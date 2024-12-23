@@ -1,4 +1,5 @@
 venv/
 frontend/frontapp/node_modules/
 pycache/
+backend/api/__pycache__/
 .env
