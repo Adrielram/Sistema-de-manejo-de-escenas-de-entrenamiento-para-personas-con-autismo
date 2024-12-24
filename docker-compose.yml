@@ -31,7 +31,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
+      - ./frontend/frontapp:/app
+      - /app/node_modules # Excluye node_modules para que Docker las gestione
     depends_on:
       - backend
 
