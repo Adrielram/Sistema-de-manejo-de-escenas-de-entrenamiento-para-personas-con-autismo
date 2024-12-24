@@ -2,9 +2,14 @@
 FROM node:18-alpine
 
 # Establecer el directorio de trabajo, copiar archivos y construir
-WORKDIR /frontapp
-COPY . /frontapp ./
-COPY ./frontapp/package*.json ./ 
+WORKDIR /app
+
+
+#COPY ./frontapp/package*.json ./ 
+COPY ./package*.json ./
+
+COPY ./frontapp ./
+
 RUN npm install
 
 # Exponer el puerto
