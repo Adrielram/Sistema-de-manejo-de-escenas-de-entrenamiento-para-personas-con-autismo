@@ -35,6 +35,8 @@ services:
       - /app/node_modules # Excluye node_modules para que Docker las gestione
     depends_on:
       - backend
+    environment:
+      - NODE_ENV=development
 
 volumes:
   db_data:
