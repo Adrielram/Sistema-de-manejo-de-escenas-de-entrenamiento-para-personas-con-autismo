@@ -7,7 +7,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user || !password) {
       setError('Por favor, ingrese todos los campos');
@@ -69,7 +69,7 @@ export default function LoginForm() {
       </div>
       <button
         type="submit"
-        className="w-full py-3 bg-red-500 text-white font-semibold rounded-md hover:bg-red-900"
+        className="w-full py-3 bg-orange-700 text-white font-semibold rounded-md hover:bg-red-900"
       >
         Iniciar sesión
       </button>
