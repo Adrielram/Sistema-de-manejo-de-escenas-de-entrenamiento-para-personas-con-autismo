@@ -12,10 +12,10 @@ export default function Home() {
           height={38}
           priority
         />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
+        <ol className="p-4 w-64 border-none border-b border-b-[#a7bcff] placeholder:text-gray-400 focus:outline-none">
+          <li className="p-4 w-64 border-none border-b border-b-[#94003b] placeholder:text-gray-400 focus:outline-none">
             Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
+            <code className="bg-black/[.05] dark:bg-red/[.06] px-1 py-0.5 rounded font-semibold">
               src/app/page.tsx
             </code>
             .
