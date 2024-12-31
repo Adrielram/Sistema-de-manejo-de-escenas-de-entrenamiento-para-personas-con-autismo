@@ -37,35 +37,27 @@ export default function LoginForm() {
 
       <div className="mb-4">
         <label htmlFor="password" className="block text-sm font-semibold text-black">Contraseña</label>
-        <input
-          type={isPasswordHidden ? 'password' : 'text'}
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Contraseña"
-          required
-          className="w-full p-3 border border-gray-300 rounded-md mt-1 text-black"
-        />
-        <div
-          className=" right-3 flex items-center cursor-pointer"
-          onClick={() => setIsPasswordHidden(!isPasswordHidden)} // Alterna el estado
-        >
+        <div className="relative">
+          <input
+            type={isPasswordHidden ? 'password' : 'text'}
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Contraseña"
+            required
+            className="w-full p-3 border border-gray-300 rounded-md mt-1 text-black pr-10"
+          />
           <Image
             src="/images/ocultarContra.jpg"
             alt="Mostrar/Ocultar Contraseña"
             width={24}
             height={24}
-            className={isPasswordHidden ? 'opacity-100' : 'opacity-50'} // Cambia la opacidad
+            className={`absolute top-1/2 right-3 transform -translate-y-1/2 cursor-pointer ${
+              isPasswordHidden ? 'opacity-100' : 'opacity-50'
+            }`}
+            onClick={() => setIsPasswordHidden(!isPasswordHidden)}
           />
         </div>
-      </div>
-      <div className="flex justify-between mb-4">
-        <a href="/recuperar-contrasena" className="text-blue-500 text-sm hover:underline">
-          Olvidé mi contraseña
-        </a>
-        <a href="/registrarse" className="text-blue-500 text-sm hover:underline">
-          Registrarse
-        </a>
       </div>
       <button
         type="submit"
