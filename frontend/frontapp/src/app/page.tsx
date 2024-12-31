@@ -20,7 +20,7 @@ export default function Home() {
             </code>
             .
           </li>
-          <li className="text-red-500">Save and see your changes instantly.</li>
+          <li>SOO THATS GONNA BE MY DAY</li>
         </ol>
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
