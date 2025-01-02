@@ -11,6 +11,18 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        primary: {
+          DEFAULT: "#f6512b",
+          dark: "#e81e25",
+        },
+        secondary: "#ffffff"
+      },
+      fontFamily: {
+        sans: ["Inter", "Helvetica", "Arial", "sans-serif"], // Base para textos
+        serif: ["Merriweather", "Georgia", "serif"], // Clásica para títulos
+        mono: ["Fira Code", "Courier New", "monospace"], // Ideal para código
+        display: ["Poppins", "Oswald", "sans-serif"], // Para encabezados llamativos
+        body: ["Roboto", "Open Sans", "sans-serif"], // Para contenido general
       },
     },
   },

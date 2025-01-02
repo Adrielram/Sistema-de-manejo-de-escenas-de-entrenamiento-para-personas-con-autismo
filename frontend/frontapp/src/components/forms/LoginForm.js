@@ -64,12 +64,12 @@ export default function LoginForm() {
           Olvidé mi contraseña
         </a>
         <a href="/registrarse" className="text-blue-500 text-sm hover:underline">
-          Registrarse
+          Registrate
         </a>
       </div>
       <button
         type="submit"
-        className="w-full py-3 bg-red-500 text-white font-semibold rounded-md hover:bg-red-900"
+        className="w-full py-3 bg-primary text-secondary font-semibold rounded-md hover:bg-primary-dark"
       >
         Iniciar sesión
       </button>
