@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Image from 'next/image';
@@ -6,6 +7,26 @@ import Image from 'next/image';
 import photo from '../../public/icon/persona_silueta.png'; // Tu imagen de la silueta
 import trashIcon from '../../public/icon/tacho_basura.png'; // Tu ícono de tacho de basura
 
+// poner un parametro por cada opcion, en true o false
+// personalInfo = true -> muestra dni y nombre del padre, sino no.
+// button_ver -> muestra boton de ver el paciente
+// trash_bin -> muestra tacho de basura
+// button_comments -> muestra boton de comentarios
+// button_edit -> muestra boton de editar
+// button_seguimiento -> muestra boton de seguimiento
+
+// dependiendo la cant de info, la tarjeta puede ser mas grande o mas chica. deberia adaptarse
+
+type OpcionesProps = {
+  // nombre se muestra siempre
+  personalInfo?: boolean; // DNI y padre a cargo
+  buttonVer?: boolean; // Muestra botón de "Ver"
+  trashBin?: boolean; // Muestra icono de tacho de basura
+  buttonComments?: boolean; // Muestra botón de "Comentarios"
+  buttonEdit?: boolean; // Muestra botón de "Editar"
+  buttonSeguimiento?: boolean; // Muestra botón de "Seguimiento"
+};
+
 type pacienteProps = {
   id: number;
   nombre: string;
@@ -13,14 +34,42 @@ type pacienteProps = {
   padreACargo: string;
 }
 
-type paciente = {
+type BoxPacienteProps = {
   paciente: pacienteProps;
-}
+  opciones: OpcionesProps;
+};
 
-const Box_paciente = ({paciente}:paciente) => {
+
+const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
   const handleDelete = () => {
     alert('Eliminar persona');
   };
+
+  const handleVer = () => {
+    alert(`Ver detalles de ${paciente.nombre}`);
+  };
+
+  const handleComments = () => {
+    alert(`Ver comentarios de ${paciente.nombre}`);
+  };
+
+  const handleEdit = () => {
+    alert(`Editar a ${paciente.nombre}`);
+  };
+
+  const handleSeguimiento = () => {
+    alert(`Ver seguimiento de ${paciente.nombre}`);
+  };
+
+  const {
+    personalInfo = false,
+    buttonVer = false,
+    trashBin = false,
+    buttonComments = false,
+    buttonEdit = false,
+    buttonSeguimiento = false,
+  } = opciones;
+ // esto creo no se esta usando, anda igual.
 
   const datosPaciente = {
     nombre: paciente.nombre || "Sin asignar",
@@ -40,22 +89,66 @@ const Box_paciente = ({paciente}:paciente) => {
           className="w-20 h-20"  // Ajustamos la clase de tamaño
         />
       </div>
+<p className="text-sm sm:text-base font-medium text-black text-center">{datosPaciente.nombre}</p>
+{/* Información personal */}
+{opciones.personalInfo && (
+        <>
+          <p className="text-sm sm:text-base font-medium text-black text-center">{datosPaciente.dni}</p>
+          <p className="text-sm sm:text-base font-medium text-black text-center">
+            Padre a cargo: {datosPaciente.padreACargo}
+          </p>
+        </>
+      )}
 
-      {/* Textos debajo de la imagen */}
-      <p className="text-sm sm:text-base font-medium text-black text-center">{datosPaciente.nombre}</p>
-      <p className="text-sm sm:text-base font-medium text-black text-center">{datosPaciente.dni}</p>
-      <p className="text-sm sm:text-base font-medium text-black text-center ">Padre a cargo: {datosPaciente.padreACargo}</p>
-
-      {/* Imagen centrada debajo de los textos */}
-      <div className="flex justify-center w-full">
-        <Image 
-          width={24}  // Ajustamos el tamaño de la imagen
-          height={24} // Ajustamos el tamaño de la imagen
-          src="/icon/tacho_basura.png"
-          alt="Tacho de basura"
-          className="w-6 h-6 mt-2"  // Ajustamos el tamaño y margen superior
-        />
+      {/* Botones y acciones */}
+      <div className="flex flex-wrap justify-center w-full space-x-2 mt-2">
+        {opciones.buttonVer && (
+          <button
+            onClick={handleVer}
+            className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 text-sm"
+          >
+            Ver
+          </button>
+        )}
+        {opciones.buttonEdit && (
+          <button
+          onClick={() => alert('Editar paciente')}
+          className="bg-primary text-white px-2 py-1 rounded hover:bg-primary-dark text-sm"
+          >
+            Editar
+          </button>
+        )}
+        {opciones.buttonSeguimiento && (
+          <button
+          onClick={() => alert('Seguimiento')}
+          className="bg-primary text-white px-2 py-1 rounded hover:bg-primary-dark text-sm"
+          >
+            Seguimiento
+          </button>
+        )}
       </div>
+        {opciones.buttonComments && (
+          <button
+            onClick={() => alert('Abrir comentarios')}
+            className="bg-primary text-white px-2 py-1 rounded hover:bg-primary-dark text-sm"
+          >
+            Comentarios
+          </button>
+        )}
+
+      {/* Icono del tacho de basura */}
+      {opciones.trashBin && (
+        <div className="flex justify-center w-full mt-2">
+          <Image
+            width={24}
+            height={24}
+            src={trashIcon}
+            alt="Tacho de basura"
+            className="w-6 h-6 cursor-pointer"
+            onClick={handleDelete}
+          />
+        </div>
+      )}
     </div>
   );
 };
