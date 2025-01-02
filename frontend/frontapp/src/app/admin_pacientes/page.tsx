@@ -7,15 +7,19 @@ import Box_paciente from '../../components/Box_paciente';
 const pacientes = [
   { id: 1, nombre: "adrielram", dni: "445357637", padreACargo:"marithe"},
   { id: 2, nombre: "rautto", dni: "255350234", padreACargo:"la patriciaaaaaaaaaaa"},
+  {id:3,nombre:"omar",dni:"123456789",padreACargo:"nomeacuerdo"},
+  {id:4,nombre:"mate",dni:"123456789",padreACargo:"nomeacuerdo"},
+  {id:5,nombre:"tomi",dni:"123456789",padreACargo:"nomeacuerdo"},
+  {id:6,nombre:"ladux",dni:"123456789",padreACargo:""},
 ];
 
 const Page = () => {
   return (
-    <div className="grid grid-cols-3 gap-1 p-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-1 gap-x-1 p-1 sm:p-2 bg-white">
       {pacientes.map((paciente) => (
      <div
           key={paciente.id}
-          className="flex flex-col w-full bg-greens-light_green shadow-2xl rounded-lg p-4 mb-4"
+          className="flex flex-col items-center justify-center w-full"
         >
                    <Box_paciente paciente = {paciente}/>
     </div>
