@@ -1,18 +1,42 @@
 // components/forms/LoginForm.js
 'use client'
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 export default function LoginForm() {
   const [user, setUser] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const router = useRouter();
+  const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError('');
     if (!user || !password) {
       setError('Por favor, ingrese todos los campos');
       return;
     }
+    try {
+      const response = await fetch('http://localhost:8000/api/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username: user, password }),
+        credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+      });
+
+      if (response.ok) {
+        // Si el login es exitoso, redirige al homepage
+        router.push('/homepage');
+      } else {
+        const data = await response.json();
+        setError(data.detail || 'Error al iniciar sesión');
+      }
+    } catch (err) {
+      setError('Hubo un problema con el servidor. Inténtalo más tarde.');
+    }
+
     console.log('Enviando datos de login...');
     setUser('');
     setPassword('');

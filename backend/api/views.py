@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
+
 
 def example_view(request):
     return JsonResponse({'message': 'Hello, world!'})
@@ -29,3 +31,17 @@ def logout(request):
     # Borrar la cookie JWT
     response.delete_cookie('jwt')
     return response
+
+@api_view(['GET'])
+def verify_session(request):
+    # Extraer la cookie 'jwt'
+    jwt_token = request.COOKIES.get('jwt')
+    if not jwt_token:
+        return Response({"message": "No autorizado"}, status=401)
+    
+    try:
+        # Validar el token JWT
+        AccessToken(jwt_token)
+        return Response({"message": "Autorizado"}, status=200)
+    except Exception:
+        return Response({"message": "Token inválido o expirado"}, status=401)
