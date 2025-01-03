@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Button from "./SmallButton";
+import BigButton from "./BigButton";
 
 export default function ScrollVerticalYHorizontal() {
   const [isPortrait, setIsPortrait] = useState<boolean>(false);
@@ -91,13 +91,12 @@ export default function ScrollVerticalYHorizontal() {
               className="flex justify-center items-center"
               style={{ minWidth: isPortrait ? "fit-content" : "150px" }}
             >
-              <Button
+              <BigButton
                 title={elemento.texto}
                 color="bg-blue-600"
                 font_bold="font-bold"
                 hover="hover:bg-blue-700"
                 onClick={() => handleButtonClick()}
-                className="w-full h-12 flex-shrink-0 break-words whitespace-pre-wrap text-center"
               />
             </li>
           ))}
