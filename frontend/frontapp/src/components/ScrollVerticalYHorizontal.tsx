@@ -16,6 +16,19 @@ export default function ScrollVerticalYHorizontal() {
     { id: 4, texto: "Objetivo 4" },
     { id: 5, texto: "Objetivo 5" },
     { id: 6, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
+    { id: 7, texto: "Objetivo 2" },
+    { id: 8, texto: "Objetivo 3" },
+    { id: 9, texto: "Objetivo 4" },
+    { id: 10, texto: "Objetivo 5" },
+    { id: 11, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
+    { id: 12, texto: "Objetivo 2" },
+    { id: 13, texto: "Objetivo 3" },
+    { id: 14, texto: "Objetivo 4" },
+    { id: 15, texto: "Objetivo 5" },
+    { id: 16, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
+    { id: 17, texto: "Objetivo 2" },
+    { id: 18, texto: "Objetivo 3" },
+    { id: 19, texto: "Objetivo 4" },
   ];
 
   /* useEffect(() => {
@@ -62,7 +75,9 @@ export default function ScrollVerticalYHorizontal() {
       <h1 className="text-2xl font-bold mb-4">Lista de Elementos</h1>
       <div
         className={`overflow-auto ${
-          isPortrait ? "overflow-x-scroll" : "overflow-y-scroll h-full"
+          isPortrait ? "overflow-x-scroll" : "overflow-y-scroll"
+        } ${
+          isPortrait ? "max-h-96" : "h-[calc(100vh-100px)]"
         } bg-gray-100 rounded-lg shadow`}
       >
         <ul
