@@ -1,10 +1,10 @@
 "use client";
 import React from 'react';
-import ReactDOM from 'react-dom';
+//import ReactDOM from 'react-dom';
 import Image from 'next/image';
 
 // Ruta de las imágenes
-import photo from '../../public/icon/persona_silueta.png'; // Tu imagen de la silueta
+//import photo from '../../public/icon/persona_silueta.png'; // Tu imagen de la silueta
 import trashIcon from '../../public/icon/tacho_basura.png'; // Tu ícono de tacho de basura
 
 // poner un parametro por cada opcion, en true o false
@@ -61,15 +61,7 @@ const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
     alert(`Ver seguimiento de ${paciente.nombre}`);
   };
 
-  const {
-    personalInfo = false,
-    buttonVer = false,
-    trashBin = false,
-    buttonComments = false,
-    buttonEdit = false,
-    buttonSeguimiento = false,
-  } = opciones;
- // esto creo no se esta usando, anda igual.
+
 
   const datosPaciente = {
     nombre: paciente.nombre || "Sin asignar",
@@ -112,7 +104,7 @@ const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
         )}
         {opciones.buttonEdit && (
           <button
-          onClick={() => alert('Editar paciente')}
+          onClick={handleEdit}
           className="bg-primary text-white px-2 py-1 rounded hover:bg-primary-dark text-sm"
           >
             Editar
@@ -120,7 +112,7 @@ const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
         )}
         {opciones.buttonSeguimiento && (
           <button
-          onClick={() => alert('Seguimiento')}
+          onClick={handleSeguimiento}
           className="bg-primary text-white px-2 py-1 rounded hover:bg-primary-dark text-sm"
           >
             Seguimiento
@@ -129,7 +121,7 @@ const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
       </div>
         {opciones.buttonComments && (
           <button
-            onClick={() => alert('Abrir comentarios')}
+            onClick={handleComments}
             className="bg-primary text-white px-2 py-1 rounded hover:bg-primary-dark text-sm"
           >
             Comentarios
