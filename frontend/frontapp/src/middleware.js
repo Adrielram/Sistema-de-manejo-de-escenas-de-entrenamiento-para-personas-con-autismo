@@ -6,7 +6,7 @@ export async function middleware(request) {
 
   try {
     // Verificar la sesión enviando una solicitud a la API para validar el token
-    const response = await fetch('http://localhost:8000/api/verify-session/', {
+    const response = await fetch('http://backend:8000/api/verify-session/', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -27,5 +27,5 @@ export async function middleware(request) {
 
 // Configuración para las rutas que deben usar este middleware
 export const config = {
-  matcher: ['/homepage/*'], // Aquí defines las rutas que quieres proteger
+  matcher: ['/homepage'], // Aquí defines las rutas que quieres proteger
 };

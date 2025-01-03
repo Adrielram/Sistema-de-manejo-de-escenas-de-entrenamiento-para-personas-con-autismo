@@ -14,8 +14,11 @@ SECRET_KEY = "django-insecure-s^_9(4+#1y%&blq82np97p0x!su^_=xiqb%az6bx+*is_zj3k#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'backend',  # Nombre del servicio en Docker Compose
+]
 
 # Application definition
 
@@ -135,6 +138,7 @@ SIMPLE_JWT = {
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Dirección de tu frontend (Next.js en desarrollo)
+    "http://frontend:3000"  # Nombre del servicio en Docker Compose
 ]
 
 CSRF_TRUSTED_ORIGINS = [
