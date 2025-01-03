@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "./globals.css";
+import ReduxProvider from './redux-provider';
+
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -28,13 +30,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <header>  
-          <Header />
-        </header>
-        <main className = "mt-14">{children}</main>
-        <footer>
-          <Footer />
-        </footer>
+        <ReduxProvider>
+          <header>  
+            <Header />
+          </header>
+          <main className = "mt-14">{children}</main>
+          <footer>
+            <Footer />
+          </footer>
+        </ReduxProvider>
       </body>
     </html>
   );
