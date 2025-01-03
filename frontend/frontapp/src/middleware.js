@@ -5,11 +5,12 @@ export async function middleware(request) {
   console.log("Middleware ejecutado en la ruta:", request.nextUrl.pathname);
 
   try {
-    // Verificar la sesión enviando una solicitud a la API para validar el token
+    // Verificar la sesión enviando la solicitud a la API para validar el token
     const response = await fetch('http://backend:8000/api/verify-session/', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Cookie': request.headers.get('cookie') || '', // Pasa las cookies del cliente
       },
       credentials: 'include', // Importante para enviar las cookies
     });
@@ -17,6 +18,7 @@ export async function middleware(request) {
     if (response.ok) {
       return NextResponse.next();
     } else {
+      console.error('Sesión no válida. Redirigiendo al login.');
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
   } catch (error) {

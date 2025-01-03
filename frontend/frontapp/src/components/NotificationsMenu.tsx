@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react";
 
-export default function NotificationMenu() {
+export default function NotificationsMenu() {
   const [showNotifications, setShowNotifications] = useState(false);
 
   const notifications: { id: number; message: string }[] = [

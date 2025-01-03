@@ -10,7 +10,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-s^_9(4+#1y%&blq82np97p0x!su^_=xiqb%az6bx+*is_zj3k#"
-
+SESSION_COOKIE_SECURE = False  # Cambiar a True en producción con HTTPS
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'  # O 'Strict', dependiendo de tus necesidades
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -19,6 +21,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'backend',  # Nombre del servicio en Docker Compose
 ]
+
 
 # Application definition
 
@@ -138,7 +141,7 @@ SIMPLE_JWT = {
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Dirección de tu frontend (Next.js en desarrollo)
-    "http://frontend:3000"  # Nombre del servicio en Docker Compose
+    "http://frontend:3000",  # Nombre del servicio en Docker Compose
 ]
 
 CSRF_TRUSTED_ORIGINS = [
