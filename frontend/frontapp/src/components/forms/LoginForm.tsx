@@ -28,6 +28,7 @@ export default function LoginForm() {
 
       if (response.ok) {
         // Si el login es exitoso, redirige al homepage
+        console.log('Login exitoso');
         router.push('/homepage');
       } else {
         const data = await response.json();
