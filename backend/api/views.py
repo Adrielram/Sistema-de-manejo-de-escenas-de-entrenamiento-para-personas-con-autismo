@@ -4,6 +4,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from .models import *
 
 
 def example_view(request):
@@ -45,3 +46,8 @@ def verify_session(request):
         return Response({"message": "Autorizado"}, status=200)
     except Exception:
         return Response({"message": "Token inválido o expirado"}, status=401)
+    
+
+def objetivos_list(request):
+    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos
+    return JsonResponse(list(objetivos), safe=False)

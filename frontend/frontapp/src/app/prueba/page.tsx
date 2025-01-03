@@ -1,16 +1,56 @@
-import ScrollVerticalYHorizontal  from "../../components/ScrollVerticalYHorizontal";
+// pages/objetivos.tsx
+'use client'
 
-export default function LoginPage() {
+import { useEffect, useState } from 'react';
+
+interface Objetivo {
+    id: number;
+    titulo: string;
+    descripcion: string;
+    escena: number; // Asumiendo que el ID de la escena es un número
+    resultado_tera?: string;
+}
+
+const Objetivos = () => {
+    const [objetivos, setObjetivos] = useState<Objetivo[]>([]);
+    
+    useEffect(() => {
+        const fetchObjetivos = async () => {
+            const response = await fetch('http://localhost:8000/api/objetivos/'); // Ajusta la URL según sea necesario
+            const data = await response.json();
+            setObjetivos(data);
+        };
+
+        fetchObjetivos();
+    }, []);
+
     return (
-        <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-1/3 p-4">
-            <ScrollVerticalYHorizontal/>
-          </div>
-          <div className="w-full md:w-2/3 p-4 flex items-center justify-center">
-            <div className="bg-blue-500 w-64 h-64 flex items-center justify-center text-white text-xl font-bold rounded">
-              Cuadrado
-            </div>
-          </div>
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4 text-black">Lista de Objetivos</h1>
+            <table className="min-w-full bg-white border border-gray-200">
+                <thead>
+                    <tr>
+                        <th className="py-2 px-4 border-b text-black">ID</th>
+                        <th className="py-2 px-4 border-b text-black">Título</th>
+                        <th className="py-2 px-4 border-b text-black">Descripción</th>
+                        <th className="py-2 px-4 border-b text-black">Escena</th>
+                        <th className="py-2 px-4 border-b text-black">Resultado Tera</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {objetivos.map((objetivo) => (
+                        <tr key={objetivo.id}>
+                            <td className="py-2 px-4 border-b text-black">{objetivo.id}</td>
+                            <td className="py-2 px-4 border-b text-black">{objetivo.titulo}</td>
+                            <td className="py-2 px-4 border-b text-black">{objetivo.descripcion}</td>
+                            <td className="py-2 px-4 border-b text-black">{objetivo.escena || 'N/A'}</td>
+                            <td className="py-2 px-4 border-b text-black">{objetivo.resultado_tera || 'N/A'}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
-      );
-    }
+    );
+};
+
+export default Objetivos;
