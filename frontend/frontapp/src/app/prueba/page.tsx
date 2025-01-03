@@ -42,7 +42,7 @@ const Objetivos = () => {
                         <tr key={objetivo.id}>
                             <td className="py-2 px-4 border-b text-black">{objetivo.id}</td>
                             <td className="py-2 px-4 border-b text-black">{objetivo.titulo}</td>
-                            <td className="py-2 px-4 border-b text-black">{objetivo.descripcion}</td>
+                            <td className="py-2 px-4 border-b text-black">{objetivo.descripcion || 'N/A'}</td>
                             <td className="py-2 px-4 border-b text-black">{objetivo.escena || 'N/A'}</td>
                             <td className="py-2 px-4 border-b text-black">{objetivo.resultado_tera || 'N/A'}</td>
                         </tr>
