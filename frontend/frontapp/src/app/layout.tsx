@@ -27,11 +27,11 @@ export default function RootLayout({
 }){
   return (
     <html lang="en">
-      <body      >
+      <body>
         <header>  
           <Header />
         </header>
-        <main>{children}</main>
+        <main className = "mt-14">{children}</main>
         <footer>
           <Footer />
         </footer>

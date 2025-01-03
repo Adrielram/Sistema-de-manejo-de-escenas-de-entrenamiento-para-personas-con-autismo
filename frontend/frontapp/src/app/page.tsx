@@ -1,7 +1,11 @@
+
+import Image from "next/image";
+
 import Button from "@/components/SmallButton";
 //import { Button } from "@headlessui/react";
 
 export default function Home() {
+  
   return (
     <>      
       <div className="flex justify-center gap-3">
