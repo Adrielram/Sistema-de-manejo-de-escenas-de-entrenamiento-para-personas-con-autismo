@@ -14,7 +14,7 @@ def example_view(request):
 
 @api_view(['POST'])
 def login(request):
-    serializer = CustomTokenObtainPairSerializer(data=request.data)
+    serializer = TokenObtainPairSerializer(data=request.data)
     if serializer.is_valid():
         response = Response({"message": "Login successful"})
         # Almacenar el token de acceso en una cookie HTTP-only
