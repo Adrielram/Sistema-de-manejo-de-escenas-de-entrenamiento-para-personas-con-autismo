@@ -4,6 +4,8 @@ import { useState } from "react";
 import DropDownList from "@/components/DropDownList";
 
 import Button from "@/components/SmallButton";
+import BigButton from "@/components/BigButton";
+import SmallButton from "@/components/SmallButton";
 //import { Button } from "@headlessui/react";
 
 export default function Home() {

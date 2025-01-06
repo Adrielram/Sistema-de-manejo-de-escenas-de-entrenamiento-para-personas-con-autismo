@@ -167,7 +167,6 @@ class Residencia(models.Model):
     class Meta:  
         db_table = 'residencia'
 
-
 class Terapeutagrupo(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE)
