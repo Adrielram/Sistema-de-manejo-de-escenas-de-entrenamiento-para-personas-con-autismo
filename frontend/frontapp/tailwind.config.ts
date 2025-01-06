@@ -14,6 +14,7 @@ export default {
         primary: {
           DEFAULT: "#f6512b",
           dark: "#e81e25",
+          blue_small_button: "#12509d",
         },
         greens: {
           light_green: "#e8f2e3",
