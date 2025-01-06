@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import Image from 'next/image';
-import Button from './Button'; // Asegúrate de ajustar la ruta de importación según la ubicación real del archivo.
+import Button from './SmallButton'; // Asegúrate de ajustar la ruta de importación según la ubicación real del archivo.
 
 // Importa las imágenes correctamente
 import rolloCine from '../../public/icon/Rollo_cine.png';
@@ -31,7 +31,6 @@ const Box_Escena = ({nombreEscena}:Box_Escena_Props) => {
             {/* Botón */}
             <div className="mt-4">
                 <Button 
-                    type="button" 
                     title="Agregar Escena" 
                     className="bg-[#f6512b] hover:bg-[#f6512b] text-white px-4 py-2" // Cambié el color de fondo aquí
                     onClick={() => alert('¡Escena agregada!')}
