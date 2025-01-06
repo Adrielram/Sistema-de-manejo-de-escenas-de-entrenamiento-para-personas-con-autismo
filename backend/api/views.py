@@ -4,15 +4,8 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from .models import *
 
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-
-        # Agregar campos personalizados al payload del token
-        token['username'] = user.username  # Incluye el nombre del usuario
-        return token
 
 def example_view(request):
     return JsonResponse({'message': 'Hello, world!'})
@@ -59,3 +52,8 @@ def verify_session(request):
         }, status=200)
     except Exception as e:
         return Response({"message": "Token inválido o expirado"}, status=401)
+    
+
+def objetivos_list(request):
+    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos
+    return JsonResponse(list(objetivos), safe=False)

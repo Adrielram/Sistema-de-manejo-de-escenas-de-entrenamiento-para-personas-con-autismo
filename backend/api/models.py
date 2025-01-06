@@ -16,6 +16,7 @@ class Escena(models.Model):
     idioma = models.CharField(max_length=255)
     complejidad = models.IntegerField()
     link = models.CharField(max_length=2000)
+    nombre = models.CharField(max_length=255)
 
     class Meta: 
         db_table = 'escena'
@@ -115,7 +116,6 @@ class Objetivo(models.Model):
     titulo = models.CharField(max_length=255)
     descripcion = models.CharField(max_length=255)
     escena = models.ForeignKey(Escena, on_delete=models.PROTECT)
-    resultado_tera = models.TextField(blank=True, null=True)
 
     class Meta:   
         db_table = 'objetivo'
