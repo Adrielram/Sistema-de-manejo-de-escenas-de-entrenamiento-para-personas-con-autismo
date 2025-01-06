@@ -16,7 +16,9 @@ export default {
           dark: "#e81e25",
           blue_small_button: "#12509d",
         },
-        secondary: "#ffffff"
+        greens: {
+          light_green: "#e8f2e3",
+        } 
       },
       fontFamily: {
         sans: ["Inter", "Helvetica", "Arial", "sans-serif"], // Base para textos
