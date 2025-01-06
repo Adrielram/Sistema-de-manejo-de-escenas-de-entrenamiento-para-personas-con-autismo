@@ -1,42 +1,68 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 type PacienteProps = {
-  id: number;
+  username: string;
   nombre: string;
   dni: string;
   padreACargo: string;
 };
 
-const pacientesMock: PacienteProps[] = [
-    { id: 1, nombre: "Adriel Ram Ferrero", dni: "445357637", padreACargo:"marithe"},
-    { id: 2, nombre: "Braian Rautto", dni: "255350234", padreACargo:"la patriciaaaaaaaaaaa"},
-    {id:3,nombre:"Hector Omar Miño",dni:"123456789",padreACargo:"nomeacuerdo"},
-    {id:4,nombre:"Mateo Romero",dni:"123456789",padreACargo:"nomeacuerdo"},
-    {id:5,nombre:"Tomas Guerrero",dni:"123456789",padreACargo:"nomeacuerdo"},
-    {id:6,nombre:"Juan Ladux",dni:"123456789",padreACargo:""},
-    {id:7,nombre:"Tomas Rodriguez",dni:"123456",padreACargo:"idk"},
-    {id:8,nombre:"Bonelli del Hoyo", dni:"1234",padreACargo:"idk"},
-];
-
-const Buscador: React.FC = () => {
+const BuscadorPacientes: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredPacientes, setFilteredPacientes] = useState(pacientesMock);
+  const [pacientes, setPacientes] = useState<PacienteProps[]>([]);
+  const [filteredPacientes, setFilteredPacientes] = useState<PacienteProps[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const fetchPacientes = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/pacientes/');
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        const data: PacienteProps[] = await response.json();
+        setPacientes(data);
+        setFilteredPacientes(data); // Es necesario mostrar todos al principio
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Ocurrió un error desconocido.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPacientes();
+  }, []);
+
+
+  //funcion que aplica el filtro
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value.toLowerCase();
     setSearchQuery(query);
 
-    const results = pacientesMock.filter(
+    const results = pacientes.filter(    
       (paciente) =>
-        paciente.nombre.toLowerCase().includes(query) ||
-        paciente.dni.includes(query) ||
-        paciente.padreACargo.toLowerCase().includes(query)
+        paciente.nombre.toLowerCase().startsWith(query) ||
+        (paciente.dni && String(paciente.dni).startsWith(query)) || 
+        paciente.padreACargo.toLowerCase().startsWith(query)
     );
-
+    
     setFilteredPacientes(results);
   };
+
+  if (loading) {
+    return <p>Cargando...</p>;
+  }
+
+  if (error) {
+    return <p>Error: {error}</p>;
+  }
 
   return (
     <div className="p-4">
@@ -51,7 +77,7 @@ const Buscador: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredPacientes.map((paciente) => (
           <div
-            key={paciente.id}
+            key={paciente.username}
             className="bg-white p-3 rounded shadow border border-gray-200"
           >
             <p><strong>Nombre:</strong> {paciente.nombre}</p>
@@ -69,4 +95,4 @@ const Buscador: React.FC = () => {
   );
 };
 
-export default Buscador
+export default BuscadorPacientes;

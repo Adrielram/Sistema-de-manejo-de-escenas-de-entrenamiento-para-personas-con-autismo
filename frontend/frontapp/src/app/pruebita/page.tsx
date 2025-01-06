@@ -5,7 +5,9 @@ import Buscador from '../../components/Buscador'
 
 const page = () => {
   return (
-      <div>holi <Buscador /></div>
+      <div>
+        <Buscador/>
+      </div>
 
   )
 }
