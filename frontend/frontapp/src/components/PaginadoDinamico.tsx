@@ -2,19 +2,22 @@
 
 import { useState } from "react";
 import Button from "./SmallButton"; // Asegúrate de que la ruta sea correcta
+import PaginadoItem from "./PaginadoItem"; // Importa el nuevo componente
 
 type Dictionary = { [key: string]: string };
 
 interface BoxPaginadoProps {
   data: Dictionary;
+  mostrarImagen: boolean;
 }
 
-export default function BoxPaginado({ data }: BoxPaginadoProps) {
+export default function BoxPaginado({ data, mostrarImagen}: BoxPaginadoProps) {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const itemsPerPage = 5;
 
   const keys = Object.keys(data); // Obtener las claves del diccionario
   const totalPages = Math.ceil(keys.length / itemsPerPage);
+  
 
   const handleNext = () => {
     if (currentPage < totalPages - 1) {
@@ -39,13 +42,7 @@ export default function BoxPaginado({ data }: BoxPaginadoProps) {
       <hr className="border-none h-1 mb-4 bg-[#f6512b]" />
       <div className="grid grid-cols-1 gap-2">
         {paginatedItems.map((key) => (
-          <div
-            key={key}
-            className="p-4 bg-white border rounded shadow-sm hover:bg-gray-50"
-          >
-            <strong className="text-blue-600 font-bold text-lg">Elemento {key}:</strong>
-            <span className="text-gray-700 font-normal">{data[key]}</span>
-          </div>
+          <PaginadoItem key={key} dni={key} nombre={data[key]} mostrarImagen={mostrarImagen} />
         ))}
       </div>
 
