@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
+import { Inter } from 'next/font/google';
 // import { Geist, Geist_Mono } from "next/font/google";
-import Header from "../components/Header";
+//import Header from "../components/Header";
 import "./globals.css";
+import SideNav from "@/components/SideNav";
+import MarginWidthWrapper from "@/components/MarginWidthWrapper";
+import MenuHeader from "@/components/MenuHeader";
+import HeaderMobile from "@/components/MobileHeader";
+import PageWrapper from "@/components/PageWrapper";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -12,6 +18,8 @@ import "./globals.css";
 //   variable: "--font-geist-mono",
 //   subsets: ["latin"],
 // });
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -26,11 +34,17 @@ export default function RootLayout({
 }){
   return (
     <html lang="en">
-      <body      >
-        <header>  
-          <Header />
-        </header>
-        <main>{children}</main>
+      <body className={`bg-white ${inter.className}`}>
+        <div className="flex">
+          <SideNav />
+          <main className="flex-1">
+            <MarginWidthWrapper>
+              <MenuHeader />
+              <HeaderMobile />
+              <PageWrapper>{children}</PageWrapper>
+            </MarginWidthWrapper>
+          </main>
+        </div>
       </body>
     </html>
   );
