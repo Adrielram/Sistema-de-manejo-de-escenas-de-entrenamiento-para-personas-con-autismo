@@ -3,12 +3,17 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useDispatch } from 'react-redux'; // Importar useDispatch
+import { setUser } from '../../../slices/userSlice'; // Importar acción
+ // Inicializar dispatcher
+
 export default function LoginForm() {
   const [user, setUser] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
   const router = useRouter();
+  const dispatch = useDispatch();
   const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
@@ -27,6 +32,10 @@ export default function LoginForm() {
       });
 
       if (response.ok) {
+        const userData = { username: user };
+
+        // Despacha la acción para actualizar el estado global
+        dispatch(setUser(userData));
         // Si el login es exitoso, redirige al homepage
         console.log('Login exitoso');
         router.push('/homepage');
