@@ -1,12 +1,13 @@
-"use client"
+"use client";
 import { useState } from "react";
 
 export default function NotificationsMenu() {
   const [showNotifications, setShowNotifications] = useState(false);
 
+  // Simulación de notificaciones
   const notifications: { id: number; message: string }[] = [
-    { id: 1, message: "Notificación 1" },
-    { id: 2, message: "Notificación 2" },
+    { id: 1, message: "Notificación 1" }
+
   ];
 
   // Funciones de manejo de botones
@@ -27,32 +28,35 @@ export default function NotificationsMenu() {
 
   return (
     <div className="relative">
-      {/* Botón de campanita */}
+      {/* Botón de campana */}
       <button
-        className="relative"
+        className="relative bg-teal-100 p-1 rounded-lg hover:bg-teal-200 hover:ring hover:ring-teal-300 hover:ring-offset-2 transition duration-300"
         onClick={() => setShowNotifications(!showNotifications)}
         aria-label="View notifications"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6 text-gray-700"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+          className="w-8 h-8 text-teal-600 animate-wiggle"
+          viewBox="0 0 21 21"
         >
           <path
+            fill="none"
+            stroke="currentColor"
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth="2"
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            d="M15.585 15.5H5.415A1.65 1.65 0 0 1 4 13a10.526 10.526 0 0 0 1.5-5.415V6.5a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v1.085c0 1.907.518 3.78 1.5 5.415a1.65 1.65 0 0 1-1.415 2.5zm1.915-11c-.267-.934-.6-1.6-1-2s-1.066-.733-2-1m-10.912 3c.209-.934.512-1.6.912-2s1.096-.733 2.088-1M13 17c-.667 1-1.5 1.5-2.5 1.5S8.667 18 8 17"
           />
         </svg>
-        
-        {/* Animación de titileo solo si hay notificaciones */}
+
+        {/* Número de notificaciones pendientes */}
         {notifications.length > 0 && (
-          <span className="animate-ping absolute top-1 right-0.5 block h-1 w-1 rounded-full ring-2 ring-green-400 bg-green-600"></span>
+          <div className="px-1 py-0.5 bg-teal-500 min-w-5 rounded-full text-center text-white text-xs absolute -top-2 -right-2 translate-x-1/4 text-nowrap">
+            <div className="absolute top-0 left-0 rounded-full -z-10 animate-ping bg-teal-200 w-full h-full"></div>
+            {notifications.length}
+          </div>
         )}
       </button>
+
 
       {/* Menú desplegable de notificaciones */}
       {showNotifications && (

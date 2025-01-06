@@ -29,16 +29,10 @@ export default function RootLayout({
 }){
   return (
     <html lang="en">
-      <body>
-        <ReduxProvider>
-          <header>  
-            <Header />
-          </header>
-          <main className = "mt-14">{children}</main>
-          <footer>
-            <Footer />
-          </footer>
-        </ReduxProvider>
+      <body className="min-h-screen flex flex-col">
+        <Header />
+        <main className = "mt-14">{children}</main>
+        <Footer />
       </body>
     </html>
   );

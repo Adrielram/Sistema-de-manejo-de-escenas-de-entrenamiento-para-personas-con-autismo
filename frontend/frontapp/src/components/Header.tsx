@@ -1,9 +1,11 @@
+"use client"
+
 import Image from "next/image";
 import Link from "next/link";
-import NotificationMenu from "./NotificacionsMenu"; // Importa el componente
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { setUser, clearUser } from "../../slices/userSlice";
+import NotificationMenu from "./NotificationsMenu"; // Importa el componente
+//import { useEffect } from "react";
+//import { useDispatch, useSelector } from "react-redux";
+//import { setUser, clearUser } from "../../slices/userSlice";
 
 export default function Header() {
   return (
