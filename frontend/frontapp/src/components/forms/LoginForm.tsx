@@ -28,6 +28,7 @@ export default function LoginForm() {
 
       if (response.ok) {
         // Si el login es exitoso, redirige al homepage
+        console.log('Login exitoso');
         router.push('/homepage');
       } else {
         const data = await response.json();
@@ -85,7 +86,7 @@ export default function LoginForm() {
       </div>
       <button
         type="submit"
-        className="w-full py-3 bg-orange-700 text-white font-semibold rounded-md hover:bg-red-900"
+        className="w-full py-3 bg-[#F6512B] text-white font-semibold rounded-md hover:bg-red-900"
       >
         Iniciar sesión
       </button>

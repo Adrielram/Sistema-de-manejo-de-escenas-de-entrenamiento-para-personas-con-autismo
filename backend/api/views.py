@@ -14,7 +14,7 @@ def example_view(request):
 
 @api_view(['POST'])
 def login(request):
-    serializer = TokenObtainPairSerializer(data=request.data)
+    serializer = CustomTokenObtainPairSerializer(data=request.data)
     if serializer.is_valid():
         response = Response({"message": "Login successful"})
         # Almacenar el token de acceso en una cookie HTTP-only
@@ -24,6 +24,7 @@ def login(request):
             httponly=True,  # Previene acceso desde JavaScript
             samesite='Lax'  # Mejora seguridad contra ataques CSRF
         )
+        
         return response
     return Response(serializer.errors, status=400)
 
@@ -39,14 +40,19 @@ def logout(request):
 def verify_session(request):
     # Extraer la cookie 'jwt'
     jwt_token = request.COOKIES.get('jwt')
+    
     if not jwt_token:
         return Response({"message": "No autorizado"}, status=401)
     
     try:
-        # Validar el token JWT
-        AccessToken(jwt_token)
-        return Response({"message": "Autorizado"}, status=200)
-    except Exception:
+        # Validar el token JWT y decodificarlo
+        access_token = AccessToken(jwt_token)
+        username = access_token['username']  # Extraer el campo 'username' del payload
+        return Response({
+            "message": "Autorizado",
+            "username": username  # Incluir el nombre de usuario en la respuesta
+        }, status=200)
+    except Exception as e:
         return Response({"message": "Token inválido o expirado"}, status=401)
     
 
