@@ -1,5 +1,7 @@
+'use client'
 
-import Image from "next/image";
+import { useState } from "react";
+import DropDownList from "@/components/DropDownList";
 
 import Button from "@/components/SmallButton";
 import BigButton from "@/components/BigButton";
@@ -7,18 +9,23 @@ import SmallButton from "@/components/SmallButton";
 //import { Button } from "@headlessui/react";
 
 export default function Home() {
-  
+
+  const names = ["Voces del Espectro", "Superando Barreras", "Mentes Maravillosas", "Diferentes, Iguales"]; // Opciones de la lista
+  const [selectedName, setSelectedName] = useState<string | null>(null); // Nombre seleccionado
+
+  const handleSelect = (name: string) => {
+    setSelectedName(name); 
+    console.log("Opción seleccionada:", name);
+  };
+
   return (
-    <>      
-      <div className="flex justify-center gap-3">
-        <SmallButton font_bold="font-bold" title="Volver"/>
-        <SmallButton font_bold="font-bold" title="Cancelar cambios"/>
-        <SmallButton color="bg-[#12509d]" title="Guardar" hover="hover:bg-[#125080]"/>
-      </div>
+    <main className="flex items-center justify-center min-h-screen bg-black">
       <div>
-        <BigButton title="Asistir a una clase"/>
-        <BigButton title="Objetivo 6 con mucho texto para probar el ajuste pero veo que no se rebalsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"/>
+        <h1 className="mb-4 text-2xl font-bold">
+          Seleccionaste: {selectedName || "Ninguno"}
+        </h1>
+        <DropDownList items={names} listName="Asociar Grupo" onSelect={handleSelect} />
       </div>
-    </>
+    </main>
   );
 }
