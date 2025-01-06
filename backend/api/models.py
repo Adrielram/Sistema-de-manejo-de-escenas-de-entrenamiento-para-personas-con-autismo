@@ -203,6 +203,8 @@ class User(AbstractUser):
         db_table = 'user'
 
 
+
+
 class Videosvistos(models.Model):
     escena = models.ForeignKey(
         Escenavideo,
@@ -229,3 +231,34 @@ class Videosvistos(models.Model):
     class Meta:     
         db_table = 'videosVistos'
         unique_together = (('escena', 'personaobjetivo_user', 'personaobjetivo_objetivo'),)
+
+class Notificacion(models.Model):
+    # Usuario destinatario (admin o terapeuta)
+    destinatario = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='notificaciones_recibidas'
+    )
+    # Usuario que envía la notificación
+    remitente = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='notificaciones_enviadas'
+    )
+    # Mensaje de la notificación
+    mensaje = models.TextField()
+    # Estado de la notificación
+    estado = models.CharField(
+        max_length=50, 
+        choices=[
+            ('pendiente', 'Pendiente'),
+            ('leida', 'Leída'),
+            ('eliminada', 'Eliminada'),
+        ],
+        default='pendiente'
+    )
+    # Marca de tiempo
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"De {self.remitente} a {self.destinatario} - {self.estado}"
