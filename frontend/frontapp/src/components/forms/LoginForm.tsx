@@ -1,26 +1,28 @@
 // components/forms/LoginForm.js
-'use client'
+'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
+import { setUser } from '../../../slices/userSlice'; // Asegúrate de que la ruta sea correcta
 import Image from 'next/image';
-import { useDispatch } from 'react-redux'; // Importar useDispatch
-import { setUser } from '../../../slices/userSlice'; // Importar acción
- // Inicializar dispatcher
 
 export default function LoginForm() {
-  const [user, setUser] = useState('');
+  const [user, setUserState] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
   const router = useRouter();
   const dispatch = useDispatch();
-  const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
     if (!user || !password) {
       setError('Por favor, ingrese todos los campos');
       return;
     }
+
     try {
       const response = await fetch('http://localhost:8000/api/login/', {
         method: 'POST',
@@ -32,13 +34,13 @@ export default function LoginForm() {
       });
 
       if (response.ok) {
-        const userData = { username: user };
+        const data = await response.json(); // Supongamos que el servidor responde con { username: "usuario" }
 
-        // Despacha la acción para actualizar el estado global
-        dispatch(setUser(userData));
-        // Si el login es exitoso, redirige al homepage
-        console.log('Login exitoso');
-        router.push('/homepage');
+        // Actualizamos el estado global con el usuario logueado
+        dispatch(setUser({ username: data.username, loggedIn: true }));
+        
+        console.log('Login exitoso '+ data.username);
+        router.push('/homepage'); // Redirigir al homepage
       } else {
         const data = await response.json();
         setError(data.detail || 'Error al iniciar sesión');
@@ -47,8 +49,7 @@ export default function LoginForm() {
       setError('Hubo un problema con el servidor. Inténtalo más tarde.');
     }
 
-    console.log('Enviando datos de login...');
-    setUser('');
+    setUserState('');
     setPassword('');
   };
 
@@ -62,7 +63,7 @@ export default function LoginForm() {
           type="user"
           id="user"
           value={user}
-          onChange={(e) => setUser(e.target.value)}
+          onChange={(e) => setUserState(e.target.value)}
           placeholder="Nombre de Usuario o DNI"
           required
           className="w-full p-3 border border-gray-300 rounded-md mt-1 text-black"

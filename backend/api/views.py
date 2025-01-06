@@ -13,6 +13,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Agregar campos personalizados al payload del token
         token['username'] = user.username  # Incluye el nombre del usuario
         return token
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        # Agrega el username al response data
+        data['username'] = self.user.username
+        return data
 
 def example_view(request):
     return JsonResponse({'message': 'Hello, world!'})
@@ -21,7 +26,11 @@ def example_view(request):
 def login(request):
     serializer = CustomTokenObtainPairSerializer(data=request.data)
     if serializer.is_valid():
-        response = Response({"message": "Login successful"})
+        response = Response({
+            "message": "Login successful",
+            "username": serializer.validated_data['username'],  # Obtiene el username desde validated_data
+        })
+        
         # Almacenar el token de acceso en una cookie HTTP-only
         response.set_cookie(
             'jwt',  # Nombre de la cookie
