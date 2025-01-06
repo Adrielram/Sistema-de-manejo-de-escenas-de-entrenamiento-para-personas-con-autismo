@@ -33,4 +33,3 @@ const data = {
     );
 };
 
-export default Objetivos;
