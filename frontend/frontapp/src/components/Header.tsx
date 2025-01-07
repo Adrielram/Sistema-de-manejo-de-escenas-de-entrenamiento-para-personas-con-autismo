@@ -1,3 +1,4 @@
+
 "use client"
 
 import Image from "next/image";
@@ -7,9 +8,16 @@ import NotificationMenu from "./NotificationsMenu"; // Importa el componente
 //import { useDispatch, useSelector } from "react-redux";
 //import { setUser, clearUser } from "../../slices/userSlice";
 
+
 export default function Header() {
+  const dispatch = useDispatch();
+  const { username, isLoggedIn } = useSelector((state: RootState) => state.user);
+  const handleLogout = () => {
+    dispatch(clearUser()); // Limpia el estado global
+  };
+
   return (
-    <nav className="bg-[#F6512B] fixed  top-0 left-0 w-full flex items-center justify-between px-4 py-2 text-white shadow-md">
+    <nav className="bg-[#F6512B] fixed top-0 left-0 w-full flex items-center justify-between px-4 py-2 text-white shadow-md">
       {/* Logo Section (Left-aligned) */}
       <div className="flex items-center space-x-2">
         <Image
@@ -25,25 +33,37 @@ export default function Header() {
         </p>
       </div>
 
-      {/* Action Buttons (Right-aligned) */}
+      {/* Action Buttons or Greeting (Right-aligned) */}
       <div className="flex items-center space-x-2 sm:space-x-4">
-        <Link
-          href="/auth/login"
-          className="rounded border-2 border-black bg-white px-2 py-1 text-xs font-bold text-black transition duration-100 hover:bg-green-500 hover:text-black sm:px-3 sm:py-1 sm:text-base"
-          aria-label="Log in to your account"
-        >
-          Log In
-        </Link>
-        <Link
-          href="/register"
-          className="rounded border-2 border-black bg-black px-2 py-1 text-xs font-bold text-white transition duration-100 hover:bg-[#44eefa] hover:text-black sm:px-3 sm:py-1 sm:text-base"
-          aria-label="Register a new account"
-        >
-          Register
-        </Link>
-
-        {/* Menú de notificaciones */}
-        <NotificationMenu />
+        {isLoggedIn ? (
+          <>
+            <p className="text-white font-semibold">Hola, {username}!</p>
+            <button
+              onClick={handleLogout}
+              className="rounded border-2 border-black bg-white px-2 py-1 text-xs font-bold text-black transition duration-100 hover:bg-red-500 hover:text-white sm:px-3 sm:py-1 sm:text-base"
+            >
+              Cerrar sesión
+            </button>
+            <NotificationMenu />
+          </>
+        ) : (
+          <>
+            <Link
+              href="/auth/login"
+              className="rounded border-2 border-black bg-white px-2 py-1 text-xs font-bold text-black transition duration-100 hover:bg-green-500 hover:text-black sm:px-3 sm:py-1 sm:text-base"
+              aria-label="Log in to your account"
+            >
+              Log In
+            </Link>
+            <Link
+              href="/register"
+              className="rounded border-2 border-black bg-black px-2 py-1 text-xs font-bold text-white transition duration-100 hover:bg-[#44eefa] hover:text-black sm:px-3 sm:py-1 sm:text-base"
+              aria-label="Register a new account"
+            >
+              Register
+            </Link>
+          </>
+        )}
       </div>
     </nav>
   );
