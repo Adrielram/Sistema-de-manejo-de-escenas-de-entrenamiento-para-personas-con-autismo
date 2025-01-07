@@ -159,48 +159,56 @@ const MenuItemWithSubMenu: React.FC<MenuItemWithSubMenuProps> = ({
   const pathname = usePathname();
   const [subMenuOpen, setSubMenuOpen] = useState(false);
 
+  const toggleSubMenu = (e: React.MouseEvent) => {
+    e.preventDefault(); // Evita la redirección al hacer clic en el despliegue
+    setSubMenuOpen(!subMenuOpen);
+  };
+
   return (
-    <>
+    <div>
       <MenuItem>
-        <button
-          className="flex w-full text-2xl"
-          onClick={() => setSubMenuOpen(!subMenuOpen)}
-        >
-          <div className="flex flex-row justify-between w-full items-center">
-            <span
-              className={`${pathname.includes(item.path) ? 'font-bold' : ''}`}
-            >
-              {item.title}
-            </span>
-            <div className={`${subMenuOpen && 'rotate-180'}`}>
-              {/* <Icon icon="lucide:chevron-down" width="24" height="24" /> */}
-              <RiArrowDropDownLine />
+        <div className="flex flex-row justify-between items-center">
+          {/* Link al path del elemento */}
+          <Link
+            href={item.path}
+            onClick={() => toggleOpen()}
+            className={`flex-1 text-2xl text-black ${
+              pathname.includes(item.path) ? 'font-bold' : ''
+            }`}
+          >
+            <div className="flex items-center space-x-2">
+              {item.icon && <span>{item.icon}</span>}
+              <span>{item.title}</span>
             </div>
-          </div>
-        </button>
+          </Link>
+
+          {/* Botón para desplegar subopciones */}
+          {item.submenu && (
+            <button
+              onClick={toggleSubMenu}
+              className={`flex items-center ml-2 text-gray-400 ${
+                subMenuOpen ? 'rotate-180 ' : ''
+              }`}
+            >
+              <RiArrowDropDownLine size={40}/>
+            </button>
+          )}
+        </div>
       </MenuItem>
-      <div className="mt-2 ml-2 flex flex-col space-y-2">
-        {subMenuOpen && (
-          <>
-            {item.subMenuItems?.map((subItem, subIdx) => {
-              return (
-                <MenuItem key={subIdx}>
-                  <Link
-                    href={subItem.path}
-                    onClick={() => toggleOpen()}
-                    className={` ${
-                      subItem.path === pathname ? 'font-bold' : ''
-                    }`}
-                  >
-                    {subItem.title}
-                  </Link>
-                </MenuItem>
-              );
-            })}
-          </>
-        )}
-      </div>
-    </>
+
+      {/* Submenú (recursivo) */}
+      {subMenuOpen && (
+        <div className="mt-2 ml-4 flex flex-col space-y-2">
+          {item.subMenuItems?.map((subItem, idx) => (
+            <MenuItemWithSubMenu
+              key={idx}
+              item={subItem}
+              toggleOpen={toggleOpen}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -2,7 +2,7 @@ import React from 'react'
 
 const therapist = () => {
   return (
-    <div>therapist</div>
+    <div className='text-black'>therapist</div>
   )
 }
 

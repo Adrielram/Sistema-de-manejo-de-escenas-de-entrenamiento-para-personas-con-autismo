@@ -2,7 +2,7 @@ import React from 'react'
 
 const scenes = () => {
   return (
-    <div>scenes</div>
+    <div className='text-black'>scenes</div>
   )
 }
 

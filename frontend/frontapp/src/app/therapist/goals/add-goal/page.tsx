@@ -2,7 +2,7 @@ import React from 'react'
 
 const addGoal = () => {
   return (
-    <div>addGoal</div>
+    <div className='text-black'>addGoal</div>
   )
 }
 

@@ -2,7 +2,7 @@ import React from 'react'
 
 const addScene = () => {
   return (
-    <div>addScene</div>
+    <div className='text-black'>addScene</div>
   )
 }
 

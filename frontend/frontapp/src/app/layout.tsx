@@ -31,15 +31,15 @@ export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
-}){
+}) {
   return (
     <html lang="en">
       <body className={`bg-white ${inter.className}`}>
-        <div className="flex">
+        <MenuHeader /> {/* Asegúrate de que esté fuera del contenedor flex */}
+        <div className="flex pt-[47px]">
           <SideNav />
           <main className="flex-1">
             <MarginWidthWrapper>
-              <MenuHeader />
               <HeaderMobile />
               <PageWrapper>{children}</PageWrapper>
             </MarginWidthWrapper>
@@ -49,3 +49,26 @@ export default function RootLayout({
     </html>
   );
 }
+
+// export default function RootLayout({
+//   children,
+// }: {
+//   children: React.ReactNode;
+// }){
+//   return (
+//     <html lang="en">
+//       <body className={`bg-white ${inter.className}`}>
+//         <div className="flex">
+//           <SideNav />
+//           <main className="flex-1">
+//             <MarginWidthWrapper>
+//               <MenuHeader /> {/*aca va el header real*/}
+//               <HeaderMobile />
+//               <PageWrapper>{children}</PageWrapper>
+//             </MarginWidthWrapper>
+//           </main>
+//         </div>
+//       </body>
+//     </html>
+//   );
+// }
