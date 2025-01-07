@@ -10,8 +10,16 @@ from rest_framework.views import APIView
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, status
-
 import json
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Agregar campos personalizados al payload del token
+        token['username'] = user.username  # Incluye el nombre del usuario
+        return token
     def validate(self, attrs):
         data = super().validate(attrs)
         # Agrega el username al response data

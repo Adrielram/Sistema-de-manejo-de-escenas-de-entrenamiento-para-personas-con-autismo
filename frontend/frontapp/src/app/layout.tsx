@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import { Inter } from 'next/font/google';
 // import { Geist, Geist_Mono } from "next/font/google";
 import Header from "../components/Header";
@@ -9,8 +10,11 @@ import MarginWidthWrapper from "../components/MarginWidthWrapper";
 import HeaderMobile from "../components/MobileHeader";
 import PageWrapper from "../components/PageWrapper";
 
+// Asegúrate de importar ReduxProvider desde la ruta correcta
+import ReduxProvider from "../../store/provider";
 
 const inter = Inter({ subsets: ['latin'] });
+
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -25,6 +29,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`min-h-screen bg-white ${inter.className}`}>
+        {/* ReduxProvider debe envolver todos los componentes que usan Redux */}
+        <ReduxProvider>
         <Header /> {/* Asegúrate de que esté fuera del contenedor flex */}
         <div className="flex pt-[47px]">
           <SideNav />
@@ -33,8 +39,10 @@ export default function RootLayout({
               <HeaderMobile />
               <PageWrapper>{children}</PageWrapper>
             </MarginWidthWrapper>
+            </ReduxProvider>
           </main>
         </div>
+
         <Footer />
       </body>
     </html>
