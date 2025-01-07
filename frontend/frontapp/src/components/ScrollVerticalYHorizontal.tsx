@@ -1,69 +1,83 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import BigButton from "./BigButton";
 
-
-
-export default function ListaResponsive() {
+export default function ScrollVerticalYHorizontal() {
   const [isPortrait, setIsPortrait] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Estado de carga
+  //const [elementos, setElementos] = useState<{ id: number; texto: string }[]>(
+  //  []
+  //);
 
-  const elementos = [
+ const elementos = [
     { id: 1, texto: "Objetivo 1" },
     { id: 2, texto: "Objetivo 2" },
     { id: 3, texto: "Objetivo 3" },
     { id: 4, texto: "Objetivo 4" },
     { id: 5, texto: "Objetivo 5" },
-    { id: 6, texto: "Objetivo 6" },
-    { id: 7, texto: "Objetivo 6" },
-    { id: 8, texto: "Objetivo 6" },
-    { id: 9, texto: "Objetivo 6" },
-    { id: 10, texto: "Objetivo 6" },
-    { id: 11, texto: "Objetivo 6" },
-    { id: 12, texto: "Objetivo 6" },
-    { id: 13, texto: "Objetivo 6" },
-    { id: 14, texto: "Objetivo 6" },
-    { id: 15, texto: "Objetivo 6" },
+    { id: 6, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
+    { id: 7, texto: "Objetivo 2" },
+    { id: 8, texto: "Objetivo 3" },
+    { id: 9, texto: "Objetivo 4" },
+    { id: 10, texto: "Objetivo 5" },
+    { id: 11, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
+    { id: 12, texto: "Objetivo 2" },
+    { id: 13, texto: "Objetivo 3" },
+    { id: 14, texto: "Objetivo 4" },
+    { id: 15, texto: "Objetivo 5" },
+    { id: 16, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
+    { id: 17, texto: "Objetivo 2" },
+    { id: 18, texto: "Objetivo 3" },
+    { id: 19, texto: "Objetivo 4" },
   ];
 
+  /* useEffect(() => {
+    const fetchObjetivos = async () => {
+      try {
+        const response = await fetch("localhost:8000/api/objetivos");
+        if (!response.ok) {
+          throw new Error(`Error en la solicitud: ${response.status}`);
+        }
+        const data = await response.json();
+        setElementos(data);
+      } catch (error) {
+        console.error("Error al obtener los objetivos:", error);
+        setElementos([]); // En caso de error, dejamos la lista vacía
+      }
+    };
+
+    fetchObjetivos();
+  }, []);
+ */
 
   useEffect(() => {
     const updateOrientation = () => {
       setIsPortrait(window.innerHeight > window.innerWidth);
-      setIsLoading(false); // Cambia a false una vez que se determina la orientación
     };
 
-    // Inicializar orientación usando matchMedia
     const mediaQuery = window.matchMedia("(orientation: portrait)");
     setIsPortrait(mediaQuery.matches);
-    setIsLoading(false); // Cambia a false inmediatamente al cargar
 
-    // Escuchar cambios en la orientación
     mediaQuery.addEventListener("change", updateOrientation);
 
-    // Escuchar cambios en el tamaño de la ventana
-    window.addEventListener("resize", updateOrientation);
-
-    // Cleanup event listeners
     return () => {
       mediaQuery.removeEventListener("change", updateOrientation);
-      window.removeEventListener("resize", updateOrientation);
     };
   }, []);
 
-  if (isLoading) {
-    return null; // No renderiza nada mientras se carga
-  }
 
-  const handleButtonClick = (texto: string) => {
-    alert(`Botón clickeado: ${texto}`);
+  const handleButtonClick = () => {
+    //aca vamos a hacer la funcionalidad del boton
   };
 
   return (
-    <div className="container mx-auto p-4 h-screen flex flex-col">
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Lista de Elementos</h1>
       <div
-        className={`flex-1 overflow-auto ${
-          isPortrait ? "overflow-x-hidden" : "overflow-y-auto"
+        className={`overflow-auto ${
+          isPortrait ? "overflow-x-scroll" : "overflow-y-scroll"
+        } ${
+          isPortrait ? "max-h-96" : "h-[calc(100vh-100px)]"
         } bg-gray-100 rounded-lg shadow`}
       >
         <ul
@@ -72,13 +86,18 @@ export default function ListaResponsive() {
           } p-4`}
         >
           {elementos.map((elemento) => (
-            <li key={elemento.id} className="min-w-[150px]">
-              <button
-                onClick={() => handleButtonClick(elemento.texto)}
-                className="w-full p-4 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-500 transition duration-300 ease-in-out"
-              >
-                {elemento.texto}
-              </button>
+            <li
+              key={elemento.id}
+              className="flex justify-center items-center"
+              style={{ minWidth: isPortrait ? "fit-content" : "150px" }}
+            >
+              <BigButton
+                title={elemento.texto}
+                color="bg-blue-600"
+                font_bold="font-bold"
+                hover="hover:bg-blue-700"
+                onClick={() => handleButtonClick()}
+              />
             </li>
           ))}
         </ul>

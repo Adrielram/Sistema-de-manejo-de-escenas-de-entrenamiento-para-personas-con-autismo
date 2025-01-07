@@ -1,11 +1,14 @@
-// components/Header.tsx
-'use client'; // Necesario para usar hooks de Redux
-import Image from 'next/image';
-import Link from 'next/link';
-import NotificationMenu from './NotificacionsMenu'; // Importa el componente
-import { useSelector, useDispatch } from 'react-redux';
-import { clearUser } from '../../slices/userSlice';
-import { RootState } from "../../store/store"; // Asegúrate de importar el tipo correcto
+
+"use client"
+
+import Image from "next/image";
+import Link from "next/link";
+import NotificationMenu from "./NotificationsMenu"; // Importa el componente
+//import { useEffect } from "react";
+//import { useDispatch, useSelector } from "react-redux";
+//import { setUser, clearUser } from "../../slices/userSlice";
+
+
 export default function Header() {
   const dispatch = useDispatch();
   const { username, isLoggedIn } = useSelector((state: RootState) => state.user);
