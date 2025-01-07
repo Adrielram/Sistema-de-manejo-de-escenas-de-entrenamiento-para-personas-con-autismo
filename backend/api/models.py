@@ -16,6 +16,7 @@ class Escena(models.Model):
     idioma = models.CharField(max_length=255)
     complejidad = models.IntegerField()
     link = models.CharField(max_length=2000)
+    nombre = models.CharField(max_length=255, default="Sin Nombre")
 
     class Meta: 
         db_table = 'escena'
@@ -109,18 +110,17 @@ class Grupo(models.Model):
     class Meta:
         db_table = 'grupo'
 
-
 class Objetivo(models.Model):
-    id = models.IntegerField(primary_key=True)
+    # Elimina la línea del id manual o cámbiala por:
+    id = models.AutoField(primary_key=True)  # Aunque esto es implícito en Django y no es necesario declararlo
     titulo = models.CharField(max_length=255)
     descripcion = models.CharField(max_length=255)
     escena = models.ForeignKey(Escena, on_delete=models.PROTECT)
-    resultado_tera = models.TextField(blank=True, null=True)
 
     class Meta:   
         db_table = 'objetivo'
 
-
+        
 class Objetivoscumplir(models.Model):
     objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE)
     objetivo_previo = models.ForeignKey(
@@ -167,7 +167,6 @@ class Residencia(models.Model):
     class Meta:  
         db_table = 'residencia'
 
-
 class Terapeutagrupo(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE)
@@ -204,6 +203,8 @@ class User(AbstractUser):
         db_table = 'user'
 
 
+
+
 class Videosvistos(models.Model):
     escena = models.ForeignKey(
         Escenavideo,
@@ -230,3 +231,34 @@ class Videosvistos(models.Model):
     class Meta:     
         db_table = 'videosVistos'
         unique_together = (('escena', 'personaobjetivo_user', 'personaobjetivo_objetivo'),)
+
+class Notificacion(models.Model):
+    # Usuario destinatario (admin o terapeuta)
+    destinatario = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='notificaciones_recibidas'
+    )
+    # Usuario que envía la notificación
+    remitente = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='notificaciones_enviadas'
+    )
+    # Mensaje de la notificación
+    mensaje = models.TextField()
+    # Estado de la notificación
+    estado = models.CharField(
+        max_length=50, 
+        choices=[
+            ('pendiente', 'Pendiente'),
+            ('leida', 'Leída'),
+            ('eliminada', 'Eliminada'),
+        ],
+        default='pendiente'
+    )
+    # Marca de tiempo
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"De {self.remitente} a {self.destinatario} - {self.estado}"
