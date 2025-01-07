@@ -5,8 +5,8 @@ import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { SIDENAV_ITEMS } from '@/constants';
-import { SideNavItem } from '@/types';
+import { SIDENAV_ITEMS } from '../constants';
+import { SideNavItem } from '../types';
 //import { Icon } from '@iconify/react';
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { motion, SVGMotionProps, useCycle } from 'framer-motion';
