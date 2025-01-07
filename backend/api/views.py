@@ -8,6 +8,10 @@ from .models import *
 from .serializers import *
 from rest_framework.views import APIView
 from rest_framework import status
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework import viewsets, status
+
+import json
 
 def example_view(request):
     return JsonResponse({'message': 'Hello, world!'})
@@ -75,3 +79,24 @@ class PacienteListView(APIView):
 
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ObjetivoViewSet(viewsets.ViewSet):
+    def create(self, request):
+        try:
+            data = {
+                'titulo': request.data.get('titulo'),
+                'descripcion': request.data.get('descripcion'),
+                'escena': request.data.get('escenaId')  # Nota que aquí usamos 'escena' en lugar de 'escenaId'
+            }
+
+            serializer = ObjetivoSerializer(data=data)
+            if serializer.is_valid():
+                objetivo = serializer.save()
+                return Response({
+                    'message': 'Objetivo creado con éxito',
+                    'objetivo': serializer.data
+                }, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

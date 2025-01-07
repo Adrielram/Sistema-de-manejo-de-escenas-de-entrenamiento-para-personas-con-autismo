@@ -16,7 +16,7 @@ class Escena(models.Model):
     idioma = models.CharField(max_length=255)
     complejidad = models.IntegerField()
     link = models.CharField(max_length=2000)
-    nombre = models.CharField(max_length=255)
+    nombre = models.CharField(max_length=255, default="Sin Nombre")
 
     class Meta: 
         db_table = 'escena'
@@ -110,9 +110,9 @@ class Grupo(models.Model):
     class Meta:
         db_table = 'grupo'
 
-
 class Objetivo(models.Model):
-    id = models.IntegerField(primary_key=True)
+    # Elimina la línea del id manual o cámbiala por:
+    id = models.AutoField(primary_key=True)  # Aunque esto es implícito en Django y no es necesario declararlo
     titulo = models.CharField(max_length=255)
     descripcion = models.CharField(max_length=255)
     escena = models.ForeignKey(Escena, on_delete=models.PROTECT)
@@ -120,7 +120,7 @@ class Objetivo(models.Model):
     class Meta:   
         db_table = 'objetivo'
 
-
+        
 class Objetivoscumplir(models.Model):
     objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE)
     objetivo_previo = models.ForeignKey(
