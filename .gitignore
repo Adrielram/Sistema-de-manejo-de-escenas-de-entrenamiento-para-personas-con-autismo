@@ -1,5 +1,4 @@
 venv/
 frontend/frontapp/node_modules/
 __pycache__/
-.env
 .vscode/
