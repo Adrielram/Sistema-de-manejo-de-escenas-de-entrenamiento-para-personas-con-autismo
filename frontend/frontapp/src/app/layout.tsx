@@ -32,17 +32,16 @@ export default function RootLayout({
         {/* ReduxProvider debe envolver todos los componentes que usan Redux */}
         <ReduxProvider>
         <Header /> {/* Asegúrate de que esté fuera del contenedor flex */}
-        <div className="flex pt-[47px]">
-          <SideNav />
-          <main className="flex-1 mt-14">
-            <MarginWidthWrapper>
-              <HeaderMobile />
-              <PageWrapper>{children}</PageWrapper>
-            </MarginWidthWrapper>
-            </ReduxProvider>
-          </main>
-        </div>
-
+          <div className="flex pt-[47px]">
+            <SideNav />
+            <main className="flex-1 mt-14">
+              <MarginWidthWrapper>
+                <HeaderMobile />
+                <PageWrapper>{children}</PageWrapper>
+              </MarginWidthWrapper>
+            </main>
+          </div>
+        </ReduxProvider>
         <Footer />
       </body>
     </html>
