@@ -4,7 +4,6 @@ import { Inter } from 'next/font/google';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "./globals.css";
-import SideNav from "../components/SideNav";
 import MarginWidthWrapper from "../components/MarginWidthWrapper";
 import HeaderMobile from "../components/MobileHeader";
 import PageWrapper from "../components/PageWrapper";
@@ -28,7 +27,6 @@ export default function RootLayout({
       <body className={`min-h-screen bg-white ${inter.className}`}>
         <Header /> {/* Asegúrate de que esté fuera del contenedor flex */}
         <div className="flex pt-[47px]">
-          <SideNav />
           <main className="flex-1 mt-14">
             <MarginWidthWrapper>
               <HeaderMobile />
