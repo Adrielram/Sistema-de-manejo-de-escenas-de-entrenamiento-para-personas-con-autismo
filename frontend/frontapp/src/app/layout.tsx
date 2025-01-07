@@ -48,25 +48,3 @@ export default function RootLayout({
   );
 }
 
-// export default function RootLayout({
-//   children,
-// }: {
-//   children: React.ReactNode;
-// }){
-//   return (
-//     <html lang="en">
-//       <body className={`bg-white ${inter.className}`}>
-//         <div className="flex">
-//           <SideNav />
-//           <main className="flex-1">
-//             <MarginWidthWrapper>
-//               <MenuHeader /> {/*aca va el header real*/}
-//               <HeaderMobile />
-//               <PageWrapper>{children}</PageWrapper>
-//             </MarginWidthWrapper>
-//           </main>
-//         </div>
-//       </body>
-//     </html>
-//   );
-// }
