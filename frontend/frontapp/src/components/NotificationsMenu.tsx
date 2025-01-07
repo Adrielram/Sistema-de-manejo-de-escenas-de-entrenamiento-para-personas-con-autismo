@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 
 export default function NotificationsMenu() {
@@ -6,14 +7,15 @@ export default function NotificationsMenu() {
 
   // Simulación de notificaciones
   const notifications: { id: number; message: string }[] = [
-    { id: 1, message: "Notificación 1" }
+    { id: 1, message: "Notificación 1" },
+    { id: 2, message: "Notificación 2" },
+    { id: 3, message: "Notificación 3" }
 
   ];
 
   // Funciones de manejo de botones
   const handleAccept = (id: number) => {
     console.log(`Notificación ${id} aceptada`);
-    // Aquí puedes agregar la lógica para aceptar la notificación
   };
 
   const handleReject = (id: number) => {
@@ -21,10 +23,6 @@ export default function NotificationsMenu() {
     // Aquí puedes agregar la lógica para rechazar la notificación
   };
 
-  const handleReadMore = (id: number) => {
-    console.log(`Leyendo más sobre la notificación ${id}`);
-    // Aquí puedes agregar la lógica para ver más detalles de la notificación
-  };
 
   return (
     <div className="relative">
@@ -116,24 +114,28 @@ export default function NotificationsMenu() {
 
                     {/* Botón de Leer más */}
                     <button
-                      onClick={() => handleReadMore(notification.id)}
                       className="text-blue-500 hover:text-blue-700"
                       aria-label={`Leer más de la notificación ${notification.id}`}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                      <Link 
+                        href={`/notification/${notification.id}`} 
+                        className="flex items-center"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M15 12H9m0 0l3-3m-3 3l3 3"
-                        />
-                      </svg>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M15 12H9m0 0l3-3m-3 3l3 3"
+                          />
+                        </svg>
+                      </Link>
                     </button>
                   </div>
                 </li>
