@@ -1,7 +1,6 @@
 "use client"
 
 import Image from "next/image";
-import Link from "next/link";
 import NotificationMenu from "./NotificationsMenu"; // Importa el componente
 //import { useEffect } from "react";
 //import { useDispatch, useSelector } from "react-redux";
@@ -26,22 +25,7 @@ export default function Header() {
       </div>
 
       {/* Action Buttons (Right-aligned) */}
-      <div className="flex items-center space-x-2 sm:space-x-4">
-        <Link
-          href="/auth/login"
-          className="rounded border-2 border-black bg-white px-2 py-1 text-xs font-bold text-black transition duration-100 hover:bg-green-500 hover:text-black sm:px-3 sm:py-1 sm:text-base"
-          aria-label="Log in to your account"
-        >
-          Log In
-        </Link>
-        <Link
-          href="/register"
-          className="rounded border-2 border-black bg-black px-2 py-1 text-xs font-bold text-white transition duration-100 hover:bg-[#44eefa] hover:text-black sm:px-3 sm:py-1 sm:text-base"
-          aria-label="Register a new account"
-        >
-          Register
-        </Link>
-
+      <div className="flex items-center space-x-2 sm:space-x-4 mr-10 md:mr-0">
         {/* Menú de notificaciones */}
         <NotificationMenu />
       </div>
