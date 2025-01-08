@@ -35,7 +35,6 @@ const MenuItem = ({ item, depth, admin }: { item: SideNavItem; depth: number; ad
   };
 
   const fontSizeClass = depth === 0 ? 'text-lg' : depth === 1 ? 'text-base' : 'text-sm';
-  {console.log("Admin:", admin)}
   return (
     <div>
       {item.submenu ? (
