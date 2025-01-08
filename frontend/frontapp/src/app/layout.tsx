@@ -4,11 +4,11 @@ import { Inter } from 'next/font/google';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "./globals.css";
-import SideNav from "@/components/SideNav";
-import MarginWidthWrapper from "@/components/MarginWidthWrapper";
-import MenuHeader from "@/components/MenuHeader";
-import HeaderMobile from "@/components/MobileHeader";
-import PageWrapper from "@/components/PageWrapper";
+import MarginWidthWrapper from "../components/MarginWidthWrapper";
+//import MenuHeader from "../components/MenuHeader";
+import HeaderMobile from "../components/MobileHeader";
+import PageWrapper from "../components/PageWrapper";
+import SideNav from "../components/SideNav";
 
 
 const inter = Inter({ subsets: ['latin'] });
