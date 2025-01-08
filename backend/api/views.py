@@ -20,6 +20,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Agregar campos personalizados al payload del token
         token['username'] = user.username  # Incluye el nombre del usuario
         return token
+        
     def validate(self, attrs):
         data = super().validate(attrs)
         # Agrega el username al response data
@@ -31,7 +32,7 @@ def example_view(request):
 
 @api_view(['POST'])
 def login(request):
-    serializer = TokenObtainPairSerializer(data=request.data)
+    serializer = CustomTokenObtainPairSerializer(data=request.data)
     if serializer.is_valid():
         response = Response({
             "message": "Login successful",

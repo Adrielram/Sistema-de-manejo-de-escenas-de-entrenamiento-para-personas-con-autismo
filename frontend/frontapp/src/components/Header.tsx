@@ -1,16 +1,40 @@
-// components/Header.tsx
-'use client'; // Necesario para usar hooks de Redux
+
+'use client'; 
 import Image from 'next/image';
 import Link from 'next/link';
-import NotificationMenu from './NotificacionsMenu'; // Importa el componente
+import NotificationMenu from './NotificationsMenu'; // Importa el componente
 import { useSelector, useDispatch } from 'react-redux';
 import { clearUser } from '../../slices/userSlice';
 import { RootState } from "../../store/store"; // Asegúrate de importar el tipo correcto
+import {useRouter} from 'next/navigation';
+
 export default function Header() {
   const dispatch = useDispatch();
+  const router = useRouter();
   const { username, isLoggedIn } = useSelector((state: RootState) => state.user);
-  const handleLogout = () => {
-    dispatch(clearUser()); // Limpia el estado global
+  const handleLogout = async () => {
+    try {
+      // Llama a la API del backend para el logout
+      const response = await fetch('http://localhost:8000/api/logout/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username: username }),
+        credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+      });
+
+      if (response.ok) {
+        // Limpia el estado global del Redux
+        dispatch(clearUser());
+        // Redirige al usuario a la página de inicio de sesión
+        router.push('/auth/login');
+      } else {
+        console.error('Error al cerrar sesión:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
   };
 
   return (

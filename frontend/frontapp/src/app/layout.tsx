@@ -39,10 +39,10 @@ export default function RootLayout({
               <HeaderMobile />
               <PageWrapper>{children}</PageWrapper>
             </MarginWidthWrapper>
-            </ReduxProvider>
           </main>
-        </div>
 
+        </div>
+        </ReduxProvider>
         <Footer />
       </body>
     </html>
