@@ -1,4 +1,4 @@
-// pages/auth/login.js
+
 import LoginForm from '../../../components/forms/LoginForm';
 import Image from 'next/image';
 
@@ -22,7 +22,7 @@ export default function LoginPage() {
               width={120} 
               height={120} 
               className="rounded-full"
-            />
+            /> 
           </div>
         </div>
         <LoginForm />
