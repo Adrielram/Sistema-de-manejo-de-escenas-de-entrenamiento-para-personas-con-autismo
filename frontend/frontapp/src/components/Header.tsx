@@ -11,6 +11,10 @@ import {useRouter} from 'next/navigation';
 export default function Header() {
   const dispatch = useDispatch();
   const router = useRouter();
+  const SignIn = async () => {
+    
+
+  }
   const { username, isLoggedIn } = useSelector((state: RootState) => state.user);
   const handleLogout = async () => {
     try {
@@ -77,7 +81,7 @@ export default function Header() {
               Log In
             </Link>
             <Link
-              href="/register"
+              href="/auth/register"
               className="rounded border-2 border-black bg-black px-2 py-1 text-xs font-bold text-white transition duration-100 hover:bg-[#44eefa] hover:text-black sm:px-3 sm:py-1 sm:text-base"
               aria-label="Register a new account"
             >
