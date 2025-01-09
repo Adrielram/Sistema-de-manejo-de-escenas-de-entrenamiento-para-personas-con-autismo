@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { Inter } from 'next/font/google';
 // import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import PageWrapper from "../components/PageWrapper";
 
 // Asegúrate de importar ReduxProvider desde la ruta correcta
 import ReduxProvider from "../../store/provider";
@@ -25,9 +24,7 @@ export default function RootLayout({
       <body className={`min-h-screen bg-white ${inter.className}`}>
         <ReduxProvider>
         <div className="flex pt-[47px]">
-          <main className="flex-1 mt-14">
-              <PageWrapper>{children}</PageWrapper>
-          </main>
+        <main className = "mt-14">{children}</main>
         </div>
         </ReduxProvider>
       </body>
