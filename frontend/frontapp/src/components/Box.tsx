@@ -2,6 +2,7 @@
 import React from 'react';
 //import ReactDOM from 'react-dom';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 // Ruta de las imágenes
 //import photo from '../../public/icon/persona_silueta.png'; // Tu imagen de la silueta
@@ -38,10 +39,13 @@ type BoxProps = {
   elem: datosProps;
   opciones: OpcionesProps;
   img: string;
+  edit_path?: string;
 };
 
 
-const Box = ({elem , opciones, img}:BoxProps) => {
+const Box = ({elem , opciones, img, edit_path}:BoxProps) => {
+  const router = useRouter();
+
   const handleDelete = () => {
     alert('Eliminar persona');
   };
@@ -55,7 +59,7 @@ const Box = ({elem , opciones, img}:BoxProps) => {
   };
 
   const handleEdit = () => {
-    alert(`Editar a ${elem.name}`);
+    router.push(edit_path);
   };
 
   const handleSeguimiento = () => {
@@ -71,7 +75,7 @@ const Box = ({elem , opciones, img}:BoxProps) => {
   };  
   
   return (
-    <div className="bg-white p-2 sm:p-3 rounded-lg shadow-lg flex flex-col items-center justify-center space-y-1 border-2 border-gray-400 w-full max-w-xs sm:w-[200px] h-auto sm:h-[300px] text-sm sm:text-base mt-5">
+    <div className="bg-white p-2 sm:p-5 rounded-lg shadow-lg flex flex-col items-center justify-center space-y-1 border-2 border-gray-400 w-full max-w-xs sm:w-[200px] h-auto sm:h-[300px] text-sm sm:text-base mt-5">
       {/* Imagen de la persona */}
       <div className="flex items-center justify-center h-[100px]">
         <Image 
@@ -109,7 +113,7 @@ const Box = ({elem , opciones, img}:BoxProps) => {
         {opciones.buttonVer && (
           <button
             onClick={handleVer}
-            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-bold"
+            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
           >
             Ver
           </button>
@@ -117,7 +121,7 @@ const Box = ({elem , opciones, img}:BoxProps) => {
         {opciones.buttonEdit && (
           <button
           onClick={handleEdit}
-          className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-bold"
+          className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
           >
             EDITAR
           </button>
@@ -125,7 +129,7 @@ const Box = ({elem , opciones, img}:BoxProps) => {
         {opciones.buttonSeguimiento && (
           <button
           onClick={handleSeguimiento}
-          className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-bold"
+          className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
           >
             Seguimiento
           </button>
@@ -133,7 +137,7 @@ const Box = ({elem , opciones, img}:BoxProps) => {
         {opciones.buttonComments && (
           <button
             onClick={handleComments}
-            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-bold"
+            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
           >
             Comentarios
           </button>

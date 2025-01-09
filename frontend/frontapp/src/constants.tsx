@@ -23,7 +23,7 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
             subMenuItems: [
                 { 
                     title: 'Agregar Objetivo', 
-                    path: '/therapist/goals/add-goal' ,
+                    path: '/therapist/goals/add_goal' ,
                     icon: <IoIosAdd />,
                 },
             ],
@@ -49,25 +49,25 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
             subMenuItems: [
               { 
                 title: 'Agregar Evaluación', 
-                path: '/therapist/assesments/add-assesment',
+                path: '/therapist/assesments/add_assesment',
                 icon: <IoIosAdd />, 
               },
             ],
         },
         {
             title: 'Grupo de Pacientes',
-            path: '/therapist/group-of-patients',
+            path: '/therapist/group_of_patients',
             icon: <BsPeopleFill />,
             submenu: true,
             subMenuItems: [
               { 
                 title: 'Agregar Grupo', 
-                path: '/therapist/group-of-patients/add-group',
+                path: '/therapist/group_of_patients/add_group',
                 icon: <IoIosAdd />, 
               },
               { 
                 title: 'Agregar Paciente', 
-                path: '/therapist/group-of-patients/add-patient',
+                path: '/therapist/group_of_patients/add_patient',
                 icon: <IoIosAdd />, 
               },
             ],
