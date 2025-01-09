@@ -111,28 +111,41 @@ class Grupo(models.Model):
         db_table = 'grupo'
 
 class Objetivo(models.Model):
-    # Elimina la línea del id manual o cámbiala por:
-    id = models.AutoField(primary_key=True)  # Aunque esto es implícito en Django y no es necesario declararlo
+    id = models.AutoField(primary_key=True)  # Esto ya es implícito, pero lo dejo explícito para mayor claridad
     titulo = models.CharField(max_length=255)
     descripcion = models.CharField(max_length=255)
-    escena = models.ForeignKey(Escena, on_delete=models.PROTECT)
+    escena = models.ManyToManyField(Escena, related_name='objetivos', blank=True)  # Permite múltiples escenas clickeadas
+    subobjetivos = models.ManyToManyField(
+        'self', 
+        through='Objetivoscumplir', 
+        symmetrical=False, 
+        related_name='subobjetivos_de',
+        blank=True
+    )  # Relación con otros objetivos como sub-objetivos
+    link_video = models.URLField(max_length=2000, blank=True, null=True)  # Campo para guardar el link al video
 
-    class Meta:   
+    class Meta:
         db_table = 'objetivo'
 
-        
+
 class Objetivoscumplir(models.Model):
-    objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE)
+    objetivo = models.ForeignKey(
+        Objetivo, 
+        on_delete=models.CASCADE, 
+        related_name='cumplimientos'
+    )
     objetivo_previo = models.ForeignKey(
-        Objetivo,
+        Objetivo, 
         on_delete=models.CASCADE,
         db_column='objetivo_previo',
-        related_name='objetivoscumplir_objetivo_previo_set'
+        related_name='requisitos'
     )
+    orden = models.IntegerField(blank=True, null=True)  # Permite especificar el orden de los sub-objetivos
 
     class Meta:
         db_table = 'objetivosCumplir'
-        unique_together = (('objetivo', 'objetivo_previo'),)  
+        unique_together = (('objetivo', 'objetivo_previo'),)
+
 
 
 

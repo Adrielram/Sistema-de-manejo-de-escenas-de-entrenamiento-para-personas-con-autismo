@@ -23,6 +23,12 @@
       }
     ]
   },
+  "baseUrl": ".", // Define la raíz del proyecto
+    "paths": {
+      "@/components/*": ["src/components/*"],
+      "@/pages/*": ["src/pages/*"],
+      "@/app/*": ["src/app/*"]
+  },
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",

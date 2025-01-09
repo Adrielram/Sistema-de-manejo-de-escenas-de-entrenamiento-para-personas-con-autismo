@@ -28,6 +28,10 @@ export default {
         body: ["Roboto", "Open Sans", "sans-serif"], // Para contenido general
       },
     },
+    screen:{
+      customLg: '850px', // Nuevo breakpoint que se activa cuando queda menos espacio
+
+    }
   },
   plugins: [],
 } satisfies Config;
