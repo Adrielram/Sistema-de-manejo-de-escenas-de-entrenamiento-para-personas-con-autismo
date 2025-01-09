@@ -33,7 +33,7 @@ export default function RootLayout({
         <ReduxProvider>
         <Header /> {/* Asegúrate de que esté fuera del contenedor flex */}
         <div className="flex pt-[47px]">
-          <SideNav />
+          
           <main className="flex-1 mt-14">
             <MarginWidthWrapper>
               <HeaderMobile />

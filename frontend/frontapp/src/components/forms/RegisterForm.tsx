@@ -3,16 +3,16 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-
+import { useRouter } from 'next/navigation';
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
+    dni: '',
     nombre: '',
     fechaNacimiento: '',
     genero: '',
     rol: '',
     contrasena: '',
     repetirContrasena: '',
-    pais: '',
     provincia: '',
     ciudad: '',
     calle: '',
@@ -22,7 +22,7 @@ export default function RegisterForm() {
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-
+  const router = useRouter();
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
@@ -30,19 +30,48 @@ export default function RegisterForm() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess(false);
-
+    
     if (formData.contrasena !== formData.repetirContrasena) {
       setError('Las contraseñas no coinciden');
       return;
     }
 
-    // Aquí se hará el fetch al backend
-    console.log('Datos enviados:', formData);
-    setSuccess(true);
+    try {
+      const response = await fetch('http://localhost:8000/api/signIn/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dni: formData.dni,
+          nombre: formData.nombre,
+          fecha_nac: formData.fechaNacimiento,
+          genero: formData.genero,
+          role: formData.rol.toLowerCase(),
+          provincia: formData.provincia,
+          ciudad: formData.ciudad,
+          calle: formData.calle,
+          numero: formData.numero,
+          id_padre: formData.asociarPadre || null,
+          password: formData.contrasena,
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al registrar el usuario');
+      }
+  
+      setSuccess(true);
+      router.push('/auth/login');
+      console.log('Usuario registrado exitosamente');
+    } catch (err) {
+      setError((err as Error).message);
+    }
   };
 
   return (
@@ -50,6 +79,19 @@ export default function RegisterForm() {
       <h1 className="text-center text-2xl font-bold text-black">Registrarse</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* DNI */}
+        <div>
+          <label className="block text-black">DNI</label>
+          <input
+            type="text"
+            name="dni"
+            value={formData.dni}
+            onChange={handleInputChange}
+            className="w-full border text-black border-black rounded px-2 py-1"
+            required
+          />
+        </div>
+
         {/* Nombre */}
         <div>
           <label className="block text-black">Nombre</label>
@@ -125,22 +167,9 @@ export default function RegisterForm() {
         <div>
           <label className="block text-black">Repetir Contraseña</label>
           <input
-            type="text"
+            type="password"
             name="repetirContrasena"
             value={formData.repetirContrasena}
-            onChange={handleInputChange}
-            className="w-full border text-black border-black rounded px-2 py-1"
-            required
-          />
-        </div>
-
-        {/* País */}
-        <div>
-          <label className="block text-black">País</label>
-          <input
-            type="text"
-            name="pais"
-            value={formData.pais}
             onChange={handleInputChange}
             className="w-full border text-black border-black rounded px-2 py-1"
             required
