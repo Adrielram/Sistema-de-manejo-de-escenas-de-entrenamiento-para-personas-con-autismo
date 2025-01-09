@@ -1,56 +1,41 @@
 "use client";
 
-import React from 'react';
-import Image from 'next/image';
-import iconoBusqueda from '../../public/icon/icono_busqueda.png';
+import React, { useRef } from "react";
+import Image from "next/image";
+import iconoBusqueda from "../../public/icon/icono_busqueda.png";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onSearch(event.target.value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleSearchClick = () => {
+    if (inputRef.current) {
+      const query = inputRef.current.value;
+      onSearch(query);
+    }
   };
 
   return (
-    <div style={styles.container}>
-      <input 
-        type="text" 
-        placeholder="Buscar" 
-        style={styles.input} 
-        onChange={handleInputChange} 
+    <div className="flex items-center border border-gray-300 rounded-lg p-2 w-72 bg-white">
+      <input
+        type="text"
+        placeholder="Buscar"
+        ref={inputRef}
+        className="flex-1 border-none outline-none text-lg text-black"
       />
-      <Image 
-        src={iconoBusqueda} 
-        alt="Ícono de búsqueda" 
-        width={30} 
-        height={30} 
-        style={styles.icon} 
+      <Image
+        src={iconoBusqueda}
+        alt="Ícono de búsqueda"
+        width={30}
+        height={30}
+        className="ml-2 cursor-pointer"
+        onClick={handleSearchClick}
       />
     </div>
   );
-};
-
-const styles = {
-  container: {
-    display: 'flex',
-    alignItems: 'center',
-    border: '1px solid #ccc',
-    borderRadius: '8px',
-    padding: '8px',
-    width: '300px',
-    backgroundColor: 'white', // Fondo blanco
-  },
-  input: {
-    flex: 1,
-    border: 'none',
-    outline: 'none',
-    fontSize: '16px',
-  },
-  icon: {
-    marginLeft: '8px',
-  },
 };
 
 export default SearchBar;

@@ -35,7 +35,8 @@ const MenuItem = ({ item, depth, admin }: { item: SideNavItem; depth: number; ad
   };
 
   const fontSizeClass = depth === 0 ? 'text-lg' : depth === 1 ? 'text-base' : 'text-sm';
-  {console.log("Admin:", admin)}
+
+  const isActive = pathname.startsWith(item.path);
   return (
     <div>
       {item.submenu ? (
@@ -43,7 +44,7 @@ const MenuItem = ({ item, depth, admin }: { item: SideNavItem; depth: number; ad
           <Link
             href={item.path}
             className={`flex flex-row items-center p-2 rounded-lg hover:bg-zinc-100 w-full justify-between text-black ${
-              pathname.includes(item.path) ? 'bg-[#3EA5E9] text-white hover:bg-[#3EA5FF]' : ''
+              isActive ? 'bg-[#3EA5E9] text-white hover:bg-[#3EA5FF]' : ''
             } ${fontSizeClass}`}
           >
             <div className="flex flex-row space-x-4 items-center">
@@ -72,7 +73,7 @@ const MenuItem = ({ item, depth, admin }: { item: SideNavItem; depth: number; ad
         <Link
           href={item.path}
           className={`flex flex-row space-x-4 items-center p-2 rounded-lg hover:bg-zinc-200 ${
-            item.path === pathname ? 'bg-[#3EA5E9] text-white hover:bg-[#3EA5FF]' : ''
+            isActive ? 'bg-[#3EA5E9] text-white hover:bg-[#3EA5FF]' : ''
           } ${fontSizeClass}`}
         >
           {item.icon && React.cloneElement(item.icon, { size: 20 })}          

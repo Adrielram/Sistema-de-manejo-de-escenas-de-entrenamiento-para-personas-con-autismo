@@ -9,7 +9,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       <SideNav list={SIDENAV_ITEMS_ADMIN} admin={true} />
       
       {/* Main content */}
-      <div className="flex-1 p-10">
+      <div className="flex-1 px-10 pt-5">
         {children}
       </div>
     </div>

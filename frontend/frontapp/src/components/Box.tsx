@@ -2,6 +2,7 @@
 import React from 'react';
 //import ReactDOM from 'react-dom';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 // Ruta de las imágenes
 //import photo from '../../public/icon/persona_silueta.png'; // Tu imagen de la silueta
@@ -27,77 +28,93 @@ type OpcionesProps = {
   buttonSeguimiento?: boolean; // Muestra botón de "Seguimiento"
 };
 
-type pacienteProps = {
+type datosProps = {
   id: number;
   nombre: string;
-  dni: string;
-  padreACargo: string;
+  dni?: string;
+  padreACargo?: string;
 }
 
-type BoxPacienteProps = {
-  paciente: pacienteProps;
+type BoxProps = {
+  elem: datosProps;
   opciones: OpcionesProps;
+  img: string;
 };
 
 
-const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
+const Box = ({elem , opciones, img}:BoxProps) => {
+  const router = useRouter();
   const handleDelete = () => {
     alert('Eliminar persona');
   };
 
   const handleVer = () => {
-    alert(`Ver detalles de ${paciente.nombre}`);
+    alert(`Ver detalles de ${elem.nombre}`);
   };
 
-  const handleComments = () => {
-    alert(`Ver comentarios de ${paciente.nombre}`);
+  const handleComments = async () => {
+    if (!elem?.id) {      
+      return;
+    }
+    router.push(`/admin/patients/${elem.id}`);
   };
 
   const handleEdit = () => {
-    alert(`Editar a ${paciente.nombre}`);
+    alert(`Editar a ${elem.nombre}`);
   };
 
   const handleSeguimiento = () => {
-    alert(`Ver seguimiento de ${paciente.nombre}`);
+    alert(`Ver seguimiento de ${elem.nombre}`);
   };
 
 
 
-  const datosPaciente = {
-    nombre: paciente.nombre || "Sin asignar",
-    dni: paciente.dni || "Sin asignar",
-    padreACargo: paciente.padreACargo || "Sin asignar"
-  };
+  const elemento = {
+    nombre: elem.nombre || "Sin asignar",
+    dni: elem.dni || "Sin asignar",
+    padreACargo: elem.padreACargo || "Sin asignar"
+  };  
   
   return (
-    <div className="bg-white p-2 sm:p-3 rounded-lg shadow-lg flex flex-col items-center justify-center space-y-1 border-2 border-gray-400 w-full max-w-xs sm:w-[200px] h-auto sm:h-[300px] text-sm sm:text-base">
+    <div className="bg-white p-2 sm:p-3 rounded-lg shadow-lg flex flex-col items-center justify-center space-y-1 border-2 border-gray-400 w-full max-w-xs sm:w-[200px] h-auto sm:h-[300px] text-sm sm:text-base mt-5">
       {/* Imagen de la persona */}
-      <div className="flex items-center justify-center space-x-2">
+      <div className="flex items-center justify-center h-[100px]">
         <Image 
-          width={80}  // Ajustamos el tamaño de la imagen
-          height={80}  // Ajustamos el tamaño de la imagen
-          src="/icon/persona_silueta.png"
+          width={80}
+          height={80}
+          src={img}
           alt="Silueta de persona"
-          className="w-20 h-20"  // Ajustamos la clase de tamaño
+          className="w-20 h-20"
         />
       </div>
-<p className="text-sm sm:text-base font-medium text-black text-center">{datosPaciente.nombre}</p>
-{/* Información personal */}
-{opciones.personalInfo && (
-        <>
-          <p className="text-sm sm:text-base font-medium text-black text-center">{datosPaciente.dni}</p>
-          <p className="text-sm sm:text-base font-medium text-black text-center">
-            Padre a cargo: {datosPaciente.padreACargo}
-          </p>
-        </>
-      )}
+
+      {/* Contenedor de información */}
+      <div className="flex flex-col items-center justify-center space-y-2 w-full h-[120px]"> 
+        <p className="text-sm sm:text-base font-medium text-black text-center">
+          {elemento.nombre}
+        </p>
+
+        {/* Información personal */}
+        {opciones.personalInfo && (
+          <>
+            <p className="text-xs sm:text-xs text-black text-center">
+              {elemento.dni}
+            </p>
+            {elemento.padreACargo !== "Sin asignar" && (
+              <p className="text-xs sm:text-xs text-black text-center break-words px-2">
+                Padre a cargo: {elemento.padreACargo}
+              </p>
+            )}
+          </>
+        )}
+      </div>
 
       {/* Botones y acciones */}
-      <div className="flex flex-wrap justify-center w-full space-x-2 mt-2">
+      <div className="flex flex-wrap justify-center w-full space-x-2 pb-6">
         {opciones.buttonVer && (
           <button
             onClick={handleVer}
-            className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 text-sm"
+            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-bold"
           >
             Ver
           </button>
@@ -105,28 +122,28 @@ const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
         {opciones.buttonEdit && (
           <button
           onClick={handleEdit}
-          className="bg-primary text-white px-2 py-1 rounded hover:bg-primary-dark text-sm"
+          className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-bold"
           >
-            Editar
+            EDITAR
           </button>
         )}
         {opciones.buttonSeguimiento && (
           <button
           onClick={handleSeguimiento}
-          className="bg-primary text-white px-2 py-1 rounded hover:bg-primary-dark text-sm"
+          className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-bold"
           >
             Seguimiento
           </button>
         )}
-      </div>
         {opciones.buttonComments && (
           <button
             onClick={handleComments}
-            className="bg-primary text-white px-2 py-1 rounded hover:bg-primary-dark text-sm"
+            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-bold"
           >
             Comentarios
           </button>
         )}
+      </div>
 
       {/* Icono del tacho de basura */}
       {opciones.trashBin && (
@@ -145,4 +162,4 @@ const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
   );
 };
 
-export default Box_paciente;
+export default Box;
