@@ -25,6 +25,7 @@ services:
       - DATABASE_HOST=db
 
   frontend:
+    user: root # ! borrar
     build:
       context: ./frontend
     container_name: nextjs_container

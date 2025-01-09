@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="mt-auto bg-[#F6512B] text-white py-6">
+    <footer className="mt-auto bottom-0 bg-[#F6512B] text-white py-6 relative z-20">
       <div className=" flex flex-col justify-center text-center md:flex-row md:space-y-0 md:space-x-12 md:items-center">
         {/* Address Section */}
         <div className="flex items-center justify-center ">
