@@ -1,11 +1,14 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from django.http import HttpResponseRedirect
 from .models import *
 from .serializers import *
+from .forms import *
 from rest_framework.views import APIView
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
@@ -100,3 +103,50 @@ class ObjetivoViewSet(viewsets.ViewSet):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+@api_view(['GET'])
+def retrieve_user(request):
+    username = request.query_params.get('username')
+    try:
+        user = User.objects.get(username=username)
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+    
+
+def update_residencia(data):
+    try:
+        residencia = Residencia.objects.get(id_dir=data.get('id_dir'))
+        residencia.provincia = data.get('provincia', residencia.provincia)
+        residencia.ciudad = data.get('ciudad', residencia.ciudad)
+        residencia.calle = data.get('calle', residencia.calle)
+        residencia.numero = data.get('numero', residencia.numero)
+        residencia.save()  # Guarda los cambios en la residencia
+        return residencia
+    except Residencia.DoesNotExist:
+        return None
+
+@api_view(['PUT'])
+def update_user(request, username): 
+    try:
+        user = User.objects.get(username=username)  
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Actualiza los campos del usuario con los datos enviados
+    user.dni = request.data.get('dni', user.dni)
+    user.nombre = request.data.get('nombre', user.nombre)
+    user.fecha_nac = request.data.get('fecha_nac', user.fecha_nac)
+    user.genero = request.data.get('genero', user.genero)
+    user.role = request.data.get('role', user.role)
+
+    # Actualiza los campos de la residencia del usuario
+    residencia = update_residencia(request.data)
+    if residencia is None:
+        return Response({'error': 'Residencia not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    user.save()  # Guarda los cambios en el usuario
+
+    return Response({'message': 'User updated successfully'}, status=status.HTTP_200_OK)
