@@ -5,7 +5,7 @@ import { Inter } from 'next/font/google';
 import "./globals.css";
 
 // Asegúrate de importar ReduxProvider desde la ruta correcta
-import ReduxProvider from "../../store/provider";
+import Provider from "../../store/provider";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,11 +22,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`min-h-screen bg-white ${inter.className}`}>
-        <ReduxProvider>
-        <div className="flex pt-[47px]">
-        <main className = "mt-14">{children}</main>
+        <div>
+          <Provider>
+          <main className = "mt-14">{children}</main>
+          </Provider>
         </div>
-        </ReduxProvider>
       </body>
     </html>
   );
