@@ -15,3 +15,15 @@ class ObjetivoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Objetivo
         fields = ['id', 'titulo', 'descripcion', 'escena']
+
+
+from rest_framework import serializers
+from .models import User
+
+class UserSerializer(serializers.ModelSerializer):
+    nombre_padre = serializers.CharField(source='user_id_padre.nombre', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'user_id_padre', 'nombre_padre']
+

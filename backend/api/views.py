@@ -16,6 +16,42 @@ import json
 def example_view(request):
     return JsonResponse({'message': 'Hello, world!'})
 
+from django_filters import rest_framework as filters
+from .models import User
+
+class PersonFilter(filters.FilterSet):
+    nombre = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
+
+    class Meta:
+        model = User
+        fields = ['nombre']
+
+from rest_framework import generics
+from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
+from .serializers import UserSerializer
+from .models import User
+
+class DynamicPagination(PageNumberPagination):
+    page_size_query_param = "limit"
+    max_page_size = 20
+    page_size = 10
+
+class PacienteListView(generics.ListAPIView):
+    queryset = User.objects.filter(role='paciente')
+    serializer_class = UserSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = PersonFilter
+
+class TerapeutaListView(generics.ListAPIView):
+    queryset = User.objects.filter(role='terapeuta')
+    serializer_class = UserSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = PersonFilter
+
+
 @api_view(['POST'])
 def login(request):
     serializer = TokenObtainPairSerializer(data=request.data)
@@ -64,22 +100,6 @@ def objetivos_list(request):
     objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos
     return JsonResponse(list(objetivos), safe=False)
 
-class PacienteListView(APIView):
-    def get(self, request):
-        query = request.query_params.get('query', '').lower()  # Parámetro de búsqueda
-        pacientes = User.objects.filter(role='paciente')
-
-        if query:
-            pacientes = pacientes.filter(
-                models.Q(nombre__icontains=query) |
-                models.Q(dni__icontains=query) |
-                models.Q(genero__icontains=query) |
-                models.Q(username__icontains=query)  # Filtrar por nombre de usuario
-            ).distinct()  # Evitar duplicados
-
-        serializer = PacienteSerializer(pacientes, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
 class ObjetivoViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
@@ -100,3 +120,5 @@ class ObjetivoViewSet(viewsets.ViewSet):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+

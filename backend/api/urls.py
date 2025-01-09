@@ -17,7 +17,8 @@ urlpatterns = [
     path('logout/', logout, name='logout'),
     path('verify-session/', verify_session, name='verify-session'),
     path('objetivos/', objetivos_list, name='listar_objetivos'),
-    path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
+    path('pacientes/', PacienteListView.as_view(), name='pacientes-list'),
+    path('terapeutas/', TerapeutaListView.as_view(), name='terapeutas-list'),
 ]
 
 urlpatterns += [path('', include(router.urls))]
