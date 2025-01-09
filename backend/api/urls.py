@@ -21,6 +21,7 @@ urlpatterns = [
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
     path('get-user/', retrieve_user, name='retrieve_user'),
     path('update-user/<str:username>/', update_user, name='update_user'),
+    path('signIn/', views.signIn, name='signIn'),
 ]
 
 urlpatterns += [path('', include(router.urls))]

@@ -85,6 +85,7 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
+AUTH_USER_MODEL = 'api.User'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -136,6 +137,8 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Duración del token de refresco
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
+    'USER_ID_FIELD': 'dni',  # Especifica que el campo clave primaria es 'dni'
+    'USER_ID_CLAIM': 'dni',  # Cómo se llamará el campo en el token JWT ESTO SE HIZO PARA QUE ANDE EL SERIALIZER AL MOMENTO DE UTILIZAR COOKIES
 }
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
