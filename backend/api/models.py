@@ -13,12 +13,13 @@ class Centrodesalud(models.Model):
 
 class Escena(models.Model):
     id = models.IntegerField(primary_key=True)
-    idioma = models.CharField(max_length=255)
+    idioma = models.CharField(max_length=40)
+    acento = models.CharField(max_length=40, default="neutro")
     complejidad = models.IntegerField()
     link = models.CharField(max_length=2000)
-    nombre = models.CharField(max_length=255, default="Sin Nombre")
+    nombre = models.CharField(max_length=100, default="Sin Nombre")
 
-    class Meta: 
+    class Meta:
         db_table = 'escena'
 
 
@@ -43,13 +44,22 @@ class Escenavideo(models.Model):
         blank=True,
         null=True
     )
+
+    personaobjetivo_evaluacion = models.ForeignKey(
+        'Personaobjetivo',
+        on_delete=models.SET_NULL,
+        related_name='escenavideo_evaluacion',
+        db_column='personaObjetivo_evaluacion_id',
+        blank=True,
+        null=True
+    )
     
     orden = models.IntegerField(blank=True, null=True)
     es_alternativo = models.BooleanField()
 
     class Meta:
         db_table = 'escenaVideo'
-        unique_together = (('escena', 'personaobjetivo_user', 'personaobjetivo_objetivo'),)
+        unique_together = (('escena', 'personaobjetivo_user', 'personaobjetivo_objetivo', 'personaobjetivo_evaluacion'),)
 
 
 class Comentario(models.Model):
@@ -113,13 +123,20 @@ class Grupo(models.Model):
 class Objetivo(models.Model):
     # Elimina la línea del id manual o cámbiala por:
     id = models.AutoField(primary_key=True)  # Aunque esto es implícito en Django y no es necesario declararlo
-    titulo = models.CharField(max_length=255)
+    nombre = models.CharField(max_length=100, default="Sin Nombre")
     descripcion = models.CharField(max_length=255)
-    escena = models.ForeignKey(Escena, on_delete=models.PROTECT)
+    escena = models.ForeignKey(Escena, on_delete=models.PROTECT, related_name='objetivo_explicativo')
 
     class Meta:   
         db_table = 'objetivo'
 
+class EscenaObjetivo(models.Model):
+    escena = models.ForeignKey('Escena', on_delete=models.CASCADE)
+    objetivo = models.ForeignKey('Objetivo', on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'EscenaObjetivo'
+        unique_together = (('escena', 'objetivo'),)
         
 class Objetivoscumplir(models.Model):
     objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE)
