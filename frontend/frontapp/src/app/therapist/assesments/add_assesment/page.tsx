@@ -1,7 +1,7 @@
 "use client";
 
 import React, {useState}   from 'react'
-const createAssesment: React.FC = () => {
+const CreateAssesment: React.FC = () => {
   const [nombre, setNombre] = useState("");
   const [link, setLink]     = useState("");
 
@@ -64,4 +64,4 @@ const createAssesment: React.FC = () => {
   )
 }
 
-export default createAssesment
+export default CreateAssesment
