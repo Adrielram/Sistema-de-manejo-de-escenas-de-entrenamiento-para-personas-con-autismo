@@ -32,7 +32,7 @@ const PacientePrincipal = () => {
           <div className="flex-shrink-0">
           <button className="flex-shrink-0 focus:outline-none"> 
             <svg
-              className="w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80"
+              className="w-40 h-40 md:w-64 md:h-64 lg:w-80 lg:h-80"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 100 100"
               fill="none"
@@ -42,7 +42,7 @@ const PacientePrincipal = () => {
               
               {/* Ícono de play */}
               <path
-                d="M20 18v64c0 2.4 2.7 3.9 4.8 2.7l56-32c2-1.1 2-4.3 0-5.4l-56-32C22.7 14.1 20 15.6 20 18z"
+                d="M35 25L35 75L75 50L35 25Z"
                 fill="currentColor"
                 className="text-black"
               />
