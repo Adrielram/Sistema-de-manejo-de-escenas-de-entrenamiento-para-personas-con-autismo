@@ -9,7 +9,7 @@ const HeaderPaciente: React.FC = () => {
 
   const handleLogout = () => {
     console.log("Cerrar sesión");
-    router.push('/auth/login');
+    router.push('../auth/login');
   };
 
   return (
