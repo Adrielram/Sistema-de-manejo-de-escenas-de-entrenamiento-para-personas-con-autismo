@@ -17,7 +17,7 @@ const HeaderPaciente: React.FC = () => {
     <header className="bg-gray-800 fixed top-0 left-0 w-full flex items-center justify-between p-4 text-white shadow-md z-10">
       {/* Imagen clickeable */}
       <div className="flex-grow flex justify-center">
-        <a href="/auth/login"> {/* CAMBIAR AL PROFILE*/}
+        <a href="./perfil"> {/* CAMBIAR AL PROFILE*/}
           <div className="relative w-20 h-20 flex items-center justify-center">
             <div className="absolute inset-0 rounded-full bg-[#F6512B]"></div>
             <Image

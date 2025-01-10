@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`min-h-screen bg-white ${inter.className}`}>
         <ReduxProvider>
-        <div className="flex pt-[47px]">
+        <div className="flex flex-col min-h-screen">
         <main className = "mt-14">{children}</main>
         </div>
         </ReduxProvider>

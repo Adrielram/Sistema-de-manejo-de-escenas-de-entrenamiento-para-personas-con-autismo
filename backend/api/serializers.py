@@ -20,7 +20,7 @@ class ObjetivoSerializer(serializers.ModelSerializer):
 class ResidenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Residencia
-        fields = ['provincia', 'ciudad', 'calle', 'numero']
+        fields = ['id_dir','provincia', 'ciudad', 'calle', 'numero']
 
 class UserSerializer(serializers.ModelSerializer):
     direccion = ResidenciaSerializer(source='direccion_id_dir')

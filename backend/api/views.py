@@ -17,6 +17,7 @@ from datetime import datetime
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.db import transaction
 
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
@@ -101,8 +102,7 @@ class PacienteListView(APIView):
             pacientes = pacientes.filter(
                 models.Q(nombre__icontains=query) |
                 models.Q(dni__icontains=query) |
-                models.Q(genero__icontains=query) |
-                models.Q(username__icontains=query)  # Filtrar por nombre de usuario
+                models.Q(genero__icontains=query)
             ).distinct()  # Evitar duplicados
 
         serializer = PacienteSerializer(pacientes, many=True)
@@ -140,43 +140,109 @@ def retrieve_user(request):
     except User.DoesNotExist:
         return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
     
-
-def update_residencia(data):
-    try:
-        residencia = Residencia.objects.get(id_dir=data.get('id_dir'))
-        residencia.provincia = data.get('provincia', residencia.provincia)
-        residencia.ciudad = data.get('ciudad', residencia.ciudad)
-        residencia.calle = data.get('calle', residencia.calle)
-        residencia.numero = data.get('numero', residencia.numero)
-        residencia.save()  # Guarda los cambios en la residencia
-        return residencia
-    except Residencia.DoesNotExist:
-        return None
-
 @api_view(['PUT'])
-def update_user(request, username): 
+def update_user(request):
     try:
-        user = User.objects.get(username=username)  
-    except User.DoesNotExist:
-        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        # Validar que todos los campos obligatorios estén presentes
+        required_fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'direccion']
 
-    # Actualiza los campos del usuario con los datos enviados
-    user.dni = request.data.get('dni', user.dni)
-    user.nombre = request.data.get('nombre', user.nombre)
-    user.fecha_nac = request.data.get('fecha_nac', user.fecha_nac)
-    user.genero = request.data.get('genero', user.genero)
-    user.role = request.data.get('role', user.role)
+        missing_fields = [field for field in required_fields if field not in request.data]
+        if missing_fields:
+            return Response(
+                {"error": f"Faltan los siguientes campos: {', '.join(missing_fields)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-    # Actualiza los campos de la residencia del usuario
-    residencia = update_residencia(request.data)
-    if residencia is None:
-        return Response({'error': 'Residencia not found'}, status=status.HTTP_404_NOT_FOUND)
+        # Obtener datos de la dirección
+        direccion = request.data.get('direccion', {})
+        id_dir = direccion.get('id_dir')
+        provincia = direccion.get('provincia')
+        ciudad = direccion.get('ciudad')
+        calle = direccion.get('calle')
+        numero = direccion.get('numero')
+        # Obtener datos del request
+        dni = request.data.get('dni')
+        nombre = request.data.get('nombre')
+        fecha_nac = request.data.get('fecha_nac')
+        genero = request.data.get('genero')
+        role = request.data.get('role')
 
-    user.save()  # Guarda los cambios en el usuario
+        # Buscar el usuario por DNI
+        try:
+            user = User.objects.get(username=nombre)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Usuario no encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-    return Response({'message': 'User updated successfully'}, status=status.HTTP_200_OK)
-        
-from django.db import transaction
+        # Validar formato de fecha de nacimiento
+        try:
+            fecha_nac = datetime.strptime(fecha_nac, "%Y-%m-%d")
+        except ValueError:
+            return Response(
+                {"error": "El formato de la fecha de nacimiento debe ser YYYY-MM-DD"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validar género
+        if genero not in ['Masculino', 'Femenino']:
+            return Response(
+                {"error": "El género debe ser 'Masculino' o 'Femenino'"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validar rol
+        if role not in [choice[0] for choice in User.ROLE_CHOICES]:
+            return Response(
+                {"error": f"El rol debe ser uno de los siguientes: {[choice[0] for choice in User.ROLE_CHOICES]}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Actualizar la residencia (dirección) dentro de una transacción
+        with transaction.atomic():
+            # Actualizar la residencia
+            residencia = Residencia.objects.get(id_dir=id_dir)
+            if not residencia:
+                return Response(
+                    {"error": "Residencia asociada no encontrada"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            residencia.provincia = provincia
+            residencia.ciudad = ciudad
+            residencia.calle = calle
+            residencia.numero = numero
+            residencia.save()
+
+            # Actualizar el usuario
+            user.dni = dni
+            user.nombre = nombre
+            user.fecha_nac = fecha_nac
+            user.genero = genero
+            user.save()
+
+        return Response(
+            {"message": "Usuario actualizado exitosamente"},
+            status=status.HTTP_200_OK
+        )
+
+    except IntegrityError as e:
+        return Response(
+            {"error": f"Error de integridad: {str(e)}"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except ValidationError as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except Exception as e:
+        return Response(
+            {"error": f"Error inesperado: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
 
 @api_view(['POST'])
 def signIn(request):

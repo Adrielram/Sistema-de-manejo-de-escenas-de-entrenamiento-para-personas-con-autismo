@@ -5,10 +5,9 @@ import store from "../store/store";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
-      <html lang="en">
-        <head />
-        <body>{children}</body>
-      </html>
+      <>
+        {children}
+      </>
     </Provider>
   );
 }

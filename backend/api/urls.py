@@ -20,7 +20,7 @@ urlpatterns = [
     path('objetivos/', objetivos_list, name='listar_objetivos'),
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
     path('get-user/', retrieve_user, name='retrieve_user'),
-    path('update-user/<str:username>/', update_user, name='update_user'),
+    path('update-user/', update_user, name='update_user'),
     path('signIn/', views.signIn, name='signIn'),
 ]
 
