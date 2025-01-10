@@ -19,6 +19,10 @@ urlpatterns = [
     path('objetivos/', objetivos_list, name='listar_objetivos'),
     path('pacientes/', PacienteListView.as_view(), name='pacientes-list'),
     path('terapeutas/', TerapeutaListView.as_view(), name='terapeutas-list'),
+    path('grupos/', GroupListView.as_view(), name='grupos-list'),
+    path('pacientes/<int:pk>/', PacienteDetailView.as_view(), name='paciente-detail'),
+    path('terapeutas/<int:pk>/', TerapeutaDetailView.as_view(), name='terapeuta-detail'),
+    path('grupos/<int:pk>/', GroupDetailView.as_view(), name='group-detail'),
 ]
 
 urlpatterns += [path('', include(router.urls))]

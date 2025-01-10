@@ -17,13 +17,21 @@ def example_view(request):
     return JsonResponse({'message': 'Hello, world!'})
 
 from django_filters import rest_framework as filters
-from .models import User
+from .models import User, Grupo
 
-class PersonFilter(filters.FilterSet):
+from django_filters import rest_framework as filters
+
+class NameFilter(filters.FilterSet):
     nombre = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
 
+    def __init__(self, *args, **kwargs):
+        model = kwargs.pop('model', None)
+        if model:
+            self._meta.model = model
+        super().__init__(*args, **kwargs)
+
     class Meta:
-        model = User
+        model = None  # Se establece dinámicamente
         fields = ['nombre']
 
 from rest_framework import generics
@@ -35,21 +43,41 @@ from .models import User
 class DynamicPagination(PageNumberPagination):
     page_size_query_param = "limit"
     max_page_size = 20
-    page_size = 10
+    page_size = 4
 
 class PacienteListView(generics.ListAPIView):
     queryset = User.objects.filter(role='paciente')
     serializer_class = UserSerializer
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
-    filterset_class = PersonFilter
+    filterset_class = NameFilter
 
 class TerapeutaListView(generics.ListAPIView):
     queryset = User.objects.filter(role='terapeuta')
     serializer_class = UserSerializer
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
-    filterset_class = PersonFilter
+    filterset_class = NameFilter
+
+class GroupListView(generics.ListAPIView):
+    queryset = Grupo.objects.all()
+    serializer_class = GroupSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+
+class PacienteDetailView(generics.RetrieveDestroyAPIView):
+    queryset = User.objects.filter(role='paciente')
+    serializer_class = UserSerializer
+
+class TerapeutaDetailView(generics.RetrieveDestroyAPIView):
+    queryset = User.objects.filter(role='terapeuta')
+    serializer_class = UserSerializer
+
+class GroupDetailView(generics.RetrieveDestroyAPIView):
+    queryset = Grupo.objects.all()
+    serializer_class = GroupSerializer
+
 
 
 @api_view(['POST'])

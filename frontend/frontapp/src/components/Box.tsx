@@ -3,7 +3,6 @@ import React from 'react';
 //import ReactDOM from 'react-dom';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-
 // Ruta de las imágenes
 //import photo from '../../public/icon/persona_silueta.png'; // Tu imagen de la silueta
 import trashIcon from '../../public/icon/tacho_basura.png'; // Tu ícono de tacho de basura
@@ -33,6 +32,7 @@ type datosProps = {
   nombre: string;
   dni?: string;
   padreACargo?: string;
+  role?: string;
 }
 
 type BoxProps = {
@@ -43,10 +43,44 @@ type BoxProps = {
 
 
 const Box = ({elem , opciones, img}:BoxProps) => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
-  const handleDelete = () => {
-    alert('Eliminar persona');
+  const handleDelete = async () => {
+    let endpoint = '';
+  
+    if (elem.role) {
+      // Es un usuario (paciente o terapeuta)
+      endpoint = elem.role === 'paciente' ? `${baseUrl}pacientes/` : `${baseUrl}terapeutas/`;
+    } else {
+      // Es un grupo
+      endpoint = `${baseUrl}grupos/`;
+    }
+  
+    try {
+      let response;
+      if (elem.role){
+          response = await fetch(`${endpoint}${elem.dni}/`, {
+          method: 'DELETE',
+        });
+      }else{
+          response = await fetch(`${endpoint}${elem.id}/`, {
+          method: 'DELETE',
+        });
+      }
+  
+      if (response.ok) {
+        alert(`Elemento ${elem.nombre} eliminado exitosamente.`);
+        // Aquí podrías actualizar la lista localmente o refetch la lista
+      } else {
+        alert('Error al eliminar el elemento.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Hubo un problema al intentar eliminar el elemento.');
+    }
   };
+  
+  
 
   const handleVer = () => {
     alert(`Ver detalles de ${elem.nombre}`);

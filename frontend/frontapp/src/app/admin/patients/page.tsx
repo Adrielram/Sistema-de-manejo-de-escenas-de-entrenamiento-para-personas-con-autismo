@@ -19,6 +19,7 @@ const PacientesPage = () => {
       );
       const data = await response.json();
       setPacientes(data.results);
+      console.log("Pacientes:", data.results);
       setNextPage(data.next);
       setPrevPage(data.previous);
     } catch (error) {
@@ -41,7 +42,7 @@ const PacientesPage = () => {
     setPage(newPage);
   };
 
-  return (
+  return (    
     <div>
       <SearchBar onSearch={handleSearch} />
       {loading ? (
