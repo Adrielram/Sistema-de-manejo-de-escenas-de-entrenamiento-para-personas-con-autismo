@@ -1,48 +1,59 @@
 "use client";
+import { create_scene } from '../../../../utils/api'; // Asegúrate de importar correctamente la función
 
 import React, { useState } from "react";
 
 
 
-const CreateObjetivo: React.FC = () => {
+const CreateScene: React.FC = () => {
   const [titulo, setTitulo] = useState("");
   const [idioma, setIdioma] = useState("");
   const [acento, setAcento] = useState("");
   const [complejidad, setComplejidad] = useState(0);
-  const [edad, setEdad] = useState("");
  
 
   const [linkVideo, setLinkVideo] = useState("");
 
   
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!titulo || !idioma || !linkVideo || !acento || !complejidad ) {
+  if (!titulo || !idioma || !linkVideo || !acento || !complejidad) {
       alert("Todos los campos son obligatorios");
       return;
-    }
+  }
 
-
-    console.log({
-      titulo,
-      idioma,
-      acento,
-      complejidad,
-      linkVideo,
-    });
-
-    alert("Objetivo creado exitosamente");
-
-    setTitulo("");
-    setAcento("");
-    setIdioma("");
-    setComplejidad(0);
-    setEdad("");
-
-    setLinkVideo("");
+  // Crear un objeto con los datos
+  const nuevaEscena = {
+      nombre: titulo,
+      idioma: idioma,
+      acento: acento,
+      complejidad: complejidad,
+      link: linkVideo,
   };
+
+  try {
+      // Llamar a la función de creación
+      const result = await create_scene(nuevaEscena);
+
+      if (result.success) {
+          alert("Escena creada exitosamente");
+          
+          // Resetear los campos
+          setTitulo("");
+          setAcento("");
+          setIdioma("");
+          setComplejidad(0);
+          setLinkVideo("");
+      } else {
+          alert(`Error al crear la escena: ${result.error}`);
+      }
+  } catch (error) {
+      console.error("Error al crear la escena:", error);
+      alert("Ocurrió un error inesperado");
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-blue-50 py-12 px-4">
@@ -116,20 +127,7 @@ const CreateObjetivo: React.FC = () => {
                 max="10" // Establece el valor máximo
                 />
             </div>
-            
-            <div>
-              <label htmlFor="edad" className="block font-semibold text-gray-700 mb-2">
-                Edad Necesaria
-              </label>
-              <input
-                id="edad"
-                type="text"
-                value={edad}
-                onChange={(e) => setEdad(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
-                placeholder="Ingrese la Edad"
-              />
-            </div>
+
             
             <div>
               <label htmlFor="linkVideo" className="block font-semibold text-gray-700 mb-2">
@@ -162,4 +160,4 @@ const CreateObjetivo: React.FC = () => {
   );
 };
 
-export default CreateObjetivo;
+export default CreateScene;

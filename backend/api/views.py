@@ -262,3 +262,24 @@ def signIn(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+
+@api_view(['POST'])
+def crear_escena(request):
+    try:
+        serializer = EscenaSerializer(data=request.data)
+        
+        # Validar datos
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Escena creada exitosamente", "data": serializer.data},
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Exception as e:
+        return Response(
+            {"error": f"Error inesperado: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
