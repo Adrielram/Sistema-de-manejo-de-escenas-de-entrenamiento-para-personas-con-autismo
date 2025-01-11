@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import SearchSelectBox from "../../../../components/SearchSelectBox";
+import SingleSearchSelectBox from "../../../../components/SingleSearchSelectBox";
 
 interface Item {
   id: number;
@@ -18,11 +19,19 @@ interface Escena extends Item {
   [key: string]: string | number | boolean; // Índice flexible heredado
 }
 
+interface VideoEscena extends Item {
+  nombre: string;
+  [key: string]: string | number | boolean; // Índice flexible heredado
+}
+
 const CreateObjetivo: React.FC = () => {
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [searchSubObjetivos, setSearchSubObjetivos] = useState("");
   const [searchEscenas, setSearchEscenas] = useState("");
+  const [searchVideoEscenas, setSearchVideoEscenas] = useState("");
+  const [selectedVideoEscenaId, setSelectedVideoEscenaId] = useState<number | null>(null);
+
   const [subObjetivos, setSubObjetivos] = useState<SubObjetivo[]>([
     { id: 1, titulo: "Título Sub-Objetivo 1", seleccionado: false },
     { id: 2, titulo: "Título Sub-Objetivo 2", seleccionado: false },
@@ -35,7 +44,28 @@ const CreateObjetivo: React.FC = () => {
     { id: 1, nombre: "Nombre Escena 1", seleccionado: false },
     { id: 2, nombre: "Nombre Escena 2", seleccionado: false },
     { id: 3, nombre: "Nombre Escena 3", seleccionado: false },
-    { id: 4, nombre: "Nombre Escena 4", seleccionado: false },
+    { id: 5, nombre: "Nombre Escena 4", seleccionado: false },
+    { id: 6, nombre: "Nombre Escena 4", seleccionado: false },
+    { id: 7, nombre: "Nombre Escena 4", seleccionado: false },
+    { id: 8, nombre: "Nombre Escena 4", seleccionado: false },
+    { id: 9, nombre: "Nombre Escena 4", seleccionado: false },
+    { id: 10, nombre: "Nombre Escena 4", seleccionado: false },
+    { id: 11, nombre: "Nombre Escena 4", seleccionado: false },
+    { id: 12, nombre: "Nombre Escena 4", seleccionado: false },
+
+
+
+  ]);
+
+  const [videoEscenas] = useState<VideoEscena[]>([
+    { id: 1, nombre: "Nombre VideoEscena 1", seleccionado: false },
+    { id: 2, nombre: "Nombre VideoEscena 2", seleccionado: false },
+    { id: 3, nombre: "Nombre VideoEscena 3", seleccionado: false },
+    { id: 4, nombre: "Nombre VideoEscena 4", seleccionado: false },
+    { id: 5, nombre: "Nombre VideoEscena 1", seleccionado: false },
+    { id: 6, nombre: "Nombre VideoEscena 2", seleccionado: false },
+    { id: 7, nombre: "Nombre VideoEscena 3", seleccionado: false },
+    { id: 8, nombre: "Nombre VideoEscena 4", seleccionado: false },
   ]);
   const [linkVideo, setLinkVideo] = useState("");
 
@@ -45,6 +75,10 @@ const CreateObjetivo: React.FC = () => {
 
   const filteredEscenas = escenas.filter(escena => 
     escena.nombre.toLowerCase().includes(searchEscenas.toLowerCase())
+  );
+
+  const filteredVideoEscenas = videoEscenas.filter(videoEscena => 
+    videoEscena.nombre.toLowerCase().includes(searchVideoEscenas.toLowerCase())
   );
 
   const toggleSubObjetivo = (id: number) => {
@@ -63,10 +97,11 @@ const CreateObjetivo: React.FC = () => {
     );
   };
 
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!titulo || !descripcion || !linkVideo) {
+    if (!titulo || !descripcion || !linkVideo || !selectedVideoEscenaId) {
       alert("Todos los campos son obligatorios");
       return;
     }
@@ -81,6 +116,7 @@ const CreateObjetivo: React.FC = () => {
       descripcion,
       subObjetivosSeleccionados,
       escenasSeleccionadas,
+      videoEscenas,
       linkVideo,
     });
 
@@ -145,6 +181,16 @@ const CreateObjetivo: React.FC = () => {
                 placeholder="Ingrese el link"
               />
             </div>
+            <SingleSearchSelectBox  
+             title="Video Escena"
+             items={filteredVideoEscenas}
+             searchValue={searchVideoEscenas}
+             onSearchChange={setSearchVideoEscenas}
+             onSelectItem={setSelectedVideoEscenaId}  // Cambiado
+             selectedItemId={selectedVideoEscenaId}    // Cambiado
+             searchPlaceholder="Buscar escenas..."
+             getItemLabel={(item) => String(item.nombre)}
+            />
           </div>
 
           {/* Columna derecha */}

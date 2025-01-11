@@ -1,17 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import SearchSelectBox from "../../../../components/SearchSelectBox";
-
-interface Item {
-  id: number;
-  seleccionado: boolean;
-}
-
-interface SubObjetivo extends Item {
-  titulo: string;
-  [key: string]: string | number | boolean; // Índice flexible heredado
-}
 
 
 
@@ -21,30 +10,11 @@ const CreateObjetivo: React.FC = () => {
   const [acento, setAcento] = useState("");
   const [complejidad, setComplejidad] = useState(0);
   const [edad, setEdad] = useState("");
-  const [searchObjetivos, setSearchObjetivos] = useState("");
-  const [objetivos, setObjetivos] = useState<SubObjetivo[]>([
-    { id: 1, titulo: "Título Objetivo 1", seleccionado: false },
-    { id: 2, titulo: "Título Objetivo 2", seleccionado: false },
-    { id: 3, titulo: "Título Objetivo 3", seleccionado: false },
-    { id: 4, titulo: "Título Objetivo 4", seleccionado: false },
-    { id: 5, titulo: "Título Objetivo 4", seleccionado: false },
-
-  ]);
+ 
 
   const [linkVideo, setLinkVideo] = useState("");
 
-  const filteredObjetivosNecesarios = objetivos.filter(sub => 
-    sub.titulo.toLowerCase().includes(searchObjetivos.toLowerCase())
-  );
-
-  const toggleObjetivos = (id: number) => {
-    setObjetivos(prev =>
-      prev.map(sub =>
-        sub.id === id ? { ...sub, seleccionado: !sub.seleccionado } : sub
-      )
-    );
-  };
-
+  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,16 +24,12 @@ const CreateObjetivo: React.FC = () => {
       return;
     }
 
-    const objetivosSeleccionados = objetivos.filter(
-      (sub) => sub.seleccionado
-    );
 
     console.log({
       titulo,
       idioma,
       acento,
       complejidad,
-      objetivosSeleccionados,
       linkVideo,
     });
 
@@ -74,10 +40,7 @@ const CreateObjetivo: React.FC = () => {
     setIdioma("");
     setComplejidad(0);
     setEdad("");
-    setSearchObjetivos("");
-    setObjetivos((prev) =>
-      prev.map((sub) => ({ ...sub, seleccionado: false }))
-    );
+
     setLinkVideo("");
   };
 
@@ -88,7 +51,7 @@ const CreateObjetivo: React.FC = () => {
           Crear Escena
         </h1>
         
-        <form onSubmit={handleSubmit} className="grid grid-cols-1  lg:grid-cols-2 gap-8" >
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8" >
         {/* Columna izquierda */}
           <div className="space-y-6 bg-white p-8 rounded-xl shadow-lg border border-blue-100">
             <div>
@@ -183,18 +146,6 @@ const CreateObjetivo: React.FC = () => {
             </div>
           </div>
 
-          {/* Columna derecha */}
-          <div className="space-y-6">
-            <SearchSelectBox
-              title="Objetivos Necesarios"
-              items={filteredObjetivosNecesarios}
-              searchValue={searchObjetivos}
-              onSearchChange={setSearchObjetivos}
-              onToggleItem={toggleObjetivos}
-              searchPlaceholder="Buscar Objetivos Necesarios..."
-              getItemLabel={(item) => String(item.titulo)}
-            />
-          </div>
 
           {/* Botón de submit a pantalla completa */}
           <div className="lg:col-span-2 mt-6">
@@ -202,7 +153,7 @@ const CreateObjetivo: React.FC = () => {
               type="submit"
               className="w-full bg-[#3EA5FF] text-white font-semibold py-4 rounded-xl hover:bg-[#2E8BFF] transition duration-300 shadow-lg hover:shadow-xl"
             >
-              Crear Objetivo
+              Crear Escena
             </button>
           </div>
         </form>
