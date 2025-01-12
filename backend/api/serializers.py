@@ -19,4 +19,4 @@ class ObjetivoSerializer(serializers.ModelSerializer):
 class EscenaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Escena
-        fields = ['id', 'idioma', 'acento', 'complejidad', 'link', 'nombre']
+        fields = ['id', 'idioma', 'acento', 'edad', 'complejidad', 'link', 'nombre']

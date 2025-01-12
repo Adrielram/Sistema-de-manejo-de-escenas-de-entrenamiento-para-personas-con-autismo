@@ -9,6 +9,7 @@ const CreateScene: React.FC = () => {
   const [titulo, setTitulo] = useState("");
   const [idioma, setIdioma] = useState("");
   const [acento, setAcento] = useState("");
+  const [edad, setEdad] = useState<string>("");
   const [complejidad, setComplejidad] = useState(0);
  
 
@@ -28,6 +29,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       nombre: titulo,
       idioma: idioma,
       acento: acento,
+      edad: edad === "" ? null : edad, // Reemplaza cadena vacía por null
       complejidad: complejidad,
       link: linkVideo,
   };
@@ -43,6 +45,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           setTitulo("");
           setAcento("");
           setIdioma("");
+          setEdad("");
           setComplejidad(0);
           setLinkVideo("");
       } else {
@@ -127,7 +130,21 @@ const handleSubmit = async (e: React.FormEvent) => {
                 max="10" // Establece el valor máximo
                 />
             </div>
-
+            <div>
+              <label htmlFor="edad" className="block font-semibold text-gray-700 mb-2">
+                Edad Necesaria
+              </label>
+              <input
+                id="edad"
+                type="text"
+                value={edad}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEdad(value === "" ? "" : value);
+                }}                className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
+                placeholder="Ingrese la Edad"
+              />
+            </div>
             
             <div>
               <label htmlFor="linkVideo" className="block font-semibold text-gray-700 mb-2">

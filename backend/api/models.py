@@ -10,18 +10,17 @@ class Centrodesalud(models.Model):
     class Meta:
         db_table = 'centroDeSalud'
 
-
 class Escena(models.Model):
     id = models.AutoField(primary_key=True)
     idioma = models.CharField(max_length=40)
     acento = models.CharField(max_length=40, default="neutro")
     complejidad = models.IntegerField()
+    edad = models.IntegerField(null=True, blank=True)  # Permite valores nulos
     link = models.CharField(max_length=2000)
     nombre = models.CharField(max_length=100, default="Sin Nombre")
 
     class Meta:
         db_table = 'escena'
-
 
 class Escenavideo(models.Model):
     id = models.AutoField(primary_key=True)
