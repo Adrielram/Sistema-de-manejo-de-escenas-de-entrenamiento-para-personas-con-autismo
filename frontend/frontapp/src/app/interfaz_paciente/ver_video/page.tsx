@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import Comentario from "../../../components/Comentario";
 import { useRouter } from "next/navigation";
-const Page = () => {
+
+const VerVideo = () => {
   const videos = [
     "https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview", // Hide and seek
     "https://drive.google.com/file/d/1qzY31odKmd2FlrjU0VK4dkfezlzEcoaJ/preview", // Futgame
@@ -15,11 +16,16 @@ const Page = () => {
     "https://docs.google.com/forms/d/e/1FAIpQLSfrNgiBZhBCQ5zpgVTD8c9AqDS3nLubktTxRdvxzi83_Jrq3g/viewform?usp=header", // Quiz 2
   ];
 
+  const [formData, setFormData] = useState({
+    escena_id: '1', //cambiar por el id de la escena actual
+    personaobjetivo_user_id: '1', //cambiar por el id del usuario actual
+    personaobjetivo_objetivo_id: '1',  //cambiar por el id del objetivo actual
+    texto: '',
+  });
+
   const router = useRouter();
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [completedQuizzes, setCompletedQuizzes] = useState([]);
-  //const [comments, setComments] = useState([]); // Estado para almacenar comentarios
-  const [newComment, setNewComment] = useState(""); // Estado para el input del nuevo comentario
+  const [completedQuizzes, setCompletedQuizzes] = useState<number[]>([]);
 
   const handleVerSiguienteVideo = () => {
     setCurrentVideoIndex((prevIndex) => prevIndex + 1);
@@ -27,9 +33,10 @@ const Page = () => {
 
   const handleVerListaObjetivos = () => {
     window.alert("Esto lo codea el adriel");
+    //router.push('../interfaz_paciente/ver_objetivos');
   };
 
-  const handleQuizClick = (index) => {
+  const handleQuizClick = (index: number) => {
     window.open(quiz[index], "_blank");
     setCompletedQuizzes((prev) => [...new Set([...prev, index])]);
   };
@@ -38,11 +45,27 @@ const Page = () => {
     router.push('../interfaz_paciente/principal');
   };
 
-  const handleAddComment = () => {
-    if (newComment.trim() !== "") {
-      //setComments((prev) => [...prev, newComment]);
-      //lamar a funcion del backend para guardar el comentario
-      setNewComment(""); // Limpiar el input después de añadir el comentario
+  const handleAddComment = async () => {
+    if (formData.texto.trim() !== "") {
+    
+      try {
+        console.log(formData);
+        const response = await fetch('http://localhost:8000/api/registrar_comentario/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Error al guardar el comentario');
+        }
+        setFormData((prev) => ({ ...prev, texto: '' }));
+      } catch (error) {
+        console.error('Error:', error);
+      }
+      
     }
   };
 
@@ -128,8 +151,8 @@ const Page = () => {
         <div className="flex items-center space-x-2">
           <input
             type="text"
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
+            value={formData.texto}
+            onChange={(e) => setFormData({ ...formData, texto: e.target.value })}
             placeholder="Escribe tu comentario..."
             className="border border-gray-300 rounded-lg py-2 px-4 w-full"
           />
@@ -141,8 +164,6 @@ const Page = () => {
           </button>
         </div>
       </div>
-
-      {/* Lista de comentarios */}
       <div className="mt-4">
         <h3 className="text-lg font-semibold text-gray-800 mb-2">Comentarios</h3>
         <Comentario />
@@ -151,4 +172,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default VerVideo;

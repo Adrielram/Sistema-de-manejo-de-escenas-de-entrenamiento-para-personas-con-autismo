@@ -101,7 +101,6 @@ class Evaluacion(models.Model):
         unique_together = (('personaobjetivo_user', 'personaobjetivo_objetivo'),)
 
 
-
 class Grupo(models.Model):
     id = models.IntegerField(primary_key=True)
     nombre = models.CharField(max_length=255, blank=True, null=True)
@@ -135,7 +134,6 @@ class Objetivoscumplir(models.Model):
         unique_together = (('objetivo', 'objetivo_previo'),)  
 
 
-
 class Personagrupo(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='personagrupos')
     grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name='miembros')
@@ -143,7 +141,6 @@ class Personagrupo(models.Model):
     class Meta:
         db_table = 'personaGrupo'
         unique_together = (('user', 'grupo'),)
-
 
 
 class Personaobjetivo(models.Model):
@@ -201,8 +198,6 @@ class User(AbstractUser):
 
     class Meta: 
         db_table = 'user'
-
-
 
 
 class Videosvistos(models.Model):

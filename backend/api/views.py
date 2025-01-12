@@ -262,3 +262,70 @@ def signIn(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+@api_view(['POST'])
+def registrar_comentario(request):
+    try:
+        # Validar que todos los campos necesarios están presentes
+        required_fields = ['escena_id',"personaobjetivo_user_id","personaobjetivo_objetivo_id", 'texto']
+        missing_fields = [field for field in required_fields if field not in request.data]
+        if missing_fields:
+            return Response(
+                {"error": f"Faltan los siguientes campos: {', '.join(missing_fields)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Obtener datos del request
+        escena_id = request.data.get('escena_id')
+        personaobjetivo_user_id = request.data.get('personaobjetivo_user_id', None)
+        personaobjetivo_objetivo_id = request.data.get('personaobjetivo_objetivo_id', None)
+        texto = request.data.get('texto')
+
+        # Validar que la escena existe
+        try:
+            escena = Escenavideo.objects.get(id=escena_id)
+        except Escenavideo.DoesNotExist:
+            return Response(
+                {"error": "La escena especificada no existe"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Validar relaciones opcionales
+        personaobjetivo_user = None
+        if personaobjetivo_user_id:
+            try:
+                personaobjetivo_user = Escenavideo.objects.get(id=personaobjetivo_user_id)
+            except Escenavideo.DoesNotExist:
+                return Response(
+                    {"error": "La persona objetivo (user) especificada no existe"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        personaobjetivo_objetivo = None
+        if personaobjetivo_objetivo_id:
+            try:
+                personaobjetivo_objetivo = Escenavideo.objects.get(id=personaobjetivo_objetivo_id)
+            except Escenavideo.DoesNotExist:
+                return Response(
+                    {"error": "La persona objetivo (objetivo) especificada no existe"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        # Crear el comentario en una transacción
+        with transaction.atomic():
+            comentario = Comentario.objects.create(
+                escena=escena,
+                personaobjetivo_user=personaobjetivo_user,
+                personaobjetivo_objetivo=personaobjetivo_objetivo,
+                texto=texto
+            )
+
+        return Response(
+            {"message": "Comentario registrado exitosamente", "comentario_id": comentario.id},
+            status=status.HTTP_201_CREATED
+        )
+
+    except Exception as e:
+        return Response(
+            {"error": f"Error inesperado: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
