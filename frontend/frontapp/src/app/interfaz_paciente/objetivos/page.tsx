@@ -29,12 +29,11 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  /* para probar:
+  // para probar:
   const elementos = [
-    { id: 1, texto: "Objetivo 1" },
-    { id: 2, texto: "Objetivo 2" },
-    { id: 3, texto: "Objetivo 3" },
-    { id: 4, texto: "Objetivo 4" },
+    { id: 1, texto: "Objetivo 1", escena: { id: 1, nombreEscena: "Escena1" } },
+    { id: 2, texto: "Objetivo 2", escena: { id: 2, nombreEscena: "Escena2" } },
+    { id: 3, texto: "Objetivo 3", escena: { id: 3, nombreEscena: "Escena3" } },
     { id: 5, texto: "Objetivo 5" },
     { id: 6, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
     { id: 7, texto: "Objetivo 2" },
@@ -51,9 +50,9 @@ export default function Page() {
     { id: 18, texto: "Objetivo 3" },
     { id: 19, texto: "Objetivo 4" },
   ];
-*/
+//
 
-  useEffect(() => {
+  /*useEffect(() => {
     const fetchObjetivos = async () => {
       try {
         // SI NO SE RENDERIZADA DEL LADO DEL CLIENTE, NO USAR 'LOCALHOST', USAR 'BACKEND'
@@ -72,7 +71,7 @@ export default function Page() {
     };
     fetchObjetivos();
   }, []);
-
+  */
 
   const handleObjetivoClick = (objetivoId: number) => {
     const objetivo = objetivos.find(obj => obj.id === objetivoId);
