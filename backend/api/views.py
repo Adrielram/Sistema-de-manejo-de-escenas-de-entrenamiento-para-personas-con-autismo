@@ -105,6 +105,31 @@ class PacienteListView(APIView):
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+@api_view(['GET'])
+def hijos_list_view(request):
+    padre_id = request.query_params.get('padre_id')
+
+    if not padre_id:
+        return Response(
+            {"error": "El ID del padre es requerido."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        # Obtener los usuarios hijos filtrados por `user_id_padre`
+        hijos = User.objects.filter(user_id_padre=padre_id)
+
+        # Serializar los datos de los hijos usando PacienteSerializer
+        serializer = PacienteSerializer(hijos, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 class ObjetivoViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
