@@ -117,3 +117,45 @@ class ObjetivoViewSet(viewsets.ViewSet):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def get_goal_data(request, objetivo_id):
+    try:
+        # Obtener el objetivo principal
+        objetivo = Objetivo.objects.get(pk=objetivo_id)
+        
+        # Obtener la escena explicativa asociada
+        escena_explicativa = {
+            "id": objetivo.escena.id,
+            "nombre": objetivo.escena.nombre,
+            "idioma": objetivo.escena.idioma,
+            "acento": objetivo.escena.acento,
+            "complejidad": objetivo.escena.complejidad,
+            "link": objetivo.escena.link,
+        }
+
+        # Obtener las escenas relacionadas a través de EscenaObjetivo
+        escenas_relacionadas = [
+            {
+                "id": relacion.escena.id,
+                "nombre": relacion.escena.nombre,
+                "idioma": relacion.escena.idioma,
+                "acento": relacion.escena.acento,
+                "complejidad": relacion.escena.complejidad,
+                "link": relacion.escena.link,
+            }
+            for relacion in EscenaObjetivo.objects.filter(objetivo=objetivo)
+        ]
+
+        # Preparar la respuesta
+        response = {
+            "id": objetivo.id,
+            "nombre": objetivo.nombre,
+            "descripcion": objetivo.descripcion,
+            "escena_explicativa": escena_explicativa,
+            "escenas_relacionadas": escenas_relacionadas,
+        }
+
+        return JsonResponse(response, status=200)
+    except Objetivo.DoesNotExist:
+        return JsonResponse({"error": "Objetivo no encontrado"}, status=404)

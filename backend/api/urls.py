@@ -18,6 +18,7 @@ urlpatterns = [
     path('verify-session/', verify_session, name='verify-session'),
     path('objetivos/', objetivos_list, name='listar_objetivos'),
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
+    path('objetivo/<int:objetivo_id>/', get_goal_data, name='get_goal_data'),
 ]
 
 urlpatterns += [path('', include(router.urls))]
