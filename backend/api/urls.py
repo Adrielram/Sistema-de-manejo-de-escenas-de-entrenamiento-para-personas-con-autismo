@@ -19,6 +19,9 @@ urlpatterns = [
     path('objetivos/', objetivos_list, name='listar_objetivos'),
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
     path('objetivo/<int:objetivo_id>/', get_goal_data, name='get_goal_data'),
+    path('signIn/', views.signIn, name='signIn'),
+    path('crear-escena/', views.crear_escena, name='crear_escena'),
 ]
+
 
 urlpatterns += [path('', include(router.urls))]
