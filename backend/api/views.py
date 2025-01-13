@@ -86,8 +86,13 @@ def verify_session(request):
     
 
 def objetivos_list(request):
-    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos
+    objetivos = Personaobjetivo.objects.all().values()  # Obtiene todos los objetivos
     return JsonResponse(list(objetivos), safe=False)
+
+def obj_list_user(request, user_id):
+    objetivos = Objetivo.objects.filter(user_id=user_id).values()  # Obtiene los objetivos del usuario
+    return JsonResponse(list(objetivos), safe=False)
+    ## CHEQUEAR ESTE BIEN
 
 class PacienteListView(APIView):
     def get(self, request):

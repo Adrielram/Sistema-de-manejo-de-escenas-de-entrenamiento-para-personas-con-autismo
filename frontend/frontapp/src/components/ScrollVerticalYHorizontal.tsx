@@ -3,33 +3,20 @@
 import { useState, useEffect } from "react";
 import BigButton from "./BigButton";
 
-export default function ScrollVerticalYHorizontal() {
-  const [isPortrait, setIsPortrait] = useState<boolean>(false);
-  //const [elementos, setElementos] = useState<{ id: number; texto: string }[]>(
-  //  []
-  //);
+interface Props {
+  elementos: Array<{ id: number; titulo: string }>;
+  onObjetivoClick: (id: number) => void;
+  selectedObjetivoId: number | null;
+}
 
- const elementos = [
-    { id: 1, texto: "Objetivo 1" },
-    { id: 2, texto: "Objetivo 2" },
-    { id: 3, texto: "Objetivo 3" },
-    { id: 4, texto: "Objetivo 4" },
-    { id: 5, texto: "Objetivo 5" },
-    { id: 6, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
-    { id: 7, texto: "Objetivo 2" },
-    { id: 8, texto: "Objetivo 3" },
-    { id: 9, texto: "Objetivo 4" },
-    { id: 10, texto: "Objetivo 5" },
-    { id: 11, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
-    { id: 12, texto: "Objetivo 2" },
-    { id: 13, texto: "Objetivo 3" },
-    { id: 14, texto: "Objetivo 4" },
-    { id: 15, texto: "Objetivo 5" },
-    { id: 16, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
-    { id: 17, texto: "Objetivo 2" },
-    { id: 18, texto: "Objetivo 3" },
-    { id: 19, texto: "Objetivo 4" },
-  ];
+export default function ScrollVerticalYHorizontal({ 
+  elementos, 
+  onObjetivoClick,
+  selectedObjetivoId 
+}: Props) {
+  const [isPortrait, setIsPortrait] = useState<boolean>(false);
+
+  
 
   /* useEffect(() => {
     const fetchObjetivos = async () => {
@@ -66,13 +53,10 @@ export default function ScrollVerticalYHorizontal() {
   }, []);
 
 
-  const handleButtonClick = () => {
-    //aca vamos a hacer la funcionalidad del boton
-  };
+
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Lista de Elementos</h1>
+    <div className="container mx-auto">
       <div
         className={`overflow-auto ${
           isPortrait ? "overflow-x-scroll" : "overflow-y-scroll"
@@ -92,11 +76,11 @@ export default function ScrollVerticalYHorizontal() {
               style={{ minWidth: isPortrait ? "fit-content" : "150px" }}
             >
               <BigButton
-                title={elemento.texto}
-                color="bg-blue-600"
+                title={elemento.titulo}
+                color={selectedObjetivoId === elemento.id ? "bg-blue-800" : "bg-blue-600"}
                 font_bold="font-bold"
                 hover="hover:bg-blue-700"
-                onClick={() => handleButtonClick()}
+                onClick={() => onObjetivoClick(elemento.id)}
               />
             </li>
           ))}
