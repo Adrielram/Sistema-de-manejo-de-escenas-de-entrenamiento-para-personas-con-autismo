@@ -84,9 +84,11 @@ def verify_session(request):
         # Validar el token JWT y decodificarlo
         access_token = AccessToken(jwt_token)
         username = access_token['username']  # Extraer el campo 'username' del payload
+        role=access_token['role']
         return Response({
             "message": "Autorizado",
-            "username": username  # Incluir el nombre de usuario en la respuesta
+            "username": username,  # Incluir el nombre de usuario en la respuesta
+            "role":role
         }, status=200)
     except Exception as e:
         return Response({"message": "Token inválido o expirado"}, status=401)
