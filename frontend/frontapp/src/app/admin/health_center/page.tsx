@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { FaTrash } from "react-icons/fa";
-import Image from 'next/image';
+import Cookies from "js-cookie";
+import Image from "next/image";
 
 interface HealthCenter {
   id: number;
@@ -13,37 +14,77 @@ export default function HealthCenterPage() {
   const [healthCenters, setHealthCenters] = useState<HealthCenter[]>([]);
 
   useEffect(() => {
-    // Paleta de colores en tonos de azul
+    // Paleta de colores en tonos variados
     const colorPalette = [
-      "bg-blue-300", "bg-blue-400", "bg-blue-500", "bg-blue-600", "bg-blue-700",  // Azules
-      "bg-orange-300", "bg-orange-400", "bg-orange-500", "bg-orange-600", "bg-orange-700",  // Naranjas
-      "bg-purple-300", "bg-purple-400", "bg-purple-500", "bg-purple-600", "bg-purple-700",  // Violetas
-      "bg-teal-300", "bg-teal-400", "bg-teal-500", "bg-teal-600", "bg-teal-700"  // Celestes
+      "bg-blue-300", "bg-blue-400", "bg-blue-500", "bg-blue-600", "bg-blue-700", // Azules
+      "bg-orange-300", "bg-orange-400", "bg-orange-500", "bg-orange-600", "bg-orange-700", // Naranjas
+      "bg-purple-300", "bg-purple-400", "bg-purple-500", "bg-purple-600", "bg-purple-700", // Violetas
+      "bg-teal-300", "bg-teal-400", "bg-teal-500", "bg-teal-600", "bg-teal-700" // Celestes
     ];
-    
 
-    // Generar colores aleatorios sin repetición
-    const generateUniqueColors = (count: number) => {
-      const shuffled = colorPalette.sort(() => 0.5 - Math.random());
-      return shuffled.slice(0, count);
+    const fetchHealthCenters = async () => {
+      try {
+        const token = Cookies.get("jwt"); // Recuperar el token JWT de las cookies
+        if (!token) {
+          console.error("No se encontró el token de autenticación.");
+          return;
+        }
+
+        const response = await fetch("${baseUrl}health-centers", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          console.error("Error al obtener los centros de salud:", response.statusText);
+          return;
+        }
+
+        const data: { id: number; name: string }[] = await response.json();
+
+        // Asignar colores aleatorios a cada centro de salud
+        const shuffledColors = colorPalette.sort(() => 0.5 - Math.random());
+        const centersWithColors = data.map((center, index) => ({
+          ...center,
+          color: shuffledColors[index % colorPalette.length],
+        }));
+
+        setHealthCenters(centersWithColors);
+      } catch (error) {
+        console.error("Error en la solicitud al backend:", error);
+      }
     };
 
-    const colors = generateUniqueColors(6);
-
-    const mockHealthCenters: HealthCenter[] = [
-      { id: 1, name: "Centro de Salud Tandil", color: colors[0] },
-      { id: 2, name: "Hospital San Martín", color: colors[1] },
-      { id: 3, name: "Clínica del Sol", color: colors[2] },
-      { id: 4, name: "Centro Médico Sur", color: colors[3] },
-      { id: 5, name: "Hospital Regional Norte", color: colors[4] },
-      { id: 6, name: "Consultorio Los Álamos", color: colors[5] },
-    ];
-
-    setHealthCenters(mockHealthCenters);
+    fetchHealthCenters();
   }, []);
 
-  const handleDelete = (id: number) => {
-    setHealthCenters(healthCenters.filter(center => center.id !== id));
+  const handleDelete = async (id: number) => {
+    try {
+      const token = Cookies.get("token");
+      if (!token) {
+        console.error("No se encontró el token de autenticación.");
+        return;
+      }
+
+      const response = await fetch(`/api/health-centers/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setHealthCenters(healthCenters.filter((center) => center.id !== id));
+      } else {
+        console.error("Error al eliminar el centro de salud:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error al enviar la solicitud de eliminación:", error);
+    }
   };
 
   return (

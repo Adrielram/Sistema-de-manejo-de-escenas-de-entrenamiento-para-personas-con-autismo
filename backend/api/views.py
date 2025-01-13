@@ -11,7 +11,27 @@ from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, status
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Centrodesalud
+
 import json
+
+
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_health_center(request, center_id):
+    try:
+        center = Centrodesalud.objects.get(id=center_id)
+        center.delete()
+        return Response({"message": "Centro de salud eliminado correctamente."}, status=status.HTTP_200_OK)
+    except Centrodesalud.DoesNotExist:
+        return Response({"error": "Centro de salud no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
 
 def example_view(request):
     return JsonResponse({'message': 'Hello, world!'})
