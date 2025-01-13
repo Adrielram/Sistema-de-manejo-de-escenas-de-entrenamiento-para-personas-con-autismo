@@ -18,6 +18,7 @@ const SearchWithFatherRes: React.FC<SearchWithResultsProps> = ({ onPadreSeleccio
   const [pagina, setPagina] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [dniSeleccionado, setDniSeleccionado] = useState<number | null>(null);
 
   useEffect(() => {
     if (query) {
@@ -63,29 +64,41 @@ const SearchWithFatherRes: React.FC<SearchWithResultsProps> = ({ onPadreSeleccio
     }
   };
 
+  const handleRadioChange = (dni: number) => {
+    setDniSeleccionado(dni);
+    onPadreSeleccionado(dni); // Notifica al componente principal el cambio
+  };
+
   return (
     <div>
+      {/* Barra de búsqueda */}
       <SearchBar onSearch={setQuery} placeholder="Buscar Padre" />
+
+      {/* Contenedor de resultados */}
       <div
         className="max-h-52 overflow-y-auto mt-2 border border-gray-300 p-2"
         onScroll={handleScroll}
       >
         {resultados.map((padre) => (
-          <div
-            key={padre.dni}
-            className="flex justify-between items-center mb-2"
-          >
-            <span className="text-black">
+          <div key={padre.dni} className="flex justify-between items-center mb-2">
+            <label className="flex items-center text-black">
+              <input
+                type="radio"
+                name="padre"
+                value={padre.dni}
+                className="mr-2"
+                checked={dniSeleccionado === padre.dni}
+                onChange={() => handleRadioChange(padre.dni)}
+              />
               {padre.nombre} - {padre.dni}
-            </span>
-            <input
-              type="checkbox"
-              className="ml-2"
-              onChange={() => onPadreSeleccionado(padre.dni)}
-            />
+            </label>
           </div>
         ))}
+
+        {/* Indicador de carga */}
         {loading && <p className="text-gray-500">Cargando...</p>}
+
+        {/* Mensaje de fin de resultados */}
         {!hasMore && resultados.length > 0 && (
           <p className="text-gray-500">No hay más resultados</p>
         )}
