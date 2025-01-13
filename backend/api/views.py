@@ -14,6 +14,9 @@ from datetime import datetime
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters
 
@@ -131,6 +134,47 @@ class ObjetivoViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+def get_goal_data(request, objetivo_id):
+    try:
+        # Obtener el objetivo principal
+        objetivo = Objetivo.objects.get(pk=objetivo_id)
+        
+        # Obtener la escena explicativa asociada
+        escena_explicativa = {
+            "id": objetivo.escena.id,
+            "nombre": objetivo.escena.nombre,
+            "idioma": objetivo.escena.idioma,
+            "acento": objetivo.escena.acento,
+            "complejidad": objetivo.escena.complejidad,
+            "link": objetivo.escena.link,
+        }
+
+        # Obtener las escenas relacionadas a través de EscenaObjetivo
+        escenas_relacionadas = [
+            {
+                "id": relacion.escena.id,
+                "nombre": relacion.escena.nombre,
+                "idioma": relacion.escena.idioma,
+                "acento": relacion.escena.acento,
+                "complejidad": relacion.escena.complejidad,
+                "link": relacion.escena.link,
+            }
+            for relacion in EscenaObjetivo.objects.filter(objetivo=objetivo)
+        ]
+
+        # Preparar la respuesta
+        response = {
+            "id": objetivo.id,
+            "nombre": objetivo.nombre,
+            "descripcion": objetivo.descripcion,
+            "escena_explicativa": escena_explicativa,
+            "escenas_relacionadas": escenas_relacionadas,
+        }
+
+        return JsonResponse(response, status=200)
+    except Objetivo.DoesNotExist:
+        return JsonResponse({"error": "Objetivo no encontrado"}, status=404)
         
 from django.db import transaction
 
@@ -269,6 +313,7 @@ def signIn(request):
         )
 
 
+
 @api_view(['POST'])
 def crear_escena(request):
     try:
@@ -290,6 +335,32 @@ def crear_escena(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+# ! ver si se debe borrar o no este endpoint
+@api_view(['GET'])
+def buscar_padres(request):
+    query = request.GET.get('query', '').strip()
+    page = request.GET.get('page', 1)
+
+    # Filtrar padres por query
+    padres = User.objects.filter(role='padre', nombre__icontains=query)
+
+    # Paginación
+    paginator = Paginator(padres, 5)  # 5 resultados por página
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        return JsonResponse({'error': 'El número de página debe ser un entero válido.'}, status=400)
+    except EmptyPage:
+        return JsonResponse({'error': 'El número de página excede el total de páginas disponibles.'}, status=404)
+
+    # Construir respuesta
+    data = [{'dni': padre.dni, 'nombre': padre.nombre} for padre in page_obj]
+    return JsonResponse({
+        'resultados': data,
+        'total_resultados': paginator.count,
+        'total_paginas': paginator.num_pages,
+        'pagina_actual': page_obj.number
+    })
 class NameFilter(filters.FilterSet):
     nombre = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
 
@@ -316,4 +387,3 @@ class ObjetivosListView(generics.ListAPIView):
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
-   

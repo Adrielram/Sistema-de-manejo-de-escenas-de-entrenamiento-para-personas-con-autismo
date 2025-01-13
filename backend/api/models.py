@@ -44,7 +44,7 @@ class Objetivo(models.Model):
     descripcion = models.CharField(max_length=255)
     escena = models.ForeignKey(Escena, on_delete=models.PROTECT, related_name='objetivo_explicativo')
 
-    class Meta:   
+    class Meta:
         db_table = 'objetivo'
 
 class EscenaObjetivo(models.Model):
