@@ -21,6 +21,7 @@ urlpatterns = [
     path('objetivo/<int:objetivo_id>/', get_goal_data, name='get_goal_data'),
     path('signIn/', views.signIn, name='signIn'),
     path('crear-escena/', views.crear_escena, name='crear_escena'),
+    path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
 ]
 
 

@@ -3,10 +3,8 @@ import type { Metadata } from "next";
 import { Inter } from 'next/font/google';
 // import { Geist, Geist_Mono } from "next/font/google";
 
-import "./globals.css";
-
-// Asegúrate de importar ReduxProvider desde la ruta correcta
-import Provider from "../../store/provider";
+import Footer from "../../components/Footer";
+import Header from "../../components/Header";
 
 
 const inter = Inter({ subsets: ['latin'] });
@@ -27,12 +25,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={`min-h-screen bg-white ${inter.className}`}>
         <div>
-          <Provider>
-          <main className = "mt-14">{children}</main>
-          </Provider>
+        <Header /> {/* Asegúrate de que esté fuera del contenedor flex */}
+          <main className = "mt-14 p-5">{children}</main>
+        <Footer />
         </div>
       </body>
     </html>
   );
 }
-

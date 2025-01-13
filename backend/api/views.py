@@ -14,6 +14,9 @@ from datetime import datetime
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
@@ -305,6 +308,7 @@ def signIn(request):
         )
 
 
+
 @api_view(['POST'])
 def crear_escena(request):
     try:
@@ -325,3 +329,29 @@ def crear_escena(request):
             {"error": f"Error inesperado: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+@api_view(['GET'])
+def buscar_padres(request):
+    query = request.GET.get('query', '').strip()
+    page = request.GET.get('page', 1)
+
+    # Filtrar padres por query
+    padres = User.objects.filter(role='padre', nombre__icontains=query)
+
+    # Paginación
+    paginator = Paginator(padres, 5)  # 5 resultados por página
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        return JsonResponse({'error': 'El número de página debe ser un entero válido.'}, status=400)
+    except EmptyPage:
+        return JsonResponse({'error': 'El número de página excede el total de páginas disponibles.'}, status=404)
+
+    # Construir respuesta
+    data = [{'dni': padre.dni, 'nombre': padre.nombre} for padre in page_obj]
+    return JsonResponse({
+        'resultados': data,
+        'total_resultados': paginator.count,
+        'total_paginas': paginator.num_pages,
+        'pagina_actual': page_obj.number
+    })
