@@ -52,7 +52,7 @@ class EscenaObjetivo(models.Model):
     objetivo = models.ForeignKey('Objetivo', on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'EscenaObjetivo'
+        db_table = 'escenaObjetivo'
         unique_together = (('escena', 'objetivo'),)
 
 class PersonaObjetivoEscena(models.Model):
@@ -81,7 +81,7 @@ class PersonaObjetivoEscena(models.Model):
     es_alternativo = models.BooleanField()
 
     class Meta:
-        db_table = 'escenaVideo'
+        db_table = 'personaObjetivoEscena'
         unique_together = (
             ('user', 'escenaobjetivo_objetivo', 'escenaobjetivo_escena'),
         )
