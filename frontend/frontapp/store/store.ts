@@ -24,12 +24,8 @@ const store = configureStore({
       },
     }),
 });
-
 // Exporta el store y el persistor
 export const persistor = persistStore(store);
-
-
-
 // Tipo del estado global
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
