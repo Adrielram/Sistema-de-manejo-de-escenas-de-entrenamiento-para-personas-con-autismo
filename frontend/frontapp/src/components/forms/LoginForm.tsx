@@ -40,7 +40,10 @@ export default function LoginForm() {
         dispatch(setUser({ username: data.username, loggedIn: true }));
         
         console.log('Login exitoso '+ data.username);
+
+        // dependiendo el rol se manda a pages dif.
         router.push('/homepage'); // Redirigir al homepage
+        
       } else {
         const data = await response.json();
         setError(data.detail || 'Error al iniciar sesión');
