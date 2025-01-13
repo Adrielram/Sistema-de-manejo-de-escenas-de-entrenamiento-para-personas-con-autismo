@@ -24,7 +24,7 @@ class Escena(models.Model):
 
 class Evaluacion(models.Model): 
     id = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=255)
+    nombre = models.CharField(max_length=255, blank=True, null=True)
     link = models.CharField(max_length=2000)
     class Meta:
         db_table = 'evaluacion'        
@@ -174,7 +174,9 @@ class Videosvistos(models.Model):
         'PersonaObjetivoEscena',
         on_delete=models.CASCADE,
         related_name='videosvistos_escena',
-        db_column='escena_id'
+        db_column='escena_id',
+        blank=True,
+        null=True
     )
     personaobjetivoescena_user = models.ForeignKey(
         'PersonaObjetivoEscena',
@@ -204,7 +206,9 @@ class Comentario(models.Model):
         'PersonaObjetivoEscena',
         on_delete=models.CASCADE,
         related_name='comentarios_escena',
-        db_column='escena_id'
+        db_column='escena_id',
+        blank=True,
+        null=True
     )
     personaobjetivoescena_user = models.ForeignKey(
         'PersonaObjetivoEscena',
