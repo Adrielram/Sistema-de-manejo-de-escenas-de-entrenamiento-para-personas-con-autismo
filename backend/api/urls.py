@@ -18,6 +18,9 @@ urlpatterns = [
     path('verify-session/', verify_session, name='verify-session'),
     path('objetivos/', objetivos_list, name='listar_objetivos'),
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
+    path('signIn/', views.signIn, name='signIn'),
+    path('crear-escena/', views.crear_escena, name='crear_escena'),
 ]
+
 
 urlpatterns += [path('', include(router.urls))]
