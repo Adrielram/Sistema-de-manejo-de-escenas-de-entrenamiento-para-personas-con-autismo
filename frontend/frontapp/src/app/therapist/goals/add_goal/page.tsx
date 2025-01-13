@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SearchSelectBox from "../../../../components/SearchSelectBox";
 import SingleSearchSelectBox from "../../../../components/SingleSearchSelectBox";
-
+import { get_scenes } from "../../../../utils/api.js";
 interface Item {
   id: number;
   seleccionado: boolean;
@@ -40,22 +40,8 @@ const CreateObjetivo: React.FC = () => {
     { id: 5, titulo: "Título Sub-Objetivo 4", seleccionado: false },
 
   ]);
-  const [escenas, setEscenas] = useState<Escena[]>([
-    { id: 1, nombre: "Nombre Escena 1", seleccionado: false },
-    { id: 2, nombre: "Nombre Escena 2", seleccionado: false },
-    { id: 3, nombre: "Nombre Escena 3", seleccionado: false },
-    { id: 5, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 6, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 7, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 8, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 9, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 10, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 11, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 12, nombre: "Nombre Escena 4", seleccionado: false },
+  const [escenas, setEscenas] = useState<Escena[]>([]); // Inicializa como un array vacío
 
-
-
-  ]);
 
   const [videoEscenas] = useState<VideoEscena[]>([
     { id: 1, nombre: "Nombre VideoEscena 1", seleccionado: false },
@@ -97,6 +83,30 @@ const CreateObjetivo: React.FC = () => {
     );
   };
 
+  
+  // Llama a la API para obtener las escenas
+  useEffect(() => {
+    const fetchEscenas = async () => {
+      try {
+        const response = await get_scenes();
+        if (response.success) {
+          // Mapea los datos recibidos para que coincidan con el formato de `escenas`
+          const fetchedEscenas = response.data.map((escena: Escena) => ({
+            id: escena.id,
+            nombre: escena.nombre,
+            seleccionado: false,
+          }));
+          setEscenas(fetchedEscenas);
+        } else {
+          console.error("Error al obtener escenas:", response.error);
+        }
+      } catch (error) {
+        console.error("Error al obtener escenas:", error);
+      }
+    };
+
+    fetchEscenas();
+  }, []); // Ejecuta esto solo al montar el componente
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

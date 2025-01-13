@@ -283,3 +283,22 @@ def crear_escena(request):
             {"error": f"Error inesperado: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+    
+
+@api_view(['GET'])
+def obtener_escenas(request):
+    try:
+        # Traer todas las escenas
+        escenas = Escena.objects.all()
+        
+        # Serializar los datos
+        serializer = EscenaSerializer(escenas, many=True)
+        
+        # Devolver la respuesta
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response(
+            {"error": f"Error inesperado: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
