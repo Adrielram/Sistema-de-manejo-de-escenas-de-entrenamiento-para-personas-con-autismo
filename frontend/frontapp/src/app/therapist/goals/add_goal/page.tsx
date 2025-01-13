@@ -1,135 +1,54 @@
 "use client";
 
 import React, { useState } from "react";
-import SearchSelectBox from "../../../../components/SearchSelectBox";
 import SingleSearchSelectBox from "../../../../components/SingleSearchSelectBox";
-
-interface Item {
-  id: number;
-  seleccionado: boolean;
-}
-
-interface SubObjetivo extends Item {
-  titulo: string;
-  [key: string]: string | number | boolean; // Índice flexible heredado
-}
-
-interface Escena extends Item {
-  nombre: string;
-  [key: string]: string | number | boolean; // Índice flexible heredado
-}
-
-interface VideoEscena extends Item {
-  nombre: string;
-  [key: string]: string | number | boolean; // Índice flexible heredado
-}
+import SearchSelectBox from "../../../../components/SearchSelectBox";
 
 const CreateObjetivo: React.FC = () => {
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
-  const [searchSubObjetivos, setSearchSubObjetivos] = useState("");
-  const [searchEscenas, setSearchEscenas] = useState("");
-  const [searchVideoEscenas, setSearchVideoEscenas] = useState("");
-  const [selectedVideoEscenaId, setSelectedVideoEscenaId] = useState<number | null>(null);
+  const [selectedSceneId, setSelectedSceneId] = useState<number | null>(null);
+  const [selectedScenes, setSelectedScenes] = useState([]);
+  const [selectedObjectives, setSelectedObjectives] = useState([]);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  const [subObjetivos, setSubObjetivos] = useState<SubObjetivo[]>([
-    { id: 1, titulo: "Título Sub-Objetivo 1", seleccionado: false },
-    { id: 2, titulo: "Título Sub-Objetivo 2", seleccionado: false },
-    { id: 3, titulo: "Título Sub-Objetivo 3", seleccionado: false },
-    { id: 4, titulo: "Título Sub-Objetivo 4", seleccionado: false },
-    { id: 5, titulo: "Título Sub-Objetivo 4", seleccionado: false },
-
-  ]);
-  const [escenas, setEscenas] = useState<Escena[]>([
-    { id: 1, nombre: "Nombre Escena 1", seleccionado: false },
-    { id: 2, nombre: "Nombre Escena 2", seleccionado: false },
-    { id: 3, nombre: "Nombre Escena 3", seleccionado: false },
-    { id: 5, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 6, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 7, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 8, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 9, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 10, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 11, nombre: "Nombre Escena 4", seleccionado: false },
-    { id: 12, nombre: "Nombre Escena 4", seleccionado: false },
-
-
-
-  ]);
-
-  const [videoEscenas] = useState<VideoEscena[]>([
-    { id: 1, nombre: "Nombre VideoEscena 1", seleccionado: false },
-    { id: 2, nombre: "Nombre VideoEscena 2", seleccionado: false },
-    { id: 3, nombre: "Nombre VideoEscena 3", seleccionado: false },
-    { id: 4, nombre: "Nombre VideoEscena 4", seleccionado: false },
-    { id: 5, nombre: "Nombre VideoEscena 1", seleccionado: false },
-    { id: 6, nombre: "Nombre VideoEscena 2", seleccionado: false },
-    { id: 7, nombre: "Nombre VideoEscena 3", seleccionado: false },
-    { id: 8, nombre: "Nombre VideoEscena 4", seleccionado: false },
-  ]);
-  const [linkVideo, setLinkVideo] = useState("");
-
-  const filteredSubObjetivos = subObjetivos.filter(sub => 
-    sub.titulo.toLowerCase().includes(searchSubObjetivos.toLowerCase())
-  );
-
-  const filteredEscenas = escenas.filter(escena => 
-    escena.nombre.toLowerCase().includes(searchEscenas.toLowerCase())
-  );
-
-  const filteredVideoEscenas = videoEscenas.filter(videoEscena => 
-    videoEscena.nombre.toLowerCase().includes(searchVideoEscenas.toLowerCase())
-  );
-
-  const toggleSubObjetivo = (id: number) => {
-    setSubObjetivos(prev =>
-      prev.map(sub =>
-        sub.id === id ? { ...sub, seleccionado: !sub.seleccionado } : sub
-      )
-    );
-  };
-
-  const toggleEscena = (id: number) => {
-    setEscenas(prev =>
-      prev.map(escena =>
-        escena.id === id ? { ...escena, seleccionado: !escena.seleccionado } : escena
-      )
-    );
-  };
-
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!titulo || !descripcion || !linkVideo || !selectedVideoEscenaId) {
-      alert("Todos los campos son obligatorios");
-      return;
-    }
-
-    const subObjetivosSeleccionados = subObjetivos.filter(
-      (sub) => sub.seleccionado
-    );
-    const escenasSeleccionadas = escenas.filter((escena) => escena.seleccionado);
-
-    console.log({
-      titulo,
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+  
+    const objetivoData = {
+      nombre: titulo,
       descripcion,
-      subObjetivosSeleccionados,
-      escenasSeleccionadas,
-      videoEscenas,
-      linkVideo,
-    });
-
-    alert("Objetivo creado exitosamente");
-
-    setTitulo("");
-    setDescripcion("");
-    setSubObjetivos((prev) =>
-      prev.map((sub) => ({ ...sub, seleccionado: false }))
-    );
-    setEscenas((prev) => prev.map((escena) => ({ ...escena, seleccionado: false })));
-    setLinkVideo("");
+      video_explicativo_id: selectedSceneId, // ID del video explicativo
+      escenas: selectedScenes.map((item) => item.id), // IDs de las escenas seleccionadas
+      objetivos: selectedObjectives.map((item) => item.id),
+    };
+  
+    try {
+      const response = await fetch(`${baseUrl}create_objetivo/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(objetivoData),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error al crear el objetivo:", errorData);
+        alert("Hubo un problema al crear el objetivo.");
+        return;
+      }
+  
+      const data = await response.json();
+      console.log("Objetivo creado con éxito:", data);
+      alert("Objetivo creado con éxito.");
+      // Aquí podrías redirigir o limpiar el formulario
+    } catch (error) {
+      console.error("Error de red al crear el objetivo:", error);
+      alert("Error de red al intentar crear el objetivo.");
+    }
   };
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-blue-50 py-12 px-4">
@@ -166,54 +85,51 @@ const CreateObjetivo: React.FC = () => {
                 className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF] min-h-[200px]"
                 placeholder="Ingrese la descripción"
               />
-            </div>
+            </div>            
             
-            <div>
-              <label htmlFor="linkVideo" className="block font-semibold text-gray-700 mb-2">
-                Link al Video Explicativo
-              </label>
-              <input
-                id="linkVideo"
-                type="text"
-                value={linkVideo}
-                onChange={(e) => setLinkVideo(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
-                placeholder="Ingrese el link"
-              />
-            </div>
-            <SingleSearchSelectBox  
-             title="Video Escena"
-             items={filteredVideoEscenas}
-             searchValue={searchVideoEscenas}
-             onSearchChange={setSearchVideoEscenas}
-             onSelectItem={setSelectedVideoEscenaId}  // Cambiado
-             selectedItemId={selectedVideoEscenaId}    // Cambiado
-             searchPlaceholder="Buscar escenas..."
-             getItemLabel={(item) => String(item.nombre)}
+            <SingleSearchSelectBox
+              title="Buscar Video Explicativo"
+              searchPlaceholder="Escribe el nombre de la escena..."
+              getItemLabel={(item) => item.nombre as string}
+              selectedItemId={selectedSceneId}
+              onSelectItem={(id) => {
+                console.log("Escena seleccionada:", id);
+                setSelectedSceneId(id); // Actualiza el estado con el id seleccionado
+              }}
+              apiUrl={`${baseUrl}escenas/`}
             />
-          </div>
 
-          {/* Columna derecha */}
-          <div className="space-y-6">
+
+          </div>          
+          <div>
             <SearchSelectBox
-              title="Sub-Objetivos"
-              items={filteredSubObjetivos}
-              searchValue={searchSubObjetivos}
-              onSearchChange={setSearchSubObjetivos}
-              onToggleItem={toggleSubObjetivo}
-              searchPlaceholder="Buscar sub-objetivos..."
-              getItemLabel={(item) => String(item.titulo)}
+              title="Buscar Escenas"
+              searchPlaceholder="Escribe el nombre de la escena..."
+              getItemLabel={(item) => item.nombre as string}
+              selectedItems={selectedScenes}
+              onSelectItems={setSelectedScenes}
+              apiUrl={`${baseUrl}escenas/`}
             />
 
             <SearchSelectBox
-              title="Escenas"
-              items={filteredEscenas}
-              searchValue={searchEscenas}
-              onSearchChange={setSearchEscenas}
-              onToggleItem={toggleEscena}
-              searchPlaceholder="Buscar escenas..."
-              getItemLabel={(item) => String(item.nombre)}
+              title="Buscar Objetivos"
+              searchPlaceholder="Escribe el nombre del objetivo..."
+              getItemLabel={(item) => item.nombre as string} // Asumiendo que cada objetivo tiene un campo 'nombre'
+              selectedItems={selectedObjectives}
+              onSelectItems={setSelectedObjectives} // Maneja la selección de objetivos
+              apiUrl={`${baseUrl}objetivos-list/`} // URL para los objetivos
             />
+
+            {/* Botón para manejar los IDs seleccionados 
+            <button
+              onClick={() => console.log("Escenas seleccionadas (IDs):", selectedScenes.map((item) => item.id))}
+              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
+              type="button"
+            >
+              Obtener IDs Seleccionados
+            </button>
+             */}
+           
           </div>
 
           {/* Botón de submit a pantalla completa */}
