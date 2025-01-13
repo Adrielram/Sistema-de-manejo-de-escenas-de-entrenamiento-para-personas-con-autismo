@@ -16,6 +16,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Centrodesalud
+from django.http import JsonResponse
+
 
 import json
 
@@ -31,6 +33,15 @@ def delete_health_center(request, center_id):
         return Response({"message": "Centro de salud eliminado correctamente."}, status=status.HTTP_200_OK)
     except Centrodesalud.DoesNotExist:
         return Response({"error": "Centro de salud no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+
+def listar_centros_de_salud(request):
+    """
+    Retorna una lista de todos los centros de salud disponibles.
+    """
+    centros = Centrodesalud.objects.all().values('id', 'nombre', 'direccion_id_dir__provincia', 'direccion_id_dir__ciudad', 'direccion_id_dir__calle', 'direccion_id_dir__numero')
+    centros_list = list(centros)
+    return JsonResponse(centros_list, safe=False)
 
 
 def example_view(request):

@@ -158,7 +158,7 @@ class Personaobjetivo(models.Model):
 
 
 class Residencia(models.Model):
-    id_dir = models.IntegerField(primary_key=True)
+    id_dir = models.AutoField(primary_key=True)
     provincia = models.CharField(max_length=255)
     ciudad = models.CharField(max_length=255)
     calle = models.CharField(max_length=255)

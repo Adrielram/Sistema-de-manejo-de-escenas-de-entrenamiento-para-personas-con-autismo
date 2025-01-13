@@ -22,6 +22,15 @@ ALLOWED_HOSTS = [
     'backend',  # Nombre del servicio en Docker Compose
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.JWTAuthentication',  # O el método de autenticación que estés utilizando
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
 
 # Application definition
 

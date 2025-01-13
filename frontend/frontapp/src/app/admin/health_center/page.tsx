@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import { FaTrash } from "react-icons/fa";
-import Cookies from "js-cookie";
 import Image from "next/image";
+import Cookies from "js-cookie";
+//const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 interface HealthCenter {
   id: number;
-  name: string;
+  nombre: string;
   color: string;
 }
 
@@ -19,22 +20,15 @@ export default function HealthCenterPage() {
       "bg-blue-300", "bg-blue-400", "bg-blue-500", "bg-blue-600", "bg-blue-700", // Azules
       "bg-orange-300", "bg-orange-400", "bg-orange-500", "bg-orange-600", "bg-orange-700", // Naranjas
       "bg-purple-300", "bg-purple-400", "bg-purple-500", "bg-purple-600", "bg-purple-700", // Violetas
-      "bg-teal-300", "bg-teal-400", "bg-teal-500", "bg-teal-600", "bg-teal-700" // Celestes
+      "bg-teal-300", "bg-teal-400", "bg-teal-500", "bg-teal-600", "bg-teal-700", // Celestes
     ];
 
     const fetchHealthCenters = async () => {
       try {
-        const token = Cookies.get("jwt"); // Recuperar el token JWT de las cookies
-        if (!token) {
-          console.error("No se encontró el token de autenticación.");
-          return;
-        }
-
-        const response = await fetch("${baseUrl}health-centers", {
+        const response = await fetch(`http://localhost:8000/api/health_centers/`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -43,7 +37,7 @@ export default function HealthCenterPage() {
           return;
         }
 
-        const data: { id: number; name: string }[] = await response.json();
+        const data: { id: number; nombre: string }[] = await response.json();
 
         // Asignar colores aleatorios a cada centro de salud
         const shuffledColors = colorPalette.sort(() => 0.5 - Math.random());
@@ -61,19 +55,19 @@ export default function HealthCenterPage() {
     fetchHealthCenters();
   }, []);
 
+
+  const token = Cookies.get("jwt"); // Asumiendo que el token está en las cookies
+  if (!token) {
+    console.error("No se encontró el token de autenticación.");
+    return;
+  }
   const handleDelete = async (id: number) => {
     try {
-      const token = Cookies.get("token");
-      if (!token) {
-        console.error("No se encontró el token de autenticación.");
-        return;
-      }
-
-      const response = await fetch(`/api/health-centers/${id}`, {
+      const response = await fetch(`http://localhost:8000/api/health_centers/${id}/delete/`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
         },
       });
 
@@ -103,7 +97,7 @@ export default function HealthCenterPage() {
               />
             </div>
             <div className="flex items-center justify-center mt-4">
-              <h2 className="text-xl font-semibold text-black">{center.name}</h2>
+              <h2 className="text-xl font-semibold text-black">{center.nombre}</h2>
               <button
                 onClick={() => handleDelete(center.id)}
                 className="ml-4 text-red-600 hover:text-red-800"
