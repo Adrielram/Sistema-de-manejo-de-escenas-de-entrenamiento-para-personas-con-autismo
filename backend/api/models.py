@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 
 
 class Centrodesalud(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     nombre = models.CharField(unique=True, max_length=255)
     direccion_id_dir = models.ForeignKey('Residencia', on_delete=models.CASCADE, db_column='direccion_id_dir')
 
@@ -112,7 +112,7 @@ class Evaluacion(models.Model):
 
 
 class Grupo(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=255, blank=True, null=True)
     centrodesalud = models.ForeignKey(Centrodesalud, on_delete=models.CASCADE, db_column='centroDeSalud_id')
 
