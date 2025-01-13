@@ -30,7 +30,7 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
 
   // para probar:
-  const elementos = [
+  /*const elementos = [
     { id: 1, texto: "Objetivo 1", escena: { id: 1, nombreEscena: "Escena1" } },
     { id: 2, texto: "Objetivo 2", escena: { id: 2, nombreEscena: "Escena2" } },
     { id: 3, texto: "Objetivo 3", escena: { id: 3, nombreEscena: "Escena3" } },
@@ -50,7 +50,8 @@ export default function Page() {
     { id: 18, texto: "Objetivo 3" },
     { id: 19, texto: "Objetivo 4" },
   ];
-//
+*/
+
 
   /*useEffect(() => {
     const fetchObjetivos = async () => {
