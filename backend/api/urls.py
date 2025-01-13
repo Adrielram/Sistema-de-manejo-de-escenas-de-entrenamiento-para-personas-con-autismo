@@ -20,6 +20,7 @@ urlpatterns = [
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
     path('signIn/', views.signIn, name='signIn'),
     path('crear-escena/', views.crear_escena, name='crear_escena'),
+    path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
 ]
 
 
