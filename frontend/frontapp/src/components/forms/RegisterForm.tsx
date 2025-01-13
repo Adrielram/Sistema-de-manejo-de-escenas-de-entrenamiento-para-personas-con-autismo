@@ -4,6 +4,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+
+import SearchWithFatherRes from '../SearchWithFatherRes';
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
     dni: '',
@@ -232,13 +234,8 @@ export default function RegisterForm() {
         {formData.rol === 'Paciente' && (
           <div className="p-3 border border-blue-500 rounded bg-blue-50">
             <h3 className="text-black font-bold mb-2">Asociar Padre</h3>
-            <input
-              type="text"
-              name="asociarPadre"
-              placeholder="Buscar padre (opcional)"
-              value={formData.asociarPadre}
-              onChange={handleInputChange}
-              className="w-full border text-black border-black rounded px-2 py-1"
+            <SearchWithFatherRes 
+              onPadreSeleccionado={(dni) => setFormData({ ...formData, asociarPadre: dni })} 
             />
           </div>
         )}
