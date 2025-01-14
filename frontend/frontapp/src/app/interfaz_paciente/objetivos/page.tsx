@@ -62,12 +62,16 @@ export default function Page() {
 
   useEffect(() => {
     const fetchObjetivos = async () => {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       try {
         // SI NO SE RENDERIZADA DEL LADO DEL CLIENTE, NO USAR 'LOCALHOST', USAR 'BACKEND'
-        const response = await fetch("http://localhost:8000/api/objetivos");  // CREO NO, LLAMAR A METODO DE API.JS
+        const response = await fetch(
+          //`${baseUrl}objetivos`
+          'http://localhost:8000/api/objetivos'
+        );
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
-        }
+        } 
         const data = await response.json();
         setObjetivos(data);
       } catch (err) {
