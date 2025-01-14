@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Objetivo
+from .models import User, Objetivo, PersonaObjetivoEvaluacion
 
 class PacienteSerializer(serializers.ModelSerializer):
     padreACargo = serializers.SerializerMethodField()
@@ -14,4 +14,12 @@ class PacienteSerializer(serializers.ModelSerializer):
 class ObjetivoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Objetivo
-        fields = ['id', 'titulo', 'descripcion', 'escena']
+        fields = ['id', 'nombre', 'descripcion', 'escena']
+
+
+class PersonaObjetivoEvaluacionSerializer(serializers.ModelSerializer):
+    objetivo = ObjetivoSerializer()
+
+    class Meta:
+        model = PersonaObjetivoEvaluacion
+        fields = ['progreso', 'objetivo', 'resultado']

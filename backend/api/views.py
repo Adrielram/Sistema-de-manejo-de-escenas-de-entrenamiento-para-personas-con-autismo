@@ -265,6 +265,15 @@ def signIn(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+@api_view(['GET'])
+def objetivos_por_usuario(request, user_id):
+    evaluaciones = PersonaObjetivoEvaluacion.objects.filter(user_id=user_id)
+    if not evaluaciones.exists():
+        return Response({"error": "No se encontraron objetivos para este usuario."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = PersonaObjetivoEvaluacionSerializer(evaluaciones, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 @api_view(['GET'])
 def buscar_padres(request):
