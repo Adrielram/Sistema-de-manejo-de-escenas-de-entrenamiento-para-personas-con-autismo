@@ -1,75 +1,81 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import DropDownList from "../../../../components/DropDownList";
-import SearchableDropDown from "../../../../components/SearchableDropDown";
 
-const CrearCentroSalud: React.FC = () => {
+import React, { useEffect, useState } from "react";
+import DropDownList from "../../../../components/DropDownList";
+
+export default function Page() {
+  const [nombreCentro, setNombreCentro] = useState<string>("");
   const [provincias, setProvincias] = useState<string[]>([]);
   const [ciudades, setCiudades] = useState<string[]>([]);
-  const [grupos, setGrupos] = useState<string[]>([]);
-  const [nombreCentro, setNombreCentro] = useState("");
-  const [provinciaSeleccionada, setProvinciaSeleccionada] = useState("");
-  const [ciudadSeleccionada, setCiudadSeleccionada] = useState("");
-  const [calle, setCalle] = useState("");
-  const [numero, setNumero] = useState("");
-  const [grupoSeleccionado, setGrupoSeleccionado] = useState("");
+  const [calle, setCalle] = useState<string>("");
+  const [numero, setNumero] = useState<string>("");
+  const [provinciaSeleccionada, setProvinciaSeleccionada] = useState<string>("");
+  const [ciudadSeleccionada, setCiudadSeleccionada] = useState<string>("");
 
+  // Cargar provincias y ciudades
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProvincesAndCities = async () => {
       try {
-        const provinciasResponse = await fetch("/api/provincias");
-        const gruposResponse = await fetch("/api/grupos");
-        setProvincias(await provinciasResponse.json());
-        setGrupos(await gruposResponse.json());
+        const response = await fetch("http://127.0.0.1:8000/api/get_info/");
+        if (response.ok) {
+          const data = await response.json();
+          setProvincias(data.provinces.map((item: { provincia: string }) => item.provincia));
+          setCiudades(data.cities.map((item: { ciudad: string }) => item.ciudad));
+        } else {
+          console.error("Error al cargar provincias y ciudades");
+        }
       } catch (error) {
-        console.error("Error al obtener datos del backend:", error);
+        console.error("Error de conexión al cargar provincias y ciudades:", error);
       }
     };
 
-    fetchData();
+    fetchProvincesAndCities();
   }, []);
 
-  useEffect(() => {
-    const fetchCiudades = async () => {
-      if (provinciaSeleccionada) {
-        try {
-          const ciudadesResponse = await fetch(
-            `/api/ciudades?provincia=${provinciaSeleccionada}`
-          );
-          setCiudades(await ciudadesResponse.json());
-        } catch (error) {
-          console.error("Error al obtener ciudades:", error);
-        }
-      } else {
-        setCiudades([]);
-      }
-    };
-
-    fetchCiudades();
-  }, [provinciaSeleccionada]);
-
+  // Manejar el cambio de provincia y filtrar ciudades
   const handleProvinciaChange = (selected: string) => {
     setProvinciaSeleccionada(selected);
-    setCiudadSeleccionada(""); // Resetear ciudad cuando se cambia de provincia
+    setCiudadSeleccionada(""); // Limpiar la ciudad seleccionada al cambiar de provincia
   };
 
-  const handleSubmit = () => {
-    const nuevoCentroSalud = {
+  // Guardar el centro de salud
+  const handleSubmit = async () => {
+    const payload = {
       nombre: nombreCentro,
       provincia: provinciaSeleccionada,
       ciudad: ciudadSeleccionada,
       calle,
       numero,
-      grupo: grupoSeleccionado,
     };
 
-    console.log("Datos del nuevo centro de salud:", nuevoCentroSalud);
-    // Lógica para enviar al backend
-    // fetch('/api/centros', { method: 'POST', body: JSON.stringify(nuevoCentroSalud), headers: { 'Content-Type': 'application/json' } })
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/create_health_center/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        alert("Centro de salud creado con éxito");
+        // Limpiar campos después de guardar
+        setNombreCentro("");
+        setProvinciaSeleccionada("");
+        setCiudadSeleccionada("");
+        setCalle("");
+        setNumero("");
+      } else {
+        alert("Error al guardar el centro de salud. Intenta nuevamente.");
+      }
+    } catch (error) {
+      console.error("Error de conexión:", error);
+      alert("Hubo un problema al conectarse al servidor.");
+    }
   };
 
   return (
-    <div style={{ padding: "20px", color: "black" }}>
+    <div style={{ padding: "20px", color: "black", marginLeft: "250px" }}>
       <div>
         <label>Nombre del Centro de Salud</label>
         <input
@@ -127,30 +133,21 @@ const CrearCentroSalud: React.FC = () => {
             onChange={(e) => setNumero(e.target.value)}
             placeholder="Número"
             style={{ width: "100%" }}
-            pattern="^[0-9]+$" // Esto es para asegurar que solo se ingresen números
+            pattern="^[0-9]+$"
             title="Solo se permiten números"
           />
         </div>
-      </div>
-
-      <div style={{ marginBottom: "20px" }}>
-        <label>Grupo Asociado</label>
-        <SearchableDropDown
-          title="Grupos"
-          items={grupos}
-          onSelect={(selected: string) => setGrupoSeleccionado(selected)}
-        />
       </div>
 
       <button
         onClick={handleSubmit}
         style={{
           padding: "10px 20px",
-          backgroundColor: "#f6512b", // Color del botón actualizado
+          backgroundColor: "#f6512b",
           color: "#fff",
           border: "none",
           borderRadius: "5px",
-          position: "fixed", // Fijar el botón en la parte inferior derecha
+          position: "fixed",
           bottom: "20px",
           right: "20px",
         }}
@@ -162,7 +159,7 @@ const CrearCentroSalud: React.FC = () => {
       <style jsx>{`
         @media (max-width: 600px) {
           div > div {
-            width: 100% !important; /* Cambiar el ancho a 100% en pantallas pequeñas */
+            width: 100% !important;
           }
           .form-container {
             padding: 10px;
@@ -176,6 +173,4 @@ const CrearCentroSalud: React.FC = () => {
       `}</style>
     </div>
   );
-};
-
-export default CrearCentroSalud;
+}

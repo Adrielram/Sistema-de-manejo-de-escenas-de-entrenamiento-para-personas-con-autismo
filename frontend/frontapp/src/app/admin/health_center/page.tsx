@@ -56,21 +56,23 @@ export default function HealthCenterPage() {
   }, []);
 
 
-  const token = Cookies.get("jwt"); // Asumiendo que el token está en las cookies
-  if (!token) {
-    console.error("No se encontró el token de autenticación.");
-    return;
-  }
+  const token = Cookies.get("jwt"); // El token solo se usa para eliminar
+
   const handleDelete = async (id: number) => {
+    if (!token) {
+      console.error("No se encontró el token de autenticación.");
+      return;
+    }
+  
     try {
       const response = await fetch(`http://localhost:8000/api/health_centers/${id}/delete/`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`, // Uso del token solo para eliminación
         },
       });
-
+  
       if (response.ok) {
         setHealthCenters(healthCenters.filter((center) => center.id !== id));
       } else {

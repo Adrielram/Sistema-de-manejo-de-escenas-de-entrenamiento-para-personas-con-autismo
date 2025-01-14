@@ -21,6 +21,8 @@ urlpatterns = [
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
     path('health_centers/<int:center_id>/delete/', delete_health_center, name='delete_health_center'),
     path('health_centers/', views.listar_centros_de_salud, name='listar_centros_de_salud'),
+    path('get_info/', views.get_provinces_and_cities, name='get_provinces_and_cities'),
+    path('create_health_center/', views.create_health_center, name='create_health_center'),
     path('signIn/', views.signIn, name='signIn'),
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
 ]

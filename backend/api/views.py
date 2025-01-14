@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, status
-
+from . import views
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -25,12 +25,58 @@ from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
-#User = get_user_model()  # Modelo de usuario creado por nosotros
+from .models import Residencia 
+from .models import Grupo
+from django.views.decorators.csrf import csrf_exempt
 
 import json
+#User = get_user_model()  # Modelo de usuario creado por nosotros
+
+@csrf_exempt  # Asegúrate de no tener problemas con CSRF
+def create_health_center(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            nombre = data.get("nombre")
+            provincia = data.get("provincia")
+            ciudad = data.get("ciudad")
+            calle = data.get("calle")
+            numero = data.get("numero")
+
+            # Validar que no haya campos vacíos
+            if not nombre or not provincia or not ciudad or not calle or not numero:
+                return JsonResponse({"error": "Faltan campos obligatorios"}, status=400)
+
+            # Crear una nueva instancia de Residencia
+            residencia = Residencia.objects.create(
+                provincia=provincia,
+                ciudad=ciudad,
+                calle=calle,
+                numero=numero
+            )
+
+            # Crear el centro de salud asociado a la nueva residencia
+            centro_de_salud = Centrodesalud.objects.create(
+                nombre=nombre,
+                direccion_id_dir=residencia
+            )
+
+            return JsonResponse({'message': 'Centro de salud creado con éxito'}, status=201)
+
+        except Exception as e:
+            return JsonResponse({'message': str(e)}, status=400)
+
+    return JsonResponse({'message': 'Método no permitido'}, status=405)
 
 
+#El siguiente metodo trae las provincias y ciudades para la lista desplegable de la creacion de un centro
+def get_provinces_and_cities(request):
+    provinces = Residencia.objects.values('provincia').distinct()
+    cities = Residencia.objects.values('ciudad').distinct()
+    return JsonResponse({
+        "provinces": list(provinces),
+        "cities": list(cities),
+    })
 
 
 @api_view(['DELETE'])
