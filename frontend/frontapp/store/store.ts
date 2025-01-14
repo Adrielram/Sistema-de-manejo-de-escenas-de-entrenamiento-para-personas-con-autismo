@@ -1,6 +1,6 @@
 "use client";
 import { configureStore } from "@reduxjs/toolkit";
-import userReducer from '../slices/userSlice';
+import userReducer, { clearUser, setUser } from '../slices/userSlice';
 import { persistStore, persistReducer } from 'redux-persist';
 import { combineReducers } from 'redux';
 import storage from 'redux-persist/lib/storage'; // Usa localStorage
@@ -24,12 +24,36 @@ const store = configureStore({
       },
     }),
 });
+// Verificar la cookie JWT y actualizar el estado de Redux
+const verifySession = async () => {
+  try {
+    const response = await fetch("http://localhost:8000/api/verify-session/", {
+      method: "GET",
+      credentials: "include", // Esto envía las cookies al backend
+    });
 
-// Exporta el store y el persistor
-export const persistor = persistStore(store);
+    if (response.ok) {
+      const data = await response.json();
+      store.dispatch(
+        setUser({
+          username: data.username,
+          role: data.role,
+          loggedIn: true,
+        })
+      );
+    } else {
+      store.dispatch(clearUser()); // Limpia el estado si la cookie no es válida
+    }
+  } catch (error) {
+    console.error("Error al verificar la sesión:", error);
+    store.dispatch(clearUser());
+  }
+};
 
-
-
+// Crear el persistor y verificar la cookie durante el rehydrate
+export const persistor = persistStore(store, null, () => {
+  verifySession(); // Verificar la cookie después de rehidratar el estado
+});
 // Tipo del estado global
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
