@@ -14,12 +14,19 @@ interface Escena{
   nombre: string;
 }
 
-interface Objetivo {
+/*interface Objetivo {
   id: number;
   titulo: string;
   descripcion: string;
   escena: Escena; // explicativa
   escenas: Escena[];  // todas las del objetivo
+}
+*/
+interface Objetivo {
+  id: number;
+  titulo: string;
+  descripcion: string;
+  escena_id: number;
 }
 
 export default function Page() {
@@ -53,7 +60,7 @@ export default function Page() {
 */
 
 
-  /*useEffect(() => {
+  useEffect(() => {
     const fetchObjetivos = async () => {
       try {
         // SI NO SE RENDERIZADA DEL LADO DEL CLIENTE, NO USAR 'LOCALHOST', USAR 'BACKEND'
@@ -72,13 +79,13 @@ export default function Page() {
     };
     fetchObjetivos();
   }, []);
-  */
+
 
   const handleObjetivoClick = (objetivoId: number) => {
     const objetivo = objetivos.find(obj => obj.id === objetivoId);
     if (objetivo) {
       setObjetivoSeleccionado(objetivoId);
-      setEscenasActivas(objetivo.escenas);
+      //setEscenasActivas(objetivo.escenas);
     }
   };
 

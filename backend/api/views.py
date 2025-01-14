@@ -89,7 +89,8 @@ def verify_session(request):
     
 
 def objetivos_list(request):
-    objetivos = Personaobjetivo.objects.all().values()  # Obtiene todos los objetivos
+    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos
+    print(JsonResponse(list(objetivos), safe=False))
     return JsonResponse(list(objetivos), safe=False)
 
 def obj_list_user(request, user_id):

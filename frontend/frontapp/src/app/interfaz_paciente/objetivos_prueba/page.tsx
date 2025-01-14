@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import ScrollVerticalYHorizontal from "../../../components/ScrollVerticalYHorizontal";
+import SearchBar from "../../../components/Buscador";
+
 
 const mockObjetivos = [
     {
@@ -206,7 +208,8 @@ const mockObjetivos = [
 export default function Page() {
   const [escenasActivas, setEscenasActivas] = useState(mockObjetivos[0].escenas);
   const [objetivoSeleccionado, setObjetivoSeleccionado] = useState<number>(mockObjetivos[0].id);
-
+  const [query, setQuery] = useState('');
+  
   const handleObjetivoClick = (objetivoId: number) => {
     const objetivo = mockObjetivos.find(obj => obj.id === objetivoId);
     if (objetivo) {
@@ -217,8 +220,8 @@ export default function Page() {
 
   return (
     <div className="flex h-screen p-4 gap-6">
-      {/* Sección de Objetivos - 40% del ancho */}
-      <div className="w-2/5">
+      {/* Sección de Objetivos - 30% del ancho */}
+      <div className="w-[30%]">
         <h2 className="text-xl font-bold mb-2">Objetivos</h2>
         <ScrollVerticalYHorizontal 
           elementos={mockObjetivos}
@@ -230,8 +233,8 @@ export default function Page() {
       {/* Separador vertical */}
       <div className="w-0.5 bg-gray-200"></div>
 
-      {/* Sección de Escenas - 60% del ancho */}
-      <div className="w-3/5">
+      {/* Sección de Escenas - 45% del ancho */}
+      <div className="w-[45%]">
         <h2 className="text-xl font-bold mb-2">
           Escenas {objetivoSeleccionado && `- ${mockObjetivos.find(obj => obj.id === objetivoSeleccionado)?.titulo}`}
         </h2>
@@ -247,6 +250,17 @@ export default function Page() {
               </li>
             ))}
           </ul>
+        </div>
+      </div>
+
+      {/* Separador vertical */}
+      <div className="w-0.5 bg-gray-200"></div>
+
+      {/* Sección de Buscador - 25% del ancho */}
+      <div className="w-[25%]">
+        <h2 className="text-xl font-bold mb-2">Buscador</h2>
+        <div className="h-[calc(100vh-100px)]">
+        <SearchBar onSearch={setQuery} placeholder="Buscar Objetivo" />
         </div>
       </div>
     </div>
