@@ -31,7 +31,7 @@ type datosProps = {
   id: number;
   nombre: string;
   dni?: string;
-  padreACargo?: string;
+  nombre_padre?: string;
   role?: string;
 }
 
@@ -106,7 +106,7 @@ const Box = ({elem , opciones, img}:BoxProps) => {
   const elemento = {
     nombre: elem.nombre || "Sin asignar",
     dni: elem.dni || "Sin asignar",
-    padreACargo: elem.padreACargo || "Sin asignar"
+    padreACargo: elem.nombre_padre || "Sin asignar"
   };  
   
   return (

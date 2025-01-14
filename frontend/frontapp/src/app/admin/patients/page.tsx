@@ -18,6 +18,7 @@ const PacientesPage = () => {
         `${baseUrl}pacientes/?nombre=${query}&page=${page}`
       );
       const data = await response.json();
+      console.log("Data:", data);
       setPacientes(data.results);
       console.log("Pacientes:", data.results);
       setNextPage(data.next);
