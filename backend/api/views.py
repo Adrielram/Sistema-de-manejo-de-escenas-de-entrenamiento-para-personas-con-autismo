@@ -317,3 +317,4 @@ class ObjetivosListView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
    
+

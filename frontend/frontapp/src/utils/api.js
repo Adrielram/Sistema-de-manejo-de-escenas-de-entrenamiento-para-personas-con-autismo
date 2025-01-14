@@ -45,7 +45,7 @@ export const create_scene = async (nuevaEscena) => {
                 nombre: nuevaEscena.nombre,
                 idioma: nuevaEscena.idioma,
                 acento: nuevaEscena.acento,
-                edad: nuevaEscena.edad ?? null, // Si no está definido, asigna null
+                condiciones: nuevaEscena.condiciones ?? null, // Si no está definido, asigna null
                 complejidad:nuevaEscena.complejidad,
                 link: nuevaEscena.link
             }),
@@ -66,3 +66,5 @@ export const create_scene = async (nuevaEscena) => {
         };
     }
   };
+
+ 
