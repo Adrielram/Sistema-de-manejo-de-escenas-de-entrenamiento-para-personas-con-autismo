@@ -35,7 +35,6 @@ class User(AbstractUser):
     role = models.CharField(max_length=255, choices=ROLE_CHOICES, default='paciente')
     direccion_id_dir = models.ForeignKey('Residencia', on_delete=models.CASCADE, db_column='direccion_id_dir')
     user_id_padre = models.ForeignKey('self', on_delete=models.SET_NULL, db_column='user_id_padre', blank=True, null=True)
-    ult_conexion = models.DateTimeField(blank=True, null=True)
     groups = models.ManyToManyField(
         'auth.Group',
         related_name='custom_user_groups'
