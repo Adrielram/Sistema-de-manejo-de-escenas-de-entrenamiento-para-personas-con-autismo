@@ -81,10 +81,16 @@ class Objetivo(models.Model):
     nombre = models.CharField(max_length=100, default="Sin Nombre")
     descripcion = models.CharField(max_length=255)
     escena = models.ForeignKey(Escena, on_delete=models.PROTECT, related_name='objetivo_explicativo')
-    centro_salud_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id', related_name='objetivo_centro_salud_id')
-    profesional_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id_profesional', related_name='objetivo_profesional_id')
-    class Meta:   
+    centro_salud_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id',to_field = 'centrodesalud', related_name='objetivo_centro_salud_id')
+    profesional_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id_profesional',to_field='profesional', related_name='objetivo_profesional_id')
+    class Meta:
         db_table = 'objetivo'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['centro_salud_id', 'profesional_id'],
+                name='unique_centro_profesional_in_objetivo'
+            )
+        ]
 
 class Evaluacion(models.Model): 
     id = models.AutoField(primary_key=True)
