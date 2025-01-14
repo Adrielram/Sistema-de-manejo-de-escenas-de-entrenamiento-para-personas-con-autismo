@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { FaTrash } from "react-icons/fa";
 import Image from "next/image";
-import Cookies from "js-cookie";
+//import Cookies from "js-cookie";
 //const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 interface HealthCenter {
@@ -56,20 +56,20 @@ export default function HealthCenterPage() {
   }, []);
 
 
-  const token = Cookies.get("jwt"); // El token solo se usa para eliminar
+  //const token = Cookies.get("jwt"); // El token solo se usa para eliminar
 
   const handleDelete = async (id: number) => {
-    if (!token) {
+    /*if (!token) {
       console.error("No se encontró el token de autenticación.");
       return;
-    }
+    }*/
   
     try {
       const response = await fetch(`http://localhost:8000/api/health_centers/${id}/delete/`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`, // Uso del token solo para eliminación
+          //"Authorization": `Bearer ${token}`, // Uso del token solo para eliminación
         },
       });
   
@@ -83,8 +83,9 @@ export default function HealthCenterPage() {
     }
   };
 
+
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 lg:pl-64">
       <h1 className="text-3xl font-bold mb-6 text-black">Centros de Salud</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
         {healthCenters.map((center) => (

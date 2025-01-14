@@ -75,91 +75,112 @@ export default function Page() {
   };
 
   return (
-    <div style={{ padding: "20px", color: "black", marginLeft: "250px" }}>
-      <div>
-        <label>Nombre del Centro de Salud</label>
-        <input
-          type="text"
-          value={nombreCentro}
-          onChange={(e) => setNombreCentro(e.target.value)}
-          placeholder="Nombre del centro"
-          style={{
-            width: "100%",
-            marginBottom: "20px",
-          }}
-        />
-      </div>
-
+    <div
+      style={{
+        backgroundColor: "#f0f0f0", // Fondo gris claro
+        padding: "40px", // Espaciado para separar del borde
+        minHeight: "100vh", // Asegura que cubra toda la altura de la pantalla
+      }}
+    >
       <div
         style={{
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          marginBottom: "20px",
+          padding: "20px",
+          backgroundColor: "#fff", // Fondo blanco para los componentes internos
+          borderRadius: "10px", // Bordes redondeados
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // Sombra sutil
+          color: "black",
+          margin: "0 auto",
+          maxWidth: "800px", // Centra y limita el ancho
         }}
       >
-        <div style={{ width: "48%", marginBottom: "20px" }}>
-          <DropDownList
-            listName="Provincias"
-            items={provincias}
-            onSelect={(selected: string) => handleProvinciaChange(selected)}
-          />
-        </div>
-
-        <div style={{ width: "48%", marginBottom: "20px" }}>
-          <DropDownList
-            listName="Ciudades"
-            items={ciudades}
-            onSelect={(selected: string) => setCiudadSeleccionada(selected)}
-          />
-        </div>
-
-        <div style={{ width: "48%", marginBottom: "20px" }}>
-          <label style={{ fontWeight: "bold" }}>Calle</label>
+        <div>
+          <label>Nombre del Centro de Salud</label>
           <input
             type="text"
-            value={calle}
-            onChange={(e) => setCalle(e.target.value)}
-            placeholder="Calle"
-            style={{ width: "100%" }}
+            value={nombreCentro}
+            onChange={(e) => setNombreCentro(e.target.value)}
+            placeholder="Nombre del centro"
+            style={{
+              width: "100%",
+              marginBottom: "20px",
+            }}
           />
         </div>
-
-        <div style={{ width: "48%", marginBottom: "20px" }}>
-          <label style={{ fontWeight: "bold" }}>Número</label>
-          <input
-            type="text"
-            value={numero}
-            onChange={(e) => setNumero(e.target.value)}
-            placeholder="Número"
-            style={{ width: "100%" }}
-            pattern="^[0-9]+$"
-            title="Solo se permiten números"
-          />
+  
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "space-between",
+            marginBottom: "20px",
+          }}
+        >
+          <div style={{ width: "48%", marginBottom: "20px" }}>
+            <DropDownList
+              listName="Provincias"
+              items={provincias}
+              onSelect={(selected: string) => handleProvinciaChange(selected)}
+            />
+          </div>
+  
+          <div style={{ width: "48%", marginBottom: "20px" }}>
+            <DropDownList
+              listName="Ciudades"
+              items={ciudades}
+              onSelect={(selected: string) => setCiudadSeleccionada(selected)}
+            />
+          </div>
+  
+          <div style={{ width: "48%", marginBottom: "20px" }}>
+            <label style={{ fontWeight: "bold" }}>Calle</label>
+            <input
+              type="text"
+              value={calle}
+              onChange={(e) => setCalle(e.target.value)}
+              placeholder="Calle"
+              style={{ width: "100%" }}
+            />
+          </div>
+  
+          <div style={{ width: "48%", marginBottom: "20px" }}>
+            <label style={{ fontWeight: "bold" }}>Número</label>
+            <input
+              type="text"
+              value={numero}
+              onChange={(e) => setNumero(e.target.value)}
+              placeholder="Número"
+              style={{ width: "100%" }}
+              pattern="^[0-9]+$"
+              title="Solo se permiten números"
+            />
+          </div>
         </div>
+  
+        <button
+          onClick={handleSubmit}
+          style={{
+            padding: "10px 20px",
+            backgroundColor: "#f6512b",
+            color: "#fff",
+            border: "none",
+            borderRadius: "5px",
+            position: "fixed",
+            bottom: "20px",
+            right: "20px",
+          }}
+        >
+          Guardar Centro de Salud
+        </button>
       </div>
-
-      <button
-        onClick={handleSubmit}
-        style={{
-          padding: "10px 20px",
-          backgroundColor: "#f6512b",
-          color: "#fff",
-          border: "none",
-          borderRadius: "5px",
-          position: "fixed",
-          bottom: "20px",
-          right: "20px",
-        }}
-      >
-        Guardar Centro de Salud
-      </button>
-
+  
       {/* Media Query para pantallas pequeñas */}
       <style jsx>{`
         @media (max-width: 600px) {
           div > div {
             width: 100% !important;
+          }
+          input {
+            width: 100%;
           }
           .form-container {
             padding: 10px;
@@ -173,4 +194,4 @@ export default function Page() {
       `}</style>
     </div>
   );
-}
+}  
