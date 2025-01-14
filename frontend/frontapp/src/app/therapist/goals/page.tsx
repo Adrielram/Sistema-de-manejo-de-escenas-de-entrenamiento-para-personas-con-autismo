@@ -80,7 +80,7 @@ const goals = () => {
     <div>
       <div className="flex flex-row flex-wrap justify-center gap-x-14">
         {goals.map((goal, index) => (
-          <li key={index}>
+          <li key={index} className='list-none'>
             <Box 
               elem={goal} 
               img='/icon/diana.png' 

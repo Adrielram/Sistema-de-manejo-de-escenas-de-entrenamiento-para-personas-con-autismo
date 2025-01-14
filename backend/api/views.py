@@ -8,14 +8,12 @@ from .models import *
 from .serializers import *
 from rest_framework.views import APIView
 from rest_framework import status
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, status
 from datetime import datetime
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
-from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters

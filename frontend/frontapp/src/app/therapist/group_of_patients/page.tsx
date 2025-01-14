@@ -80,7 +80,7 @@ const group_of_patient = () => {
     <div>
       <div className="flex flex-row flex-wrap justify-center gap-x-14">
         {group_of_patients.map((group_of_patient, index) => (
-          <li key={index}>
+          <li key={index} className='list-none'>
             <Box 
               elem={group_of_patient} 
               img='/icon/silueta_de_multiples_usuarios.png' 

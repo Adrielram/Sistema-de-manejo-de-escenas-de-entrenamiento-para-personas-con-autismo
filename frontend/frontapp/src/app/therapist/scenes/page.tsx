@@ -80,7 +80,7 @@ const scenes = () => {
     <div>
       <div className="flex flex-row flex-wrap justify-center gap-x-14">
         {scenes.map((scene, index) => (
-          <li key={index}>
+          <li key={index} className='list-none'>
             <Box 
               elem={scene} 
               img='/icon/pelicula.png' 
