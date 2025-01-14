@@ -46,7 +46,7 @@ export default function LoginForm() {
           router.push('/interfaz_paciente/principal'); // Redirigir al paciente
         } else if (data.role === "padre") {
           router.push('/interfaz_padre/principal'); // Redirigir al padre
-        } else if (data.role === "therapist") {
+        } else if (data.role === "terapeuta") {
           router.push('/therapist'); // Redirigir al terapeuta
         } else {
           setError('Rol desconocido. Contacte al soporte.'); // Manejar roles inesperados
