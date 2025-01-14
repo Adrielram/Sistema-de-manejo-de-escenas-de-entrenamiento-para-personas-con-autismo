@@ -28,99 +28,13 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Residencia 
 from .models import Grupo
 from django.views.decorators.csrf import csrf_exempt
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import rest_framework as filters
 
 import json
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
-@csrf_exempt  # Asegúrate de no tener problemas con CSRF
-def create_health_center(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            nombre = data.get("nombre")
-            provincia = data.get("provincia")
-            ciudad = data.get("ciudad")
-            calle = data.get("calle")
-            numero = data.get("numero")
-
-            # Validar que no haya campos vacíos
-            if not nombre or not provincia or not ciudad or not calle or not numero:
-                return JsonResponse({"error": "Faltan campos obligatorios"}, status=400)
-
-            # Crear una nueva instancia de Residencia
-            residencia = Residencia.objects.create(
-                provincia=provincia,
-                ciudad=ciudad,
-                calle=calle,
-                numero=numero
-            )
-
-            # Crear el centro de salud asociado a la nueva residencia
-            centro_de_salud = Centrodesalud.objects.create(
-                nombre=nombre,
-                direccion_id_dir=residencia
-            )
-
-            return JsonResponse({'message': 'Centro de salud creado con éxito'}, status=201)
-
-        except Exception as e:
-            return JsonResponse({'message': str(e)}, status=400)
-
-    return JsonResponse({'message': 'Método no permitido'}, status=405)
-
-
-#El siguiente metodo trae las provincias y ciudades para la lista desplegable de la creacion de un centro
-def get_provinces_and_cities(request):
-    provinces = Residencia.objects.values('provincia').distinct()
-    cities = Residencia.objects.values('ciudad').distinct()
-    return JsonResponse({
-        "provinces": list(provinces),
-        "cities": list(cities),
-    })
-
-
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def delete_health_center(request, center_id):
-    try:
-        center = Centrodesalud.objects.get(id=center_id)
-        center.delete()
-        return Response({"message": "Centro de salud eliminado correctamente."}, status=status.HTTP_200_OK)
-    except Centrodesalud.DoesNotExist:
-        return Response({"error": "Centro de salud no encontrado."}, status=status.HTTP_404_NOT_FOUND)
-
-
-def listar_centros_de_salud(request):
-    """
-    Retorna una lista de todos los centros de salud disponibles.
-    """
-    centros = Centrodesalud.objects.all().values('id', 'nombre', 'direccion_id_dir__provincia', 'direccion_id_dir__ciudad', 'direccion_id_dir__calle', 'direccion_id_dir__numero')
-    centros_list = list(centros)
-    return JsonResponse(centros_list, safe=False)
-
-
-
-
-
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def delete_health_center(request, center_id):
-    try:
-        center = Centrodesalud.objects.get(id=center_id)
-        center.delete()
-        return Response({"message": "Centro de salud eliminado correctamente."}, status=status.HTTP_200_OK)
-    except Centrodesalud.DoesNotExist:
-        return Response({"error": "Centro de salud no encontrado."}, status=status.HTTP_404_NOT_FOUND)
-
-
-def listar_centros_de_salud(request):
-    """
-    Retorna una lista de todos los centros de salud disponibles.
-    """
-    centros = Centrodesalud.objects.all().values('id', 'nombre', 'direccion_id_dir__provincia', 'direccion_id_dir__ciudad', 'direccion_id_dir__calle', 'direccion_id_dir__numero')
-    centros_list = list(centros)
-    return JsonResponse(centros_list, safe=False)
-
+import json
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -129,16 +43,19 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # Agregar campos personalizados al payload del token
         token['username'] = user.username  # Incluye el nombre del usuario
+        token['role'] = user.role #El rol del usuario
         return token
         
     def validate(self, attrs):
         data = super().validate(attrs)
         # Agrega el username al response data
         data['username'] = self.user.username
+        data['role'] = self.user.role
         return data
 
 def example_view(request):
     return JsonResponse({'message': 'Hello, world!'})
+
 
 @api_view(['POST'])
 def login(request):
@@ -147,6 +64,7 @@ def login(request):
         response = Response({
             "message": "Login successful",
             "username": serializer.validated_data['username'],  # Obtiene el username desde validated_data
+            "role": serializer.validated_data['role'],  # Obtiene el role desde validated_data
         })
         
         # Almacenar el token de acceso en una cookie HTTP-only
@@ -154,7 +72,8 @@ def login(request):
             'jwt',  # Nombre de la cookie
             serializer.validated_data['access'],  # Token JWT
             httponly=True,  # Previene acceso desde JavaScript
-            samesite='Lax'  # Mejora seguridad contra ataques CSRF
+            samesite='Lax',  # Mejora seguridad contra ataques CSRF
+            max_age=60 * 60
         )
         
         return response
@@ -180,16 +99,18 @@ def verify_session(request):
         # Validar el token JWT y decodificarlo
         access_token = AccessToken(jwt_token)
         username = access_token['username']  # Extraer el campo 'username' del payload
+        role=access_token['role']
         return Response({
             "message": "Autorizado",
-            "username": username  # Incluir el nombre de usuario en la respuesta
+            "username": username,  # Incluir el nombre de usuario en la respuesta
+            "role":role
         }, status=200)
     except Exception as e:
         return Response({"message": "Token inválido o expirado"}, status=401)
     
 
 def objetivos_list(request):
-    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos
+    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
     return JsonResponse(list(objetivos), safe=False)
 
 class PacienteListView(APIView):
@@ -211,13 +132,8 @@ class PacienteListView(APIView):
 class ObjetivoViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
-            data = {
-                'titulo': request.data.get('titulo'),
-                'descripcion': request.data.get('descripcion'),
-                'escena': request.data.get('escenaId')  # Nota que aquí usamos 'escena' en lugar de 'escenaId'
-            }
-
-            serializer = ObjetivoSerializer(data=data)
+            # Serializar los datos
+            serializer = ObjetivoSerializer(data=request.data)
             if serializer.is_valid():
                 objetivo = serializer.save()
                 return Response({
@@ -225,9 +141,9 @@ class ObjetivoViewSet(viewsets.ViewSet):
                     'objetivo': serializer.data
                 }, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         
 from django.db import transaction
 
@@ -364,6 +280,56 @@ def signIn(request):
             {"error": f"Error inesperado: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+def crear_escena(request):
+    try:
+        serializer = EscenaSerializer(data=request.data)
+        
+        # Validar datos
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Escena creada exitosamente", "data": serializer.data},
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Exception as e:
+        return Response(
+            {"error": f"Error inesperado: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+class NameFilter(filters.FilterSet):
+    nombre = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
+
+    def __init__(self, *args, **kwargs):
+        model = kwargs.pop('model', None)
+        if model:
+            self._meta.model = model
+        super().__init__(*args, **kwargs)
+
+    class Meta:
+        model = None  # Se establece dinámicamente
+        fields = ['nombre']
+
+class EscenaListView(generics.ListAPIView):
+    queryset = Escena.objects.all()
+    serializer_class = EscenaSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+
+class ObjetivosListView(generics.ListAPIView):    
+    queryset = Objetivo.objects.all()
+    serializer_class = ObjetivoSerializerList
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+   
 
 
 @api_view(['GET'])
