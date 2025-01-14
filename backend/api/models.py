@@ -67,24 +67,21 @@ class Grupo(models.Model):
     class Meta:
         db_table = 'grupo'
 
-
 class CentroProfesional(models.Model):
-    centrodesalud = models.ForeignKey(Centrodesalud,on_delete=models.CASCADE)
+    centrodesalud = models.ForeignKey(Centrodesalud, on_delete=models.CASCADE)
     profesional = models.ForeignKey(User, on_delete=models.CASCADE)
     class Meta:
         db_table = 'centroProfesional'
-        models.UniqueConstraint(
-            fields=['centrodesalud', 'profesional'], 
-            name='CentroProfesional'
-        )
+        unique_together = (('centrodesalud', 'profesional'),)
 
 class Objetivo(models.Model):
+    # Elimina la línea del id manual o cámbiala por:
+    id = models.AutoField(primary_key=True)  # Aunque esto es implícito en Django y no es necesario declararlo
     nombre = models.CharField(max_length=100, default="Sin Nombre")
     descripcion = models.CharField(max_length=255)
     escena = models.ForeignKey(Escena, on_delete=models.PROTECT, related_name='objetivo_explicativo')
-    # Referencias agregadas para el composite key
-    centroProfesional = models.ForeignKey(CentroProfesional, unique=True, db_column='centroProfesional_id', on_delete=models.CASCADE)
-
+    centro_salud_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id', related_name='objetivo_centro_salud_id')
+    profesional_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id_profesional', related_name='objetivo_profesional_id')
     class Meta:   
         db_table = 'objetivo'
 

@@ -22,6 +22,7 @@ urlpatterns = [
     path('crear-escena/', views.crear_escena, name='crear_escena'),
     path('escenas/', EscenaListView.as_view(), name='escena-list'),
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
+    path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
 ]
 
 
