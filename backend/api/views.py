@@ -240,8 +240,13 @@ def signIn(request):
                         {"error": "El padre especificado no existe o no tiene el rol de 'padre'"},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-            print("Contrasena"+request.data.get('password'))
-            user.set_password(request.data.get('password'))
+            password = request.data.get('password')
+            if not password:
+                return Response(
+                    {"error": "La contraseña es requerida"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            user.set_password(password)
             print("Valida ")
             print(user.check_password(user.password))
             user.is_active = True
