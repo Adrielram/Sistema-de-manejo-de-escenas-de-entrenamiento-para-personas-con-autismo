@@ -58,7 +58,8 @@ def login(request):
             'jwt',  # Nombre de la cookie
             serializer.validated_data['access'],  # Token JWT
             httponly=True,  # Previene acceso desde JavaScript
-            samesite='Lax'  # Mejora seguridad contra ataques CSRF
+            samesite='Lax',  # Mejora seguridad contra ataques CSRF
+            max_age=60 * 60
         )
         
         return response
