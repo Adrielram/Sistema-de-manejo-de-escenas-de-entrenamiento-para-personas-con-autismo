@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Objetivo, Escena, CentroProfesional
+from .models import User, Objetivo, Escena, CentroProfesional, EscenaObjetivo, Objetivoscumplir
 
 class PacienteSerializer(serializers.ModelSerializer):
     padreACargo = serializers.SerializerMethodField()
@@ -26,12 +26,19 @@ class ObjetivoSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'descripcion', 'video_explicativo_id', 'centro_salud_id', 'profesional_id']
 
     def create(self, validated_data):
-        # Extraer el video explicativo
+        # Extraer el video explicativo y las escenas
         video_explicativo = validated_data.pop('escena')
-
-        # Crear el objetivo con los datos validados
+        escenas_ids = validated_data.pop('escenas', [])
+        objetivos_ids = validated_data.pop('objetivos', [])
+        # Crear el objetivo
         objetivo = Objetivo.objects.create(escena=video_explicativo, **validated_data)
-
+        # Crear las relaciones EscenaObjetivo
+        for escena_id in escenas_ids:
+            escena = Escena.objects.get(id=escena_id)
+            EscenaObjetivo.objects.create(objetivo=objetivo, escena=escena)
+        for objetivo_id in objetivos_ids:
+            objetivo_previo = Objetivo.objects.get(id=objetivo_id)
+            Objetivoscumplir.objects.create(objetivo=objetivo, objetivo_previo=objetivo_previo)
         return objetivo
 
 class ObjetivoSerializerList(serializers.ModelSerializer):
