@@ -28,8 +28,11 @@ export default function RegisterForm() {
     asociarPadre: '',
   });
   const [centros, setCentros] = useState<{ id: number; nombre: string }[]>([]); // Inicializar como un array vacío
-  const [pagina, setPagina] = useState(1); // Página actual
+  const pagina = 1; // Página actual
   const [centrosSeleccionados, setCentrosSeleccionados] = useState<number[]>([]); // IDs de los centros seleccionados
+  const [paginaAnterior, setPaginaAnterior] = useState<number | null>(null);
+  const [paginaSiguiente, setPaginaSiguiente] = useState<number | null>(null);
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const router = useRouter();
@@ -46,11 +49,16 @@ export default function RegisterForm() {
   };
   const fetchCentros = async (page: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/obtener_centros_de_salud/?page=${page}&page_size=5`);
+      const response = await fetch(`http://localhost:8000/api/obtener_centros_de_salud/?page=${page}`);
       if (!response.ok) throw new Error('Error al cargar centros de salud');
       const data = await response.json();
-      console.log(data); // Depuración: Verifica el contenido recibido
-      setCentros(data.centros || []); // Actualiza según el campo correcto
+  
+      console.log(data); // Verifica que `data.results` contenga los centros de salud
+  
+      // Actualiza el estado con los centros y otros datos relevantes
+      setCentros(data.results || []); // `results` contiene los centros
+      setPaginaAnterior(data.previous ? page - 1 : null);
+      setPaginaSiguiente(data.next ? page + 1 : null);
     } catch (err) {
       console.error(err); // Depuración: Muestra el error en consola
       setError((err as Error).message); // Muestra el mensaje de error en el front
@@ -61,6 +69,7 @@ export default function RegisterForm() {
   }, [formData.rol, pagina]);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("Centros seleccionados: ", centrosSeleccionados);
     e.preventDefault();
     setError('');
     setSuccess(false);
@@ -88,6 +97,7 @@ export default function RegisterForm() {
           numero: formData.numero,
           id_padre: idPadreSeleccionado || null,
           password: formData.contrasena,
+          centros_de_salud: centrosSeleccionados,
         }),
       });
   
@@ -297,24 +307,25 @@ export default function RegisterForm() {
               ) : (
                 <p className="text-gray-500">Cargando centros de salud...</p>
               )}
-            </ul>
+            </ul>        
             <div className="flex justify-between mt-4">
               <button
                 type="button"
                 className="px-4 py-2 bg-gray-300 rounded"
-                disabled={pagina === 1}
-                onClick={() => setPagina((prev) => Math.max(prev - 1, 1))}
+                disabled={!paginaAnterior} // Deshabilita si no hay página anterior
+                onClick={() => fetchCentros(paginaAnterior)}
               >
                 &lt; Anterior
               </button>
               <button
                 type="button"
                 className="px-4 py-2 bg-gray-300 rounded"
-                onClick={() => setPagina((prev) => prev + 1)}
+                disabled={!paginaSiguiente} // Deshabilita si no hay página siguiente
+                onClick={() => fetchCentros(paginaSiguiente)}
               >
                 Siguiente &gt;
               </button>
-            </div>
+            </div>         
           </div>
         )}
 

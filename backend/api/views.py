@@ -171,7 +171,9 @@ def signIn(request):
         calle = request.data.get('calle')
         numero = request.data.get('numero')
         id_padre = request.data.get('id_padre', None)  # Puede ser opcional
+        centros_de_salud = request.data.get('centros_de_salud', None)  # Puede ser opcional
 
+        print("Centros de salud "+str(centros_de_salud))
         print(f"Datos recibidos: DNI={dni}, Nombre={nombre}, Fecha={fecha_nac}, Genero={genero}, Role={role}")
 
         # Verificar si el DNI ya existe
@@ -245,15 +247,33 @@ def signIn(request):
                     return Response(
                         {"error": "El padre especificado no existe o no tiene el rol de 'padre'"},
                         status=status.HTTP_400_BAD_REQUEST
-                    )
+                    )                
+            
             print("Contrasena"+request.data.get('password'))
             user.set_password(request.data.get('password'))
             print("Valida ")
             print(user.check_password(user.password))
-            user.is_active = True
-            user.save()
+            if role == 'terapeuta':
+                user.is_active = False
+            else:
+                user.is_active = True
+            user.save()       
             print(f"Usuario creado: {user}")
-
+            if role == 'terapeuta' and centros_de_salud is not None:
+                try:       
+                    centros_validos = Centrodesalud.objects.filter(id__in=centros_de_salud)
+                    if centros_validos.count() != len(centros_de_salud):
+                        return Response(
+                            {"error": "Uno o más centros de salud especificados no existen"},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    for centro in centros_validos:
+                        CentroProfesional.objects.create(profesional=user, centrodesalud=centro)
+                except Exception as e:  # Captura cualquier otro error inesperado
+                    return Response(
+                        {"error": f"Error al asociar centros de salud: {str(e)}"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )                         
         return Response(
             {"message": "Usuario registrado exitosamente"},
             status=status.HTTP_201_CREATED
@@ -326,7 +346,13 @@ class ObjetivosListView(generics.ListAPIView):
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
-   
+
+class CentrosSaludListView(generics.ListAPIView):
+    queryset = Centrodesalud.objects.all()
+    serializer_class = CentroSaludSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter  
 
 
 @api_view(['GET'])
@@ -354,34 +380,3 @@ def buscar_padres(request):
         'total_paginas': paginator.num_pages,
         'pagina_actual': page_obj.number
     })
-
-@api_view(['GET'])
-def obtener_centros_de_salud(request):
-    # Obtiene el número de página desde los parámetros de la consulta
-    page = request.GET.get('page', 1)  # Por defecto, página 1
-    centros_por_pagina = 5  # Cambia este número si quieres otro tamaño de página
-
-    # Consulta todos los centros de salud
-    centros = Centrodesalud.objects.all().values('id', 'nombre')
-
-    # Aplica la paginación
-    paginator = Paginator(centros, centros_por_pagina)
-
-    try:
-        centros_paginados = paginator.page(page)
-    except PageNotAnInteger:
-        # Si el parámetro 'page' no es un entero, devuelve la primera página
-        centros_paginados = paginator.page(1)
-    except EmptyPage:
-        # Si el número de página está fuera del rango, devuelve una página vacía
-        centros_paginados = []
-
-    # Construye la respuesta JSON
-    response_data = {
-        'centros': list(centros_paginados),
-        'total_centros': paginator.count,
-        'total_paginas': paginator.num_pages,
-        'pagina_actual': centros_paginados.number if centros_paginados else 0,
-    }
-
-    return JsonResponse(response_data, safe=False)

@@ -23,7 +23,7 @@ urlpatterns = [
     path('escenas/', EscenaListView.as_view(), name='escena-list'),
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
-    path('obtener_centros_de_salud/', views.obtener_centros_de_salud, name='obtener_centros_salud'),
+    path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
 ]
 
 
