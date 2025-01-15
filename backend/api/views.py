@@ -17,10 +17,21 @@ from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import rest_framework as filters
 
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
 import json
+
+from rest_framework import generics
+from rest_framework.pagination import PageNumberPagination
+
+class DynamicPagination(PageNumberPagination):
+    page_size_query_param = "limit"
+    max_page_size = 20
+    page_size = 4
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -96,8 +107,7 @@ def verify_session(request):
     
 
 def objetivos_list(request):
-    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos
-    print(JsonResponse(list(objetivos), safe=False))
+    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
     return JsonResponse(list(objetivos), safe=False)
 
 def obj_list_user(request, user_id):
@@ -124,13 +134,8 @@ class PacienteListView(APIView):
 class ObjetivoViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
-            data = {
-                'titulo': request.data.get('titulo'),
-                'descripcion': request.data.get('descripcion'),
-                'escena': request.data.get('escenaId')  # Nota que aquí usamos 'escena' en lugar de 'escenaId'
-            }
-
-            serializer = ObjetivoSerializer(data=data)
+            # Serializar los datos
+            serializer = ObjetivoSerializer(data=request.data)
             if serializer.is_valid():
                 objetivo = serializer.save()
                 return Response({
@@ -138,9 +143,9 @@ class ObjetivoViewSet(viewsets.ViewSet):
                     'objetivo': serializer.data
                 }, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         
 from django.db import transaction
 
@@ -277,6 +282,56 @@ def signIn(request):
             {"error": f"Error inesperado: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+def crear_escena(request):
+    try:
+        serializer = EscenaSerializer(data=request.data)
+        
+        # Validar datos
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Escena creada exitosamente", "data": serializer.data},
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Exception as e:
+        return Response(
+            {"error": f"Error inesperado: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+class NameFilter(filters.FilterSet):
+    nombre = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
+
+    def __init__(self, *args, **kwargs):
+        model = kwargs.pop('model', None)
+        if model:
+            self._meta.model = model
+        super().__init__(*args, **kwargs)
+
+    class Meta:
+        model = None  # Se establece dinámicamente
+        fields = ['nombre']
+
+class EscenaListView(generics.ListAPIView):
+    queryset = Escena.objects.all()
+    serializer_class = EscenaSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+
+class ObjetivosListView(generics.ListAPIView):    
+    queryset = Objetivo.objects.all()
+    serializer_class = ObjetivoSerializerList
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+   
 
 
 @api_view(['GET'])
