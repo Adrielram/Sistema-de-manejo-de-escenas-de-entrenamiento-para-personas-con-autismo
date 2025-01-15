@@ -7,29 +7,33 @@ const NotificacionesComponent = () => {
   useEffect(() => {
     const socket = new WebSocket('ws://localhost:8000/ws/notificaciones/');
 
-    socket.onopen = () => {
-      console.log("Conectado al servidor de notificaciones.");
+    const handleMessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("Notificación recibida:", data);
+        setNotificaciones(prevState => [...prevState, data]);
     };
 
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log("Notificación recibida:", data);
-      setNotificaciones(prevState => [...prevState, data]);
+    const handleClose = () => {
+        console.log("Conexión cerrada.");
     };
 
-    socket.onclose = () => {
-      console.log("Conexión cerrada.");
+    const handleError = (error) => {
+        console.error("Error en WebSocket:", error);
     };
+    
+    socket.addEventListener("message", handleMessage);
+    socket.addEventListener("close", handleClose);
+    socket.addEventListener("error", handleError);
 
-    socket.onerror = (error) => {
-      console.error("Error en WebSocket:", error);
+    return () => {        
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.close();
+        }        
+        socket.removeEventListener("message", handleMessage);
+        socket.removeEventListener("close", handleClose);
+        socket.removeEventListener("error", handleError);
     };
-
-    return () => {
-        console.log("Cerrando WebSocket...");
-        socket.close();
-      };
-  }, []);
+}, []);
 
   return (
     <div>
