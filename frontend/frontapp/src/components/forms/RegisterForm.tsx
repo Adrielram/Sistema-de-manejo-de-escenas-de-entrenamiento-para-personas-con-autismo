@@ -1,7 +1,7 @@
 // components/RegisterForm.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -27,7 +27,9 @@ export default function RegisterForm() {
     numero: '',
     asociarPadre: '',
   });
-
+  const [centros, setCentros] = useState<{ id: number; nombre: string }[]>([]); // Inicializar como un array vacío
+  const [pagina, setPagina] = useState(1); // Página actual
+  const [centrosSeleccionados, setCentrosSeleccionados] = useState<number[]>([]); // IDs de los centros seleccionados
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const router = useRouter();
@@ -37,6 +39,26 @@ export default function RegisterForm() {
       [e.target.name]: e.target.value,
     });
   };
+  const handleCentroClick = (id: number) => {
+    setCentrosSeleccionados((prev) =>
+      prev.includes(id) ? prev.filter((centroId) => centroId !== id) : [...prev, id]
+    );
+  };
+  const fetchCentros = async (page: number) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/obtener_centros_de_salud/?page=${page}&page_size=5`);
+      if (!response.ok) throw new Error('Error al cargar centros de salud');
+      const data = await response.json();
+      console.log(data); // Depuración: Verifica el contenido recibido
+      setCentros(data.centros || []); // Actualiza según el campo correcto
+    } catch (err) {
+      console.error(err); // Depuración: Muestra el error en consola
+      setError((err as Error).message); // Muestra el mensaje de error en el front
+    }
+  };
+  useEffect(() => {
+    if (formData.rol === 'Terapeuta') fetchCentros(pagina);
+  }, [formData.rol, pagina]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,6 +177,7 @@ export default function RegisterForm() {
             <option value="" disabled>Seleccionar Rol</option>
             <option value="Paciente">Paciente</option>
             <option value="Padre">Padre</option>
+            <option value="Terapeuta">Terapeuta</option>
           </select>
         </div>
 
@@ -249,6 +272,48 @@ export default function RegisterForm() {
                     <span className="ml-2">{idPadreSeleccionado}</span>
                   </li>
               </ul>
+            </div>
+          </div>
+        )}
+        {/* Centros de salud para terapeutas */}
+        {formData.rol === 'Terapeuta' && (
+          <div className="p-4 border border-blue-500 rounded bg-blue-50">
+            <h3 className="text-black font-bold mb-2">Seleccionar Centros de Salud</h3>
+            <ul className="space-y-2">
+              {centros?.length > 0 ? (
+                centros.map((centro: { id: number; nombre: string }) => (
+                  <li
+                    key={centro.id}
+                    className={`p-2 border rounded cursor-pointer ${
+                      centrosSeleccionados.includes(centro.id)
+                        ? 'bg-green-300'
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                    onClick={() => handleCentroClick(centro.id)}
+                  >
+                    {centro.nombre}
+                  </li>
+                ))
+              ) : (
+                <p className="text-gray-500">Cargando centros de salud...</p>
+              )}
+            </ul>
+            <div className="flex justify-between mt-4">
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-300 rounded"
+                disabled={pagina === 1}
+                onClick={() => setPagina((prev) => Math.max(prev - 1, 1))}
+              >
+                &lt; Anterior
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-300 rounded"
+                onClick={() => setPagina((prev) => prev + 1)}
+              >
+                Siguiente &gt;
+              </button>
             </div>
           </div>
         )}

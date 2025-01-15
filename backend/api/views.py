@@ -59,7 +59,7 @@ def login(request):
             serializer.validated_data['access'],  # Token JWT
             httponly=True,  # Previene acceso desde JavaScript
             samesite='Lax',  # Mejora seguridad contra ataques CSRF
-            max_age=60 * 60
+            max_age=60 * 60 #La cookie durará 1 hora.
         )
         
         return response
@@ -298,3 +298,34 @@ def buscar_padres(request):
         'total_paginas': paginator.num_pages,
         'pagina_actual': page_obj.number
     })
+
+@api_view(['GET'])
+def obtener_centros_de_salud(request):
+    # Obtiene el número de página desde los parámetros de la consulta
+    page = request.GET.get('page', 1)  # Por defecto, página 1
+    centros_por_pagina = 5  # Cambia este número si quieres otro tamaño de página
+
+    # Consulta todos los centros de salud
+    centros = Centrodesalud.objects.all().values('id', 'nombre')
+
+    # Aplica la paginación
+    paginator = Paginator(centros, centros_por_pagina)
+
+    try:
+        centros_paginados = paginator.page(page)
+    except PageNotAnInteger:
+        # Si el parámetro 'page' no es un entero, devuelve la primera página
+        centros_paginados = paginator.page(1)
+    except EmptyPage:
+        # Si el número de página está fuera del rango, devuelve una página vacía
+        centros_paginados = []
+
+    # Construye la respuesta JSON
+    response_data = {
+        'centros': list(centros_paginados),
+        'total_centros': paginator.count,
+        'total_paginas': paginator.num_pages,
+        'pagina_actual': centros_paginados.number if centros_paginados else 0,
+    }
+
+    return JsonResponse(response_data, safe=False)
