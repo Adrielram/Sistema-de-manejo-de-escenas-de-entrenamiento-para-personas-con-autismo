@@ -265,6 +265,53 @@ def signIn(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+
+# @api_view(['POST'])
+# def listar_comentarios(request):
+#     user_id = request.data.get('user_id')
+#     objetivo_id = request.data.get('objetivo_id')
+
+#     # Comprobar si se proporcionaron ambos IDs
+#     if user_id is None or objetivo_id is None:
+#         return Response({'error': 'user_id y objetivo_id son requeridos'}, status=status.HTTP_400_BAD_REQUEST)
+
+#     # Obtener los comentarios principales hechos por el usuario en el objetivo
+#     comentarios_usuario = Comentario.objects.filter(
+#         user_id=user_id,
+#         objetivo_id=objetivo_id,
+#         reply_to__isnull=True  # Solo comentarios principales del usuario
+#     )
+
+#     # Lista para almacenar todos los comentarios y sus respuestas
+#     data = []
+
+#     # Iterar sobre los comentarios principales
+#     for comentario in comentarios_usuario:
+#         # Obtener las respuestas para el comentario actual
+#         respuestas = Comentario.objects.filter(reply_to=comentario)
+
+#         # Crear un diccionario para el comentario con sus respuestas
+#         comentario_data = {
+#             'id': comentario.id,
+#             'texto': comentario.texto,
+#             'usuario': comentario.user_id.id,
+#             'respuestas': []
+#         }
+
+#         # Formatear las respuestas
+#         for respuesta in respuestas:
+#             comentario_data['respuestas'].append({
+#                 'id': respuesta.id,
+#                 'texto': respuesta.texto,
+#                 'usuario': respuesta.user_id.id
+#             })
+
+#         # Agregar el comentario formateado a la lista
+#         data.append(comentario_data)
+
+#     # Retornar la respuesta como un objeto Response de DRF
+#     return Response({'comentarios': data})
+
 @api_view(['GET'])
 def objetivos_por_usuario(request, user_id):
     evaluaciones = PersonaObjetivoEvaluacion.objects.filter(user_id=user_id)

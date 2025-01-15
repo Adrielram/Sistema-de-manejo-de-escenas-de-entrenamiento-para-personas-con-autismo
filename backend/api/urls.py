@@ -21,6 +21,11 @@ urlpatterns = [
     path('signIn/', views.signIn, name='signIn'),
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('objetivos-paciente/<int:user_id>/', views.objetivos_por_usuario, name='objetivos-paciente'),
+    #path('listar_comentarios/', listar_comentarios, name='listar_comentarios'),   paso id_user y id_objetivo por json 
+#       {
+#           "user_id": 1,
+#           "objetivo_id": 1
+#       }
 ]
 
 urlpatterns += [path('', include(router.urls))]
