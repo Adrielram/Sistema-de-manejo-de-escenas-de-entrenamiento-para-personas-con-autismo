@@ -72,7 +72,9 @@ class CentroProfesional(models.Model):
     profesional = models.ForeignKey(User, on_delete=models.CASCADE)
     class Meta:
         db_table = 'centroProfesional'
-        unique_together = (('centrodesalud', 'profesional'),)
+        constraints = [
+            models.UniqueConstraint(fields=['centrodesalud', 'profesional'], name='unique_centrodesalud_profesional')
+        ]
 
 class Objetivo(models.Model):
     # Elimina la línea del id manual o cámbiala por:
