@@ -20,8 +20,10 @@ urlpatterns = [
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
     path('objetivo/<int:objetivo_id>/', get_goal_data, name='get_goal_data'),
     path('signIn/', views.signIn, name='signIn'),
-    path('crear-escena/', views.crear_escena, name='crear_escena'),
+<<<<<<<<< Temporary merge branch 1
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
+=========
+    path('crear-escena/', views.crear_escena, name='crear_escena'),
     path('escenas/', EscenaListView.as_view(), name='escena-list'),
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
     #path('obtener-escenas/', obtener_escenas, name='obtener_escenas')

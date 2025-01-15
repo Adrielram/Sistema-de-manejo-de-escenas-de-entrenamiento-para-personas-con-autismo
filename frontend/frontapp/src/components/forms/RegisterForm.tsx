@@ -155,6 +155,8 @@ export default function RegisterForm() {
             <option value="" disabled>Seleccionar Rol</option>
             <option value="Paciente">Paciente</option>
             <option value="Padre">Padre</option>
+            <option value="Terapeuta">Terapeuta</option>
+
           </select>
         </div>
 

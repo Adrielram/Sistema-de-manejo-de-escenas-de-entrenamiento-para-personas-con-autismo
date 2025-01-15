@@ -40,16 +40,19 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # Agregar campos personalizados al payload del token
         token['username'] = user.username  # Incluye el nombre del usuario
+        token['role'] = user.role #El rol del usuario
         return token
         
     def validate(self, attrs):
         data = super().validate(attrs)
         # Agrega el username al response data
         data['username'] = self.user.username
+        data['role'] = self.user.role
         return data
 
 def example_view(request):
     return JsonResponse({'message': 'Hello, world!'})
+
 
 @api_view(['POST'])
 def login(request):
@@ -58,6 +61,7 @@ def login(request):
         response = Response({
             "message": "Login successful",
             "username": serializer.validated_data['username'],  # Obtiene el username desde validated_data
+            "role": serializer.validated_data['role'],  # Obtiene el role desde validated_data
         })
         
         # Almacenar el token de acceso en una cookie HTTP-only
@@ -65,7 +69,8 @@ def login(request):
             'jwt',  # Nombre de la cookie
             serializer.validated_data['access'],  # Token JWT
             httponly=True,  # Previene acceso desde JavaScript
-            samesite='Lax'  # Mejora seguridad contra ataques CSRF
+            samesite='Lax',  # Mejora seguridad contra ataques CSRF
+            max_age=60 * 60
         )
         
         return response
@@ -91,9 +96,11 @@ def verify_session(request):
         # Validar el token JWT y decodificarlo
         access_token = AccessToken(jwt_token)
         username = access_token['username']  # Extraer el campo 'username' del payload
+        role=access_token['role']
         return Response({
             "message": "Autorizado",
-            "username": username  # Incluir el nombre de usuario en la respuesta
+            "username": username,  # Incluir el nombre de usuario en la respuesta
+            "role":role
         }, status=200)
     except Exception as e:
         return Response({"message": "Token inválido o expirado"}, status=401)
@@ -313,7 +320,6 @@ def signIn(request):
         )
 
 
-
 @api_view(['POST'])
 def crear_escena(request):
     try:
@@ -335,32 +341,6 @@ def crear_escena(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-# ! ver si se debe borrar o no este endpoint
-@api_view(['GET'])
-def buscar_padres(request):
-    query = request.GET.get('query', '').strip()
-    page = request.GET.get('page', 1)
-
-    # Filtrar padres por query
-    padres = User.objects.filter(role='padre', nombre__icontains=query)
-
-    # Paginación
-    paginator = Paginator(padres, 5)  # 5 resultados por página
-    try:
-        page_obj = paginator.page(page)
-    except PageNotAnInteger:
-        return JsonResponse({'error': 'El número de página debe ser un entero válido.'}, status=400)
-    except EmptyPage:
-        return JsonResponse({'error': 'El número de página excede el total de páginas disponibles.'}, status=404)
-
-    # Construir respuesta
-    data = [{'dni': padre.dni, 'nombre': padre.nombre} for padre in page_obj]
-    return JsonResponse({
-        'resultados': data,
-        'total_resultados': paginator.count,
-        'total_paginas': paginator.num_pages,
-        'pagina_actual': page_obj.number
-    })
 class NameFilter(filters.FilterSet):
     nombre = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
 
@@ -387,3 +367,31 @@ class ObjetivosListView(generics.ListAPIView):
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
+   
+
+
+@api_view(['GET'])
+def buscar_padres(request):
+    query = request.GET.get('query', '').strip()
+    page = request.GET.get('page', 1)
+
+    # Filtrar padres por query
+    padres = User.objects.filter(role='padre', nombre__icontains=query)
+
+    # Paginación
+    paginator = Paginator(padres, 5)  # 5 resultados por página
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        return JsonResponse({'error': 'El número de página debe ser un entero válido.'}, status=400)
+    except EmptyPage:
+        return JsonResponse({'error': 'El número de página excede el total de páginas disponibles.'}, status=404)
+
+    # Construir respuesta
+    data = [{'dni': padre.dni, 'nombre': padre.nombre} for padre in page_obj]
+    return JsonResponse({
+        'resultados': data,
+        'total_resultados': paginator.count,
+        'total_paginas': paginator.num_pages,
+        'pagina_actual': page_obj.number
+    })

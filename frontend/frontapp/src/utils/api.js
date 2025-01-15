@@ -45,7 +45,7 @@ export const create_scene = async (nuevaEscena) => {
                 nombre: nuevaEscena.nombre,
                 idioma: nuevaEscena.idioma,
                 acento: nuevaEscena.acento,
-                edad: nuevaEscena.edad ?? null, // Si no está definido, asigna null
+                condiciones: nuevaEscena.condiciones ?? null, // Si no está definido, asigna null
                 complejidad:nuevaEscena.complejidad,
                 link: nuevaEscena.link
             }),
@@ -67,31 +67,4 @@ export const create_scene = async (nuevaEscena) => {
     }
   };
 
-
-  export const get_scenes = async () => {
-    try {
-        const getScenesURL = `${baseUrl}obtener-escenas/`; // URL del endpoint
-        console.log(getScenesURL); // Para depuración
-        
-        const response = await fetch(getScenesURL, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json', // Opcional para GET
-            },
-        });
-
-        const data = await response.json();
-
-        if (response.status === 200) {
-            return { success: true, data }; // Retorna las escenas
-        } else {
-            return { success: false, error: data.error || 'Error desconocido' };
-        }
-    } catch (error) {
-        console.error('Error en la solicitud:', error);
-        return { 
-            success: false, 
-            error: error.message || 'Error desconocido',
-        };
-    }
-};
+ 

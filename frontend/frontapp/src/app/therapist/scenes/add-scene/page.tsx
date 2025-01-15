@@ -9,7 +9,7 @@ const CreateScene: React.FC = () => {
   const [titulo, setTitulo] = useState("");
   const [idioma, setIdioma] = useState("");
   const [acento, setAcento] = useState("");
-  const [edad, setEdad] = useState<string>("");
+  const [condiciones, setCondicion] = useState<string>("");
   const [complejidad, setComplejidad] = useState(0);
  
 
@@ -29,7 +29,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       nombre: titulo,
       idioma: idioma,
       acento: acento,
-      edad: edad === "" ? null : edad, // Reemplaza cadena vacía por null
+      condiciones: condiciones === "" ? null : condiciones, // Reemplaza cadena vacía por null
       complejidad: complejidad,
       link: linkVideo,
   };
@@ -45,7 +45,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           setTitulo("");
           setAcento("");
           setIdioma("");
-          setEdad("");
+          setCondicion("");
           setComplejidad(0);
           setLinkVideo("");
       } else {
@@ -131,18 +131,19 @@ const handleSubmit = async (e: React.FormEvent) => {
                 />
             </div>
             <div>
-              <label htmlFor="edad" className="block font-semibold text-gray-700 mb-2">
-                Edad Necesaria
+              <label htmlFor="condiciones" className="block font-semibold text-gray-700 mb-2">
+                Condiciones
               </label>
               <input
-                id="edad"
+                id="condiciones"
                 type="text"
-                value={edad}
+                value={condiciones}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setEdad(value === "" ? "" : value);
-                }}                className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
-                placeholder="Ingrese la Edad"
+                  setCondicion(value === "" ? "" : value);
+                }}                
+                className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
+                placeholder="Ingrese las Condiciones"
               />
             </div>
             
