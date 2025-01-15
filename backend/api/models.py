@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-
 class Centrodesalud(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(unique=True, max_length=100)
@@ -62,46 +61,103 @@ class Escena(models.Model):
 
 class Grupo(models.Model):
     id = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=100, blank=True, null=True)
-    centrodesalud_id = models.ForeignKey(Centrodesalud, on_delete=models.CASCADE, db_column='centroDeSalud_id')
+    nombre = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True
+    )
+    centrodesalud_id = models.ForeignKey(
+        Centrodesalud, 
+        on_delete=models.CASCADE, 
+        db_column='centroDeSalud_id'
+    )
 
     class Meta:
         db_table = 'grupo'
 
 class CentroProfesional(models.Model):
-    centrodesalud = models.ForeignKey(Centrodesalud, on_delete=models.CASCADE)
-    profesional = models.ForeignKey(User, on_delete=models.CASCADE)
+    centrodesalud = models.ForeignKey(
+        Centrodesalud, 
+        on_delete=models.CASCADE
+    )
+    profesional = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE
+    )
+
     class Meta:
         db_table = 'centroProfesional'
-        unique_together = (('centrodesalud', 'profesional'),)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['centrodesalud', 'profesional'],
+                name='unique_centrodesalud_profesional'
+            )
+        ]
 
 class Objetivo(models.Model):
     # Elimina la línea del id manual o cámbiala por:
     id = models.AutoField(primary_key=True)  # Aunque esto es implícito en Django y no es necesario declararlo
-    nombre = models.CharField(max_length=100, default="Sin Nombre")
+    nombre = models.CharField(
+        max_length=100, 
+        default="Sin Nombre"
+    )
     descripcion = models.CharField(max_length=255)
-    escena = models.ForeignKey(Escena, on_delete=models.PROTECT, related_name='objetivo_explicativo')
-    centro_salud_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id', related_name='objetivo_centro_salud_id')
-    profesional_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id_profesional', related_name='objetivo_profesional_id')
+    escena = models.ForeignKey(
+        Escena, 
+        on_delete=models.PROTECT, 
+        related_name='objetivo_explicativo'
+    )
+    centro_profesional = models.ForeignKey(
+        CentroProfesional, 
+        on_delete=models.CASCADE, 
+        db_column='centroProfesional_id',
+        related_name='objetivo_centro_salud_id'
+    )
     class Meta:   
         db_table = 'objetivo'
 
 class Evaluacion(models.Model): 
     id = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=255, blank=True, null=True)
+    nombre = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True
+    )
     link = models.CharField(max_length=2000)
-    centro_salud_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id', related_name='evaluacion_centro_salud_id')
-    profesional_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id_profesional', related_name='evaluacion_profesional_id')
+    centro_salud_id = models.ForeignKey(
+        CentroProfesional, 
+        on_delete=models.CASCADE, 
+        db_column='centroProfesional_id', 
+        related_name='evaluacion_centro_salud_id'
+    )
+    profesional_id = models.ForeignKey(
+        CentroProfesional, 
+        on_delete=models.CASCADE, 
+        db_column='centroProfesional_id_profesional', 
+        related_name='evaluacion_profesional_id'
+    )
     class Meta:
         db_table = 'evaluacion'      
 
 class CentroProfesionalEscena(models.Model):    
-    escena_id = models.ForeignKey(Escena, on_delete=models.CASCADE)
-    centro_salud_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id', related_name='cpe_centro_salud_id')
-    profesional_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id_profesional', related_name='cpe_profesional_id')
+    escena_id = models.ForeignKey(
+        Escena, 
+        on_delete=models.CASCADE
+    )
+    centro_profesional = models.ForeignKey(
+        CentroProfesional, 
+        on_delete=models.CASCADE,  
+        related_name='centro_profesional_id'
+    )
+
     class Meta:
         db_table = 'centroProfesionalEscena'
-        unique_together = (('centro_salud_id', 'profesional_id', 'escena_id'),)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['centro_profesional', 'escena_id'], 
+                name='unique_centro_salud_profesional_escena'
+            )
+        ]
 
 class EscenaObjetivo(models.Model):
     escena = models.ForeignKey('Escena', on_delete=models.CASCADE)
@@ -109,13 +165,17 @@ class EscenaObjetivo(models.Model):
 
     class Meta:
         db_table = 'escenaObjetivo'
-        unique_together = (('escena', 'objetivo'),)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['escena', 'objetivo'], 
+                name='unique_escena_objetivo'
+            )
+        ]
 
 class PersonaObjetivoEscena(models.Model):
     id = models.AutoField(primary_key=True)    
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)
-
-    objetivo_id = models.ForeignKey(
+    escena_objetivo = models.ForeignKey(
         'EscenaObjetivo',
         on_delete=models.SET_NULL,
         related_name='objetivo_relations',
@@ -123,27 +183,23 @@ class PersonaObjetivoEscena(models.Model):
         blank=True,
         null=True
     )
-
-    escena_id = models.ForeignKey(
-        'EscenaObjetivo',
-        on_delete=models.SET_NULL,
-        related_name='escena_relations',
-        db_column='escena_id',
-        blank=True,
-        null=True
-    )
-
     orden = models.IntegerField(blank=True, null=True)
     es_alternativo = models.BooleanField()
 
     class Meta:
-        db_table = 'personaObjetivoEscena'
-        unique_together = (
-            ('user_id', 'objetivo_id', 'escena_id'),
-        )
-        
+        db_table = 'personaEscenaObjetivo'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user_id', 'escena_objetivo'],
+                name='unique_user_escena_objetivo'
+            )
+        ]
+
 class Objetivoscumplir(models.Model):
-    objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE)
+    objetivo = models.ForeignKey(
+        Objetivo, 
+        on_delete=models.CASCADE
+    )
     objetivo_previo = models.ForeignKey(
         Objetivo,
         on_delete=models.CASCADE,
@@ -153,55 +209,61 @@ class Objetivoscumplir(models.Model):
 
     class Meta:
         db_table = 'objetivosCumplir'
-        unique_together = (('objetivo', 'objetivo_previo'),)  
-
-
+        constraints = [
+            models.UniqueConstraint(
+                fields=['objetivo', 'objetivo_previo'], 
+                name='unique_objetivo_objetivo_previo'
+            )
+        ]
 
 class Personagrupo(models.Model):
-    user_id = models.ForeignKey('User', on_delete=models.CASCADE, related_name='personagrupos')
-    grupo_id = models.ForeignKey(Grupo, on_delete=models.CASCADE, related_name='miembros')
+    user_id = models.ForeignKey(
+        'User', 
+        on_delete=models.CASCADE, 
+        related_name='personagrupos'
+    )
+    grupo_id = models.ForeignKey(
+        Grupo, 
+        on_delete=models.CASCADE, 
+        related_name='miembros'
+    )
 
     class Meta:
         db_table = 'personaGrupo'
-        unique_together = (('user_id', 'grupo_id'),)
-
-
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user_id', 'grupo_id'], 
+                name='unique_user_grupo'
+            )
+        ]
 
 class PersonaObjetivoEvaluacion(models.Model):
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)
     objetivo_id = models.ForeignKey('Objetivo', on_delete=models.CASCADE)  
     resultado = models.TextField(blank=True, null=True)
     progreso = models.IntegerField()
-    evaluacion_id = models.ForeignKey('Evaluacion', on_delete=models.CASCADE, blank=True, null=True)
-    centro_salud_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id', related_name='poe_centro_salud_id')
-    profesional_id = models.ForeignKey(CentroProfesional, on_delete=models.CASCADE, db_column='centroProfesional_id_profesional', related_name='poe_profesional_id')
+    evaluacion = models.ForeignKey(
+        'Evaluacion', 
+        on_delete=models.CASCADE, 
+        blank=True, 
+        null=True
+    )
+
     class Meta:    
         db_table = 'personaObjetivoEvaluacion'
-        unique_together = (('user_id', 'objetivo_id', 'evaluacion_id', 'centro_salud_id', 'profesional_id'),)
-
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user_id', 'objetivo_id', 'evaluacion'], 
+                name='unique_user_objetivo_evaluacion'
+            )
+        ]
 
 class Videosvistos(models.Model):
-    escena_id = models.ForeignKey(
+    id = models.AutoField(primary_key=True)
+    persona_objetivo_escena =  models.ForeignKey(
         'PersonaObjetivoEscena',
         on_delete=models.CASCADE,
-        related_name='videosvistos_escena',
-        db_column='escena_id',
-        blank=True,
-        null=True
-    )
-    user_id = models.ForeignKey(
-        'PersonaObjetivoEscena',
-        on_delete=models.CASCADE,
-        related_name='videosvistos_user',
-        db_column='PersonaObjetivoEscena_user_id',
-        blank=True,
-        null=True
-    )
-    objetivo_id = models.ForeignKey(
-        'PersonaObjetivoEscena',
-        on_delete=models.CASCADE,
-        related_name='videosvistos_objetivo',
-        db_column='PersonaObjetivoEscena_objetivo_id',
+        related_name='videosvistos_persona_objetivo_escena',
         blank=True,
         null=True
     )
@@ -209,41 +271,40 @@ class Videosvistos(models.Model):
 
     class Meta:     
         db_table = 'videosVistos'
-        unique_together = (('escena_id', 'user_id', 'objetivo_id'),)
-
+        constraints = [
+            models.UniqueConstraint(
+                fields=['persona_objetivo_escena', 'id'],
+                name='unique_escena_user_objetivo_videos_vistos'
+            )
+        ]
 
 class Comentario(models.Model):
-    escena_id = models.ForeignKey(
+    id = models.AutoField(primary_key=True)
+    persona_objetivo_escena = models.ForeignKey(
         'PersonaObjetivoEscena',
         on_delete=models.CASCADE,
-        related_name='comentarios_escena',
-        db_column='escena_id',
-        blank=True,
-        null=True
-    )
-    user_id = models.ForeignKey(
-        'PersonaObjetivoEscena',
-        on_delete=models.CASCADE,
-        related_name='comentarios_user',
-        db_column='PersonaObjetivoEscena_user_id',
-        blank=True,
-        null=True
-    )
-    objetivo_id = models.ForeignKey(
-        'PersonaObjetivoEscena',
-        on_delete=models.CASCADE,
-        related_name='comentarios_objetivo',
-        db_column='PersonaObjetivoEscena_objetivo_id',
+        related_name='comentarios_persona_objetivo_escena',
         blank=True,
         null=True
     )
     texto = models.TextField(blank=True, null=True)
     visibilidad = models.BooleanField(default=True)
+    comentario_respondido = models.ForeignKey(
+        'Comentario',
+        on_delete=models.CASCADE,
+        related_name='comentarios_comentario_respondido',
+        blank=True,
+        null=True
+    )
 
     class Meta:
         db_table = 'comentario'
-        unique_together = (('escena_id', 'user_id', 'objetivo_id'),)
-
+        constraints = [
+            models.UniqueConstraint(
+                fields=['persona_objetivo_escena', 'id'],
+                name='unique_escena_user_objetivo_comentario'
+            )
+        ]
 
 class Notificacion(models.Model):
     # Usuario destinatario (admin o terapeuta)
