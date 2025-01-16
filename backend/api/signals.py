@@ -13,7 +13,7 @@ def notificacion_usuario_creado(sender, instance, created, **kwargs):
             admin = User.objects.filter(role='admin').first()
             if not admin:
                 raise ValueError("No se encontró un usuario con el rol 'admin'.")
-
+            print("Existe un ADMINISTRADOR")
             # Obtén el ContentType del modelo asociado
             content_type = ContentType.objects.get_for_model(instance)
 
@@ -21,7 +21,7 @@ def notificacion_usuario_creado(sender, instance, created, **kwargs):
             notificacion = Notificacion.objects.create(
                 destinatario=admin,  # El destinatario es el usuario admin
                 remitente=instance,  # El remitente es el usuario recién creado
-                mensaje=f"¡Bienvenido, {instance.username}! Tu cuenta ha sido creada.",
+                mensaje=f"{instance.username} ha enviado una solicitud para registrarse!",
                 estado='pendiente',
                 content_type=content_type,  # El tipo de contenido asociado
                 object_id=instance.dni,  # El ID del objeto asociado

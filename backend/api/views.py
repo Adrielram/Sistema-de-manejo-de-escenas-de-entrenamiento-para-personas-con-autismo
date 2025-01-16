@@ -238,6 +238,13 @@ def signIn(request):
                 email='adri@example.com'
             )
 
+            if role == 'admin':
+                return Response(
+                    {"error": "No está permitido registrar usuarios con rol de administrador a través de esta API."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+
             # Asociar padre si el rol es paciente y se proporciona un ID de padre
             if role == 'paciente' and id_padre:
                 try:
