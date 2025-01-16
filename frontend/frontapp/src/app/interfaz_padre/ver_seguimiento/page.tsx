@@ -21,14 +21,13 @@ type PersonaObjetivo = {
 };
 
 const ObjetivoList = () => {
-  const {userId} = useSelector((state: RootState) => state.user); // Obtén el userId del estado global
+  const {userId} = useSelector((state: RootState) => state.user); 
   const dispatch = useDispatch();
-  //const username = "Mateo Romero"; // Simulación de datos
+  const router = useRouter();
   const [objetivos, setObjetivos] = useState<PersonaObjetivo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const router = useRouter();
   const [nombreUsuario, setNombreUsuario] = useState<string | null>(null); 
 
   useEffect(() => {
@@ -56,7 +55,7 @@ const ObjetivoList = () => {
     const fetchObjetivos = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8000/api/objetivos-paciente/?user_id=${userId}`);
+        const response = await fetch(`http://localhost:8000/api/objetivos-ev-paciente/?user_id=${userId}`);
         
         if (!response.ok) {
           throw new Error('Error al cargar los objetivos');

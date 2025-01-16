@@ -26,8 +26,7 @@ urlpatterns = [
     path('HijosListView/', views.hijos_list_view, name='HijosListView'),
     path('get-dni/', views.get_dni, name='get-dni'),
     path('get-name/', views.obtener_nombre_por_dni, name='get-name'),
-    path('objetivos-paciente/', views.objetivos_por_usuario, name='objetivos-paciente'),
-    path('objetivos-paciente/<int:user_id>/', views.objetivos_por_usuario, name='objetivos-paciente'),
+    path('objetivos-ev-paciente/', views.objetivos_evaluacion_usuario, name='objetivos-ev-paciente'),
     #path('listar_comentarios/', listar_comentarios, name='listar_comentarios'),   paso id_user y id_objetivo por json 
 #       {
 #           "user_id": 1,

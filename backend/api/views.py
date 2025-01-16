@@ -127,46 +127,6 @@ class PacienteListView(APIView):
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from .models import User
-
-@api_view(['GET'])
-def get_dni(request):
-    username = request.query_params.get('username')
-    if not username:
-        return Response({'error': 'Se requiere el parámetro username'}, status=400)
-    
-    try:
-        user = User.objects.get(username=username)
-        return Response({'dni': user.dni})
-    except User.DoesNotExist:
-        return Response({'error': f'No se encontró un usuario con username: {username}'}, status=404)
-
-
-@api_view(['GET'])
-def hijos_list_view(request):
-    padre_id = request.query_params.get('padre_id')
-
-    if not padre_id:
-        return Response(
-            {"error": "El ID del padre es requerido."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    try:
-        # Obtener los usuarios hijos filtrados por `user_id_padre`
-        hijos = User.objects.filter(user_id_padre=padre_id)
-
-        # Serializar los datos de los hijos usando PacienteSerializer
-        serializer = PacienteSerializer(hijos, many=True)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response(
-            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
 
 
 class ObjetivoViewSet(viewsets.ViewSet):
@@ -369,7 +329,31 @@ def signIn(request):
 #     return Response({'comentarios': data})
 
 @api_view(['GET'])
-def objetivos_por_usuario(request):
+def hijos_list_view(request):
+    padre_id = request.query_params.get('padre_id')
+
+    if not padre_id:
+        return Response(
+            {"error": "El ID del padre es requerido."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        # Obtener los usuarios hijos filtrados por `user_id_padre`
+        hijos = User.objects.filter(user_id_padre=padre_id)
+
+        # Serializar los datos de los hijos usando PacienteSerializer
+        serializer = PacienteSerializer(hijos, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+def objetivos_evaluacion_usuario(request):
     user_id = request.query_params.get('user_id')
     if not user_id:
         return Response({"error": "Falta el parámetro 'user_id'."}, status=400)
@@ -382,6 +366,7 @@ def objetivos_por_usuario(request):
     serializer = PersonaObjetivoEvaluacionSerializer(objetivos, many=True)
     return Response(serializer.data)
 
+
 @api_view(['GET'])
 def obtener_nombre_por_dni(request):
     dni = request.query_params.get('dni')  
@@ -392,6 +377,17 @@ def obtener_nombre_por_dni(request):
     except User.DoesNotExist:
         return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
+@api_view(['GET'])
+def get_dni(request):
+    username = request.query_params.get('username')
+    if not username:
+        return Response({'error': 'Se requiere el parámetro username'}, status=400)
+    
+    try:
+        user = User.objects.get(username=username)
+        return Response({'dni': user.dni})
+    except User.DoesNotExist:
+        return Response({'error': f'No se encontró un usuario con username: {username}'}, status=404)
 
 @api_view(['POST'])
 def crear_escena(request):
