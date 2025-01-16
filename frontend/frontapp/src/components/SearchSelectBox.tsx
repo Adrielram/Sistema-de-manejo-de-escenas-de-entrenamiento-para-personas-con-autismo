@@ -12,6 +12,8 @@ interface MultiSearchSelectBoxProps {
   selectedItems: Item[];
   onSelectItems: (items: Item[]) => void;
   apiUrl: string; // URL para la API de escenas
+  resetTrigger: boolean; // Nuevo prop para indicar cuándo resetear el componente
+
 }
 
 const SearchSelectBox = ({
@@ -21,11 +23,20 @@ const SearchSelectBox = ({
   selectedItems,
   onSelectItems,
   apiUrl,
+  resetTrigger, // Nuevo prop
+
 }: MultiSearchSelectBoxProps) => {
   const [searchValue, setSearchValue] = useState("");
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Efecto para resetear el componente cuando se activa resetTrigger
+  useEffect(() => {
+    if (resetTrigger) {
+      setSearchValue(""); // Limpia el valor del campo de búsqueda
+      setItems([]); // Limpia los ítems cargados
+    }
+  }, [resetTrigger]);
 
   // Fetch items cuando searchValue cambia
   useEffect(() => {

@@ -443,20 +443,27 @@ class AssociateCenterView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         username = request.data.get('username')
-        centers = request.data.get('centers', [])
-        
-        user = User.objects.get(username=username)
-        
+        center_ids = request.data.get('centers', [])  # Recibimos solo los IDs
+
         try:
-            for center in centers:
-                print("center: ", center)
-                CentroProfesional.objects.create(centrodesalud=center, profesional=user)
-            
+            user = User.objects.get(username=username)
+
+            for center_id in center_ids:
+                CentroProfesional.objects.create(
+                    centrodesalud_id=center_id,  # Usar directamente el ID
+                    profesional=user
+                )
+
             return Response({
                 'message': 'Centros asociados exitosamente',
-                'centers': centers
+                'centers': center_ids
             }, status=status.HTTP_201_CREATED)
-            
+
+        except User.DoesNotExist:
+            return Response({
+                'error': 'Usuario no encontrado.'
+            }, status=status.HTTP_404_NOT_FOUND)
+
         except Exception as e:
             return Response({
                 'error': str(e)

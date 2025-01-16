@@ -19,6 +19,7 @@ export default function Therapist() {
   const [selectedCenters, setSelectedCenters] = useState([]);
   const {username} = useSelector((state: RootState) => state.user);
   const [associatedCenters, setAssociatedCenters] = useState([]); // Para almacenar los centros asociados
+  const [resetTrigger, setResetTrigger] = useState(false);
 
   const fetchAssociatedCenters = async () => {
     try {
@@ -35,16 +36,16 @@ export default function Therapist() {
   useEffect(() => {
     if (username) fetchAssociatedCenters();
   },);
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
   
     const therapistCenterData = {
       username: username,
-      centers: selectedCenters
+      centers: selectedCenters.map(center => center.id), // Solo enviar el ID de cada centro
     };
-
+  
     console.log('Datos a enviar:', therapistCenterData); // Para depuración
+    console.log('Datos a enviar 2:', JSON.stringify(therapistCenterData)); // Para depuración
   
     try {
       const response = await fetch(`http://localhost:8000/api/associate_center/`, {
@@ -52,7 +53,7 @@ export default function Therapist() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(therapistCenterData),
+        body: JSON.stringify(therapistCenterData), // Serializar el cuerpo correctamente
       });
   
       if (!response.ok) {
@@ -61,7 +62,9 @@ export default function Therapist() {
         alert("Hubo un problema al asociar centros.");
         return;
       }
-  
+      setSelectedCenters([]); // Limpiar los centros seleccionados
+      setResetTrigger((prev) => !prev); // Activa el reinicio del SearchSelectBox
+
       const data = await response.json();
       console.log("Centros asociados con éxito:", data);
       alert("Centros asociados con éxito.");
@@ -99,6 +102,8 @@ export default function Therapist() {
                   getItemLabel={(item) => item.nombre as string}
                   selectedItems={selectedCenters}
                   onSelectItems={setSelectedCenters}
+                  resetTrigger={resetTrigger} // Pasa el trigger al SearchSelectBox
+
                   apiUrl={`http://localhost:8000/api/get_not_associated_centers/${username}/`}
                 />
             </div>
