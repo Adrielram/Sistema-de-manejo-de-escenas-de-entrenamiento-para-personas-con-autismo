@@ -32,6 +32,7 @@ urlpatterns = [
     path('notificaciones/', views.obtener_notificaciones_pendientes, name='notificaciones-pendientes'),
     path('notificaciones/<int:pk>/', views.obtener_detalle_notificacion, name='notification-detail'),
     path('notificaciones/<int:pk>/<str:accion>/', procesar_notificacion, name='procesar_notificacion'),
+    path('check-cookie/', check_cookie, name='check_cookie'),
 ]
 
 
