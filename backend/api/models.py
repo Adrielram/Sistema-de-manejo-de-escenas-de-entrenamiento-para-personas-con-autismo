@@ -3,7 +3,6 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
-
 class Centrodesalud(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(unique=True, max_length=100)
@@ -75,7 +74,9 @@ class CentroProfesional(models.Model):
     profesional = models.ForeignKey(User, on_delete=models.CASCADE)
     class Meta:
         db_table = 'centroProfesional'
-        unique_together = (('centrodesalud', 'profesional'),)
+        constraints = [
+            models.UniqueConstraint(fields=['centrodesalud', 'profesional'], name='unique_centrodesalud_profesional')
+        ]
 
 class Objetivo(models.Model):
     # Elimina la línea del id manual o cámbiala por:

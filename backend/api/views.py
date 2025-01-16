@@ -17,10 +17,21 @@ from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import rest_framework as filters
 
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
 import json
+
+from rest_framework import generics
+from rest_framework.pagination import PageNumberPagination
+
+class DynamicPagination(PageNumberPagination):
+    page_size_query_param = "limit"
+    max_page_size = 20
+    page_size = 4
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -59,7 +70,7 @@ def login(request):
             serializer.validated_data['access'],  # Token JWT
             httponly=True,  # Previene acceso desde JavaScript
             samesite='Lax',  # Mejora seguridad contra ataques CSRF
-            max_age=60 * 60
+            max_age=60 * 60 #La cookie durará 1 hora.
         )
         
         return response
@@ -96,7 +107,7 @@ def verify_session(request):
     
 
 def objetivos_list(request):
-    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos
+    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
     return JsonResponse(list(objetivos), safe=False)
 
 class PacienteListView(APIView):
@@ -118,13 +129,8 @@ class PacienteListView(APIView):
 class ObjetivoViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
-            data = {
-                'titulo': request.data.get('titulo'),
-                'descripcion': request.data.get('descripcion'),
-                'escena': request.data.get('escenaId')  # Nota que aquí usamos 'escena' en lugar de 'escenaId'
-            }
-
-            serializer = ObjetivoSerializer(data=data)
+            # Serializar los datos
+            serializer = ObjetivoSerializer(data=request.data)
             if serializer.is_valid():
                 objetivo = serializer.save()
                 return Response({
@@ -132,9 +138,9 @@ class ObjetivoViewSet(viewsets.ViewSet):
                     'objetivo': serializer.data
                 }, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         
 from django.db import transaction
 
@@ -165,7 +171,9 @@ def signIn(request):
         calle = request.data.get('calle')
         numero = request.data.get('numero')
         id_padre = request.data.get('id_padre', None)  # Puede ser opcional
+        centros_de_salud = request.data.get('centros_de_salud', None)  # Puede ser opcional
 
+        print("Centros de salud "+str(centros_de_salud))
         print(f"Datos recibidos: DNI={dni}, Nombre={nombre}, Fecha={fecha_nac}, Genero={genero}, Role={role}")
 
         # Verificar si el DNI ya existe
@@ -239,7 +247,8 @@ def signIn(request):
                     return Response(
                         {"error": "El padre especificado no existe o no tiene el rol de 'padre'"},
                         status=status.HTTP_400_BAD_REQUEST
-                    )
+                    )                
+            
             password = request.data.get('password')
             if not password:
                 return Response(
@@ -249,10 +258,27 @@ def signIn(request):
             user.set_password(password)
             print("Valida ")
             print(user.check_password(user.password))
-            user.is_active = True
-            user.save()
+            if role == 'terapeuta':
+                user.is_active = False
+            else:
+                user.is_active = True
+            user.save()       
             print(f"Usuario creado: {user}")
-
+            if role == 'terapeuta' and centros_de_salud is not None:
+                try:       
+                    centros_validos = Centrodesalud.objects.filter(id__in=centros_de_salud)
+                    if centros_validos.count() != len(centros_de_salud):
+                        return Response(
+                            {"error": "Uno o más centros de salud especificados no existen"},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    for centro in centros_validos:
+                        CentroProfesional.objects.create(profesional=user, centrodesalud=centro)
+                except Exception as e:  # Captura cualquier otro error inesperado
+                    return Response(
+                        {"error": f"Error al asociar centros de salud: {str(e)}"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )                         
         return Response(
             {"message": "Usuario registrado exitosamente"},
             status=status.HTTP_201_CREATED
@@ -276,6 +302,62 @@ def signIn(request):
             {"error": f"Error inesperado: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+def crear_escena(request):
+    try:
+        serializer = EscenaSerializer(data=request.data)
+        
+        # Validar datos
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Escena creada exitosamente", "data": serializer.data},
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Exception as e:
+        return Response(
+            {"error": f"Error inesperado: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+class NameFilter(filters.FilterSet):
+    nombre = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
+
+    def __init__(self, *args, **kwargs):
+        model = kwargs.pop('model', None)
+        if model:
+            self._meta.model = model
+        super().__init__(*args, **kwargs)
+
+    class Meta:
+        model = None  # Se establece dinámicamente
+        fields = ['nombre']
+
+class EscenaListView(generics.ListAPIView):
+    queryset = Escena.objects.all()
+    serializer_class = EscenaSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+
+class ObjetivosListView(generics.ListAPIView):    
+    queryset = Objetivo.objects.all()
+    serializer_class = ObjetivoSerializerList
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+
+class CentrosSaludListView(generics.ListAPIView):
+    queryset = Centrodesalud.objects.all()
+    serializer_class = CentroSaludSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter  
 
 
 @api_view(['GET'])
