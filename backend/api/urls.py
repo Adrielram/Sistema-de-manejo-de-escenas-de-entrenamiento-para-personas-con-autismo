@@ -26,6 +26,7 @@ urlpatterns = [
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
     #path('obtener-escenas/', obtener_escenas, name='obtener_escenas')
 
+    path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
 ]
 
 
