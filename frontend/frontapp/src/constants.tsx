@@ -65,11 +65,6 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
                 path: '/therapist/group_of_patients/add_group',
                 icon: <IoIosAdd />, 
               },
-              { 
-                title: 'Agregar Paciente', 
-                path: '/therapist/group_of_patients/add_patient',
-                icon: <IoIosAdd />, 
-              },
             ],
         },
       ],

@@ -80,7 +80,7 @@ const assesments = () => {
     <div>
       <div className="flex flex-row flex-wrap justify-center gap-x-14">
         {assesments.map((assesment, index) => (
-          <li key={index}>
+          <li key={index} className='list-none'>
             <Box 
               elem={assesment} 
               img='/icon/evaluacion.png' 
