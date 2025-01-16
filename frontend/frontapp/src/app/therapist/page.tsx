@@ -10,9 +10,8 @@ import Footer from '../../components/Footer';
 export default function Therapist() {
   const dispatch = useDispatch();
   const router = useRouter();
-
-  const handleSetCentroSalud = (centro: string) => {
-    dispatch(setCenter({ centro })); 
+  const handleSetCentroSalud = (center: string) => {
+    dispatch(setCenter({ center })); 
     router.push('/therapist/selection'); 
   };
 
