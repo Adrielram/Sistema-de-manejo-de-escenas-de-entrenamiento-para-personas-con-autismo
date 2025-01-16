@@ -227,6 +227,13 @@ def signIn(request):
                 email='adri@example.com'
             )
 
+            if role == 'admin':
+                return Response(
+                    {"error": "No está permitido registrar usuarios con rol de administrador a través de esta API."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+
             # Asociar padre si el rol es paciente y se proporciona un ID de padre
             if role == 'paciente' and id_padre:
                 try:
@@ -238,8 +245,13 @@ def signIn(request):
                         status=status.HTTP_400_BAD_REQUEST
                     )                
             
-            print("Contrasena"+request.data.get('password'))
-            user.set_password(request.data.get('password'))
+            password = request.data.get('password')
+            if not password:
+                return Response(
+                    {"error": "La contraseña es requerida"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            user.set_password(password)
             print("Valida ")
             print(user.check_password(user.password))
             if role == 'terapeuta':
