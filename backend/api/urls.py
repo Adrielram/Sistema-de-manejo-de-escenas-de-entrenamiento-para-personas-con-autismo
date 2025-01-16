@@ -3,7 +3,7 @@ from . import views
 from .views import *
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ObjetivoViewSet
+from .views import ObjetivoViewSet, EscenaListView, ObjetivosListView
 
 
 router = DefaultRouter()
@@ -23,6 +23,13 @@ urlpatterns = [
     path('pacientes/<int:pk>/', PacienteDetailView.as_view(), name='paciente-detail'),
     path('terapeutas/<int:pk>/', TerapeutaDetailView.as_view(), name='terapeuta-detail'),
     path('grupos/<int:pk>/', GroupDetailView.as_view(), name='group-detail'),
+    path('signIn/', views.signIn, name='signIn'),
+    path('crear-escena/', views.crear_escena, name='crear_escena'),
+    path('escenas/', EscenaListView.as_view(), name='escena-list'),
+    path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
+    path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
+    path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
 ]
+
 
 urlpatterns += [path('', include(router.urls))]

@@ -6,6 +6,7 @@ import iconoBusqueda from "../../public/icon/icono_busqueda.png";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
+  placeholder?: string; // Prop para cambiar el placeholder
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
