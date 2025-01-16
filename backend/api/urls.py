@@ -24,6 +24,7 @@ urlpatterns = [
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('HijosListView/', views.hijos_list_view, name='HijosListView'),
+    path('get-dni/', views.get_dni, name='get-dni'),
 ]
 
 

@@ -1,32 +1,62 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import Box_paciente from '../../../components/Box_paciente';
+import { useSelector } from 'react-redux'
+import { RootState } from '../../../../store/store';
+ 
+
 
 const VerHijos = () => {
-  const padreId = 222; // ESTO ES EL DNI DEL PADRE, LO DEBERIA OBTENER DEL USUARIO LOGUEADO
+  const { username } = useSelector((state: RootState) => state.user) // ESTO ES EL DNI DEL PADRE, LO DEBERIA OBTENER DEL USUARIO LOGUEADO
   const [hijos, setHijos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Función para obtener los hijos desde el backend
-    const fetchHijos = async () => {
+    // Función para obtener el DNI a partir del username
+    const fetchDNI = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/HijosListView/?padre_id=${padreId}`);
+        const response = await fetch(`http://localhost:8000/api/get-dni/?username=${username}`);
+        if (!response.ok) {
+          throw new Error('Error al obtener el DNI');
+        }
+        const data = await response.json();
+        return data.dni; // Retornamos el DNI
+      } catch (error) {
+        setError(error.message);
+        throw error; // Lanza el error para detener la ejecución
+      }
+    };
+  
+    // Función para obtener los hijos desde el backend
+    const fetchHijos = async (dni) => {
+      try {
+        const response = await fetch(`http://localhost:8000/api/HijosListView/?padre_id=${dni}`);
         if (!response.ok) {
           throw new Error('Error al obtener los hijos');
         }
         const data = await response.json();
-        setHijos(data);
+        setHijos(data); // Guardamos los hijos en el estado
       } catch (error) {
         setError(error.message);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchHijos();
-  }, []);
+  
+    // Controlador principal
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const dni = await fetchDNI(); 
+        await fetchHijos(dni); 
+      } catch {
+        setLoading(false); 
+      }
+    };
+  
+    fetchData(); 
+  }, [username]);
 
   if (loading) {
     return <div className="text-center">Cargando...</div>;

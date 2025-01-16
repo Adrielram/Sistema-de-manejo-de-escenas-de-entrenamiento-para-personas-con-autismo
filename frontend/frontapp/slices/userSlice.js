@@ -5,6 +5,7 @@ const initialState = {
   username: "",
   role: "",
   centro: "",
+  userId: "",
 };
 
 const userSlice = createSlice({
@@ -22,12 +23,16 @@ const userSlice = createSlice({
       state.username = "";
       state.role="";
       state.centro="";
+      state.userId= "";
     },
     setCentroSalud: (state, action) => {
       state.centro = action.payload.centro;
     },
+    setUserId: (state,action) => {
+      state.userId = action.payload.userId;
+    },
   },
 });
 
-export const { setUser, clearUser, setCentroSalud} = userSlice.actions;
+export const { setUser, clearUser, setCentroSalud, setUserId} = userSlice.actions;
 export default userSlice.reducer;
