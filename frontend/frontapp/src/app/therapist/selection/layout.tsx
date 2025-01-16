@@ -2,13 +2,13 @@
 
 import { Inter } from 'next/font/google';
 
-import Footer from "../../components/Footer";
-import Header from "../../components/Header";
-import MarginWidthWrapper from "../../components/MarginWidthWrapper";
-import HeaderMobile from "../../components/MobileHeader";
-import PageWrapper from "../../components/PageWrapper";
-import SideNav from "../../components/SideNav";
-import { SIDENAV_ITEMS } from "../../constants";
+import Footer from "../../../components/Footer";
+import Header from "../../../components/Header";
+import MarginWidthWrapper from "../../../components/MarginWidthWrapper";
+import HeaderMobile from "../../../components/MobileHeader";
+import PageWrapper from "../../../components/PageWrapper";
+import SideNav from "../../../components/SideNav";
+import { SIDENAV_ITEMS } from "../../../constants";
 
 const inter = Inter({ subsets: ['latin'] });
 

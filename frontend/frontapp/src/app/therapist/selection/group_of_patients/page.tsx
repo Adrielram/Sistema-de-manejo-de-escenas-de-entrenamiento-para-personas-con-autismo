@@ -1,69 +1,69 @@
 import React from 'react'
 
-import Box from '../../../components/Box'
-import SmallButton from '../../../components/SmallButton'
+import Box from '../../../../components/Box'
+import SmallButton from '../../../../components/SmallButton'
 
-const goals = () => {
-  const goals = [
+const group_of_patient = () => {
+  const group_of_patients = [
     {
-    id: 1234,
-    name: 'Objetivo 1',
+    id: 1122,
+    name: 'Grupo 1',
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
     link: 'httppblablabla',
     subgoals: [{title: 'Objetivo 2'}, {title: 'Objetivo 3'}, {title: 'Objetivo 4'}],
     scenes: [{name: 'Escena 2'}, {name: 'Escena 3'}, {name: 'Escena 4'}],
     },
     {
-      id: 5678,
-      name: 'Objetivo 2',
+      id: 1121,
+      name: 'Grupo 2',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
       scenes: [{name: 'Escena 5'}, {name: 'Escena 6'}, {name: 'Escena 7'}],
     },
     {
-      id: 1111,
-      name: 'Objetivo 3',
+      id: 1123,
+      name: 'Grupo 3',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
       scenes: [{name: 'Escena 5'}, {name: 'Escena 6'}, {name: 'Escena 7'}],
     },
     {
-      id: 2222,
-      name: 'Objetivo 4',
+      id: 1124,
+      name: 'Grupo 4',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
       scenes: [{name: 'Escena 5'}, {name: 'Escena 6'}, {name: 'Escena 7'}],
     },
     {
-      id: 3333,
-      name: 'Objetivo 5',
+      id: 1125,
+      name: 'Grupo 5',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
       scenes: [{name: 'Escena 5'}, {name: 'Escena 6'}, {name: 'Escena 7'}],
     },
     {
-      id: 4444,
-      name: 'Objetivo 6',
+      id: 1126,
+      name: 'Grupo 6',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
       scenes: [{name: 'Escena 5'}, {name: 'Escena 6'}, {name: 'Escena 7'}],
     },
     {
-      id: 5555,
-      name: 'Objetivo 7',
+      id: 1127,
+      name: 'Grupo 7',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
       scenes: [{name: 'Escena 5'}, {name: 'Escena 6'}, {name: 'Escena 7'}],
     },
     {
-      id: 6666,
-      name: 'Objetivo 8',
+      id: 1128,
+      name: 'Grupo 8',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
@@ -79,13 +79,13 @@ const goals = () => {
   return (
     <div>
       <div className="flex flex-row flex-wrap justify-center gap-x-14">
-        {goals.map((goal, index) => (
+        {group_of_patients.map((group_of_patient, index) => (
           <li key={index}>
             <Box 
-              elem={goal} 
-              img='/icon/diana.png' 
-              opciones={opProps}
-              edit_path={`/therapist/goals/${goal.id}`}
+              elem={group_of_patient} 
+              img='/icon/silueta_de_multiples_usuarios.png' 
+              opciones={opProps} 
+              edit_path={`/therapist/group_of_patients/${group_of_patient.id}`}
             />
           </li>
         ))}
@@ -98,4 +98,4 @@ const goals = () => {
   )
 }
 
-export default goals
+export default group_of_patient
