@@ -7,7 +7,7 @@ import { RootState } from '../../../../store/store';
 
 
 const VerHijos = () => {
-  const { username } = useSelector((state: RootState) => state.user) // ESTO ES EL DNI DEL PADRE, LO DEBERIA OBTENER DEL USUARIO LOGUEADO
+  const { username } = useSelector((state: RootState) => state.user)
   const [hijos, setHijos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

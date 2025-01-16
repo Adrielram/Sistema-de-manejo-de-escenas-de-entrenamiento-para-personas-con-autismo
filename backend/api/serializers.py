@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Objetivo, PersonaObjetivoEvaluacion, Escena, CentroProfesional
+from .models import *
 
 class PacienteSerializer(serializers.ModelSerializer):
     padreACargo = serializers.SerializerMethodField()
@@ -10,6 +10,7 @@ class PacienteSerializer(serializers.ModelSerializer):
 
     def get_padreACargo(self, obj):
         return obj.user_id_padre.nombre if obj.user_id_padre else ''
+
 class ObjetivoSerializer(serializers.ModelSerializer):
     video_explicativo_id = serializers.PrimaryKeyRelatedField(
         queryset=Escena.objects.all(), source='escena'
@@ -41,8 +42,18 @@ class ObjetivoSerializerList(serializers.ModelSerializer):
 
 
 class PersonaObjetivoEvaluacionSerializer(serializers.ModelSerializer):
-    objetivo = ObjetivoSerializer()
+    objetivo_id = ObjetivoSerializerList()  # Usamos el serializer más simple para evitar anidaciones complejas
 
     class Meta:
         model = PersonaObjetivoEvaluacion
-        fields = ['progreso', 'objetivo', 'resultado']
+        fields = ['progreso', 'objetivo_id', 'resultado']
+
+class EscenaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Escena
+        fields = ['id', 'idioma', 'acento', 'condiciones', 'complejidad', 'link', 'nombre']
+
+class CentroSaludSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Centrodesalud
+        fields = ['id', 'nombre', 'direccion_id_dir']

@@ -25,7 +25,8 @@ urlpatterns = [
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('HijosListView/', views.hijos_list_view, name='HijosListView'),
     path('get-dni/', views.get_dni, name='get-dni'),
-    path('objetivos-paciente/<int:user_id>/', views.objetivos_por_usuario, name='objetivos-paciente'),
+    path('get-name/', views.obtener_nombre_por_dni, name='get-name'),
+    path('objetivos-paciente/', views.objetivos_por_usuario, name='objetivos-paciente'),
 ]
 
 

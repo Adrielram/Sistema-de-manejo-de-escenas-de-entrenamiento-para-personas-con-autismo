@@ -322,13 +322,28 @@ def signIn(request):
         )
 
 @api_view(['GET'])
-def objetivos_por_usuario(request, user_id):
-    evaluaciones = PersonaObjetivoEvaluacion.objects.filter(user_id=user_id)
-    if not evaluaciones.exists():
-        return Response({"error": "No se encontraron objetivos para este usuario."}, status=status.HTTP_404_NOT_FOUND)
+def objetivos_por_usuario(request):
+    user_id = request.query_params.get('user_id')
+    if not user_id:
+        return Response({"error": "Falta el parámetro 'user_id'."}, status=400)
+    
+    objetivos = PersonaObjetivoEvaluacion.objects.select_related('objetivo_id').filter(user_id=user_id)
+    
+    if not objetivos.exists():
+        return Response({"error": "No se encontraron objetivos para este usuario."}, status=404)
 
-    serializer = PersonaObjetivoEvaluacionSerializer(evaluaciones, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    serializer = PersonaObjetivoEvaluacionSerializer(objetivos, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def obtener_nombre_por_dni(request):
+    dni = request.query_params.get('dni')  
+
+    try:
+        user = User.objects.get(dni=dni)  
+        return Response({"nombre": user.nombre}, status=status.HTTP_200_OK)  
+    except User.DoesNotExist:
+        return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])
