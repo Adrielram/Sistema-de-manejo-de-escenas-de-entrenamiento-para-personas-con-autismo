@@ -17,13 +17,12 @@ export default function Therapist() {
     router.push('/therapist/selection'); 
   };
   const [selectedCenters, setSelectedCenters] = useState([]);
-  const urlBase = process.env.NEXT_PUBLIC_API_URL;
   const {username} = useSelector((state: RootState) => state.user);
   const [associatedCenters, setAssociatedCenters] = useState([]); // Para almacenar los centros asociados
 
   const fetchAssociatedCenters = async () => {
     try {
-      const response = await fetch(`${urlBase}get_associated_centers/${username}/`);
+      const response = await fetch(`http://localhost:8000/api/get_associated_centers/${username}/`);
       if (!response.ok) throw new Error('Error al cargar los centros asociados');
       const data = await response.json();
       setAssociatedCenters(data.results); // Guarda los centros asociados en el estado
@@ -46,7 +45,7 @@ export default function Therapist() {
     };
   
     try {
-      const response = await fetch(`${urlBase}associate_center/`, {
+      const response = await fetch(`http://localhost:8000/api/associate_center/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,13 +96,13 @@ export default function Therapist() {
                 getItemLabel={(item) => item.nombre as string}
                 selectedItems={selectedCenters}
                 onSelectItems={setSelectedCenters}
-                apiUrl={`${urlBase}get_not_associated_centers/${username}/`}
+                apiUrl={`http://localhost:8000/api/get_not_associated_centers/${username}/`}
               />
           </div>
-          <div className="lg:col-span-2 mt-6">
+          <div className="flex justify-center mt-6">
             <button
               type="submit"
-              className="w-full bg-[#3EA5FF] text-white font-semibold py-4 rounded-xl hover:bg-[#2E8BFF] transition duration-300 shadow-lg hover:shadow-xl"
+              className="px-8 py-3 bg-[#3EA5FF] text-white font-semibold rounded-xl hover:bg-[#2E8BFF] transition duration-300 shadow-lg hover:shadow-xl"
             >
               Crear Objetivo
             </button>

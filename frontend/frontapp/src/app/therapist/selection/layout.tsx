@@ -1,7 +1,5 @@
-// app/therapist/layout.js
-
+// app/therapist/layout.tsx
 import { Inter } from 'next/font/google';
-
 import Footer from "../../../components/Footer";
 import Header from "../../../components/Header";
 import MarginWidthWrapper from "../../../components/MarginWidthWrapper";
@@ -18,9 +16,9 @@ export default function TherapistLayout({
     children: React.ReactNode;
   }) {
     return (
-      <div className={`min-h-screen bg-white ${inter.className}`}>
-        <Header /> {/* Asegúrate de que esté fuera del contenedor flex */}
-        <div className="flex">
+      <div className={`flex min-h-screen flex-col bg-white ${inter.className}`}>
+        <Header />
+        <div className="flex flex-1">
           <SideNav list={SIDENAV_ITEMS}/>
           <main className="flex-1">
             <MarginWidthWrapper>
