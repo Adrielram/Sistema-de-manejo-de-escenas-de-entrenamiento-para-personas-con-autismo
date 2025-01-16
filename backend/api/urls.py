@@ -26,7 +26,7 @@ urlpatterns = [
     path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
     path('get_not_associated_centers/<str:username>/', NotAssociatedCentersListView.as_view(), name='get_not_associated_centers'),
     path('get_associated_centers/<str:username>/', AssociatedCentersListView.as_view(), name='get_associated_centers'),
-    path('associate_center/', views.associateCenters, name='associate_center'),
+    path('associate_center/', AssociateCenterView.as_view(), name='associate_center'),
 ]
 
 

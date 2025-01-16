@@ -55,3 +55,8 @@ class CentroSaludSerializer(serializers.ModelSerializer):
     class Meta:
         model = Centrodesalud
         fields = ['id', 'nombre', 'direccion_id_dir']
+
+class ProfesionalCentroSerializer(serializers.ModelSerializer):  
+    class Meta:
+        model = CentroProfesional
+        fields = ['centrodesalud', 'profesional']

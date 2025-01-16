@@ -41,8 +41,10 @@ export default function Therapist() {
   
     const therapistCenterData = {
       username: username,
-      centers: selectedCenters.map((item) => item.id), // IDs de los centros seleccionados
+      centers: selectedCenters
     };
+
+    console.log('Datos a enviar:', therapistCenterData); // Para depuración
   
     try {
       const response = await fetch(`http://localhost:8000/api/associate_center/`, {
@@ -73,41 +75,43 @@ export default function Therapist() {
   return (
     <div>
       <Header />
-        <div className="text-black p-6">
-          <h1 className="text-2xl font-bold mb-4">Selecciona un Centro de Salud</h1>
-          <div className="flex flex-row flex-wrap justify-center gap-x-14">
-            {associatedCenters.map((center, index) => (
-              <li key={index} className='list-none'>
-                <button
-                  onClick={() => handleSetCentroSalud(center.nombre)}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg"
-                >
-                  {center.nombre}
-                </button>
-              </li>
-            ))}
+        <div className='h-screen'>
+          <div className="text-black p-6">
+            <h1 className="text-2xl font-bold mb-4">Selecciona un Centro de Salud</h1>
+            <div className="flex flex-row flex-wrap justify-center gap-x-14">
+              {associatedCenters.map((center, index) => (
+                <li key={index} className='list-none'>
+                  <button
+                    onClick={() => handleSetCentroSalud(center.nombre)}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                  >
+                    {center.nombre}
+                  </button>
+                </li>
+              ))}
+            </div>
           </div>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8">
+            <div>
+              <SearchSelectBox
+                  title="Buscar centros de salud"
+                  searchPlaceholder="Escribe el nombre del centro de salud..."
+                  getItemLabel={(item) => item.nombre as string}
+                  selectedItems={selectedCenters}
+                  onSelectItems={setSelectedCenters}
+                  apiUrl={`http://localhost:8000/api/get_not_associated_centers/${username}/`}
+                />
+            </div>
+            <div className="flex justify-center mt-6">
+              <button
+                type="submit"
+                className="px-8 py-3 bg-[#3EA5FF] text-white font-semibold rounded-xl hover:bg-[#2E8BFF] transition duration-300 shadow-lg hover:shadow-xl"
+              >
+                Asociar Centros de Salud
+              </button>
+            </div>
+          </form>
         </div>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8">
-          <div>
-            <SearchSelectBox
-                title="Buscar centros de salud"
-                searchPlaceholder="Escribe el nombre del centro de salud..."
-                getItemLabel={(item) => item.nombre as string}
-                selectedItems={selectedCenters}
-                onSelectItems={setSelectedCenters}
-                apiUrl={`http://localhost:8000/api/get_not_associated_centers/${username}/`}
-              />
-          </div>
-          <div className="flex justify-center mt-6">
-            <button
-              type="submit"
-              className="px-8 py-3 bg-[#3EA5FF] text-white font-semibold rounded-xl hover:bg-[#2E8BFF] transition duration-300 shadow-lg hover:shadow-xl"
-            >
-              Crear Objetivo
-            </button>
-          </div>
-        </form>
       <Footer />
     </div>
   );

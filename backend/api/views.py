@@ -337,24 +337,24 @@ def signIn(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-@api_view(['POST'])
-def associateCenters(request):
-    centros_de_salud = request.data.get('centros_de_salud', None)
-    if centros_de_salud is not None:
-        try:       
-            centros_validos = Centrodesalud.objects.filter(id__in=centros_de_salud)
-            if centros_validos.count() != len(centros_de_salud):
-                return Response(
-                    {"error": "Uno o más centros de salud especificados no existen"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            for centro in centros_validos:
-                CentroProfesional.objects.create(profesional=user, centrodesalud=centro)
-        except Exception as e:
-            return Response(
-                {"error": f"Error al asociar centros de salud: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+# @api_view(['POST'])
+# def associateCenters(request):
+#     centros_de_salud = request.data.get('centros_de_salud', None)
+#     if centros_de_salud is not None:
+#         try:       
+#             centros_validos = Centrodesalud.objects.filter(id__in=centros_de_salud)
+#             if centros_validos.count() != len(centros_de_salud):
+#                 return Response(
+#                     {"error": "Uno o más centros de salud especificados no existen"},
+#                     status=status.HTTP_400_BAD_REQUEST
+#                 )
+#             for centro in centros_validos:
+#                 CentroProfesional.objects.create(profesional=user, centrodesalud=centro)
+#         except Exception as e:
+#             return Response(
+#                 {"error": f"Error al asociar centros de salud: {str(e)}"},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
 
 @api_view(['POST'])
 def crear_escena(request):
@@ -437,6 +437,30 @@ class AssociatedCentersListView(generics.ListAPIView):
         related_centers = get_related_centers(self)
         # Filtra los centros de salud donde el profesional no esté relacionado
         return Centrodesalud.objects.filter(id__in=related_centers)
+
+class AssociateCenterView(generics.CreateAPIView):
+    serializer_class = ProfesionalCentroSerializer
+
+    def create(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        centers = request.data.get('centers', [])
+        
+        user = User.objects.get(username=username)
+        
+        try:
+            for center in centers:
+                print("center: ", center)
+                CentroProfesional.objects.create(centrodesalud=center, profesional=user)
+            
+            return Response({
+                'message': 'Centros asociados exitosamente',
+                'centers': centers
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 def buscar_padres(request):
