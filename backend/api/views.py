@@ -17,10 +17,22 @@ from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import rest_framework as filters
+
 
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
 import json
+
+from rest_framework import generics
+from rest_framework.pagination import PageNumberPagination
+
+class DynamicPagination(PageNumberPagination):
+    page_size_query_param = "limit"
+    max_page_size = 20
+    page_size = 4
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -29,16 +41,19 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # Agregar campos personalizados al payload del token
         token['username'] = user.username  # Incluye el nombre del usuario
+        token['role'] = user.role #El rol del usuario
         return token
         
     def validate(self, attrs):
         data = super().validate(attrs)
         # Agrega el username al response data
         data['username'] = self.user.username
+        data['role'] = self.user.role
         return data
 
 def example_view(request):
     return JsonResponse({'message': 'Hello, world!'})
+
 
 @api_view(['POST'])
 def login(request):
@@ -47,6 +62,7 @@ def login(request):
         response = Response({
             "message": "Login successful",
             "username": serializer.validated_data['username'],  # Obtiene el username desde validated_data
+            "role": serializer.validated_data['role'],  # Obtiene el role desde validated_data
         })
         
         # Almacenar el token de acceso en una cookie HTTP-only
@@ -54,7 +70,8 @@ def login(request):
             'jwt',  # Nombre de la cookie
             serializer.validated_data['access'],  # Token JWT
             httponly=True,  # Previene acceso desde JavaScript
-            samesite='Lax'  # Mejora seguridad contra ataques CSRF
+            samesite='Lax',  # Mejora seguridad contra ataques CSRF
+            max_age=60 * 60
         )
         
         return response
@@ -80,16 +97,18 @@ def verify_session(request):
         # Validar el token JWT y decodificarlo
         access_token = AccessToken(jwt_token)
         username = access_token['username']  # Extraer el campo 'username' del payload
+        role=access_token['role']
         return Response({
             "message": "Autorizado",
-            "username": username  # Incluir el nombre de usuario en la respuesta
+            "username": username,  # Incluir el nombre de usuario en la respuesta
+            "role":role
         }, status=200)
     except Exception as e:
         return Response({"message": "Token inválido o expirado"}, status=401)
     
 
 def objetivos_list(request):
-    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos
+    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
     return JsonResponse(list(objetivos), safe=False)
 
 class PacienteListView(APIView):
@@ -108,16 +127,53 @@ class PacienteListView(APIView):
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import User
+
+@api_view(['GET'])
+def get_dni(request):
+    username = request.query_params.get('username')
+    if not username:
+        return Response({'error': 'Se requiere el parámetro username'}, status=400)
+    
+    try:
+        user = User.objects.get(username=username)
+        return Response({'dni': user.dni})
+    except User.DoesNotExist:
+        return Response({'error': f'No se encontró un usuario con username: {username}'}, status=404)
+
+
+@api_view(['GET'])
+def hijos_list_view(request):
+    padre_id = request.query_params.get('padre_id')
+
+    if not padre_id:
+        return Response(
+            {"error": "El ID del padre es requerido."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        # Obtener los usuarios hijos filtrados por `user_id_padre`
+        hijos = User.objects.filter(user_id_padre=padre_id)
+
+        # Serializar los datos de los hijos usando PacienteSerializer
+        serializer = PacienteSerializer(hijos, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 class ObjetivoViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
-            data = {
-                'titulo': request.data.get('titulo'),
-                'descripcion': request.data.get('descripcion'),
-                'escena': request.data.get('escenaId')  # Nota que aquí usamos 'escena' en lugar de 'escenaId'
-            }
-
-            serializer = ObjetivoSerializer(data=data)
+            # Serializar los datos
+            serializer = ObjetivoSerializer(data=request.data)
             if serializer.is_valid():
                 objetivo = serializer.save()
                 return Response({
@@ -125,9 +181,9 @@ class ObjetivoViewSet(viewsets.ViewSet):
                     'objetivo': serializer.data
                 }, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         
 from django.db import transaction
 
@@ -273,6 +329,56 @@ def objetivos_por_usuario(request, user_id):
 
     serializer = PersonaObjetivoEvaluacionSerializer(evaluaciones, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def crear_escena(request):
+    try:
+        serializer = EscenaSerializer(data=request.data)
+        
+        # Validar datos
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Escena creada exitosamente", "data": serializer.data},
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Exception as e:
+        return Response(
+            {"error": f"Error inesperado: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+class NameFilter(filters.FilterSet):
+    nombre = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
+
+    def __init__(self, *args, **kwargs):
+        model = kwargs.pop('model', None)
+        if model:
+            self._meta.model = model
+        super().__init__(*args, **kwargs)
+
+    class Meta:
+        model = None  # Se establece dinámicamente
+        fields = ['nombre']
+
+class EscenaListView(generics.ListAPIView):
+    queryset = Escena.objects.all()
+    serializer_class = EscenaSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+
+class ObjetivosListView(generics.ListAPIView):    
+    queryset = Objetivo.objects.all()
+    serializer_class = ObjetivoSerializerList
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+   
 
 
 @api_view(['GET'])
