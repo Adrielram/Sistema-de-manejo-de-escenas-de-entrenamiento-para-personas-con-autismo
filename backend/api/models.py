@@ -259,6 +259,7 @@ class PersonaObjetivoEvaluacion(models.Model):
         ]
 
 class Videosvistos(models.Model):
+    id = models.AutoField(primary_key=True)
     persona_objetivo_escena =  models.ForeignKey(
         'PersonaObjetivoEscena',
         on_delete=models.CASCADE,
@@ -272,12 +273,13 @@ class Videosvistos(models.Model):
         db_table = 'videosVistos'
         constraints = [
             models.UniqueConstraint(
-                fields=['persona_objetivo_escena'],
+                fields=['persona_objetivo_escena', 'id'],
                 name='unique_escena_user_objetivo_videos_vistos'
             )
         ]
 
 class Comentario(models.Model):
+    id = models.AutoField(primary_key=True)
     persona_objetivo_escena = models.ForeignKey(
         'PersonaObjetivoEscena',
         on_delete=models.CASCADE,
@@ -299,7 +301,7 @@ class Comentario(models.Model):
         db_table = 'comentario'
         constraints = [
             models.UniqueConstraint(
-                fields=['persona_objetivo_escena'],
+                fields=['persona_objetivo_escena', 'id'],
                 name='unique_escena_user_objetivo_comentario'
             )
         ]
