@@ -29,6 +29,9 @@ urlpatterns = [
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
+    path('notificaciones/', views.obtener_notificaciones_pendientes, name='notificaciones-pendientes'),
+    path('notificaciones/<int:pk>/', views.obtener_detalle_notificacion, name='notification-detail'),
+    path('notificaciones/<int:pk>/<str:accion>/', procesar_notificacion, name='procesar_notificacion'),
 ]
 
 

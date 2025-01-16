@@ -415,4 +415,100 @@ class GroupDetailView(generics.RetrieveDestroyAPIView):
     queryset = Grupo.objects.all()
     serializer_class = GroupSerializer
 
+from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes
+from .models import Notificacion
+from rest_framework.permissions import IsAuthenticated
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def obtener_notificaciones_pendientes(request):
+    # Filtrar notificaciones pendientes para el usuario actual
+    notificaciones = Notificacion.objects.filter(
+        destinatario=request.user, estado='pendiente'
+    ).values('id', 'mensaje', 'timestamp')  # Puedes incluir más campos según lo que necesites
+
+    return JsonResponse({'notificaciones': list(notificaciones)})
+
+from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from .models import Notificacion
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def obtener_detalle_notificacion(request, pk):
+    try:
+        # Buscar la notificación por id y asegurarse de que pertenece al usuario autenticado
+        notificacion = Notificacion.objects.get(id=pk, destinatario=request.user)
+        # Devolver los detalles de la notificación
+        return JsonResponse({
+            'id': notificacion.id,
+            'mensaje': notificacion.mensaje,
+            'timestamp': notificacion.timestamp,
+            'estado': notificacion.estado,
+            'remitente': notificacion.remitente.username if notificacion.remitente else None,
+            'destinatario': notificacion.destinatario.username if notificacion.destinatario else None,
+        })
+    except Notificacion.DoesNotExist:
+        # Manejar el caso de una notificación no encontrada o no autorizada
+        return JsonResponse({'error': 'Notificación no encontrada o no autorizada'}, status=404)
+    
+from django.contrib.contenttypes.models import ContentType
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from api.models import User
+from .models import Notificacion
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def procesar_notificacion(request, pk, accion):
+    """
+    Procesa una notificación para aceptarla o rechazarla.
+    :param pk: ID de la notificación.
+    :param accion: "aceptar" o "rechazar".
+    """
+    notificacion = get_object_or_404(Notificacion, pk=pk)
+
+    # Verifica el tipo de objeto asociado
+    content_type = notificacion.content_type
+    objeto_asociado = notificacion.objeto_asociado  # Accede al objeto asociado
+
+    try:
+        if content_type.model == 'user':  # Si es una solicitud de activación de usuario
+            usuario = get_object_or_404(User, username=notificacion.remitente.username)
+            if accion == 'aceptar':
+                usuario.is_active = True
+                usuario.save()
+                notificacion.estado = 'leida'
+            elif accion == 'rechazar':                
+                usuario.delete()
+                notificacion.estado = 'eliminada'
+        
+        elif content_type.model == 'objetivo':  # Si es una solicitud de agregar un objetivo
+            if accion == 'aceptar':
+                objeto_asociado.aprobado = True
+                objeto_asociado.save()
+                notificacion.estado = 'leida'
+            elif accion == 'rechazar':
+                objeto_asociado.delete()
+                notificacion.estado = 'eliminada'
+
+        elif content_type.model == 'comentario':  # Si es una solicitud de moderar un comentario
+            if accion == 'aceptar':
+                notificacion.estado = 'leida'
+            elif accion == 'rechazar':
+                objeto_asociado.delete()
+                notificacion.estado = 'eliminada'
+
+        else:
+            return JsonResponse({'error': 'Tipo de objeto no soportado'}, status=400)
+
+        notificacion.save()  # Guarda el estado de la notificación
+        return JsonResponse({'success': True, 'message': f'Notificación {accion}ada correctamente'})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+
 

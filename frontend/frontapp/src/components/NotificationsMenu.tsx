@@ -1,28 +1,53 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {useSelector} from "react-redux";
+import { RootState } from "../../store/store";
 
-export default function NotificationsMenu() {
+export default function NotificationsMenu({token}) {
+  console.log("Token: ", token);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notificaciones, setNotificaciones] = useState(() => {
+      // Recuperar notificaciones desde localStorage al cargar el componente
+      const storedNotificaciones = localStorage.getItem("notificaciones");
+      return storedNotificaciones ? JSON.parse(storedNotificaciones) : [];
+    });
+    const {role} = useSelector((state: RootState) => state.user);   
 
-  // Simulación de notificaciones
-  const notifications: { id: number; message: string }[] = [
-    { id: 1, message: "Notificación 1" },
-    { id: 2, message: "Notificación 2" },
-    { id: 3, message: "Notificación 3" }
-
-  ];
-
-  // Funciones de manejo de botones
-  const handleAccept = (id: number) => {
-    console.log(`Notificación ${id} aceptada`);
-  };
-
-  const handleReject = (id: number) => {
-    console.log(`Notificación ${id} rechazada`);
-    // Aquí puedes agregar la lógica para rechazar la notificación
-  };
-
+    useEffect(() => {
+      // Fetch de notificaciones pendientes
+      const fetchNotificaciones = async () => {
+        const response = await fetch(`${baseUrl}notificaciones/`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setNotificaciones(data.notificaciones);
+        }
+      };
+  
+      fetchNotificaciones();
+  
+      const socket = new WebSocket(`ws://localhost:8000/ws/notificaciones/?token=${token}`);
+      
+      const handleMessage = (event) => {
+        const data = JSON.parse(event.data);
+        setNotificaciones((prev) => [...prev, data]);
+      };
+  
+      socket.addEventListener("message", handleMessage);
+  
+      return () => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.close();
+        }
+        socket.removeEventListener("message", handleMessage);
+      };
+    }, [token]); 
 
   return (
     <div className="relative">
@@ -47,10 +72,10 @@ export default function NotificationsMenu() {
         </svg>
 
         {/* Número de notificaciones pendientes */}
-        {notifications.length > 0 && (
+        {notificaciones.length > 0 && (
           <div className="px-1 py-0.5 bg-teal-500 min-w-5 rounded-full text-center text-white text-xs absolute -top-2 -right-2 translate-x-1/4 text-nowrap">
             <div className="absolute top-0 left-0 rounded-full -z-10 animate-ping bg-teal-200 w-full h-full"></div>
-            {notifications.length}
+            {notificaciones.length}
           </div>
         )}
       </button>
@@ -59,17 +84,17 @@ export default function NotificationsMenu() {
       {/* Menú desplegable de notificaciones */}
       {showNotifications && (
         <div className="absolute right-0 mt-2 w-72 bg-white text-black shadow-lg rounded-md p-4">
-          {notifications.length > 0 ? (
+          {notificaciones.length > 0 ? (
             <ul className="space-y-2">
-              {notifications.map((notification) => (
+              {notificaciones.map((notification) => (
+                
                 <li
                   key={notification.id}
                   className="border-b border-gray-300 pb-2 flex items-center justify-between"
                 >
-                  <span>{notification.message}</span>
-                  <div className="flex space-x-2">
-                    {/* Botón de Aceptar */}
-                    <button
+                  <span>{notification.mensaje}</span>
+                  <div className="flex space-x-2">               
+                    {/*<button
                       onClick={() => handleAccept(notification.id)}
                       className="text-green-500 hover:text-green-700"
                       aria-label={`Aceptar notificación ${notification.id}`}
@@ -89,8 +114,7 @@ export default function NotificationsMenu() {
                         />
                       </svg>
                     </button>
-
-                    {/* Botón de Rechazar */}
+               
                     <button
                       onClick={() => handleReject(notification.id)}
                       className="text-red-500 hover:text-red-700"
@@ -110,20 +134,17 @@ export default function NotificationsMenu() {
                           d="M6 18L18 6M6 6l12 12"
                         />
                       </svg>
-                    </button>
+                    </button>*/}
 
-                    {/* Botón de Leer más */}
+                    {/* Botón de Leer más */}                                 
                     <button
                       className="text-blue-500 hover:text-blue-700"
                       aria-label={`Leer más de la notificación ${notification.id}`}
                     >
-                      <Link 
-                        href={`/notification/${notification.id}`} 
-                        className="flex items-center"
-                      >
+                      <Link href={role === "admin" ? `/admin/notification/${notification.id}` : role === "terapeuta" ? `/therapist/notification/${notification.id}` : "#"} className="flex items-center">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
+                          className="h-8 w-8"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -137,6 +158,7 @@ export default function NotificationsMenu() {
                         </svg>
                       </Link>
                     </button>
+    
                   </div>
                 </li>
               ))}

@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     'api',
     "corsheaders",
     'django_filters',
-    'django_filters',
 ]
 
 # Configuración de Channels
@@ -149,7 +148,6 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
 
 SIMPLE_JWT = {
