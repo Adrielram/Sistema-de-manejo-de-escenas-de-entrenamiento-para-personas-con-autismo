@@ -10,9 +10,10 @@ const GenericDropdown = ({ title, items, onSelect }) => {
 
   // Filtra los elementos según el término de búsqueda
   const filteredItems = items.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    item.nombre && item.nombre.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+  
+  console.log('items-------------------' + items);
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
   };
@@ -65,20 +66,26 @@ const GenericDropdown = ({ title, items, onSelect }) => {
           </div>
 
           {/* Lista de elementos */}
-          {filteredItems.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => {
-                onSelect(item);
-                setIsOpen(false); // Cierra el dropdown después de seleccionar
-              }}
-              style={styles.listItem}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
-              {item.name}
-            </div>
-          ))}
+          {filteredItems.map((item) => {
+            // Determinar si se usa 'dni' o 'id'
+            const key = item.dni ? 'dni' : 'id';
+
+            return (
+              <div
+                key={item[key]} // Usar 'dni' o 'id' como clave
+                onClick={() => {
+                  onSelect(item);
+                  setIsOpen(false); // Cierra el dropdown después de seleccionar
+                }}
+                style={styles.listItem}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              >
+                {item.nombre}
+              </div>
+            );
+          })}
+
 
           {/* Mensaje si no hay coincidencias */}
           {filteredItems.length === 0 && (

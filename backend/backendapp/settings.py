@@ -22,14 +22,7 @@ ALLOWED_HOSTS = [
     'backend',  # Nombre del servicio en Docker Compose
 ]
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.JWTAuthentication',  # O el método de autenticación que estés utilizando
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-}
+
 
 
 # Application definition
@@ -138,10 +131,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 #CODIGO PARA SESION
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'api.authentication.CookieJWTAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
+
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Duración del token de acceso
@@ -155,6 +153,10 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Dirección de tu frontend (Next.js en desarrollo)
     "http://frontend:3000",  # Nombre del servicio en Docker Compose
+]
+
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000/',  # Dominio del frontend
 ]
 
 CSRF_TRUSTED_ORIGINS = [

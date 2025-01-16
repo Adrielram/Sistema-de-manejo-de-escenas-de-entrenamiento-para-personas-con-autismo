@@ -1,8 +1,8 @@
 import React from 'react';
 
 interface Item {
-  id: string;
-  name: string;
+  dni: string;
+  nombre: string;
 }
 
 interface AssociatedListProps {
@@ -27,18 +27,23 @@ const AssociatedList: React.FC<AssociatedListProps> = ({ title, items, onRemove,
       <h2 className="title">{title}</h2>
       <hr className="line" />
       <ul className="items-list">
-        {items.map(item => (
-          <li key={item.id} className="list-item">
-            <span>{item.name}</span>
-            <button
-              className="delete-button"
-              onClick={() => onRemove(item.id)}
-              aria-label={`Eliminar ${item.name}`}
-            >
-              🗑️
-            </button>
-          </li>
-        ))}
+        {items.map(item => {
+          // Determinar si se usa 'dni' o 'id'
+          const key = item.dni ? 'dni' : 'id';
+
+          return (
+            <li key={item[key]} className="list-item">
+              <span>{item.nombre}</span>
+              <button
+                className="delete-button"
+                onClick={() => onRemove(item[key])} // Usar la clave correcta para eliminar
+                aria-label={`Eliminar ${item.nombre}`}
+              >
+                🗑️
+              </button>
+            </li>
+          );
+        })}
       </ul>
       <div className="pagination">
         <button className="pagination-button">Anterior</button>

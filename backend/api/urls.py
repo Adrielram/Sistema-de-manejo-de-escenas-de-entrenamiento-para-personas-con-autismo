@@ -28,6 +28,10 @@ urlpatterns = [
     path('escenas/', EscenaListView.as_view(), name='escena-list'),
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
+    path('get_health_centers/', views.get_health_centers, name='get_health_centers'),
+    path('get_therapists/', views.get_therapists, name='get_therapists'),
+    path('get_patients/', views.get_patients, name='get_patients'),
+    path('create_group/', views.create_group, name='create_group'),
 ]
 
 

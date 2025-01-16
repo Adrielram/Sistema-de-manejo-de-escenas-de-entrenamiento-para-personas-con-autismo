@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { FaTrash } from "react-icons/fa";
 import Image from "next/image";
-//import Cookies from "js-cookie";
+
 //const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 interface HealthCenter {
@@ -54,23 +54,11 @@ export default function HealthCenterPage() {
 
     fetchHealthCenters();
   }, []);
-
-
-  //const token = Cookies.get("jwt"); // El token solo se usa para eliminar
-
   const handleDelete = async (id: number) => {
-    /*if (!token) {
-      console.error("No se encontró el token de autenticación.");
-      return;
-    }*/
-  
     try {
       const response = await fetch(`http://localhost:8000/api/health_centers/${id}/delete/`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          //"Authorization": `Bearer ${token}`, // Uso del token solo para eliminación
-        },
+        credentials: "include", // Uso del token solo para eliminación
       });
   
       if (response.ok) {
