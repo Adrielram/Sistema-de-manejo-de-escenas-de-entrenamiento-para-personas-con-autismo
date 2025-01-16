@@ -71,30 +71,11 @@ class Grupo(models.Model):
         on_delete=models.CASCADE, 
         db_column='centroDeSalud_id'
     )
-    nombre = models.CharField(
-        max_length=100, 
-        blank=True, 
-        null=True
-    )
-    centrodesalud_id = models.ForeignKey(
-        Centrodesalud, 
-        on_delete=models.CASCADE, 
-        db_column='centroDeSalud_id'
-    )
 
     class Meta:
         db_table = 'grupo'
 
 class CentroProfesional(models.Model):
-    centrodesalud = models.ForeignKey(
-        Centrodesalud, 
-        on_delete=models.CASCADE
-    )
-    profesional = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE
-    )
-
     centrodesalud = models.ForeignKey(
         Centrodesalud, 
         on_delete=models.CASCADE
@@ -112,12 +93,6 @@ class CentroProfesional(models.Model):
                 name='unique_centrodesalud_profesional'
             )
         ]
-        constraints = [
-            models.UniqueConstraint(
-                fields=['centrodesalud', 'profesional'],
-                name='unique_centrodesalud_profesional'
-            )
-        ]
 
 class Objetivo(models.Model):
     # Elimina la línea del id manual o cámbiala por:
@@ -126,22 +101,7 @@ class Objetivo(models.Model):
         max_length=100, 
         default="Sin Nombre"
     )
-    nombre = models.CharField(
-        max_length=100, 
-        default="Sin Nombre"
-    )
     descripcion = models.CharField(max_length=255)
-    escena = models.ForeignKey(
-        Escena, 
-        on_delete=models.PROTECT, 
-        related_name='objetivo_explicativo'
-    )
-    centro_profesional = models.ForeignKey(
-        CentroProfesional, 
-        on_delete=models.CASCADE, 
-        db_column='centroProfesional_id',
-        related_name='objetivo_centro_salud_id'
-    )
     escena = models.ForeignKey(
         Escena, 
         on_delete=models.PROTECT, 
@@ -163,24 +123,7 @@ class Evaluacion(models.Model):
         blank=True, 
         null=True
     )
-    nombre = models.CharField(
-        max_length=255, 
-        blank=True, 
-        null=True
-    )
     link = models.CharField(max_length=2000)
-    centro_salud_id = models.ForeignKey(
-        CentroProfesional, 
-        on_delete=models.CASCADE, 
-        db_column='centroProfesional_id', 
-        related_name='evaluacion_centro_salud_id'
-    )
-    profesional_id = models.ForeignKey(
-        CentroProfesional, 
-        on_delete=models.CASCADE, 
-        db_column='centroProfesional_id_profesional', 
-        related_name='evaluacion_profesional_id'
-    )
     centro_salud_id = models.ForeignKey(
         CentroProfesional, 
         on_delete=models.CASCADE, 
@@ -207,24 +150,8 @@ class CentroProfesionalEscena(models.Model):
         related_name='centro_profesional_id'
     )
 
-    escena_id = models.ForeignKey(
-        Escena, 
-        on_delete=models.CASCADE
-    )
-    centro_profesional = models.ForeignKey(
-        CentroProfesional, 
-        on_delete=models.CASCADE,  
-        related_name='centro_profesional_id'
-    )
-
     class Meta:
         db_table = 'centroProfesionalEscena'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['centro_profesional', 'escena_id'], 
-                name='unique_centro_salud_profesional_escena'
-            )
-        ]
         constraints = [
             models.UniqueConstraint(
                 fields=['centro_profesional', 'escena_id'], 
@@ -244,17 +171,10 @@ class EscenaObjetivo(models.Model):
                 name='unique_escena_objetivo'
             )
         ]
-        constraints = [
-            models.UniqueConstraint(
-                fields=['escena', 'objetivo'], 
-                name='unique_escena_objetivo'
-            )
-        ]
 
 class PersonaObjetivoEscena(models.Model):
     id = models.AutoField(primary_key=True)    
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)
-    escena_objetivo = models.ForeignKey(
     escena_objetivo = models.ForeignKey(
         'EscenaObjetivo',
         on_delete=models.SET_NULL,
@@ -275,19 +195,7 @@ class PersonaObjetivoEscena(models.Model):
             )
         ]
 
-        db_table = 'personaEscenaObjetivo'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user_id', 'escena_objetivo'],
-                name='unique_user_escena_objetivo'
-            )
-        ]
-
 class Objetivoscumplir(models.Model):
-    objetivo = models.ForeignKey(
-        Objetivo, 
-        on_delete=models.CASCADE
-    )
     objetivo = models.ForeignKey(
         Objetivo, 
         on_delete=models.CASCADE
@@ -307,24 +215,8 @@ class Objetivoscumplir(models.Model):
                 name='unique_objetivo_objetivo_previo'
             )
         ]
-        constraints = [
-            models.UniqueConstraint(
-                fields=['objetivo', 'objetivo_previo'], 
-                name='unique_objetivo_objetivo_previo'
-            )
-        ]
 
 class Personagrupo(models.Model):
-    user_id = models.ForeignKey(
-        'User', 
-        on_delete=models.CASCADE, 
-        related_name='personagrupos'
-    )
-    grupo_id = models.ForeignKey(
-        Grupo, 
-        on_delete=models.CASCADE, 
-        related_name='miembros'
-    )
     user_id = models.ForeignKey(
         'User', 
         on_delete=models.CASCADE, 
@@ -344,25 +236,12 @@ class Personagrupo(models.Model):
                 name='unique_user_grupo'
             )
         ]
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user_id', 'grupo_id'], 
-                name='unique_user_grupo'
-            )
-        ]
 
 class PersonaObjetivoEvaluacion(models.Model):
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)
     objetivo_id = models.ForeignKey('Objetivo', on_delete=models.CASCADE)  
     resultado = models.TextField(blank=True, null=True)
     progreso = models.IntegerField()
-    evaluacion = models.ForeignKey(
-        'Evaluacion', 
-        on_delete=models.CASCADE, 
-        blank=True, 
-        null=True
-    )
-
     evaluacion = models.ForeignKey(
         'Evaluacion', 
         on_delete=models.CASCADE, 
@@ -378,19 +257,12 @@ class PersonaObjetivoEvaluacion(models.Model):
                 name='unique_user_objetivo_evaluacion'
             )
         ]
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user_id', 'objetivo_id', 'evaluacion'], 
-                name='unique_user_objetivo_evaluacion'
-            )
-        ]
 
 class Videosvistos(models.Model):
     id = models.AutoField(primary_key=True)
     persona_objetivo_escena =  models.ForeignKey(
         'PersonaObjetivoEscena',
         on_delete=models.CASCADE,
-        related_name='videosvistos_persona_objetivo_escena',
         related_name='videosvistos_persona_objetivo_escena',
         blank=True,
         null=True
@@ -412,7 +284,6 @@ class Comentario(models.Model):
         'PersonaObjetivoEscena',
         on_delete=models.CASCADE,
         related_name='comentarios_persona_objetivo_escena',
-        related_name='comentarios_persona_objetivo_escena',
         blank=True,
         null=True
     )
@@ -420,12 +291,7 @@ class Comentario(models.Model):
     visibilidad = models.BooleanField(default=True)
     comentario_respondido = models.ForeignKey(
         'Comentario',
-    texto = models.TextField(blank=True, null=True)
-    visibilidad = models.BooleanField(default=True)
-    comentario_respondido = models.ForeignKey(
-        'Comentario',
         on_delete=models.CASCADE,
-        related_name='comentarios_comentario_respondido',
         related_name='comentarios_comentario_respondido',
         blank=True,
         null=True

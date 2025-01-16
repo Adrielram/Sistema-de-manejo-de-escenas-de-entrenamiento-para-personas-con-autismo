@@ -1,9 +1,9 @@
 "use client";
 import {useSelector} from 'react-redux';
 import React, { useState } from "react";
-import SingleSearchSelectBox from "../../../../components/SingleSearchSelectBox";
-import SearchSelectBox from "../../../../components/SearchSelectBox";
-import { RootState } from '../../../../../store/store';
+import SingleSearchSelectBox from "../../../../../components/SingleSearchSelectBox";
+import SearchSelectBox from "../../../../../components/SearchSelectBox";
+import { RootState } from '../../../../../../store/store';
 
 const CreateObjetivo: React.FC = () => {
   const [titulo, setTitulo] = useState("");

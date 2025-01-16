@@ -337,6 +337,24 @@ def signIn(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+@api_view(['POST'])
+def associateCenters(request):
+    centros_de_salud = request.data.get('centros_de_salud', None)
+    if centros_de_salud is not None:
+        try:       
+            centros_validos = Centrodesalud.objects.filter(id__in=centros_de_salud)
+            if centros_validos.count() != len(centros_de_salud):
+                return Response(
+                    {"error": "Uno o más centros de salud especificados no existen"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            for centro in centros_validos:
+                CentroProfesional.objects.create(profesional=user, centrodesalud=centro)
+        except Exception as e:
+            return Response(
+                {"error": f"Error al asociar centros de salud: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 @api_view(['POST'])
 def crear_escena(request):
@@ -391,8 +409,34 @@ class CentrosSaludListView(generics.ListAPIView):
     serializer_class = CentroSaludSerializer
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
-    filterset_class = NameFilter  
+    filterset_class = NameFilter
 
+def get_related_centers(self):
+        username = self.kwargs.get('username')
+        profesional = User.objects.get(username=username)
+        return CentroProfesional.objects.filter(profesional=profesional).values_list('centrodesalud', flat=True)
+
+class NotAssociatedCentersListView(generics.ListAPIView):
+    serializer_class = CentroSaludSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+
+    def get_queryset(self):
+        related_centers = get_related_centers(self)
+        # Filtra los centros de salud donde el profesional no esté relacionado
+        return Centrodesalud.objects.exclude(id__in=related_centers)
+    
+class AssociatedCentersListView(generics.ListAPIView):
+    serializer_class = CentroSaludSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+
+    def get_queryset(self):
+        related_centers = get_related_centers(self)
+        # Filtra los centros de salud donde el profesional no esté relacionado
+        return Centrodesalud.objects.filter(id__in=related_centers)
 
 @api_view(['GET'])
 def buscar_padres(request):
