@@ -512,3 +512,86 @@ def buscar_padres(request):
         'total_paginas': paginator.num_pages,
         'pagina_actual': page_obj.number
     })
+
+class ComentariosListaAPIView(APIView):
+    """
+    Endpoint para obtener todas las IDs de comentarios asociados a un PersonaObjetivoEscena.
+    """
+
+    def get(self, request):
+        # Obtener parámetros de consulta
+        id_objetivo = request.query_params.get('idObjetivo')
+        id_persona = request.query_params.get('idPersona')
+        id_escena = request.query_params.get('idEscena')
+
+        # Validar que los parámetros estén presentes
+        if not all([id_objetivo, id_persona, id_escena]):
+            return Response(
+                {"error": "Faltan parámetros en la consulta (idObjetivo, idPersona, idEscena)."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Buscar PersonaObjetivoEscena
+            from .models import PersonaObjetivoEscena
+            persona_objetivo_escena = PersonaObjetivoEscena.objects.get(
+                persona_id=id_persona,
+                objetivo_id=id_objetivo,
+                escena_id=id_escena
+            )
+
+            # Obtener todos los comentarios asociados
+            comentarios = Comentario.objects.filter(persona_objetivo_escena=persona_objetivo_escena)
+            ids = comentarios.values_list('id', flat=True)
+
+            return Response({"comentarios_ids": list(ids)}, status=status.HTTP_200_OK)
+
+        except PersonaObjetivoEscena.DoesNotExist:
+            return Response(
+                {"error": "No se encontró la relación PersonaObjetivoEscena con los datos proporcionados."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": f"Error inesperado: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+class ComentarioDetalleAPIView(APIView):
+    """
+    Endpoint para obtener un comentario específico por ID.
+    """
+    def get(self, request):
+        # Obtener el parámetro id_comentario
+        id_comentario = request.query_params.get('idComentario')
+
+        # Validar que el parámetro esté presente
+        if not id_comentario:
+            return Response(
+                {"error": "El parámetro 'idComentario' es obligatorio."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Buscar el comentario por ID
+            comentario = Comentario.objects.get(id=id_comentario)
+
+            # Retornar los datos del comentario
+            return Response({
+                "id": comentario.id,
+                "texto": comentario.texto if comentario.visibilidad else "Comentario oculto",
+                "visibilidad": comentario.visibilidad,
+            }, status=status.HTTP_200_OK)
+
+        except Comentario.DoesNotExist:
+            return Response(
+                {"error": "No se encontró un comentario con el ID proporcionado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": f"Error inesperado: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

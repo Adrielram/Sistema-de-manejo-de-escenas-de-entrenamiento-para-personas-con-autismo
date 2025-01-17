@@ -9,8 +9,6 @@ router = DefaultRouter()
 router.register(r'create_objetivo', ObjetivoViewSet, basename='objetivo')
 
 
-
-
 urlpatterns = [
     # Definir las rutas para las vistas que tengas en tu aplicación
     path('example/', views.example_view, name='example'),
@@ -27,7 +25,8 @@ urlpatterns = [
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
+    path('comentarios/', ComentarioDetalleAPIView.as_view(), name='comentario-detalle'),
+    path('comentarios/lista/', ComentariosListaAPIView.as_view(), name='comentarios-lista'),
 ]
-
 
 urlpatterns += [path('', include(router.urls))]
