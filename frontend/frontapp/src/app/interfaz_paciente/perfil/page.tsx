@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 
-//import { useSelector} from "react-redux";
-//import { RootState } from "../../../../store/store";
+import { useSelector} from "react-redux";
+import { RootState } from "../../../../store/store";
 
 
 const UserPage: React.FC = () => {
@@ -21,12 +21,10 @@ const UserPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
-    const USERNAME = "adriel"
-    //const USERNAME = useSelector((state: RootState) => state.user.username);  //modificar esto no funciona aun
-    //console.log("USERNAME desde Redux: ", USERNAME, ".");
+    const { username } = useSelector((state: RootState) => state.user); 
 
     useEffect(() => {
-        fetch(`http://localhost:8000/api/get-user/?username=${USERNAME}`)
+        fetch(`http://localhost:8000/api/get-user/?username=${username}`)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error("Network response was not ok");
@@ -52,7 +50,7 @@ const UserPage: React.FC = () => {
                 setError(error.message);
                 setLoading(false);
             });
-    }, [USERNAME]);
+    }, [username]);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault(); // Evita que se recargue la página

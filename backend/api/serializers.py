@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import User, Objetivo, Escena, CentroProfesional, Residencia, Centrodesalud
+from datetime import datetime
 
 class PacienteSerializer(serializers.ModelSerializer):
     padreACargo = serializers.SerializerMethodField()
@@ -10,6 +11,8 @@ class PacienteSerializer(serializers.ModelSerializer):
 
     def get_padreACargo(self, obj):
         return obj.user_id_padre.nombre if obj.user_id_padre else ''
+    
+
 class ObjetivoSerializer(serializers.ModelSerializer):
     video_explicativo_id = serializers.PrimaryKeyRelatedField(
         queryset=Escena.objects.all(), source='escena'
@@ -46,12 +49,25 @@ class ResidenciaSerializer(serializers.ModelSerializer):
         model = Residencia
         fields = ['id_dir','provincia', 'ciudad', 'calle', 'numero']
 
+class ResidenciaAllSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Residencia
+        fields = '__all__'  # Incluye todos los campos del modelo Residencia
+
 class UserSerializer(serializers.ModelSerializer):
-    direccion = ResidenciaSerializer(source='direccion_id_dir')
+    fecha_nac = serializers.SerializerMethodField()  # Personalizar la representación
+    residencia = ResidenciaAllSerializer(source='direccion_id_dir', read_only=True)
+
+    def get_fecha_nac(self, obj):
+        # Convertir fecha_nac a date si es un datetime
+        if isinstance(obj.fecha_nac, datetime):
+            return obj.fecha_nac.date()
+        return obj.fecha_nac  # Si ya es un date o None, retornarlo directamente
 
     class Meta:
         model = User
-        fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'direccion']
+        fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'residencia', 'user_id_padre']
+
 
 class EscenaSerializer(serializers.ModelSerializer):
     class Meta:

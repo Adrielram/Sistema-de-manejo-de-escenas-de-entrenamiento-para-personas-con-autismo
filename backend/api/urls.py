@@ -2,7 +2,7 @@ from . import views
 from .views import *
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ObjetivoViewSet, EscenaListView, ObjetivosListView
+from .views import ObjetivoViewSet, EscenaListView, ObjetivosListView, retrieve_user
 
 
 router = DefaultRouter()
@@ -19,7 +19,7 @@ urlpatterns = [
     path('verify-session/', verify_session, name='verify-session'),
     path('objetivos/', objetivos_list, name='listar_objetivos'),
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
-    path('get-user/', retrieve_user, name='retrieve_user'),
+    path('get-user/', retrieve_user.as_view(), name='retrieve_user'),
     path('update-user/', update_user, name='update_user'),
     path('signIn/', views.signIn, name='signIn'),
     path('crear-escena/', views.crear_escena, name='crear_escena'),

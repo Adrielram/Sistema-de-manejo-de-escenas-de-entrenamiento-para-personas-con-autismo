@@ -2,10 +2,7 @@ import type { Metadata } from "next";
 
 import { Inter } from 'next/font/google';
 // import { Geist, Geist_Mono } from "next/font/google";
-<<<<<<<<< Temporary merge branch 1
-import Footer from "../components/Footer";
-=========
->>>>>>>>> Temporary merge branch 2
+
 import "./globals.css";
 
 // Asegúrate de importar ReduxProvider desde la ruta correcta
@@ -38,4 +35,3 @@ export default function RootLayout({
     </html>
   );
 }
-

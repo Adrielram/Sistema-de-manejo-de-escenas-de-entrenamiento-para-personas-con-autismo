@@ -150,15 +150,23 @@ class ObjetivoViewSet(viewsets.ViewSet):
 
         
 
-@api_view(['GET'])
-def retrieve_user(request):
-    username = request.query_params.get('username')
-    try:
-        user = User.objects.get(username=username)
+class retrieve_user(APIView):
+    def get(self, request):
+        username = request.query_params.get('username', '').strip()
+
+        # Validar que el parámetro 'username' está presente
+        if not username:
+            return Response(
+                {"error": "El parámetro 'username' es obligatorio."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Obtener el usuario con el username proporcionado
+        user = get_object_or_404(User, username=username)
+
+        # Serializar los datos del usuario
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    except User.DoesNotExist:
-        return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
     
 @api_view(['PUT'])
 def update_user(request):
@@ -196,14 +204,6 @@ def update_user(request):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Validar formato de fecha de nacimiento
-        try:
-            fecha_nac = datetime.strptime(fecha_nac, "%Y-%m-%d")
-        except ValueError:
-            return Response(
-                {"error": "El formato de la fecha de nacimiento debe ser YYYY-MM-DD"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
 
         # Validar género
         if genero not in ['Masculino', 'Femenino']:
