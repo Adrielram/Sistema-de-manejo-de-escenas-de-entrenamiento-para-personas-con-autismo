@@ -2,88 +2,64 @@
 
 import { useState, useEffect } from "react";
 import ScrollVerticalYHorizontal from "../../../components/ScrollVerticalYHorizontal";
+import SearchBar from "../../../components/Buscador"; // Asegúrate de mover los datos mock a un archivo separado
 
-// le paso al back el usuario (d alguna manera)
-// me devuelve objetivos con las escenas de c/u
-
-interface Escena{  
-  id: number;
-  idioma: string;
-  complejidad: number;
-  link: string;
-  nombre: string;
-}
-
-/*interface Objetivo {
-  id: number;
-  titulo: string;
-  descripcion: string;
-  escena: Escena; // explicativa
-  escenas: Escena[];  // todas las del objetivo
-}
-*/
-interface Objetivo {
-  id: number;
-  titulo: string;
-  descripcion: string;
-  escena_id: number;
+interface PaginatedResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: any[];
 }
 
 export default function Page() {
-  const [objetivos, setObjetivos] = useState<Objetivo[]>([]);
-  const [escenasActivas, setEscenasActivas] = useState<Escena[]>([]);
-  const [objetivoSeleccionado, setObjetivoSeleccionado] = useState<number | null>(null);
+  const [objetivos, setObjetivos] = useState<Array<{ id: number; titulo: string }>>([]);
+  //const [escenasActivas, setEscenasActivas] = useState();
+  const [objetivoSeleccionado, setObjetivoSeleccionado] = useState<number>();
+  const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // para probar:
-  /*const elementos = [
-    { id: 1, texto: "Objetivo 1", escena: { id: 1, nombreEscena: "Escena1" } },
-    { id: 2, texto: "Objetivo 2", escena: { id: 2, nombreEscena: "Escena2" } },
-    { id: 3, texto: "Objetivo 3", escena: { id: 3, nombreEscena: "Escena3" } },
-    { id: 5, texto: "Objetivo 5" },
-    { id: 6, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
-    { id: 7, texto: "Objetivo 2" },
-    { id: 8, texto: "Objetivo 3" },
-    { id: 9, texto: "Objetivo 4" },
-    { id: 10, texto: "Objetivo 5" },
-    { id: 11, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
-    { id: 12, texto: "Objetivo 2" },
-    { id: 13, texto: "Objetivo 3" },
-    { id: 14, texto: "Objetivo 4" },
-    { id: 15, texto: "Objetivo 5" },
-    { id: 16, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
-    { id: 17, texto: "Objetivo 2" },
-    { id: 18, texto: "Objetivo 3" },
-    { id: 19, texto: "Objetivo 4" },
-  ];
-*/
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const username = 'paciente1'; // Reemplazar con el username real
+  // USERNAME SACARLO DEL ESTADO DE REDUX
+  const baseURL = process.env.NEXT_PUBLIC_API_URL;
+  const fetchObjetivos = async (page: number = 1) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `${baseURL}obtener_objetivos_usuario/?username=${username}&page=${page}&limit=4`
+        //`http://localhost:8000/api/obtener_objetivos_usuario/?username=${username}&page=${page}&limit=4`
+       //`http://localhost:8000/api/obtener_centros_de_salud/?username=${username}`
+      );
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const data: PaginatedResponse = await response.json();
+  
+      // Mapear a la estructura esperada
+      const mappedResults = data.results.map(obj => ({
+        id: obj.id,
+        titulo: obj.titulo, 
+      }));
+      setObjetivos(mappedResults);
+      setTotalPages(Math.ceil(data.count / 4));
+  
+      if (mappedResults.length > 0 && !objetivoSeleccionado) {
+        
+        setObjetivoSeleccionado(mappedResults[0].id);
+      }
+    } catch (err) {
+      setError("Error al cargar los objetivos");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
 
   useEffect(() => {
-    const fetchObjetivos = async () => {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-      try {
-        // SI NO SE RENDERIZADA DEL LADO DEL CLIENTE, NO USAR 'LOCALHOST', USAR 'BACKEND'
-        const response = await fetch(
-          //`${baseUrl}objetivos`
-          'http://localhost:8000/api/objetivos'
-        );
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        } 
-        const data = await response.json();
-        setObjetivos(data);
-      } catch (err) {
-        setError("Error al cargar los objetivos");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchObjetivos();
-  }, []);
-
+    fetchObjetivos(currentPage);
+  }, [currentPage, username]);
 
   const handleObjetivoClick = (objetivoId: number) => {
     const objetivo = objetivos.find(obj => obj.id === objetivoId);
@@ -93,50 +69,33 @@ export default function Page() {
     }
   };
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Cargando...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center p-4">{error}</div>;
-  }
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
 
   return (
-    <div className="flex flex-col h-screen p-4 space-y-6">
-      {/* Sección de Objetivos */}
-      <div className="flex-1">
+    <div className="flex h-screen p-4 gap-6">
+      {error && (
+        <div className="absolute top-0 right-0 m-4 p-4 bg-yellow-100 text-yellow-800 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {/* Sección de Objetivos - 30% del ancho */}
+      <div className="w-[30%]">
         <h2 className="text-xl font-bold mb-2">Objetivos</h2>
         <ScrollVerticalYHorizontal 
           elementos={objetivos}
           onObjetivoClick={handleObjetivoClick}
           selectedObjetivoId={objetivoSeleccionado}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          isLoading={isLoading}
         />
       </div>
 
-      {/* Sección de Escenas */}
-      <div className="flex-1">
-        <h2 className="text-xl font-bold mb-2">Escenas</h2>
-        <div className="overflow-auto h-[calc(50vh-100px)] bg-gray-100 rounded-lg shadow p-4">
-          {escenasActivas.length > 0 ? (
-            <ul className="space-y-2">
-              {escenasActivas.map((escena) => (
-                <li
-                  key={escena.id}
-                  className="p-4 bg-white rounded-lg shadow hover:bg-gray-50 transition-colors"
-                >
-                  <h3 className="font-semibold">{escena.nombre}</h3>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-center text-gray-500">
-              {objetivoSeleccionado 
-                ? "Este objetivo no tiene escenas"
-                : "Selecciona un objetivo para ver sus escenas"}
-            </p>
-          )}
-        </div>
-      </div>
+      {/* Resto del código igual... */}
     </div>
   );
 }

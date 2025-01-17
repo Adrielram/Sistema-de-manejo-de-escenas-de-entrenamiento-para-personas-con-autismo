@@ -131,6 +131,36 @@ class Command(BaseCommand):
             escena=escena_2,
             centro_profesional=centro_prof
         )
+        objetivo_3 = Objetivo.objects.create(
+            nombre="Objetivo 3",
+            descripcion="Tercer objetivo de prueba",
+            escena=escena_1,
+            centro_profesional=centro_prof
+        )
+        objetivo_4 = Objetivo.objects.create(
+            nombre="Objetivo 4",
+            descripcion="Cuarto objetivo de prueba",
+            escena=escena_2,
+            centro_profesional=centro_prof
+        )
+        objetivo_5 = Objetivo.objects.create(
+            nombre="Objetivo 5",
+            descripcion="Segundo objetivo de prueba",
+            escena=escena_2,
+            centro_profesional=centro_prof
+        )
+        objetivo_6 = Objetivo.objects.create(
+            nombre="Objetivo 6",
+            descripcion="Sexto objetivo de prueba",
+            escena=escena_1,
+            centro_profesional=centro_prof
+        )
+        objetivo_7 = Objetivo.objects.create(
+            nombre="Objetivo 7",
+            descripcion="Septimo objetivo de prueba",
+            escena=escena_2,
+            centro_profesional=centro_prof
+        )
 
         Objetivoscumplir.objects.create(
             objetivo=objetivo_2,
@@ -146,6 +176,27 @@ class Command(BaseCommand):
             escena=escena_2,
             objetivo=objetivo_2
         )
+        escena_obj_3 = EscenaObjetivo.objects.create(
+            escena=escena_1,
+            objetivo=objetivo_3
+        )
+        escena_obj_4 = EscenaObjetivo.objects.create(
+            escena=escena_2,
+            objetivo=objetivo_4
+        )
+        escena_obj_5 = EscenaObjetivo.objects.create(
+            escena=escena_1,
+            objetivo=objetivo_5
+        )
+        escena_obj_6 = EscenaObjetivo.objects.create(
+            escena=escena_2,
+            objetivo=objetivo_6
+        )
+        escena_obj_7 = EscenaObjetivo.objects.create(
+            escena=escena_1,
+            objetivo=objetivo_7
+        )
+
 
         # Create person-objective-scene relationship
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
@@ -158,6 +209,36 @@ class Command(BaseCommand):
             user_id=paciente,
             escena_objetivo=escena_obj_2,
             orden=2,
+            es_alternativo=False
+        )
+        persona_obj_esc_3 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_3,
+            orden=1,
+            es_alternativo=False
+        )
+        persona_obj_esc_4 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_4,
+            orden=2,
+            es_alternativo=False
+        )
+        persona_obj_esc_5 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_5,
+            orden=1,
+            es_alternativo=False
+        )
+        persona_obj_esc_6 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_6,
+            orden=2,
+            es_alternativo=False
+        )
+        persona_obj_esc_7 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_7,
+            orden=1,
             es_alternativo=False
         )
 

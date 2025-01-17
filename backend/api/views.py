@@ -105,15 +105,98 @@ def verify_session(request):
     except Exception as e:
         return Response({"message": "Token inválido o expirado"}, status=401)
     
-
+@api_view(['GET'])
 def objetivos_list(request):
     objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
     return JsonResponse(list(objetivos), safe=False)
 
+'''
+@api_view(['GET'])
 def obj_list_user(request, user_id):
-    objetivos = Objetivo.objects.filter(user_id=user_id).values()  # Obtiene los objetivos del usuario
+    objetivos = PersonaObjetivoEscena.objects.filter(user_id=user_id).values()  # Obtiene los objetivos del usuario
     return JsonResponse(list(objetivos), safe=False)
     ## CHEQUEAR ESTE BIEN
+'''
+'''
+@api_view(['GET'])
+def obtener_objetivos_usuario(request):
+    # Obtén el 'username' del request
+    username = request.GET.get('username', None)
+
+    if not username:
+        return JsonResponse({'error': 'El campo username es requerido.'}, status=400)
+
+    # Filtra el usuario por 'username' y obtiene su DNI
+    try:
+        usuario = User.objects.get(username=username)  # Usa .get() para obtener un único registro
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'Usuario no encontrado.'}, status=404)
+
+    dni = usuario.dni
+
+    # Filtra las relaciones en PersonaObjetivoEscena asociadas al usuario por su ID
+    relaciones = PersonaObjetivoEscena.objects.filter(user_id=dni)
+
+    # Obtén los nombres y IDs de los objetivos relacionados
+    objetivos = Objetivo.objects.filter(
+        id__in=relaciones.values_list('escena_objetivo', flat=True)
+    ).values('id', 'nombre')
+
+    # Formatea los resultados para incluir 'titulo' en lugar de 'nombre'
+    resultados = [
+        {'id': objetivo['id'], 'titulo': objetivo['nombre']}
+        for objetivo in objetivos
+    ]
+
+    # Retorna los resultados en formato JSON
+    return JsonResponse(resultados, safe=False)
+'''
+
+class ObjetivosUsuarioListView(generics.ListAPIView):
+    """
+    Vista para listar los objetivos de un usuario específico
+    con paginación dinámica.
+    """
+    serializer_class = ObjetivoSerializerList
+    pagination_class = DynamicPagination
+    #permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+
+    def get_queryset(self):
+        # Obtén el username del request
+        username = self.request.GET.get('username', None)
+        if not username:
+            return Objetivo.objects.none()  # Devuelve un queryset vacío si no hay username
+
+        # Filtra el usuario por username
+        try:
+            usuario = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Objetivo.objects.none()
+
+        # Filtra las relaciones y los objetivos asociados
+        relaciones = PersonaObjetivoEscena.objects.filter(user_id=usuario)
+        return Objetivo.objects.filter(
+            id__in=relaciones.values_list('escena_objetivo', flat=True)
+        )
+
+    def list(self, request, *args, **kwargs):
+        """
+        Personaliza la respuesta para formatear los resultados
+        con el formato deseado (id, titulo).
+        """
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            # Personalizar los datos para devolver 'titulo' en lugar de 'nombre'
+            data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
+            return self.get_paginated_response(data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
+        return Response(data)
+
 
 class PacienteListView(APIView):
     def get(self, request):
