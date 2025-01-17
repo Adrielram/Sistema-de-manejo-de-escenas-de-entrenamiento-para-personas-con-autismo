@@ -71,7 +71,6 @@ export const persistor = persistStore(store, null, async () => {
   if (hasCookie) {
     await verifySession(); // Verifica la sesión solo si existe la cookie
   } else {
-    console.log("No hay JWT");
     store.dispatch(clearUser()); // Limpia el estado si no hay cookie JWT
   }
 });

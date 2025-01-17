@@ -458,9 +458,9 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from api.models import User
 from .models import Notificacion
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+
 def procesar_notificacion(request, pk, accion):
     """
     Procesa una notificación para aceptarla o rechazarla.
@@ -480,9 +480,10 @@ def procesar_notificacion(request, pk, accion):
                 usuario.is_active = True
                 usuario.save()
                 notificacion.estado = 'leida'
-            elif accion == 'rechazar':                
+            elif accion == 'rechazar':                                 
                 usuario.delete()
-                notificacion.estado = 'eliminada'
+                # No guardar la notificación eliminada
+                return JsonResponse({'success': True, 'message': f'Usuario {usuario} eliminado y notificación procesada'})
         
         elif content_type.model == 'objetivo':  # Si es una solicitud de agregar un objetivo
             if accion == 'aceptar':
