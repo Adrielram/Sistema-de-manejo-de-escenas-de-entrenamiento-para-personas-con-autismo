@@ -3,8 +3,7 @@ from .models import User, Objetivo, Escena, CentroProfesional, Residencia, Centr
 from datetime import datetime
 
 class PacienteSerializer(serializers.ModelSerializer):
-    padreACargo = serializers.SerializerMethodField()
-
+    padreACargo = serializers.CharField(source='user_id_padre.nombre', read_only=True)
     class Meta:
         model = User
         fields = ['username', 'nombre', 'dni', 'padreACargo']
@@ -57,6 +56,7 @@ class ResidenciaAllSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     fecha_nac = serializers.SerializerMethodField()  # Personalizar la representación
     residencia = ResidenciaAllSerializer(source='direccion_id_dir', read_only=True)
+    padreACargo = serializers.CharField(source='user_id_padre.nombre', read_only=True)
 
     def get_fecha_nac(self, obj):
         # Convertir fecha_nac a date si es un datetime
@@ -66,7 +66,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'residencia', 'user_id_padre']
+        fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'residencia', 'padreACargo']
 
 
 class EscenaSerializer(serializers.ModelSerializer):

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 
 import { useSelector} from "react-redux";
 import { RootState } from "../../../../store/store";
-
+import SearchWithFatherRes from '../../../components/SearchWithFatherRes';
 
 const UserPage: React.FC = () => {
     const [dni, setDni] = useState("");
@@ -21,8 +21,14 @@ const UserPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
-    const { username } = useSelector((state: RootState) => state.user); 
+    const [padre, setPadre] = useState<string | null>(null);
+    const [showSearchFather, setShowSearchFather] = useState(false);
+    const [idPadreSeleccionado, setIdPadreSeleccionado] = useState<number | null>(null);
 
+    const { username } = useSelector((state: RootState) => state.user); 
+    const handlePadreSeleccionado = (dni: number) => {
+        setIdPadreSeleccionado(dni); // Almacena el DNI del padre seleccionado
+      };
     useEffect(() => {
         fetch(`http://localhost:8000/api/get-user/?username=${username}`)
             .then((response) => {
@@ -38,12 +44,13 @@ const UserPage: React.FC = () => {
                 setGenero(data.genero);
                 setRole(data.role);
                 setDireccion({
-                    id_dir: data.direccion.id_dir,
-                    provincia: data.direccion.provincia,
-                    ciudad: data.direccion.ciudad,
-                    calle: data.direccion.calle,
-                    numero: data.direccion.numero.toString(),
+                    id_dir: data.residencia.id_dir,
+                    provincia: data.residencia.provincia,
+                    ciudad: data.residencia.ciudad,
+                    calle: data.residencia.calle,
+                    numero: data.residencia.numero.toString(),
                 });
+                setPadre(data.padreACargo||null);
                 setLoading(false); // Termina la carga una vez obtenidos los datos
             })
             .catch((error) => {
@@ -54,28 +61,29 @@ const UserPage: React.FC = () => {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault(); // Evita que se recargue la página
-
+    
         // Validaciones simples
         if (!dni || !nombre || !fechaNac || !genero || !role || !direccion.provincia || !direccion.ciudad || !direccion.calle || !direccion.numero) {
             setError("Por favor, completa todos los campos.");
             return;
         }
-
+    
         const updatedUser = {
             dni,
             nombre,
             fecha_nac: fechaNac,
             genero,
             role,
-            direccion: {
+            residencia: {
                 id_dir: direccion.id_dir,
                 provincia: direccion.provincia,
                 ciudad: direccion.ciudad,
                 calle: direccion.calle,
-                numero: direccion.numero
+                numero: parseInt(direccion.numero), // Conversión a número
             },
+            padreACargo: idPadreSeleccionado || null,
         };
-
+    
         try {
             console.log("Datos enviados al backend:", updatedUser);
             const response = await fetch(`http://localhost:8000/api/update-user/`, {
@@ -85,14 +93,15 @@ const UserPage: React.FC = () => {
                 },
                 body: JSON.stringify(updatedUser),
             });
+            
             if (!response.ok) {
-              const errorResponse = await response.json(); // Captura la respuesta de error
-              console.error("Error:", errorResponse);
-              throw new Error("Failed to save user data");
-          }
-
+                const errorResponse = await response.json();
+                console.error("Error:", errorResponse);
+                throw new Error(errorResponse.detail || "Failed to save user data");
+            }
+    
             setSuccess("Datos actualizados con éxito");
-            setError(null); // Limpia el mensaje de error si hay uno
+            setError(null);
         } catch (error: unknown) {
             if (error instanceof Error) {
                 setError(error.message);
@@ -111,32 +120,34 @@ const UserPage: React.FC = () => {
     }
 
     return (
-        <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-md">
-            <h1 className="text-xl font-semibold mb-4">Mis Datos</h1>
+        <div className="max-w-3xl mx-auto p-4 bg-sky-700 shadow-md rounded-md">
+            <h1 className="text-xl font-semibold mb-4 text-white">Mis Datos</h1>
             {success && <div className="text-green-500 mb-4">{success}</div>}
             <form onSubmit={handleSave} className="space-y-4">
                 <div>
-                    <label className="block font-medium">DNI:</label>
+                    <label className="block font-medium text-white">DNI:</label>
                     <input
                         type="text"
                         value={dni}
+                        readOnly
                         onChange={(e) => setDni(e.target.value)}
                         className="border p-2 rounded w-full"
                         required
                     />
                 </div>
                 <div>
-                    <label className="block font-medium">Nombre:</label>
+                    <label className="block font-medium text-white">Nombre:</label>
                     <input
                         type="text"
                         value={nombre}
+                        readOnly
                         onChange={(e) => setNombre(e.target.value)}
                         className="border p-2 rounded w-full"
                         required
                     />
                 </div>
                 <div>
-                    <label className="block font-medium">Fecha de Nacimiento:</label>
+                    <label className="block font-medium text-white">Fecha de Nacimiento:</label>
                     <input
                         type="date"
                         value={fechaNac}
@@ -146,6 +157,7 @@ const UserPage: React.FC = () => {
                     />
                 </div>
                 <div>
+                    <label className="block font-medium text-white">Genero:</label>
                     <select
                         id="genero"
                         value={genero}
@@ -161,7 +173,7 @@ const UserPage: React.FC = () => {
                 <div>
                     <div className="space-y-4">
                         <div>
-                            <label className="block font-medium">Provincia:</label>
+                            <label className="block font-medium text-white">Provincia:</label>
                             <input
                                 type="text"
                                 value={direccion.provincia}
@@ -173,7 +185,7 @@ const UserPage: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label className="block font-medium">Ciudad:</label>
+                            <label className="block font-medium text-white">Ciudad:</label>
                             <input
                                 type="text"
                                 value={direccion.ciudad}
@@ -185,7 +197,7 @@ const UserPage: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label className="block font-medium">Calle:</label>
+                            <label className="block font-medium text-white">Calle:</label>
                             <input
                                 type="text"
                                 value={direccion.calle}
@@ -197,7 +209,7 @@ const UserPage: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label className="block font-medium">Número:</label>
+                            <label className="block font-medium text-white">Número:</label>
                             <input
                                 type="text"
                                 value={direccion.numero}
@@ -209,15 +221,32 @@ const UserPage: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label className="block font-medium">Padre a cargo:</label>
-                            <p>todavia no tengo el componente</p>
+                            <label className="block font-medium text-white">Padre a cargo:</label>
+                            {padre ? (
+                                <p className="text-white">{`${padre}`}</p>
+                            ) : (
+                                <>
+                                    {showSearchFather ? (
+                                        <SearchWithFatherRes onPadreSeleccionado={handlePadreSeleccionado}/> // Renderiza el componente
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowSearchFather(true)}
+                                            className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-950 transition"
+                                        >
+                                            Agregar Padre
+                                        </button>
+                                    )}
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
                 <div className="text-right">
                     <button
                         type="submit"
-                        className="bg-green-600 text-white p-2 rounded px-6 py-3 hover:bg-green-800 transition"
+                        className="bg-orange-700 text-white p-2 rounded px-6 py-3 hover:bg-red-800 transition"
+                        
                     >
                         Guardar
                     </button>

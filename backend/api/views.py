@@ -22,6 +22,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters
+from django.db import transaction
 
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
@@ -129,7 +130,6 @@ class PacienteListView(APIView):
                 models.Q(dni__icontains=query) |
                 models.Q(genero__icontains=query)
             ).distinct()  # Evitar duplicados
-
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -151,6 +151,7 @@ class ObjetivoViewSet(viewsets.ViewSet):
         
 
 class retrieve_user(APIView):
+    
     def get(self, request):
         username = request.query_params.get('username', '').strip()
 
@@ -172,7 +173,7 @@ class retrieve_user(APIView):
 def update_user(request):
     try:
         # Validar que todos los campos obligatorios estén presentes
-        required_fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'direccion']
+        required_fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'residencia']
 
         missing_fields = [field for field in required_fields if field not in request.data]
         if missing_fields:
@@ -182,28 +183,29 @@ def update_user(request):
             )
 
         # Obtener datos de la dirección
-        direccion = request.data.get('direccion', {})
+        direccion = request.data.get('residencia', {})
         id_dir = direccion.get('id_dir')
         provincia = direccion.get('provincia')
         ciudad = direccion.get('ciudad')
         calle = direccion.get('calle')
         numero = direccion.get('numero')
+
         # Obtener datos del request
         dni = request.data.get('dni')
         nombre = request.data.get('nombre')
         fecha_nac = request.data.get('fecha_nac')
         genero = request.data.get('genero')
         role = request.data.get('role')
+        padre_id = request.data.get('padreACargo', None)  # Obtener el DNI del padre
 
         # Buscar el usuario por DNI
         try:
-            user = User.objects.get(username=nombre)
+            user = User.objects.get(dni=dni)
         except User.DoesNotExist:
             return Response(
                 {"error": "Usuario no encontrado"},
                 status=status.HTTP_404_NOT_FOUND
             )
-
 
         # Validar género
         if genero not in ['Masculino', 'Femenino']:
@@ -219,28 +221,38 @@ def update_user(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Buscar al padre (si se proporcionó un DNI válido)
+        if padre_id:
+            try:
+                padre = User.objects.get(dni=padre_id)  # Buscar al padre por DNI
+                user.user_id_padre = padre  # Asignar el padre al usuario
+            except User.DoesNotExist:
+                return Response(
+                    {"error": f"No se encontró un usuario con el DNI '{padre_id}'"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
         # Actualizar la residencia (dirección) dentro de una transacción
         with transaction.atomic():
             # Actualizar la residencia
-            residencia = Residencia.objects.get(id_dir=id_dir)
-            if not residencia:
+            try:
+                residencia = Residencia.objects.get(id_dir=id_dir)
+                residencia.provincia = provincia
+                residencia.ciudad = ciudad
+                residencia.calle = calle
+                residencia.numero = numero
+                residencia.save()
+            except Residencia.DoesNotExist:
                 return Response(
                     {"error": "Residencia asociada no encontrada"},
                     status=status.HTTP_404_NOT_FOUND
                 )
 
-            residencia.provincia = provincia
-            residencia.ciudad = ciudad
-            residencia.calle = calle
-            residencia.numero = numero
-            residencia.save()
-
             # Actualizar el usuario
-            user.dni = dni
-            user.nombre = nombre
             user.fecha_nac = fecha_nac
             user.genero = genero
-            user.save()
+            user.role = role
+            user.save()  # Guardar todos los cambios del usuario
 
         return Response(
             {"message": "Usuario actualizado exitosamente"},
