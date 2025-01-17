@@ -11,7 +11,7 @@ import {useRouter} from 'next/navigation';
 export default function Header() {
   const dispatch = useDispatch();
   const router = useRouter();
- 
+  
   const { username, isLoggedIn } = useSelector((state: RootState) => state.user);
   const handleLogout = async () => {
     try {
