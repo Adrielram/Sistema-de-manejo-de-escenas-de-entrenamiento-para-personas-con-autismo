@@ -196,6 +196,10 @@ class Command(BaseCommand):
             escena=escena_1,
             objetivo=objetivo_7
         )
+        escena_obj_8 = EscenaObjetivo.objects.create(
+            escena = escena_2,
+            objetivo = objetivo_1
+        )
 
 
         # Create person-objective-scene relationship

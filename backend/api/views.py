@@ -197,6 +197,23 @@ class ObjetivosUsuarioListView(generics.ListAPIView):
         data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
         return Response(data)
 
+class EscenasPorObjetivoListView(generics.ListAPIView):
+    #queryset = Escena.objects.all()
+    serializer_class = EscenaSerializer
+    #pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+
+    def get_queryset(self):
+        # Obtén el ID del objetivo del request
+        objetivo_id = self.request.GET.get('objetivo_id', None)
+        if not objetivo_id:
+            return Escena.objects.none()  # Devuelve un queryset vacío si no hay objetivo_id
+
+        # Filtra las relaciones por el ID del objetivo
+        relaciones = EscenaObjetivo.objects.filter(objetivo=objetivo_id)
+        return Escena.objects.filter(
+            id__in=relaciones.values_list('escena', flat=True)
+        )
 
 class PacienteListView(APIView):
     def get(self, request):

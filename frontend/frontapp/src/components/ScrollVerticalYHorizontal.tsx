@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import BigButton from "./BigButton";
 
@@ -28,28 +27,25 @@ export default function ScrollVerticalYHorizontal({
     const updateOrientation = () => {
       setIsPortrait(window.innerHeight > window.innerWidth);
     };
-
     const mediaQuery = window.matchMedia("(orientation: portrait)");
     setIsPortrait(mediaQuery.matches);
-
     mediaQuery.addEventListener("change", updateOrientation);
-
     return () => {
       mediaQuery.removeEventListener("change", updateOrientation);
     };
   }, []);
 
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full flex flex-col gap-2">
       <div
-        className={`overflow-auto flex-grow ${
+        className={`overflow-auto ${
           isPortrait ? "overflow-x-scroll" : "overflow-y-scroll"
         } ${
-          isPortrait ? "max-h-96" : "h-[calc(100vh-150px)]"
+          isPortrait ? "max-h-64" : "max-h-[400px]"
         } bg-gray-100 rounded-lg shadow`}
       >
         {isLoading ? (
-          <div className="flex justify-center items-center h-full">
+          <div className="flex justify-center items-center h-32">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         ) : (
@@ -65,8 +61,7 @@ export default function ScrollVerticalYHorizontal({
                 style={{ minWidth: isPortrait ? "fit-content" : "150px" }}
               >
                 <BigButton
-                  //title={elemento.titulo}
-                  title = {elemento.titulo}
+                  title={elemento.titulo}
                   color={selectedObjetivoId === elemento.id ? "bg-blue-800" : "bg-blue-600"}
                   font_bold="font-bold"
                   hover="hover:bg-blue-700"
@@ -77,13 +72,13 @@ export default function ScrollVerticalYHorizontal({
           </ul>
         )}
       </div>
-
+      
       {/* Controles de paginación */}
-      <div className="flex justify-between items-center mt-4 px-4">
+      <div className="flex justify-between items-center px-4 py-2 bg-gray-50 rounded-lg">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`px-4 py-2 rounded ${
+          className={`px-4 py-1.5 text-sm rounded ${
             currentPage === 1
               ? "bg-gray-300 cursor-not-allowed"
               : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -97,7 +92,7 @@ export default function ScrollVerticalYHorizontal({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`px-4 py-2 rounded ${
+          className={`px-4 py-1.5 text-sm rounded ${
             currentPage === totalPages
               ? "bg-gray-300 cursor-not-allowed"
               : "bg-blue-600 hover:bg-blue-700 text-white"
