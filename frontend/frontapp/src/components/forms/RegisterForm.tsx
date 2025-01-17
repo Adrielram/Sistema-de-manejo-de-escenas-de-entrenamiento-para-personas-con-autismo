@@ -1,10 +1,18 @@
 // components/RegisterForm.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+
+import SearchWithFatherRes from '../SearchWithFatherRes';
 export default function RegisterForm() {
+  
+  const [idPadreSeleccionado, setIdPadreSeleccionado] = useState<number | null>(null);
+
+  const handlePadreSeleccionado = (dni: number) => {
+    setIdPadreSeleccionado(dni); // Almacena el DNI del padre seleccionado
+  };
   const [formData, setFormData] = useState({
     dni: '',
     nombre: '',
@@ -19,6 +27,11 @@ export default function RegisterForm() {
     numero: '',
     asociarPadre: '',
   });
+  const [centros, setCentros] = useState<{ id: number; nombre: string }[]>([]); // Inicializar como un array vacío
+  const pagina = 1; // Página actual
+  const [centrosSeleccionados, setCentrosSeleccionados] = useState<number[]>([]); // IDs de los centros seleccionados
+  const [paginaAnterior, setPaginaAnterior] = useState<number | null>(null);
+  const [paginaSiguiente, setPaginaSiguiente] = useState<number | null>(null);
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -29,8 +42,34 @@ export default function RegisterForm() {
       [e.target.name]: e.target.value,
     });
   };
+  const handleCentroClick = (id: number) => {
+    setCentrosSeleccionados((prev) =>
+      prev.includes(id) ? prev.filter((centroId) => centroId !== id) : [...prev, id]
+    );
+  };
+  const fetchCentros = async (page: number) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/obtener_centros_de_salud/?page=${page}`);
+      if (!response.ok) throw new Error('Error al cargar centros de salud');
+      const data = await response.json();
+  
+      console.log(data); // Verifica que `data.results` contenga los centros de salud
+  
+      // Actualiza el estado con los centros y otros datos relevantes
+      setCentros(data.results || []); // `results` contiene los centros
+      setPaginaAnterior(data.previous ? page - 1 : null);
+      setPaginaSiguiente(data.next ? page + 1 : null);
+    } catch (err) {
+      console.error(err); // Depuración: Muestra el error en consola
+      setError((err as Error).message); // Muestra el mensaje de error en el front
+    }
+  };
+  useEffect(() => {
+    if (formData.rol === 'Terapeuta') fetchCentros(pagina);
+  }, [formData.rol, pagina]);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("Centros seleccionados: ", centrosSeleccionados);
     e.preventDefault();
     setError('');
     setSuccess(false);
@@ -56,8 +95,9 @@ export default function RegisterForm() {
           ciudad: formData.ciudad,
           calle: formData.calle,
           numero: formData.numero,
-          id_padre: formData.asociarPadre || null,
+          id_padre: idPadreSeleccionado || null,
           password: formData.contrasena,
+          centros_de_salud: centrosSeleccionados,
         }),
       });
   
@@ -147,6 +187,7 @@ export default function RegisterForm() {
             <option value="" disabled>Seleccionar Rol</option>
             <option value="Paciente">Paciente</option>
             <option value="Padre">Padre</option>
+            <option value="Terapeuta">Terapeuta</option>
           </select>
         </div>
 
@@ -232,14 +273,59 @@ export default function RegisterForm() {
         {formData.rol === 'Paciente' && (
           <div className="p-3 border border-blue-500 rounded bg-blue-50">
             <h3 className="text-black font-bold mb-2">Asociar Padre</h3>
-            <input
-              type="text"
-              name="asociarPadre"
-              placeholder="Buscar padre (opcional)"
-              value={formData.asociarPadre}
-              onChange={handleInputChange}
-              className="w-full border text-black border-black rounded px-2 py-1"
-            />
+            <SearchWithFatherRes onPadreSeleccionado={handlePadreSeleccionado} />
+            <div className="mt-4 p-4 border border-gray-300 rounded-lg bg-gray-100">
+              <h3 className="text-black text-lg font-semibold mb-2">Padre seleccionado:</h3>
+              <ul className="list-disc pl-5 text-black space-y-1">
+                  <li key={idPadreSeleccionado} className="flex items-center">
+                    <span className="font-medium">DNI:</span>
+                    <span className="ml-2">{idPadreSeleccionado}</span>
+                  </li>
+              </ul>
+            </div>
+          </div>
+        )}
+        {/* Centros de salud para terapeutas */}
+        {formData.rol === 'Terapeuta' && (
+          <div className="p-4 border border-blue-500 rounded bg-blue-50">
+            <h3 className="text-black font-bold mb-2">Seleccionar Centros de Salud</h3>
+            <ul className="space-y-2">
+              {centros?.length > 0 ? (
+                centros.map((centro: { id: number; nombre: string }) => (
+                  <li
+                    key={centro.id}
+                    className={`p-2 border rounded cursor-pointer ${
+                      centrosSeleccionados.includes(centro.id)
+                        ? 'bg-green-300'
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                    onClick={() => handleCentroClick(centro.id)}
+                  >
+                    {centro.nombre}
+                  </li>
+                ))
+              ) : (
+                <p className="text-gray-500">Cargando centros de salud...</p>
+              )}
+            </ul>        
+            <div className="flex justify-between mt-4">
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-300 rounded"
+                disabled={!paginaAnterior} // Deshabilita si no hay página anterior
+                onClick={() => fetchCentros(paginaAnterior)}
+              >
+                &lt; Anterior
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-300 rounded"
+                disabled={!paginaSiguiente} // Deshabilita si no hay página siguiente
+                onClick={() => fetchCentros(paginaSiguiente)}
+              >
+                Siguiente &gt;
+              </button>
+            </div>         
           </div>
         )}
 
