@@ -13,7 +13,7 @@ export default function LoginForm() {
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
   const router = useRouter();
   const dispatch = useDispatch();
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -29,7 +29,7 @@ export default function LoginForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username: user, password }),
+        body: JSON.stringify({ username: user, password}),
         credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
       });
 
@@ -37,10 +37,21 @@ export default function LoginForm() {
         const data = await response.json(); // Supongamos que el servidor responde con { username: "usuario" }
 
         // Actualizamos el estado global con el usuario logueado
-        dispatch(setUser({ username: data.username, loggedIn: true }));
+        dispatch(setUser({ username: data.username, loggedIn: true,role:data.role }));
         
         console.log('Login exitoso '+ data.username);
-        router.push('../interfaz_paciente/principal'); // REDIRIGIR A LA PAG QUE QUIERASSSSSSSS
+        if (data.role === "admin") {
+          router.push('/admin/health_center'); // Redirigir al admin
+        } else if (data.role === "paciente") {
+          router.push('/interfaz_paciente/principal'); // Redirigir al paciente
+        } else if (data.role === "padre") {
+          router.push('/interfaz_padre/principal'); // Redirigir al padre
+        } else if (data.role === "terapeuta") {
+          router.push('/therapist'); // Redirigir al terapeuta
+        } else {
+          setError('Rol desconocido. Contacte al soporte.'); // Manejar roles inesperados
+        }
+        
       } else {
         const data = await response.json();
         setError(data.detail || 'Error al iniciar sesión');

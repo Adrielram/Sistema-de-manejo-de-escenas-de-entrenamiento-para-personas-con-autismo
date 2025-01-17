@@ -6,9 +6,10 @@ import iconoBusqueda from '../../public/icon/icono_busqueda.png';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
+  placeholder?: string; // Prop para cambiar el placeholder
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ onSearch, placeholder = "Buscar" }) => {
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onSearch(event.target.value);
   };
@@ -17,7 +18,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     <div style={styles.container}>
       <input 
         type="text" 
-        placeholder="Buscar" 
+        placeholder={placeholder} 
         style={styles.input} 
         onChange={handleInputChange} 
       />
@@ -47,6 +48,7 @@ const styles = {
     border: 'none',
     outline: 'none',
     fontSize: '16px',
+    color: 'black'
   },
   icon: {
     marginLeft: '8px',

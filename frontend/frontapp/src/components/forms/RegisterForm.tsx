@@ -4,7 +4,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+
+import SearchWithFatherRes from '../SearchWithFatherRes';
 export default function RegisterForm() {
+  
+  const [idPadreSeleccionado, setIdPadreSeleccionado] = useState<number | null>(null);
+
+  const handlePadreSeleccionado = (dni: number) => {
+    setIdPadreSeleccionado(dni); // Almacena el DNI del padre seleccionado
+  };
   const [formData, setFormData] = useState({
     dni: '',
     nombre: '',
@@ -56,7 +64,7 @@ export default function RegisterForm() {
           ciudad: formData.ciudad,
           calle: formData.calle,
           numero: formData.numero,
-          id_padre: formData.asociarPadre || null,
+          id_padre: idPadreSeleccionado || null,
           password: formData.contrasena,
         }),
       });
@@ -147,6 +155,8 @@ export default function RegisterForm() {
             <option value="" disabled>Seleccionar Rol</option>
             <option value="Paciente">Paciente</option>
             <option value="Padre">Padre</option>
+            <option value="Terapeuta">Terapeuta</option>
+
           </select>
         </div>
 
@@ -232,14 +242,16 @@ export default function RegisterForm() {
         {formData.rol === 'Paciente' && (
           <div className="p-3 border border-blue-500 rounded bg-blue-50">
             <h3 className="text-black font-bold mb-2">Asociar Padre</h3>
-            <input
-              type="text"
-              name="asociarPadre"
-              placeholder="Buscar padre (opcional)"
-              value={formData.asociarPadre}
-              onChange={handleInputChange}
-              className="w-full border text-black border-black rounded px-2 py-1"
-            />
+            <SearchWithFatherRes onPadreSeleccionado={handlePadreSeleccionado} />
+            <div className="mt-4 p-4 border border-gray-300 rounded-lg bg-gray-100">
+              <h3 className="text-black text-lg font-semibold mb-2">Padre seleccionado:</h3>
+              <ul className="list-disc pl-5 text-black space-y-1">
+                  <li key={idPadreSeleccionado} className="flex items-center">
+                    <span className="font-medium">DNI:</span>
+                    <span className="ml-2">{idPadreSeleccionado}</span>
+                  </li>
+              </ul>
+            </div>
           </div>
         )}
 

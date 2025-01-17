@@ -8,7 +8,7 @@ export default function InterfacePacienteLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#f5af76] flex flex-col">
+    <div className="bg-[#f5af76] min-h-screen flex flex-col">
         <HeaderPaciente />
       <main className="mt-14">{children}</main>
     </div>
