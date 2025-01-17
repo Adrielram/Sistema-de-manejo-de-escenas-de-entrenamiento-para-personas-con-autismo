@@ -21,9 +21,22 @@ def enviar_notificacion(notificacion):
                     "tipo": str(notificacion.content_type),
                     "objeto_id": notificacion.object_id,
                     "remitente": notificacion.remitente.username if notificacion.remitente else None,
+                    "type": "enviar_notificacion"
                 },
             }
         )
     except User.DoesNotExist:
         print("No se encontró un usuario administrador.")
+
+
+def actualizar_notificacion(notification_id, estado):
+    channel_layer = get_channel_layer()
+    admin_user = User.objects.get(role="admin")
+    async_to_sync(channel_layer.group_send)(
+        f"notificaciones_{admin_user.dni}",
+        {
+            "type": "notificacion_actualizada",
+            "message": {"id": notification_id, "estado": estado, "type": "notificacion_actualizada"},
+        },
+    )
 

@@ -32,6 +32,11 @@ class NotificacionConsumer(AsyncWebsocketConsumer):
         # Enviar mensajes al cliente
         await self.send(text_data=json.dumps(event["message"]))
 
+    async def notificacion_actualizada(self, event):
+    # Enviar mensajes al cliente
+        await self.send(text_data=json.dumps(event["message"]))
+
+
     def get_token_from_query_string(self, query_string):
         # Extraer el token del query_string (e.g., ?token=abc123)
         params = dict(param.split("=") for param in query_string.split("&") if "=" in param)

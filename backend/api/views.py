@@ -458,6 +458,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from api.models import User
 from .models import Notificacion
+from api.notificaciones.utils import actualizar_notificacion 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 
@@ -480,7 +481,8 @@ def procesar_notificacion(request, pk, accion):
                 usuario.is_active = True
                 usuario.save()
                 notificacion.estado = 'leida'
-            elif accion == 'rechazar':                                 
+            elif accion == 'rechazar':  
+                actualizar_notificacion(notificacion.id, 'rechazada')                               
                 usuario.delete()
                 # No guardar la notificación eliminada
                 return JsonResponse({'success': True, 'message': f'Usuario {usuario} eliminado y notificación procesada'})
@@ -505,6 +507,7 @@ def procesar_notificacion(request, pk, accion):
             return JsonResponse({'error': 'Tipo de objeto no soportado'}, status=400)
 
         notificacion.save()  # Guarda el estado de la notificación
+        actualizar_notificacion(notificacion.id, notificacion.estado)
         return JsonResponse({'success': True, 'message': f'Notificación {accion}ada correctamente'})
 
     except Exception as e:

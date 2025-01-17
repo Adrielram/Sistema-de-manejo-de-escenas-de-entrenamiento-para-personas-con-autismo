@@ -36,7 +36,13 @@ export default function NotificationsMenu({token}) {
       
       const handleMessage = (event) => {
         const data = JSON.parse(event.data);
-        setNotificaciones((prev) => [...prev, data]);
+        console.log("Data: "+JSON.stringify(data));
+        if (data.type === "notificacion_actualizada") {          
+          fetchNotificaciones();
+        } else if (data.type === "enviar_notificacion") {
+          // Cuando llega una nueva notificación, agregarla al estado actual
+          setNotificaciones((prev) => [...prev, data]);
+        }
       };
   
       socket.addEventListener("message", handleMessage);
@@ -93,49 +99,8 @@ export default function NotificationsMenu({token}) {
                   className="border-b border-gray-300 pb-2 flex items-center justify-between"
                 >
                   <span>{notification.mensaje}</span>
-                  <div className="flex space-x-2">               
-                    {/*<button
-                      onClick={() => handleAccept(notification.id)}
-                      className="text-green-500 hover:text-green-700"
-                      aria-label={`Aceptar notificación ${notification.id}`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    </button>
-               
-                    <button
-                      onClick={() => handleReject(notification.id)}
-                      className="text-red-500 hover:text-red-700"
-                      aria-label={`Rechazar notificación ${notification.id}`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>*/}
-
+                  <div className="flex space-x-2">              
+                    
                     {/* Botón de Leer más */}                                 
                     <button
                       className="text-blue-500 hover:text-blue-700"
