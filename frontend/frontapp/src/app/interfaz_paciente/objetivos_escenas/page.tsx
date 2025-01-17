@@ -6,6 +6,12 @@ import SearchBar from "../../../components/Buscador";
 
 // VER CODIGO GPT O OBJETIVOS Y AGREGAR EL PAGINADO, PASAR ESA INFO AL COMPONENTE. LUEGO HACER EL FETCH DE LA ESCENA DADO UN OBJETIVO
 
+interface PaginatedResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: any[];
+}
 
 interface Objetivo {
   id: number;
@@ -18,6 +24,8 @@ interface Escena {
   descripcion: string;
 }
 
+
+
 export default function Page() {
   const [objetivos, setObjetivos] = useState<Objetivo[]>([]);
   const [escenasActivas, setEscenasActivas] = useState<Escena[]>([]);
@@ -27,17 +35,34 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
   const baseURL = process.env.NEXT_PUBLIC_API_URL; // URL base de tu API
   const username = "paciente1"; // Reemplazar con el username real
+  const [currentPage, setCurrentPage] = useState(1); // Estado para la página actual
+  const [totalPages, setTotalPages] = useState(1); // Estado para las páginas totales
+
 
   // Fetch de objetivos
-  const fetchObjetivos = async () => {
+  const fetchObjetivos = async (page: number = 1) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${baseURL}obtener_objetivos_usuario/?username=${username}`);
+      const response = await fetch(
+        `${baseURL}obtener_objetivos_usuario/?username=${username}&page=${page}&limit=4`
+      );
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
-      const data = await response.json();
-      setObjetivos(data.results); // Suponiendo que `results` contiene la lista de objetivos
+      const data: PaginatedResponse = await response.json();
+
+      // Mapear los datos al formato esperado
+      const mappedResults = data.results.map((obj) => ({
+        id: obj.id,
+        titulo: obj.titulo,
+      }));
+      setObjetivos(mappedResults);
+      setTotalPages(Math.ceil(data.count / 4)); // Calcular el total de páginas
+
+      // Seleccionar automáticamente el primer objetivo si no hay uno seleccionado
+      if (mappedResults.length > 0 && !objetivoSeleccionado) {
+        setObjetivoSeleccionado(mappedResults[0].id);
+      }
     } catch (err) {
       setError("Error al cargar los objetivos");
       console.error(err);
@@ -65,14 +90,18 @@ export default function Page() {
   };
 
   useEffect(() => {
-    fetchObjetivos();
-  }, []);
+    fetchObjetivos(currentPage);
+  }, [currentPage]);
 
-  const handleObjetivoClick = (objetivoId: number) => {
-    setObjetivoSeleccionado(objetivoId);
-    fetchEscenas(objetivoId);
+  // Manejar el cambio de página
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
   };
 
+  // Manejar el clic en un objetivo
+  const handleObjetivoClick = (objetivoId: number) => {
+    setObjetivoSeleccionado(objetivoId);
+  };
   return (
     <div className="flex h-screen p-4 gap-6">
       {error && (
@@ -88,6 +117,10 @@ export default function Page() {
           elementos={objetivos}
           onObjetivoClick={handleObjetivoClick}
           selectedObjetivoId={objetivoSeleccionado}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          isLoading={isLoading}
         />
       </div>
 
