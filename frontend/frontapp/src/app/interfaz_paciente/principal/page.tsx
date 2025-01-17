@@ -1,7 +1,17 @@
+"use client"
 import React from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+
 
 const PacientePrincipal = () => {
+  const router = useRouter();
+  const HandleOnClick = () => {
+    router.push('/paciente/video');
+  };
+  const HandleOnClickObj = () => {
+    router.push('./objetivos_prueba');
+  };
   return ( 
     <div className=" md:min-h-screen w-full flex items-start md:items-center justify-center md:justify-start p-0 pt-4 md:p-8  bg-[#f5af76]">
       
@@ -30,7 +40,7 @@ const PacientePrincipal = () => {
 
           {/* SVG con círculo de fondo */}
           <div className="flex-shrink-0">
-          <button className="flex-shrink-0 focus:outline-none"> 
+          <button onClick={HandleOnClick} className="flex-shrink-0 focus:outline-none"> 
             <svg
               className="w-40 h-40 md:w-64 md:h-64 lg:w-80 lg:h-80"
               xmlns="http://www.w3.org/2000/svg"
@@ -54,7 +64,7 @@ const PacientePrincipal = () => {
 
         {/* Botón */}
         <div className="flex-shrink-0">
-          <button className="px-8 py-4 md:px-16 md:py-8 text-lg md:text-3xl font-bold text-white bg-blue-600 rounded-xl shadow-lg hover:bg-blue-700 transition-colors duration-300">
+          <button onClick={HandleOnClickObj} className="px-8 py-4 md:px-16 md:py-8 text-lg md:text-3xl font-bold text-white bg-blue-600 rounded-xl shadow-lg hover:bg-blue-700 transition-colors duration-300">
             VER OBJETIVOS
           </button>
         </div>
