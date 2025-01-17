@@ -482,8 +482,8 @@ def procesar_notificacion(request, pk, accion):
                 usuario.save()
                 notificacion.estado = 'leida'
             elif accion == 'rechazar':  
-                actualizar_notificacion(notificacion.id, 'rechazada')                               
                 usuario.delete()
+                actualizar_notificacion(notificacion.id, 'rechazada')                               
                 # No guardar la notificación eliminada
                 return JsonResponse({'success': True, 'message': f'Usuario {usuario} eliminado y notificación procesada'})
         
