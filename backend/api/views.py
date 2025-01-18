@@ -451,7 +451,7 @@ class AssociateCenterView(generics.CreateAPIView):
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
         
-class DesassociateCenterView(generics.CreateAPIView):
+class DisassociateCenterView(generics.CreateAPIView):
     serializer_class = ProfesionalCentroSerializer
 
     def create(self, request, *args, **kwargs):
