@@ -87,10 +87,10 @@ const Box = ({elem , opciones, img}:BoxProps) => {
   };
 
   const handleComments = async () => {
-    if (!elem?.id) {      
+    if (!elem?.dni) {      
       return;
     }
-    router.push(`/admin/patients/${elem.id}`);
+    router.push(`/admin/patients/${elem.dni}`);
   };
 
   const handleEdit = () => {

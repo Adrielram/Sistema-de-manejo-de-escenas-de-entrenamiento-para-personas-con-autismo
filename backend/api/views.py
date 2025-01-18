@@ -19,7 +19,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters
-
+from .authentication import CookieJWTAuthentication
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
 import json
@@ -524,19 +524,16 @@ def check_cookie(request):
     return JsonResponse({"exists": False})
 
 
-
-
-
-
 from rest_framework.permissions import IsAuthenticated
 from .models import Comentario
 class ComentariosPacienteAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
 
-    def get(self, request, username):
+    def get(self, request, dni):
         try:
             # Verificar si el usuario tiene rol "paciente"
-            user = User.objects.get(username=username, role='paciente')
+            user = User.objects.get(dni=dni, role='paciente')
         except User.DoesNotExist:
             return Response({'error': 'Usuario no encontrado o no es paciente'}, status=404)
 
