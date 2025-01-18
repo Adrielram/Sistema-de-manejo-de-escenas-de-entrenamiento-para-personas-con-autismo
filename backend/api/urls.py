@@ -3,8 +3,6 @@ from . import views
 from .views import *
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ObjetivoViewSet, EscenaListView, ObjetivosListView
-
 
 router = DefaultRouter()
 router.register(r'create_objetivo', ObjetivoViewSet, basename='objetivo')
@@ -24,6 +22,7 @@ urlpatterns = [
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
+    path('paciente/<str:username>/comentarios/', ComentariosPacienteAPIView.as_view(), name='comentarios_paciente'),
 ]
 
 

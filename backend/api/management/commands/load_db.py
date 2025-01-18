@@ -210,6 +210,79 @@ class Command(BaseCommand):
             comentario_contestado=comentario_respuesta
         )
 
+                # Escena 1: Comentarios iniciales y respuestas encadenadas
+        comentario_escena1_paciente = Comentario.objects.create(
+            user=paciente,
+            escena=escena_1,
+            texto="¿Qué significa la señal al lado del puente?",
+        )
+
+        comentario_escena1_terapeuta = Comentario.objects.create(
+            user=terapeuta,
+            escena=escena_1,
+            texto="Esa señal indica que el puente solo soporta 10 toneladas.",
+            comentario_contestado=comentario_escena1_paciente,
+        )
+
+        Comentario.objects.create(
+            user=paciente,
+            escena=escena_1,
+            texto="¡Gracias! Eso explica por qué había un camión detenido ahí.",
+            comentario_contestado=comentario_escena1_terapeuta,
+        )
+
+        # Escena 2: Comentarios iniciales y respuestas encadenadas
+        comentario_escena2_paciente = Comentario.objects.create(
+            user=paciente,
+            escena=escena_2,
+            texto="¿Por qué el auto rojo se detiene en la esquina?",
+        )
+
+        comentario_escena2_terapeuta = Comentario.objects.create(
+            user=terapeuta,
+            escena=escena_2,
+            texto="Se detuvo porque hay un paso de peatones marcado en el suelo.",
+            comentario_contestado=comentario_escena2_paciente,
+        )
+
+        Comentario.objects.create(
+            user=paciente,
+            escena=escena_2,
+            texto="Entendido, es importante respetar a los peatones.",
+            comentario_contestado=comentario_escena2_terapeuta,
+        )
+
+        # Escena 1: Otro hilo de conversación
+        comentario_extra_escena1 = Comentario.objects.create(
+            user=paciente,
+            escena=escena_1,
+            texto="¿Qué es lo que muestra la pantalla del tablero en el minuto 2:15?",
+        )
+
+        Comentario.objects.create(
+            user=terapeuta,
+            escena=escena_1,
+            texto="La pantalla muestra que el auto está en modo de ahorro de energía.",
+            comentario_contestado=comentario_extra_escena1,
+        )
+
+        # Escena 2: Otro hilo de conversación
+        comentario_extra_escena2 = Comentario.objects.create(
+            user=paciente,
+            escena=escena_2,
+            texto="¿Qué tipo de señal es la que está al costado del camino en el minuto 3:45?",
+        )
+
+        Comentario.objects.create(
+            user=terapeuta,
+            escena=escena_2,
+            texto="Esa es una señal de advertencia de curva peligrosa.",
+            comentario_contestado=comentario_extra_escena2,
+        )
+
+
+
+
         Videosvistos.objects.create(
             persona_objetivo_escena=persona_obj_esc_1,
         )

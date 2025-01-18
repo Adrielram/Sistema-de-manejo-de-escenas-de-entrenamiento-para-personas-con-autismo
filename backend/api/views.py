@@ -355,6 +355,8 @@ class CentrosSaludListView(generics.ListAPIView):
     filterset_class = NameFilter  
 
 
+
+
 @api_view(['GET'])
 def buscar_padres(request):
     query = request.GET.get('query', '').strip()
@@ -380,3 +382,36 @@ def buscar_padres(request):
         'total_paginas': paginator.num_pages,
         'pagina_actual': page_obj.number
     })
+
+from rest_framework.permissions import IsAuthenticated
+from .models import Comentario
+class ComentariosPacienteAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, username):
+        try:
+            # Verificar si el usuario tiene rol "paciente"
+            user = User.objects.get(username=username, role='paciente')
+        except User.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado o no es paciente'}, status=404)
+
+        # Obtener todos los comentarios del usuario
+        comentarios = Comentario.objects.filter(user=user).select_related('escena')
+
+        # Agrupar comentarios por escena
+        agrupados = {}
+        for comentario in comentarios:
+            escena_nombre = comentario.escena.nombre
+            if escena_nombre not in agrupados:
+                agrupados[escena_nombre] = []
+            agrupados[escena_nombre].append({
+                'id': comentario.id,
+                'texto': comentario.texto,
+                'visibilidad': comentario.visibilidad
+            })
+
+        # Crear estructura de respuesta
+        respuesta = [{'escena': escena, 'comentarios': datos} for escena, datos in agrupados.items()]
+
+        return Response(respuesta, status=200)
+
