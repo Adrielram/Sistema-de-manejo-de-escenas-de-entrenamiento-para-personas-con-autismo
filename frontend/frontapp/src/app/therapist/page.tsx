@@ -35,8 +35,10 @@ export default function Therapist() {
   };
 
   useEffect(() => {
-    if (username) fetchAssociatedCenters();
-  },);
+    if (username && associatedCenters.length === 0) {
+      fetchAssociatedCenters();
+    }
+  });
 
   const handleSubmitOfAssociation = async (event: React.FormEvent) => {
     event.preventDefault();
