@@ -36,6 +36,8 @@ export default function Page() {
   const username = "paciente1"; // Reemplazar con el username real
   const [currentPage, setCurrentPage] = useState(1); // Estado para la página actual
   const [totalPages, setTotalPages] = useState(1); // Estado para las páginas totales
+  const [objetivosFiltrados, setObjetivosFiltrados] = useState<Objetivo[]>([]);
+  const [tituloObjetivoSeleccionado, setTituloObjetivoSeleccionado] = useState<string>("");
 
 
   // Fetch de objetivos
@@ -56,11 +58,15 @@ export default function Page() {
         titulo: obj.titulo,
       }));
       setObjetivos(mappedResults);
+      setObjetivosFiltrados(mappedResults); // Inicializar objetivos filtrados
       setTotalPages(Math.ceil(data.count / 6)); // Calcular el total de páginas
 
       // Seleccionar automáticamente el primer objetivo si no hay uno seleccionado
       if (mappedResults.length > 0 && !objetivoSeleccionado) {
-        setObjetivoSeleccionado(mappedResults[0].id);
+        const primerObjetivo = mappedResults[0];
+        setObjetivoSeleccionado(primerObjetivo.id);
+        setTituloObjetivoSeleccionado(primerObjetivo.titulo);
+        fetchEscenas(primerObjetivo.id);
       }
     } catch (err) {
       setError("Error al cargar los objetivos");
@@ -88,21 +94,38 @@ export default function Page() {
     }
   };
 
+
+  
   useEffect(() => {
     fetchObjetivos(currentPage);
   }, [currentPage]);
 
-  // Manejar el cambio de página
+  // Manejar búsqueda
+  const handleSearch = (searchQuery: string) => {
+    setQuery(searchQuery);
+    if (searchQuery.trim() === "") {
+      setObjetivosFiltrados(objetivos);
+      return;
+    }
+    
+    const filtrados = objetivos.filter(objetivo =>
+      objetivo.titulo.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setObjetivosFiltrados(filtrados);
+  };
+
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
 
-  // Manejar el clic en un objetivo
   const handleObjetivoClick = (objetivoId: number) => {
-    setObjetivoSeleccionado(objetivoId);
-    fetchEscenas(objetivoId);
+    const objetivo = objetivos.find(obj => obj.id === objetivoId);
+    if (objetivo) {
+      setObjetivoSeleccionado(objetivoId);
+      setTituloObjetivoSeleccionado(objetivo.titulo);
+      fetchEscenas(objetivoId);
+    }
   };
-
   return (
     // Cambiamos el contenedor principal para manejar responsive
     <div className="min-h-screen p-4 flex flex-col md:flex-row md:h-screen gap-6">
@@ -111,7 +134,7 @@ export default function Page() {
         {/* Buscador en móvil */}
         <div className="w-full">
           <h2 className="text-xl font-bold mb-2">Buscador</h2>
-          <SearchBar onSearch={setQuery} placeholder="Buscar Objetivo" />
+          <SearchBar onSearch={handleSearch} placeholder="Buscar Objetivo" />
         </div>
 
         {/* Objetivos en móvil */}
@@ -119,7 +142,7 @@ export default function Page() {
   <h2 className="text-xl font-bold mb-2">Objetivos</h2>
   <div className="h-fit"> {/* Removido max-h-[400px] */}
     <ScrollVerticalYHorizontal
-      elementos={objetivos}
+      elementos={objetivosFiltrados}
       onObjetivoClick={handleObjetivoClick}
       selectedObjetivoId={objetivoSeleccionado}
       currentPage={currentPage}
@@ -135,7 +158,7 @@ export default function Page() {
   <h2 className="text-xl font-bold mb-2">Objetivos</h2>
   <div className="h-fit"> {/* Removido max-h-[600px] */}
     <ScrollVerticalYHorizontal
-      elementos={objetivos}
+      elementos={objetivosFiltrados}
       onObjetivoClick={handleObjetivoClick}
       selectedObjetivoId={objetivoSeleccionado}
       currentPage={currentPage}
@@ -152,7 +175,7 @@ export default function Page() {
       {/* Escenas */}
       <div className="w-full md:w-[45%]">
         <h2 className="text-xl font-bold mb-2">
-        Escenas {objetivoSeleccionado && `- ${objetivos.find(obj => obj.id === objetivoSeleccionado)?.titulo}`}
+        {tituloObjetivoSeleccionado ? `Escenas - ${tituloObjetivoSeleccionado}` : "Escenas"}
         </h2>
         <div className="h-[500px] md:h-[calc(100vh-100px)] overflow-auto bg-gray-100 rounded-lg shadow p-4">
           <ul className="space-y-4">
@@ -176,7 +199,7 @@ export default function Page() {
       <div className="hidden md:block md:w-[25%]">
         <h2 className="text-xl font-bold mb-2">Buscador</h2>
         <div className="h-[calc(100vh-100px)]">
-          <SearchBar onSearch={setQuery} placeholder="Buscar Objetivo" />
+          <SearchBar onSearch={handleSearch} placeholder="Buscar Objetivo" />
         </div>
       </div>
     </div>
