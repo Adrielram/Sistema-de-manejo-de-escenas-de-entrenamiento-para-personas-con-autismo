@@ -3,8 +3,6 @@ from . import views
 from .views import *
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ObjetivoViewSet, EscenaListView, ObjetivosListView
-
 
 router = DefaultRouter()
 router.register(r'create_objetivo', ObjetivoViewSet, basename='objetivo')
@@ -33,6 +31,7 @@ urlpatterns = [
     path('notificaciones/<int:pk>/', views.obtener_detalle_notificacion, name='notification-detail'),
     path('notificaciones/<int:pk>/<str:accion>/', procesar_notificacion, name='procesar_notificacion'),
     path('check-cookie/', check_cookie, name='check_cookie'),
+    path('paciente/<str:username>/comentarios/', ComentariosPacienteAPIView.as_view(), name='comentarios_paciente'),
 ]
 
 

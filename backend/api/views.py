@@ -341,7 +341,7 @@ class EscenaListView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
 
-class ObjetivosListView(generics.ListAPIView):    
+class ObjetivosListView(generics.RetrieveDestroyAPIView):    
     queryset = Objetivo.objects.all()
     serializer_class = ObjetivoSerializerList
     pagination_class = DynamicPagination
@@ -354,6 +354,8 @@ class CentrosSaludListView(generics.ListAPIView):
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter  
+
+
 
 
 @api_view(['GET'])
@@ -523,4 +525,38 @@ def check_cookie(request):
 
 
 
+
+
+
+from rest_framework.permissions import IsAuthenticated
+from .models import Comentario
+class ComentariosPacienteAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, username):
+        try:
+            # Verificar si el usuario tiene rol "paciente"
+            user = User.objects.get(username=username, role='paciente')
+        except User.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado o no es paciente'}, status=404)
+
+        # Obtener todos los comentarios del usuario
+        comentarios = Comentario.objects.filter(user=user).select_related('escena')
+
+        # Agrupar comentarios por escena
+        agrupados = {}
+        for comentario in comentarios:
+            escena_nombre = comentario.escena.nombre
+            if escena_nombre not in agrupados:
+                agrupados[escena_nombre] = []
+            agrupados[escena_nombre].append({
+                'id': comentario.id,
+                'texto': comentario.texto,
+                'visibilidad': comentario.visibilidad
+            })
+
+        # Crear estructura de respuesta
+        respuesta = [{'escena': escena, 'comentarios': datos} for escena, datos in agrupados.items()]
+
+        return Response(respuesta, status=200)
 
