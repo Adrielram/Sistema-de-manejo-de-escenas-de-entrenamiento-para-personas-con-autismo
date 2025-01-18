@@ -340,7 +340,7 @@ class EscenaListView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
 
-class ObjetivosListView(generics.ListAPIView):    
+class ObjetivosListView(generics.RetrieveDestroyAPIView):    
     queryset = Objetivo.objects.all()
     serializer_class = ObjetivoSerializerList
     pagination_class = DynamicPagination
