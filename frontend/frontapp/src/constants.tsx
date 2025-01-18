@@ -11,58 +11,58 @@ import { SideNavItem } from './types';
 export const SIDENAV_ITEMS: SideNavItem[] = [
     {
       title: 'Contenidos',
-      path: '/therapist',
+      path: '/therapist/selection',
       icon: <MdContentCopy />,
       submenu: true,
       subMenuItems: [
         {
             title: 'Objetivos',
-            path: '/therapist/goals',
+            path: '/therapist/selection/goals',
             icon: <GoGoal />,
             submenu: true,
             subMenuItems: [
                 { 
                     title: 'Agregar Objetivo', 
-                    path: '/therapist/goals/add_goal' ,
+                    path: '/therapist/selection/goals/add_goal' ,
                     icon: <IoIosAdd />,
                 },
             ],
         },
         {
             title: 'Escenas',
-            path: '/therapist/scenes',
+            path: '/therapist/selection/scenes',
             icon: <ImVideoCamera />,
             submenu: true,
             subMenuItems: [
               { 
                 title: 'Agregar Escena', 
-                path: '/therapist/scenes/add-scene',
+                path: '/therapist/selection/scenes/add-scene',
                 icon: <IoIosAdd />, 
               },
             ],
         },
         {
             title: 'Evaluaciones',
-            path: '/therapist/assesments',
+            path: '/therapist/selection/assesments',
             icon: <BiSolidSpreadsheet />,
             submenu: true,
             subMenuItems: [
               { 
                 title: 'Agregar Evaluación', 
-                path: '/therapist/assesments/add_assesment',
+                path: '/therapist/selection/assesments/add_assesment',
                 icon: <IoIosAdd />, 
               },
             ],
         },
         {
             title: 'Grupo de Pacientes',
-            path: '/therapist/group_of_patients',
+            path: '/therapist/selection/group_of_patients',
             icon: <BsPeopleFill />,
             submenu: true,
             subMenuItems: [
               { 
                 title: 'Agregar Grupo', 
-                path: '/therapist/group_of_patients/add_group',
+                path: '/therapist/selection/group_of_patients/add_group',
                 icon: <IoIosAdd />, 
               },
             ],

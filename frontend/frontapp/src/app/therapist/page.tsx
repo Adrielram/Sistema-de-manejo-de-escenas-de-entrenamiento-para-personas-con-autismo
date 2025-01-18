@@ -91,7 +91,7 @@ export default function Therapist() {
     console.log('Datos a enviar 2:', JSON.stringify(therapistCenterData)); // Para depuración
   
     try {
-      const response = await fetch(`http://localhost:8000/api/desassociate_center/`, {
+      const response = await fetch(`http://localhost:8000/api/disassociate_center/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
