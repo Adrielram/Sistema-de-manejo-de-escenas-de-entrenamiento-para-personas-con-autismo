@@ -280,29 +280,32 @@ class Videosvistos(models.Model):
 
 class Comentario(models.Model):
     id = models.AutoField(primary_key=True)
-    persona_objetivo_escena = models.ForeignKey(
-        'PersonaObjetivoEscena',
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='comentarios_user'
+    )
+    escena = models.ForeignKey(
+        Escena, 
+        on_delete=models.CASCADE, 
+        related_name='comentarios_escena'
+    )
+    comentario_contestado = models.ForeignKey(
+        'Comentario',
         on_delete=models.CASCADE,
-        related_name='comentarios_persona_objetivo_escena',
+        related_name='comentarios_comentario_contestado',
         blank=True,
         null=True
     )
     texto = models.TextField(blank=True, null=True)
     visibilidad = models.BooleanField(default=True)
-    comentario_respondido = models.ForeignKey(
-        'Comentario',
-        on_delete=models.CASCADE,
-        related_name='comentarios_comentario_respondido',
-        blank=True,
-        null=True
-    )
 
     class Meta:
         db_table = 'comentario'
         constraints = [
             models.UniqueConstraint(
-                fields=['persona_objetivo_escena', 'id'],
-                name='unique_escena_user_objetivo_comentario'
+                fields=['id', 'user', 'escena'],
+                name='unique_escena_user_comentario'
             )
         ]
 
