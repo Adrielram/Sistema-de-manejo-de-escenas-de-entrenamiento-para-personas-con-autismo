@@ -27,6 +27,7 @@ urlpatterns = [
     path('get_not_associated_centers/<str:username>/', NotAssociatedCentersListView.as_view(), name='get_not_associated_centers'),
     path('get_associated_centers/<str:username>/', AssociatedCentersListView.as_view(), name='get_associated_centers'),
     path('associate_center/', AssociateCenterView.as_view(), name='associate_center'),
+    path('desassociate_center/', DesassociateCenterView.as_view(), name='desassociate_center'),
 ]
 
 

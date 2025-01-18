@@ -443,19 +443,52 @@ class AssociateCenterView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         username = request.data.get('username')
-        center_ids = request.data.get('centers', [])  # Recibimos solo los IDs
+        center_ids = request.data.get('centers', [])
+
+        user = User.objects.get(username=username)
 
         try:
-            user = User.objects.get(username=username)
-
             for center_id in center_ids:
+                center = Centrodesalud.objects.get(id=center_id)
                 CentroProfesional.objects.create(
-                    centrodesalud_id=center_id,  # Usar directamente el ID
+                    centrodesalud=center,
                     profesional=user
                 )
 
             return Response({
                 'message': 'Centros asociados exitosamente',
+                'centers': center_ids
+            }, status=status.HTTP_201_CREATED)
+
+        except User.DoesNotExist:
+            return Response({
+                'error': 'Usuario no encontrado.'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+class DesassociateCenterView(generics.CreateAPIView):
+    serializer_class = ProfesionalCentroSerializer
+
+    def create(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        center_ids = request.data.get('centers', [])
+
+        user = User.objects.get(username=username)
+
+        try:
+            for center_id in center_ids:
+                center = Centrodesalud.objects.get(id=center_id)
+                CentroProfesional.objects.filter(
+                    centrodesalud=center,
+                    profesional=user
+                ).delete()
+
+            return Response({
+                'message': 'Centros desasociados exitosamente',
                 'centers': center_ids
             }, status=status.HTTP_201_CREATED)
 
