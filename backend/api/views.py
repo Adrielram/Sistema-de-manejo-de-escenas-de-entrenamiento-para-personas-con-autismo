@@ -197,6 +197,64 @@ class ObjetivosUsuarioListView(generics.ListAPIView):
         data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
         return Response(data)
 
+
+class ObjetivoFilter(filters.FilterSet):
+    search = filters.CharFilter(field_name='titulo', lookup_expr='icontains')
+
+    class Meta:
+        model = Objetivo
+        fields = ['search']
+
+class ObjetivoFilter(filters.FilterSet):
+    query = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
+
+    class Meta:
+        model = Objetivo
+        fields = ['query']
+
+class ObjetivoBusquedaView(generics.ListAPIView):
+    serializer_class = ObjetivoSerializerList
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_class = ObjetivoFilter
+    pagination_class = None
+
+    def get_queryset(self):
+        username = self.request.query_params.get('username', None)
+        query = self.request.query_params.get('query', '')
+
+        if not username:
+            return Objetivo.objects.none()
+
+        try:
+            usuario = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Objetivo.objects.none()
+
+        # Obtén los objetivos base filtrados por relaciones
+        queryset = Objetivo.objects.filter(
+            id__in=PersonaObjetivoEscena.objects.filter(
+                user_id=usuario
+            ).values_list('escena_objetivo', flat=True)
+        )
+
+        # Aplica el filtro de búsqueda si existe
+        if query:
+            queryset = queryset.filter(nombre__icontains=query)
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        
+        # Asegúrate de que el formato de respuesta incluya id y titulo
+        data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
+        return Response(data)
+    
+
+
+
+
 class EscenasPorObjetivoListView(generics.ListAPIView):
     #queryset = Escena.objects.all()
     serializer_class = EscenaSerializer

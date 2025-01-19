@@ -35,6 +35,15 @@ export default function ScrollVerticalYHorizontal({
     };
   }, []);
 
+  // Aseguramos que los elementos sean únicos basados en su ID
+  const elementosUnicos = elementos.reduce((acc, current) => {
+    const x = acc.find(item => item.id === current.id);
+    if (!x) {
+      return acc.concat([current]);
+    }
+    return acc;
+  }, [] as Array<{ id: number; titulo: string }>);
+
   return (
     <div className="w-full flex flex-col gap-2">
       <div
@@ -54,9 +63,9 @@ export default function ScrollVerticalYHorizontal({
               isPortrait ? "flex-row space-x-4" : "flex-col space-y-2"
             } p-4`}
           >
-            {elementos.map((elemento) => (
+            {elementosUnicos.map((elemento, index) => (
               <li
-                key={elemento.id}
+                key={`${elemento.id}-${index}`}
                 className="flex justify-center items-center"
                 style={{ minWidth: isPortrait ? "fit-content" : "150px" }}
               >
