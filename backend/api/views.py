@@ -423,7 +423,7 @@ class AssociateCenterView(generics.CreateAPIView):
     serializer_class = ProfesionalCentroSerializer
 
     def create(self, request, *args, **kwargs):
-        username = request.data.get('username')
+        username = request.data.get('center')
         center_ids = request.data.get('centers', [])
 
         user = User.objects.get(username=username)
@@ -450,7 +450,49 @@ class AssociateCenterView(generics.CreateAPIView):
             return Response({
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class CreateGroup(generics.CreateAPIView):
+    serializer_class = PatientGroupSerializer
+
+    def create(self, request, *args, **kwargs):
+        try:
+            # Obtener la instancia del centro de salud
+            center_name = request.data.get('nombre_centro')
+            center = Centrodesalud.objects.get(nombre=center_name)
+
+            # Crear el grupo
+            nombre_grupo = request.data.get('nombre_grupo')
+            print("Nombre grupo ",nombre_grupo)
+            grupo = Grupo.objects.create(
+                nombre=nombre_grupo,
+                centrodesalud_id=center  # Usar la instancia directamente
+            )
+
+            # Serializar el grupo para la respuesta
+            grupo_serialized = PatientGroupSerializer(grupo).data
+
+            return Response({
+                'message': 'Grupo creado exitosamente',
+                'group': grupo_serialized
+            }, status=status.HTTP_201_CREATED)
+
+        except Centrodesalud.DoesNotExist:
+            return Response({
+                'error': f'Centro de salud con nombre "{center_name}" no encontrado.'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        except IntegrityError:
+            return Response({
+                'error': f'El grupo con nombre "{request.data.get("nombre_grupo")}" ya existe.'
+            }, status=status.HTTP_400_BAD_REQUEST)
         
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
 class DesassociateCenterView(generics.CreateAPIView):
     serializer_class = ProfesionalCentroSerializer
 
