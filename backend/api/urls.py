@@ -24,7 +24,10 @@ urlpatterns = [
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
+    path('formularios/', FormularioListCreateView.as_view(), name='formulario-list-create'),
+    path('formularios/<int:pk>/', FormularioDetailView.as_view(), name='formulario-detail'),
+    path('preguntas/', PreguntaListCreateView.as_view(), name='pregunta-list-create'),
+    path('respuestas/', RespuestaListCreateView.as_view(), name='respuesta-list-create'),
 ]
-
 
 urlpatterns += [path('', include(router.urls))]

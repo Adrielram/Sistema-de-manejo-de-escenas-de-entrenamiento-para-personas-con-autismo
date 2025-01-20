@@ -380,3 +380,38 @@ def buscar_padres(request):
         'total_paginas': paginator.num_pages,
         'pagina_actual': page_obj.number
     })
+
+from rest_framework import generics, status
+from rest_framework.response import Response
+from .models import Formulario, Pregunta, Respuesta
+from .serializers import FormularioSerializer, PreguntaSerializer, RespuestaSerializer
+
+
+class FormularioListCreateView(generics.ListCreateAPIView):
+    queryset = Formulario.objects.all()
+    serializer_class = FormularioSerializer
+
+
+class FormularioDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Formulario.objects.all()
+    serializer_class = FormularioSerializer
+
+
+class PreguntaListCreateView(generics.ListCreateAPIView):
+    queryset = Pregunta.objects.all()
+    serializer_class = PreguntaSerializer
+
+
+class RespuestaListCreateView(generics.ListCreateAPIView):
+    queryset = Respuesta.objects.all()
+    serializer_class = RespuestaSerializer
+
+    def perform_create(self, serializer):
+        pregunta = serializer.validated_data['pregunta']
+        respuesta = serializer.validated_data['respuesta']
+
+        # Verificación automática si aplica
+        correcta = None
+        if pregunta.tipo == 'multiple-choice' and pregunta.correcta:
+            correcta = (respuesta == pregunta.correcta)
+        serializer.save(correcta=correcta)

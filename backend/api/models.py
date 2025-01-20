@@ -339,3 +339,48 @@ class Notificacion(models.Model):
 
     def __str__(self):
         return f"De {self.remitente} a {self.destinatario} - {self.estado}"
+    
+from django.db import models
+class Formulario(models.Model):
+    titulo = models.CharField(max_length=255)
+    descripcion = models.TextField(blank=True, null=True)
+    es_verificacion_automatica = models.BooleanField(default=False)
+    creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.titulo
+
+
+class Pregunta(models.Model):
+    TIPOS_PREGUNTA = [
+        ('multiple-choice', 'Multiple Choice'),
+        ('respuesta-corta', 'Respuesta Corta'),
+        ('respuesta-larga', 'Respuesta Larga'),
+    ]
+
+    formulario = models.ForeignKey(Formulario, related_name="preguntas", on_delete=models.CASCADE)
+    texto = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=TIPOS_PREGUNTA)
+    correcta = models.CharField(max_length=255, blank=True, null=True)  # Solo para verificación automática
+
+    def __str__(self):
+        return self.texto
+
+
+class Opcion(models.Model):
+    pregunta = models.ForeignKey(Pregunta, related_name="opciones", on_delete=models.CASCADE)
+    texto = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.texto
+
+
+class Respuesta(models.Model):
+    pregunta = models.ForeignKey(Pregunta, related_name="respuestas", on_delete=models.CASCADE)
+    paciente = models.ForeignKey(User, on_delete=models.CASCADE, related_name="respuestas")
+    respuesta = models.TextField()
+    correcta = models.BooleanField(null=True)  # Solo para verificación automática
+
+    def __str__(self):
+        return f"Respuesta de {self.paciente.username} a {self.pregunta.texto}"
