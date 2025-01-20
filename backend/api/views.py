@@ -197,13 +197,12 @@ class ObjetivosUsuarioListView(generics.ListAPIView):
         data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
         return Response(data)
 
-
-class ObjetivoFilter(filters.FilterSet):
-    search = filters.CharFilter(field_name='titulo', lookup_expr='icontains')
-
-    class Meta:
-        model = Objetivo
-        fields = ['search']
+#
+#class ObjetivoFilter(filters.FilterSet):
+#    search = filters.CharFilter(field_name='titulo', lookup_expr='icontains')
+#    class Meta:
+#        model = Objetivo
+#        fields = ['search']
 
 class ObjetivoFilter(filters.FilterSet):
     query = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
@@ -251,8 +250,6 @@ class ObjetivoBusquedaView(generics.ListAPIView):
         data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
         return Response(data)
     
-
-
 
 
 class EscenasPorObjetivoListView(generics.ListAPIView):
