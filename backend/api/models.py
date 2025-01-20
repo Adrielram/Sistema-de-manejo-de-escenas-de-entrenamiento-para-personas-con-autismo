@@ -29,7 +29,7 @@ class User(AbstractUser):
     ]
     dni = models.IntegerField(primary_key=True)
     nombre = models.CharField(unique=True, max_length=255)
-    fecha_nac = models.DateField()
+    fecha_nac = models.DateTimeField()
     genero = models.CharField(max_length=255)
     role = models.CharField(max_length=255, choices=ROLE_CHOICES, default='paciente')
     direccion_id_dir = models.ForeignKey('Residencia', on_delete=models.CASCADE, db_column='direccion_id_dir')

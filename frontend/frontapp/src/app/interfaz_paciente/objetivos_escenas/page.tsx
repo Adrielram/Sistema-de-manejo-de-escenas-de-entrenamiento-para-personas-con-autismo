@@ -46,16 +46,17 @@ export default function Page() {
         throw new Error(`Error: ${response.status}`);
       }
       const data: PaginatedResponse = await response.json();
-
+  
       const mappedResults = data.results.map((obj) => ({
         id: obj.id,
         titulo: obj.titulo,
       }));
-
+  
+      // Actualizamos objetivos solo cuando los datos están listos
       setObjetivos(mappedResults);
       setObjetivosFiltrados(mappedResults);
       setTotalPages(Math.ceil(data.count / 6));
-
+  
       if (mappedResults.length > 0 && !objetivoSeleccionado) {
         const primerObjetivo = mappedResults[0];
         setObjetivoSeleccionado(primerObjetivo.id);
@@ -69,6 +70,8 @@ export default function Page() {
       setIsLoading(false);
     }
   };
+  
+  
 
   const fetchEscenas = async (objetivoId: number) => {
     setIsLoading(true);

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import BigButton from "./BigButton";
 
 interface Props {
@@ -9,17 +9,15 @@ interface Props {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  isLoading: boolean;
 }
 
-export default function ScrollVerticalYHorizontal({
+function ScrollVerticalYHorizontalComponent({
   elementos,
   onObjetivoClick,
   selectedObjetivoId,
   currentPage,
   totalPages,
   onPageChange,
-  isLoading
 }: Props) {
   const [isPortrait, setIsPortrait] = useState<boolean>(false);
 
@@ -35,15 +33,6 @@ export default function ScrollVerticalYHorizontal({
     };
   }, []);
 
-  // Aseguramos que los elementos sean únicos basados en su ID
-  const elementosUnicos = elementos.reduce((acc, current) => {
-    const x = acc.find(item => item.id === current.id);
-    if (!x) {
-      return acc.concat([current]);
-    }
-    return acc;
-  }, [] as Array<{ id: number; titulo: string }>);
-
   return (
     <div className="w-full flex flex-col gap-2">
       <div
@@ -53,35 +42,31 @@ export default function ScrollVerticalYHorizontal({
           isPortrait ? "max-h-64" : "max-h-[400px]"
         } bg-gray-100 rounded-lg shadow`}
       >
-        {isLoading ? (
-          <div className="flex justify-center items-center h-32">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        ) : (
-          <ul
-            className={`flex ${
-              isPortrait ? "flex-row space-x-4" : "flex-col space-y-2"
-            } p-4`}
-          >
-            {elementosUnicos.map((elemento, index) => (
-              <li
-                key={`${elemento.id}-${index}`}
-                className="flex justify-center items-center"
-                style={{ minWidth: isPortrait ? "fit-content" : "150px" }}
-              >
-                <BigButton
-                  title={elemento.titulo}
-                  color={selectedObjetivoId === elemento.id ? "bg-blue-800" : "bg-blue-600"}
-                  font_bold="font-bold"
-                  hover="hover:bg-blue-700"
-                  onClick={() => onObjetivoClick(elemento.id)}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
+        <ul
+          className={`flex ${
+            isPortrait ? "flex-row space-x-4" : "flex-col space-y-2"
+          } p-4`}
+        >
+          {elementos.map((elemento) => (
+            <li
+              key={elemento.id}
+              className="flex justify-center items-center"
+              style={{ minWidth: isPortrait ? "fit-content" : "150px" }}
+            >
+              <BigButton
+                title={elemento.titulo}
+                color={
+                  selectedObjetivoId === elemento.id ? "bg-blue-800" : "bg-blue-600"
+                }
+                font_bold="font-bold"
+                hover="hover:bg-blue-700"
+                onClick={() => onObjetivoClick(elemento.id)}
+              />
+            </li>
+          ))}
+        </ul>
       </div>
-      
+
       {/* Controles de paginación */}
       <div className="flex justify-between items-center px-4 py-2 bg-gray-50 rounded-lg">
         <button
@@ -113,3 +98,8 @@ export default function ScrollVerticalYHorizontal({
     </div>
   );
 }
+
+// Memorizar el componente para evitar re-renderización innecesaria
+const ScrollVerticalYHorizontal = memo(ScrollVerticalYHorizontalComponent);
+
+export default ScrollVerticalYHorizontal;
