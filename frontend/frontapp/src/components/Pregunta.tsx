@@ -1,6 +1,6 @@
-"use client"
-import React, { useState } from 'react';
-import Opcion from './Opcion';
+"use client";
+import React, { useState, useEffect } from "react";
+import Opcion from "./Opcion";
 
 interface PreguntaProps {
   onAddPregunta: (pregunta: any) => void;
@@ -8,10 +8,16 @@ interface PreguntaProps {
 }
 
 const Pregunta: React.FC<PreguntaProps> = ({ onAddPregunta, esVerificacionAutomatica }) => {
-  const [texto, setTexto] = useState('');
-  const [tipo, setTipo] = useState('respuesta-corta');
+  const [texto, setTexto] = useState("");
+  const [tipo, setTipo] = useState(esVerificacionAutomatica ? "multiple-choice" : "respuesta-corta");
   const [opciones, setOpciones] = useState<any[]>([]);
-  const [correcta, setCorrecta] = useState('');
+  const [correcta, setCorrecta] = useState("");
+  
+
+  // Define los tipos de preguntas según el modo de verificación
+  const tiposPermitidos = esVerificacionAutomatica
+    ? ["multiple-choice"] // Solo "multiple-choice" si es con verificación automática
+    : ["respuesta-corta", "respuesta-larga", "multiple-choice"]; // Todos los tipos si es sin verificación automática
 
   const agregarOpcion = (opcion: string) => {
     setOpciones([...opciones, { texto: opcion }]);
@@ -21,18 +27,24 @@ const Pregunta: React.FC<PreguntaProps> = ({ onAddPregunta, esVerificacionAutoma
     setOpciones(opciones.filter((_, i) => i !== index));
   };
 
+  useEffect(() => {
+    setTipo(esVerificacionAutomatica ? "multiple-choice" : "respuesta-corta");
+    setOpciones([]);
+    setCorrecta("");
+  }, [esVerificacionAutomatica]);
+
   const manejarAgregarPregunta = () => {
     const pregunta = {
       texto,
       tipo,
-        
-      correcta: tipo === 'multiple-choice' && esVerificacionAutomatica ? correcta : undefined,
+      opciones: tipo === "multiple-choice" ? opciones : undefined,
+      correcta: tipo === "multiple-choice" ? correcta : undefined,
     };
     onAddPregunta(pregunta);
-    setTexto('');
-    setTipo('respuesta-corta');
+    setTexto("");
+    setTipo(esVerificacionAutomatica ? "multiple-choice" : "respuesta-corta");
     setOpciones([]);
-    setCorrecta('');
+    setCorrecta("");
   };
 
   return (
@@ -47,22 +59,29 @@ const Pregunta: React.FC<PreguntaProps> = ({ onAddPregunta, esVerificacionAutoma
           placeholder="Escribe la pregunta aquí"
         />
       </label>
+
       <label className="block text-sm font-medium text-gray-700">
         Tipo de pregunta:
         <select
           value={tipo}
           onChange={(e) => setTipo(e.target.value)}
-          className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"          
+          className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="respuesta-corta">Respuesta Corta</option>
-          <option value="respuesta-larga">Respuesta Larga</option>
-          <option value="multiple-choice">Multiple Choice</option>
+          {tiposPermitidos.map((tipoOpcion) => (
+            <option key={tipoOpcion} value={tipoOpcion}>
+              {tipoOpcion === "respuesta-corta"
+                ? "Respuesta Corta"
+                : tipoOpcion === "respuesta-larga"
+                ? "Respuesta Larga"
+                : "Opción Múltiple"}
+            </option>
+          ))}
         </select>
       </label>
-      {tipo === 'multiple-choice' && (
+
+      {tipo === "multiple-choice" && (
         <div className="space-y-4">
           <Opcion onAddOpcion={agregarOpcion} />
-          {/* Mostrar las opciones agregadas */}
           <div className="mt-4">
             <h4 className="text-sm font-medium text-gray-700">Opciones seleccionadas:</h4>
             <ul className="space-y-2 mt-2">
@@ -87,9 +106,10 @@ const Pregunta: React.FC<PreguntaProps> = ({ onAddPregunta, esVerificacionAutoma
               className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Escribe la respuesta correcta"
             />
-          </label>          
+          </label>
         </div>
       )}
+
       <button
         onClick={manejarAgregarPregunta}
         className="w-full py-2 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition"
@@ -98,7 +118,6 @@ const Pregunta: React.FC<PreguntaProps> = ({ onAddPregunta, esVerificacionAutoma
       </button>
     </div>
   );
-  
 };
 
 export default Pregunta;

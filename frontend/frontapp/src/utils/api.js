@@ -69,14 +69,19 @@ export const create_scene = async (nuevaEscena) => {
 
   export const enviarFormulario = async (formulario) => {
     try {
-      const respuesta = await fetch(`${baseUrl}formularios`, {
+      const respuesta = await fetch(`${baseUrl}formularios/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formulario),
-      });
-      return await respuesta.json();
+      }); 
+      const data = await respuesta.json();
+      if (respuesta.status === 201) {
+          return { success: true, data };
+      } else {
+          return { success: false, error: data.error || 'No se pudo crear el formulario' };
+      }
     } catch (error) {
       console.error('Error al enviar formulario:', error);
     }

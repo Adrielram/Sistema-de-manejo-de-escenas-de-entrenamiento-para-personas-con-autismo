@@ -6,7 +6,13 @@ import { enviarFormulario } from '../utils/api';
 const CrearFormulario: React.FC = () => {
   const manejarEnvio = async (formulario) => {
     const resultado = await enviarFormulario(formulario);
-    console.log('Formulario creado:', resultado);
+    if (!resultado.success){
+      alert("No se pudo crear el formulario.")
+    }else{
+      alert("Formulario creado exitosamente");
+      console.log('Formulario creado:', resultado);
+    }
+    
   };
 
   return (
