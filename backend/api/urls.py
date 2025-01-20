@@ -27,6 +27,7 @@ urlpatterns = [
     path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
     path('comentarios/', ComentarioDetalleAPIView.as_view(), name='comentario-detalle'),
     path('comentarios/lista/', ComentariosListaAPIView.as_view(), name='comentarios-lista'),
+    path('check-cookie/', check_cookie, name='check_cookie'),
 ]
 
 urlpatterns += [path('', include(router.urls))]

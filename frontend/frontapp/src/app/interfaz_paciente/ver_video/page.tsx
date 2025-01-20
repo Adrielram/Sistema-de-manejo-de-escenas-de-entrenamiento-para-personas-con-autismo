@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import ComentarioPaciente from '../../../components/ComentarioPaciente';
+import ComentarioPaciente from "../../../components/ComentarioPaciente";
 
 const VerVideo = () => {
   const videos = [
@@ -17,45 +17,43 @@ const VerVideo = () => {
   ];
 
   const [formData, setFormData] = useState({
-    escena_id: '1', //cambiar por el id de la escena actual
-    personaobjetivo_user_id: '1', //cambiar por el id del usuario actual
-    personaobjetivo_objetivo_id: '1',  //cambiar por el id del objetivo actual
-    texto: '',
+    escena_id: "1", // Cambiar por el ID de la escena actual
+    personaobjetivo_user_id: "1", // Cambiar por el ID del usuario actual
+    personaobjetivo_objetivo_id: "1", // Cambiar por el ID del objetivo actual
+    texto: "",
   });
 
   const router = useRouter();
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [completedQuizzes, setCompletedQuizzes] = useState<number[]>([]);
-  const [comentariosIds, setComentariosIds] = useState<number[]>([]);
-  
+  const [comentariosHashSet, setComentariosHashSet] = useState<{
+    [key: number]: number[];
+  }>({}); // HashSet con comentarios principales y sus respuestas
 
-  //TODO ESTO VA CON REDUX  
   const idPersona = 1; // Supongamos que es el ID de la persona actual
   const idObjetivo = 1; // ID del objetivo
-  const idEscena = 1; // ID de la escena
-
+  const idEscena = 9; // ID de la escena
 
   useEffect(() => {
-    // Fetch para obtener los IDs de los comentarios
+    // Fetch para obtener el HashSet de comentarios
     const fetchComentarios = async () => {
       try {
         const response = await fetch(
-          `/api/comentarios/lista/?idPersona=${idPersona}&idObjetivo=${idObjetivo}&idEscena=${idEscena}`
+          `http://localhost:8000/api/comentarios/lista/?id_escena=${idEscena}`
         );
         const data = await response.json();
         if (response.ok) {
-          setComentariosIds(data.comentarios_ids);
+          setComentariosHashSet(data); // Actualiza el HashSet
         } else {
           console.error(data.error);
         }
       } catch (error) {
-        console.error('Error al obtener los comentarios:', error);
+        console.error("Error al obtener los comentarios:", error);
       }
     };
 
     fetchComentarios();
   }, [idPersona, idObjetivo, idEscena]);
-
 
   const handleVerSiguienteVideo = () => {
     setCurrentVideoIndex((prevIndex) => prevIndex + 1);
@@ -72,30 +70,30 @@ const VerVideo = () => {
   };
 
   const handleCompletarObjetivo = () => {
-    router.push('../interfaz_paciente/principal');
+    router.push("../interfaz_paciente/principal");
   };
 
   const handleAddComment = async () => {
     if (formData.texto.trim() !== "") {
-    
       try {
-        console.log(formData);
-        const response = await fetch('http://localhost:8000/api/registrar_comentario/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        });
-  
+        const response = await fetch(
+          "http://localhost:8000/api/registrar_comentario/",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          }
+        );
+
         if (!response.ok) {
-          throw new Error('Error al guardar el comentario');
+          throw new Error("Error al guardar el comentario");
         }
-        setFormData((prev) => ({ ...prev, texto: '' }));
+        setFormData((prev) => ({ ...prev, texto: "" }));
       } catch (error) {
-        console.error('Error:', error);
+        console.error("Error:", error);
       }
-      
     }
   };
 
@@ -182,7 +180,9 @@ const VerVideo = () => {
           <input
             type="text"
             value={formData.texto}
-            onChange={(e) => setFormData({ ...formData, texto: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, texto: e.target.value })
+            }
             placeholder="Escribe tu comentario..."
             className="border border-gray-300 rounded-lg py-2 px-4 w-full"
           />
@@ -196,10 +196,16 @@ const VerVideo = () => {
       </div>
       <div>
         <h1>Comentarios</h1>
-        {comentariosIds.map((id) => (
-            <ComentarioPaciente key={id} idComentario={id} />
+        {/* Renderizado de comentarios */}
+        {Object.keys(comentariosHashSet).map((principalId) => (
+          <div key={principalId} className="mb-4">
+            <ComentarioPaciente
+              idComentario={parseInt(principalId)}
+              respuestas={comentariosHashSet[parseInt(principalId)]}
+            />
+          </div>
         ))}
-        </div>
+      </div>
     </div>
   );
 };
