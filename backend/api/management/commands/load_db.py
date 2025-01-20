@@ -284,13 +284,15 @@ class Command(BaseCommand):
         )
 
         comentario_respuesta = Comentario.objects.create(
-            persona_objetivo_escena=persona_obj_esc_1,
-            texto="Lorem ipsum no me acuerdo como sigue...",
+            user=paciente,
+            escena=escena_1,
+            texto="En el minuto 1:31 no entiendo que dice el letrero",
         )
         Comentario.objects.create(
-            persona_objetivo_escena=persona_obj_esc_1,
-            texto="Lorem ipsum no me acuerdo como sigue...",
-            comentario_respondido=comentario_respuesta
+            user=terapeuta,
+            escena=escena_1,
+            texto="El letrero dice aguante messi",
+            comentario_contestado=comentario_respuesta
         )
 
         Videosvistos.objects.create(
