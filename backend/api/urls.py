@@ -1,13 +1,14 @@
-from django.urls import path
 from . import views
 from .views import *
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ObjetivoViewSet, EscenaListView, ObjetivosListView
+from .views import ObjetivoViewSet, EscenaListView, ObjetivosListView, retrieve_user
 
 
 router = DefaultRouter()
 router.register(r'create_objetivo', ObjetivoViewSet, basename='objetivo')
+
+
 
 
 urlpatterns = [
@@ -21,6 +22,8 @@ urlpatterns = [
     path('obtener_escenas_por_objetivo/', EscenasPorObjetivoListView.as_view(), name='listar_escenas_por_objetivo'),
     path('buscar_objetivos/', ObjetivoBusquedaView.as_view(), name='objetivo-search'),
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
+    path('get-user/', retrieve_user.as_view(), name='retrieve_user'),
+    path('update-user/', update_user, name='update_user'),
     path('signIn/', views.signIn, name='signIn'),
     path('crear-escena/', views.crear_escena, name='crear_escena'),
     path('escenas/', EscenaListView.as_view(), name='escena-list'),

@@ -1,11 +1,14 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from django.http import HttpResponseRedirect
 from .models import *
 from .serializers import *
+from .forms import *
 from rest_framework.views import APIView
 from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
@@ -19,6 +22,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters
+from django.db import transaction
 
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
@@ -279,10 +283,8 @@ class PacienteListView(APIView):
             pacientes = pacientes.filter(
                 models.Q(nombre__icontains=query) |
                 models.Q(dni__icontains=query) |
-                models.Q(genero__icontains=query) |
-                models.Q(username__icontains=query)  # Filtrar por nombre de usuario
+                models.Q(genero__icontains=query)
             ).distinct()  # Evitar duplicados
-
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -302,7 +304,132 @@ class ObjetivoViewSet(viewsets.ViewSet):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         
-from django.db import transaction
+
+class retrieve_user(APIView):
+    
+    def get(self, request):
+        username = request.query_params.get('username', '').strip()
+
+        # Validar que el parámetro 'username' está presente
+        if not username:
+            return Response(
+                {"error": "El parámetro 'username' es obligatorio."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Obtener el usuario con el username proporcionado
+        user = get_object_or_404(User, username=username)
+
+        # Serializar los datos del usuario
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+@api_view(['PUT'])
+def update_user(request):
+    try:
+        # Validar que todos los campos obligatorios estén presentes
+        required_fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'residencia']
+
+        missing_fields = [field for field in required_fields if field not in request.data]
+        if missing_fields:
+            return Response(
+                {"error": f"Faltan los siguientes campos: {', '.join(missing_fields)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Obtener datos de la dirección
+        direccion = request.data.get('residencia', {})
+        id_dir = direccion.get('id_dir')
+        provincia = direccion.get('provincia')
+        ciudad = direccion.get('ciudad')
+        calle = direccion.get('calle')
+        numero = direccion.get('numero')
+
+        # Obtener datos del request
+        dni = request.data.get('dni')
+        nombre = request.data.get('nombre')
+        fecha_nac = request.data.get('fecha_nac')
+        genero = request.data.get('genero')
+        role = request.data.get('role')
+        padre_id = request.data.get('padreACargo', None)  # Obtener el DNI del padre
+
+        # Buscar el usuario por DNI
+        try:
+            user = User.objects.get(dni=dni)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Usuario no encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Validar género
+        if genero not in ['Masculino', 'Femenino']:
+            return Response(
+                {"error": "El género debe ser 'Masculino' o 'Femenino'"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validar rol
+        if role not in [choice[0] for choice in User.ROLE_CHOICES]:
+            return Response(
+                {"error": f"El rol debe ser uno de los siguientes: {[choice[0] for choice in User.ROLE_CHOICES]}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Buscar al padre (si se proporcionó un DNI válido)
+        if padre_id:
+            try:
+                padre = User.objects.get(dni=padre_id)  # Buscar al padre por DNI
+                user.user_id_padre = padre  # Asignar el padre al usuario
+            except User.DoesNotExist:
+                return Response(
+                    {"error": f"No se encontró un usuario con el DNI '{padre_id}'"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        # Actualizar la residencia (dirección) dentro de una transacción
+        with transaction.atomic():
+            # Actualizar la residencia
+            try:
+                residencia = Residencia.objects.get(id_dir=id_dir)
+                residencia.provincia = provincia
+                residencia.ciudad = ciudad
+                residencia.calle = calle
+                residencia.numero = numero
+                residencia.save()
+            except Residencia.DoesNotExist:
+                return Response(
+                    {"error": "Residencia asociada no encontrada"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Actualizar el usuario
+            user.fecha_nac = fecha_nac
+            user.genero = genero
+            user.role = role
+            user.save()  # Guardar todos los cambios del usuario
+
+        return Response(
+            {"message": "Usuario actualizado exitosamente"},
+            status=status.HTTP_200_OK
+        )
+
+    except IntegrityError as e:
+        return Response(
+            {"error": f"Error de integridad: {str(e)}"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except ValidationError as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except Exception as e:
+        return Response(
+            {"error": f"Error inesperado: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
 
 @api_view(['POST'])
 def signIn(request):
