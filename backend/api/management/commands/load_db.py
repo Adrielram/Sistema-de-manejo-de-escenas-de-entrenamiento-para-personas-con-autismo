@@ -194,7 +194,7 @@ class Command(BaseCommand):
             complejidad=1,
             condiciones="Normal",
             link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
-            nombre="Escena 1"
+            nombre="Escena 7"
         )
         escena_8 = Escena.objects.create(
             idioma="Español",
@@ -250,6 +250,12 @@ class Command(BaseCommand):
             escena=escena_1,
             centro_profesional=centro_prof
         )
+        objetivo_7 = Objetivo.objects.create(
+            nombre="maradona",
+            descripcion="Tenes que vencer a piccolo",
+            escena=escena_6,
+            centro_profesional=centro_prof
+        )
 
         Objetivoscumplir.objects.create(
             objetivo=objetivo_2,
@@ -289,6 +295,10 @@ class Command(BaseCommand):
             escena=escena_9,
             objetivo=objetivo_6
         )
+        escena_obj_9 = EscenaObjetivo.objects.create(
+            escena=escena_7,
+            objetivo=objetivo_7
+        )
 
         # Create person-objective-scene relationship
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
@@ -324,6 +334,24 @@ class Command(BaseCommand):
         persona_obj_esc_6 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_2,
+            orden=3,
+            es_alternativo=False
+        )
+        persona_obj_esc_7 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_7,
+            orden=3,
+            es_alternativo=False
+        )
+        persona_obj_esc_8 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_8,
+            orden=3,
+            es_alternativo=False
+        )
+        persona_obj_esc_9 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_9,
             orden=3,
             es_alternativo=False
         )

@@ -163,7 +163,7 @@ class ObjetivosUsuarioListView(generics.ListAPIView):
     """
     serializer_class = ObjetivoSerializerList
     pagination_class = DynamicPagination
-    #permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
 
     def get_queryset(self):
@@ -178,10 +178,17 @@ class ObjetivosUsuarioListView(generics.ListAPIView):
         except User.DoesNotExist:
             return Objetivo.objects.none()
 
-        # Filtra las relaciones y los objetivos asociados
-        relaciones = PersonaObjetivoEscena.objects.filter(user_id=usuario)
+        # Paso 1: Filtrar PersonaObjetivoEscena para este usuario
+        persona_escena_objetivos = PersonaObjetivoEscena.objects.filter(user_id=usuario)
+
+        # Paso 2: Obtener los EscenaObjetivo asociados
+        escena_objetivos = EscenaObjetivo.objects.filter(
+            id__in=persona_escena_objetivos.values_list('escena_objetivo_id', flat=True)
+        )
+
+        # Paso 3: Filtrar Objetivos asociados a esas escenas
         return Objetivo.objects.filter(
-            id__in=relaciones.values_list('escena_objetivo', flat=True)
+            id__in=escena_objetivos.values_list('objetivo_id', flat=True)
         )
 
     def list(self, request, *args, **kwargs):
@@ -200,6 +207,8 @@ class ObjetivosUsuarioListView(generics.ListAPIView):
         serializer = self.get_serializer(queryset, many=True)
         data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
         return Response(data)
+
+
 
 #
 #class ObjetivoFilter(filters.FilterSet):
@@ -233,18 +242,20 @@ class ObjetivoBusquedaView(generics.ListAPIView):
         except User.DoesNotExist:
             return Objetivo.objects.none()
 
-        # Obtén los objetivos base filtrados por relaciones
+        # Filtra los objetivos relacionados al usuario a través de PersonaObjetivoEscena y EscenaObjetivo
         queryset = Objetivo.objects.filter(
-            id__in=PersonaObjetivoEscena.objects.filter(
-                user_id=usuario
-            ).values_list('escena_objetivo', flat=True)
+            id__in=EscenaObjetivo.objects.filter(
+                id__in=PersonaObjetivoEscena.objects.filter(
+                    user_id=usuario
+                ).values_list('escena_objetivo_id', flat=True)
+            ).values_list('objetivo_id', flat=True)
         )
 
-        # Aplica el filtro de búsqueda si existe
-        if query:
-            queryset = queryset.filter(nombre__icontains=query)
+    # Si el query está vacío después de limpiar, devuelve todo el queryset
+        if not query:
+            return queryset
 
-        return queryset
+        return queryset.filter(nombre__icontains=query)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -253,6 +264,7 @@ class ObjetivoBusquedaView(generics.ListAPIView):
         # Asegúrate de que el formato de respuesta incluya id y titulo
         data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
         return Response(data)
+
     
 
 

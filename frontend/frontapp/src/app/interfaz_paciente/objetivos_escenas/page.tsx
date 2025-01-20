@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import ScrollVerticalYHorizontal from "../../../components/ScrollVerticalYHorizontal";
 import SearchBar from "../../../components/Buscador";
 
+
 interface PaginatedResponse {
   count: number;
   next: string | null;
@@ -115,12 +116,16 @@ export default function Page() {
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
+  
     if (searchQuery.trim() === "") {
-      setObjetivosFiltrados(objetivos);
+      // Realiza una nueva llamada al backend para obtener todos los resultados
+      fetchObjetivosPorBusqueda("");
       return;
     }
+  
     fetchObjetivosPorBusqueda(searchQuery);
   };
+  
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -145,8 +150,9 @@ export default function Page() {
         <SearchBar onSearch={handleSearch} placeholder="Buscar Objetivo" />
 
         {query && (
-          <div className="mt-4">
-            <h2 className="text-lg font-bold mb-2">Resultados de la Búsqueda</h2>
+        <div className="mt-4">
+          <h2 className="text-lg font-bold mb-2">Resultados de la Búsqueda</h2>
+          <div className="max-h-64 overflow-y-scroll bg-gray-50 rounded-lg shadow p-4">
             {objetivosFiltrados.length > 0 ? (
               <ul className="space-y-2">
                 {objetivosFiltrados.map((objetivo) => (
@@ -165,7 +171,8 @@ export default function Page() {
               <p>No se encontraron resultados.</p>
             )}
           </div>
-        )}
+        </div>
+)}
 
         <h2 className="text-xl font-bold mb-2 mt-6">Objetivos</h2>
         <ScrollVerticalYHorizontal
