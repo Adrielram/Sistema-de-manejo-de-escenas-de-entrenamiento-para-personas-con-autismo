@@ -13,7 +13,6 @@ const CreateGroupPage = () => {
   const [associatedHealthCenters, setAssociatedHealthCenters] = useState([]);
   const [groupName, setGroupName] = useState("");
 
-  // Fetch data for health centers, therapists, and patients
   useEffect(() => {
     const fetchData = async () => {
       const healthCentersResponse = await fetch("http://127.0.0.1:8000/api/get_health_centers/");
@@ -23,9 +22,9 @@ const CreateGroupPage = () => {
       const healthCentersData = await healthCentersResponse.json();
       const therapistsData = await therapistsResponse.json();
       const patientsData = await patientsResponse.json();
-      console.log(healthCentersData)
-      console.log(therapistsData)
-      console.log(patientsData)
+      console.log("healthCentersData" + healthCentersData)
+      console.log("therapistsData" + therapistsData)
+      console.log("patientsData" + patientsData)
 
       setHealthCenters(healthCentersData);
       setTherapists(therapistsData);
@@ -37,7 +36,7 @@ const CreateGroupPage = () => {
 
   const handleAddItem = (item, setAssociatedItems, associatedItems) => {
     if (item) {
-      const key = item.dni ? 'dni' : 'id'; // Verificar si tiene dni o id
+      const key = item.dni ? 'dni' : 'id';
       if (!associatedItems.find((i) => i[key] === item[key])) {
         setAssociatedItems((prev) => [...prev, item]);
       }
@@ -45,12 +44,11 @@ const CreateGroupPage = () => {
   };
   
   const handleRemoveItem = (id, setAssociatedItems) => {
-    setAssociatedItems((prev) => prev.filter((i) => i.dni !== id && i.id !== id)); // Filtrar por dni o id
+    setAssociatedItems((prev) => prev.filter((i) => i.dni !== id && i.id !== id));
   };
-  
 
   const handleSave = async () => {
-    const healthCenterId = associatedHealthCenters[0]?.dni; // Asumiendo un solo centro de salud seleccionado
+    const healthCenterId = associatedHealthCenters[0]?.dni;
     const therapistIds = associatedTherapists.map((t) => t.dni);
     const patientIds = associatedPatients.map((p) => p.dni);
 
@@ -83,7 +81,7 @@ const CreateGroupPage = () => {
           value={groupName}
           onChange={(e) => setGroupName(e.target.value)}
           placeholder="Ingrese el nombre del grupo"
-          className="p-2 w-full mb-5 border border-gray-300 rounded-md text-sm"
+          className="p-2 w-full mb-5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
         />
 
         <div className="flex flex-wrap gap-5 justify-center">
@@ -131,53 +129,15 @@ const CreateGroupPage = () => {
         </div>
 
         {/* Botón Guardar */}
-        <div className="save-button-container">
-          <button className="save-button" onClick={handleSave}>Crear grupo</button>
+        <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 z-10 w-auto flex justify-center">
+          <button 
+            onClick={handleSave}
+            className="px-5 py-2.5 bg-[#f6512b] hover:bg-[#d94421] rounded-full text-white font-bold text-base cursor-pointer transition-colors duration-300 shadow-lg hover:shadow-xl"
+          >
+            Crear grupo
+          </button>
         </div>
       </div>
-
-      <style jsx>{`
-        .save-button-container {
-          display: flex;
-          justify-content: center;
-          position: fixed;
-          bottom: 20px; /* Fija el botón 20px por encima del borde inferior */
-          left: 50%; /* Centra el botón horizontalmente */
-          transform: translateX(-50%); /* Ajusta para centrar perfectamente */
-          width: auto;
-          z-index: 1000; /* Asegura que el botón esté por encima de otros elementos */
-        }
-
-        .save-button {
-          padding: 10px 20px;
-          background-color: #f6512b; /* Color naranja */
-          border: none;
-          border-radius: 25px;
-          color: white;
-          font-size: 1rem;
-          font-weight: bold;
-          cursor: pointer;
-          transition: background-color 0.3s;
-        }
-
-        .save-button:hover {
-          background-color: #d94421; /* Naranja más oscuro al pasar el mouse */
-        }
-
-        /* Media Query para pantallas pequeñas */
-        @media (max-width: 768px) {
-          .save-button-container {
-            justify-content: center;
-            left: 50%;
-            transform: translateX(-50%);
-          }
-
-          .save-button {
-            margin: 0 10px; /* Ajusta los márgenes para pantallas pequeñas */
-          }
-        }
-      `}</style>
-
     </div>
   );
 };
