@@ -42,13 +42,22 @@ const VerVideo = () => {
           `http://localhost:8000/api/comentarios/lista/?id_escena=${idEscena}`
         );
         const data = await response.json();
+        
         if (response.ok) {
-          setComentariosHashSet(data); // Actualiza el HashSet
+          // Access the nested hashset data
+          if (data && data.hashset && typeof data.hashset === 'object') {
+            setComentariosHashSet(data.hashset);
+          } else {
+            console.error('Datos inesperados:', data);
+            setComentariosHashSet({});
+          }
         } else {
           console.error(data.error);
+          setComentariosHashSet({});
         }
       } catch (error) {
         console.error("Error al obtener los comentarios:", error);
+        setComentariosHashSet({});
       }
     };
 
