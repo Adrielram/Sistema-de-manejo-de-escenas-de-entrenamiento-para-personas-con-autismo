@@ -6,28 +6,91 @@ const Comentario = ({dni}) => {
   const [escenas, setEscenas] = useState<any[]>([]);
   const [comentarioActivo, setComentarioActivo] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (!dni) return;
-
-    const fetchComentarios = async () => {
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-        const response = await fetch(`${baseUrl}paciente/${dni}/comentarios/`, {
-          method: "GET",
-          credentials: "include",
-        });
-        if (!response.ok) {
-          throw new Error("Error al obtener los comentarios");
-        }
-        const data = await response.json();
-        setEscenas(data);
-      } catch (error) {
-        console.error(error);
+  
+  const fetchComentarios = async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${baseUrl}paciente/${dni}/comentarios/`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Error al obtener los comentarios");
       }
-    };
+      const data = await response.json();
+      setEscenas(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  
+  const fetchBorrarComentario = async (id) => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${baseUrl}comentarios/borrar/${id}/`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Error al borrar el comentario");
+      }
+      alert("Comentario eliminado exitosamente");
+      setEscenas((prevEscenas) =>
+        prevEscenas.map((escena) => ({
+          ...escena,
+          comentarios: escena.comentarios.filter((comentario) => comentario.id !== id),
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
+  const actualizarVisibilidadLocal = (id, nuevaVisibilidad) => {
+    setEscenas((prevEscenas) =>
+      prevEscenas.map((escena) => ({
+        ...escena,
+        comentarios: escena.comentarios.map((comentario) =>
+          comentario.id === id
+            ? { ...comentario, visibilidad: nuevaVisibilidad }
+            : comentario
+        ),
+      }))
+    );
+  };
+  
+  // Modifica fetchCambiarVisibilidad para actualizar el estado local
+  const fetchCambiarVisibilidad = async (id, visibilidad) => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${baseUrl}comentarios/cambiar-visibilidad/${id}/`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ visibilidad }),
+      });
+      if (!response.ok) {
+        throw new Error("Error al cambiar la visibilidad");
+      }
+      const data = await response.json();
+      console.log("Visibilidad actualizada:", data);
+  
+      // Actualizar estado local
+      actualizarVisibilidadLocal(id, visibilidad);
+      alert("Visibilidad actualizada correctamente");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  
+
+  useEffect(() => {
+    if (!dni) return;  
     fetchComentarios();
   }, [dni]);
+  
 
   const toggleEngranaje = (id: number) => {
     setComentarioActivo((prev) => (prev === id ? null : id));
@@ -60,16 +123,32 @@ const Comentario = ({dni}) => {
                     <p className="font-bold text-black">VISIBILIDAD</p>
                   </div>
                   <div className="flex flex-col mt-2">
-                    <label className="text-black">
-                      <input type="radio" name={`visibilidad-${comentario.id}`} className="mr-2" defaultChecked={comentario.visibilidad} />
-                      PUBLICO
-                    </label>
-                    <label className="text-black">
-                      <input type="radio" name={`visibilidad-${comentario.id}`} className="mr-2" defaultChecked={!comentario.visibilidad} />
-                      PRIVADO
-                    </label>
+                  <label className="text-black">
+                    <input
+                      type="radio"
+                      name={`visibilidad-${comentario.id}`}
+                      className="mr-2"
+                      defaultChecked={comentario.visibilidad}
+                      onChange={() => fetchCambiarVisibilidad(comentario.id, true)}
+                    />
+                    PUBLICO
+                  </label>
+                  <label className="text-black">
+                    <input
+                      type="radio"
+                      name={`visibilidad-${comentario.id}`}
+                      className="mr-2"
+                      defaultChecked={!comentario.visibilidad}
+                      onChange={() => fetchCambiarVisibilidad(comentario.id, false)}
+                    />
+                    PRIVADO
+                  </label>
                   </div>
-                  <button className="mt-3 text-red-500 font-bold">BORRAR COMENTARIO</button>
+                  <button className="mt-3 text-red-500 font-bold"
+                          onClick={() => fetchBorrarComentario(comentario.id)}
+                  >
+                    BORRAR COMENTARIO
+                  </button>
                 </div>
               )}
             </div>

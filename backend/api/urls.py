@@ -32,6 +32,8 @@ urlpatterns = [
     path('notificaciones/<int:pk>/<str:accion>/', procesar_notificacion, name='procesar_notificacion'),
     path('check-cookie/', check_cookie, name='check_cookie'),
     path('paciente/<int:dni>/comentarios/', ComentariosPacienteAPIView.as_view(), name='comentarios_paciente'),
+    path('comentarios/borrar/<int:id>/', views.BorrarComentarioAPIView.as_view(), name='borrar_comentario_cbv'),
+    path('comentarios/cambiar-visibilidad/<int:id>/', CambiarVisibilidadComentarioView.as_view(), name='cambiar_visibilidad_comentario'),
 ]
 
 

@@ -190,13 +190,13 @@ class Command(BaseCommand):
         )
 
         # Create notifications
-        Notificacion.objects.create(
+        '''Notificacion.objects.create(
             destinatario=terapeuta,
             remitente=admin,
             mensaje="Bienvenido al sistema",
             estado="pendiente",
             timestamp=datetime.now()
-        )
+        )'''
 
         comentario_respuesta = Comentario.objects.create(
             user=paciente,

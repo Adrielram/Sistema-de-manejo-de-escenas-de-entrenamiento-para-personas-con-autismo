@@ -557,3 +557,41 @@ class ComentariosPacienteAPIView(APIView):
 
         return Response(respuesta, status=200)
 
+class BorrarComentarioAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
+    def delete(self, request, id, *args, **kwargs):
+        try:
+            comentario = Comentario.objects.get(pk=id)
+            comentario.delete()
+            return Response({'message': 'Comentario eliminado exitosamente'}, status=status.HTTP_200_OK)
+        except Comentario.DoesNotExist:
+            return Response({'error': 'Comentario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        
+
+
+class CambiarVisibilidadComentarioView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
+    def patch(self, request, id):
+        try:
+            # Obtiene el comentario
+            comentario = Comentario.objects.get(id=id)
+            
+            # Extrae los datos del cuerpo de la solicitud
+            import json
+            body = json.loads(request.body)
+            nueva_visibilidad = body.get('visibilidad')
+            
+            if nueva_visibilidad is None:
+                return JsonResponse({'error': 'Falta el campo "visibilidad"'}, status=400)
+            
+            # Cambia la visibilidad y guarda el comentario
+            comentario.visibilidad = nueva_visibilidad
+            comentario.save()
+            
+            return JsonResponse({'message': 'Visibilidad actualizada correctamente', 'id': comentario.id, 'visibilidad': comentario.visibilidad})
+        except Comentario.DoesNotExist:
+            return JsonResponse({'error': 'Comentario no encontrado'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
