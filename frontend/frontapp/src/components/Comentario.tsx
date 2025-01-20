@@ -99,10 +99,10 @@ const Comentario = ({dni}) => {
   return (
     <div>
       {escenas.map((escena) => (
-        <div key={escena.escena} className="flex flex-col w-full bg-greens-light_green shadow-2xl rounded-lg p-4 mb-4">
+        <div key={escena.escena} className="flex flex-col w-full m-2 bg-greens-light_green shadow-2xl rounded-lg p-4 mb-4">
           <p className="font-bold text-black">ESCENA: {escena.escena}</p>
           {escena.comentarios.map((comentario) => (
-            <div key={comentario.id} className="flex flex-col bg-white p-3 rounded-lg shadow-md">
+            <div key={comentario.id} className="flex flex-col bg-white p-3 rounded-lg shadow-md mt-2 mb-2">
               <div className="flex flex-row items-center justify-between">
                 <div className="flex items-center">
                   <Image
