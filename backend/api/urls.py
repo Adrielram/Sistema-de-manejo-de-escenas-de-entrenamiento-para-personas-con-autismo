@@ -32,6 +32,8 @@ urlpatterns = [
     path('get_therapists/', views.get_therapists, name='get_therapists'),
     path('get_patients/', views.get_patients, name='get_patients'),
     path('create_group/', views.create_group, name='create_group'),
+    path('get_groups/', views.get_groups, name='get_groups'),
+    path('update_group/<int:group_id>/', views.update_group, name='update_group'),
 ]
 
 

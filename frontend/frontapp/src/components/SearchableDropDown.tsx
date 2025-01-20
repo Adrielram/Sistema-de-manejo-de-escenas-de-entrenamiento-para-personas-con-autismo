@@ -7,7 +7,6 @@ import iconoBusqueda from "../../public/icon/icono_busqueda.png";
 const GenericDropdown = ({ title, items, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
   // Filtra los elementos según el término de búsqueda
   const filteredItems = items.filter((item) =>
     item.nombre && item.nombre.toLowerCase().includes(searchQuery.toLowerCase())

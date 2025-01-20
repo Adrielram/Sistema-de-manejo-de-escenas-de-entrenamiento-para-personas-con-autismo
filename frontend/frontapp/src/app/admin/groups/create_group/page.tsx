@@ -132,7 +132,7 @@ const CreateGroupPage = () => {
 
         {/* Botón Guardar */}
         <div className="save-button-container">
-          <button className="save-button" onClick={handleSave}>Guardar grupo</button>
+          <button className="save-button" onClick={handleSave}>Crear grupo</button>
         </div>
       </div>
 
