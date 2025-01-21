@@ -30,6 +30,11 @@ class DynamicPagination(PageNumberPagination):
     max_page_size = 20
     page_size = 4
 
+def check_cookie(request):
+    # Verificar si la cookie 'jwt' está presente
+    if 'jwt' in request.COOKIES:
+        return JsonResponse({"exists": True})
+    return JsonResponse({"exists": False})
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod

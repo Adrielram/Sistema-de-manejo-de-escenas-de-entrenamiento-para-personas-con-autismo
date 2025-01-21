@@ -29,6 +29,7 @@ urlpatterns = [
     path('associate_center/', AssociateCenterView.as_view(), name='associate_center'),
     path('create_patient_group/', CreateGroup.as_view(), name='create_patient_group'),
     path('disassociate_center/', DisassociateCenterView.as_view(), name='desassociate_center'),
+    path('check-cookie/', check_cookie, name='check_cookie'),
 ]
 
 
