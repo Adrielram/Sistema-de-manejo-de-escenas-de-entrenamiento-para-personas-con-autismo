@@ -57,6 +57,21 @@ from .models import Grupo, Personagrupo, User
 
 from django.http import JsonResponse
 from .models import Grupo
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_person_group(request, grupo_id, user_id):
+    try:
+        # Buscar la relación en la tabla Personagrupo
+        relacion = Personagrupo.objects.get(grupo_id=grupo_id, user_id_id=user_id)
+        relacion.delete()
+        return Response({"message": "Relación eliminada correctamente."}, status=status.HTTP_200_OK)
+    except Personagrupo.DoesNotExist:
+        return Response({"error": "Relación no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
 def get_groups(request):
     if request.method == "GET":
         grupos = Grupo.objects.all()  # Obtener todos los grupos

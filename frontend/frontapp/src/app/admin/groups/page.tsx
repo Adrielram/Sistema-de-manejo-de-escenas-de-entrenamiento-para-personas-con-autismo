@@ -16,9 +16,8 @@ const ManageGroupPage = () => {
     const fetchGroupData = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
-        console.log('Iniciando fetch de grupos...');
         const response = await fetch("http://localhost:8000/api/get_groups/", {
           method: "GET",
           headers: {
@@ -26,71 +25,51 @@ const ManageGroupPage = () => {
           },
         });
 
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-
         if (!response.ok) {
           throw new Error(`Error: ${response.status} - ${response.statusText}`);
         }
 
         const data = await response.json();
-        console.log('Datos recibidos:', data);
-        
-        if (Array.isArray(data)) {
-          console.log('Número de grupos recibidos:', data.length);
-        } else {
-          console.log('Estructura de datos recibida:', typeof data);
-        }
-
         setGroups(data);
       } catch (err) {
-        console.log('Error completo:', err);
         setError(err.message);
-        console.error("Error al obtener los grupos:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    console.log('useEffect ejecutándose...');
     fetchGroupData();
-}, []);
+  }, []);
 
-  // Efecto para actualizar los estados cuando se selecciona un grupo
   useEffect(() => {
     if (selectedGroup) {
+      console.log("Pacientes recibidos del back:", selectedGroup.patients);
       setAssociatedTherapists(selectedGroup.therapists || []);
       setAssociatedPatients(selectedGroup.patients || []);
     } else {
       setAssociatedTherapists([]);
       setAssociatedPatients([]);
     }
-  }, [selectedGroup]); // Se ejecuta cuando cambia el grupo seleccionado
+  }, [selectedGroup]);
 
   const handleGroupSelect = (group) => {
     setSelectedGroup(group);
   };
 
-  const handleSave = async () => {
+  const handleRemoveTherapist = async (therapistId) => {
     if (!selectedGroup) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const therapistIds = associatedTherapists.map((t) => t.id);
-      const patientIds = associatedPatients.map((p) => p.id);
-
-      const response = await fetch(`http://localhost:8000/api/update_group/${selectedGroup.id}/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          therapist_ids: therapistIds,
-          patient_ids: patientIds,
-        }),
-      });
+      const response = await fetch(
+        `http://localhost:8000/api/personagrupo/${selectedGroup.id}/${therapistId}/`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
@@ -98,32 +77,49 @@ const ManageGroupPage = () => {
 
       const result = await response.json();
       alert(result.message);
-      
-      // Actualizar la lista de grupos después de guardar
-      const updatedGroups = groups.map(group => 
-        group.id === selectedGroup.id 
-          ? { ...group, therapists: associatedTherapists, patients: associatedPatients }
-          : group
-      );
-      setGroups(updatedGroups);
 
+      // Actualizar la lista de terapeutas después de eliminar
+      setAssociatedTherapists((prev) => prev.filter((t) => t.id !== therapistId));
     } catch (err) {
       setError(err.message);
-      alert("Error al guardar los cambios");
+      alert("Error al eliminar el terapeuta.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleAddTherapist = (therapist) => {
-    if (!associatedTherapists.some((t) => t.id === therapist.id)) {
-      setAssociatedTherapists(prev => [...prev, therapist]);
-    }
-  };
+  const handleRemovePatient = async (patientId) => {
+    if (!selectedGroup || !patientId) return;  // verificación de patientId
+  
+    console.log("El patientId es:", patientId); // Agregar este log
+    if (!selectedGroup) return;
 
-  const handleAddPatient = (patient) => {
-    if (!associatedPatients.some((p) => p.id === patient.id)) {
-      setAssociatedPatients(prev => [...prev, patient]);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/personagrupo/${selectedGroup.id}/${patientId}/`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      alert(result.message);
+
+      // Actualizar la lista de pacientes después de eliminar
+      setAssociatedPatients((prev) => prev.filter((p) => p.id !== patientId));
+    } catch (err) {
+      setError(err.message);
+      alert("Error al eliminar el paciente.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -140,7 +136,7 @@ const ManageGroupPage = () => {
           Seleccionar grupo:
         </label>
         <GenericDropdown
-          title="Seleccionar Grupo"
+          title={selectedGroup ? selectedGroup.name : "Seleccionar Grupo"}
           items={groups}
           onSelect={handleGroupSelect}
         />
@@ -149,32 +145,23 @@ const ManageGroupPage = () => {
           <>
             <div className="flex flex-wrap gap-5 justify-center mt-5">
               <div className="flex-1 min-w-[300px] sm:w-[48%] lg:w-[30%]">
-                <GenericDropdown
-                  title="Editar Terapeutas"
-                  items={selectedGroup.therapists}
-                  onSelect={handleAddTherapist}
-                />
                 <AssociatedList
                   title="Terapeutas Asociados"
                   items={associatedTherapists}
-                  onRemove={(id) =>
-                    setAssociatedTherapists((prev) => prev.filter((t) => t.id !== id))
-                  }
+                  onRemove={handleRemoveTherapist}
                 />
               </div>
 
               <div className="flex-1 min-w-[300px] sm:w-[48%] lg:w-[30%]">
-                <GenericDropdown
-                  title="Editar Pacientes"
-                  items={selectedGroup.patients}
-                  onSelect={handleAddPatient}
-                />
                 <AssociatedList
                   title="Pacientes Asociados"
                   items={associatedPatients}
-                  onRemove={(id) =>
-                    setAssociatedPatients((prev) => prev.filter((p) => p.id !== id))
-                  }
+                  /*onRemove={(patient) => {
+                    console.log("Los pacientes asociados son:", associatedPatients);
+                    console.log("El paciente a eliminar es:", patient); // Verificar el objeto completo
+                    handleRemovePatient(patient); // Asegúrate de pasar el id correctamente
+                  }}*/
+                  onRemove={handleRemovePatient}                  
                 />
               </div>
             </div>
@@ -182,7 +169,7 @@ const ManageGroupPage = () => {
             <div className="save-button-container mt-5 text-center">
               <button
                 className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-gray-400"
-                onClick={handleSave}
+                onClick={() => alert("Funcionalidad para guardar")}
                 disabled={isLoading}
               >
                 {isLoading ? "Guardando..." : "Guardar cambios"}
