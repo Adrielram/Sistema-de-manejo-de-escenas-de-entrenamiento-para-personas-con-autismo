@@ -381,70 +381,182 @@ def buscar_padres(request):
         'pagina_actual': page_obj.number
     })
 
-@api_view(['POST'])
-def registrar_comentario(request):
+def obtener_dni(username):
+    if not username:
+        raise ValueError("Se requiere el parámetro username")
     try:
-        # Validar que todos los campos necesarios están presentes
-        required_fields = ['escena_id',"personaobjetivo_user_id","personaobjetivo_objetivo_id", 'texto']
-        missing_fields = [field for field in required_fields if field not in request.data]
-        if missing_fields:
-            return Response(
-                {"error": f"Faltan los siguientes campos: {', '.join(missing_fields)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        user = User.objects.get(username=username)
+        return user.dni
+    except User.DoesNotExist:
+        raise User.DoesNotExist(f"No se encontró un usuario con username: {username}")
 
-        # Obtener datos del request
-        escena_id = request.data.get('escena_id')
-        personaobjetivo_user_id = request.data.get('personaobjetivo_user_id', None)
-        personaobjetivo_objetivo_id = request.data.get('personaobjetivo_objetivo_id', None)
-        texto = request.data.get('texto')
+@api_view(['GET'])
+def get_dni(request):
+    """View para obtener el DNI a partir del username."""
+    username = request.query_params.get('username')
+    try:
+        dni = obtener_dni(username)
+        return Response({'dni': dni})
+    except ValueError as e:
+        return Response({'error': str(e)}, status=400)
+    except User.DoesNotExist as e:
+        return Response({'error': str(e)}, status=404)
 
-        # Validar que la escena existe
+class registrar_comentario(APIView):
+    def post(self, request):
+        data = request.data.copy() 
+        # Modificar el campo 'user' para usar el DNI
         try:
-            escena = Escenavideo.objects.get(id=escena_id)
-        except Escenavideo.DoesNotExist:
+            data['user'] = obtener_dni(request.data['user'])
+        except Exception as e:
+            return Response({'error': f'Error obteniendo el DNI: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Pasar los datos modificados al serializer
+        serializer = ComentarioSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()  # Guardar el comentario
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        # Si el serializer no es válido, retornar los errores
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class EscenasSegunUsuarioObjetivo(APIView):
+    def get(self, request):
+        objetivo_id = request.query_params.get('objetivo_id')
+
+        if not objetivo_id:
+            return Response({'error': 'Se requiere el parámetro objetivo_id'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Obtener las escenas relacionadas al objetivo
+        escena_objetivos = EscenaObjetivo.objects.filter(objetivo_id=objetivo_id)
+        if not escena_objetivos.exists():
+            return Response({'error': 'No se encontraron escenas para el objetivo proporcionado'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Obtener los IDs de las escenas relacionadas
+        escena_ids = escena_objetivos.values_list('escena_id', flat=True)
+
+        # Consultar las escenas para obtener los links
+        escenas = Escena.objects.filter(id__in=escena_ids).values('id', 'link')
+
+        return Response(list(escenas), status=status.HTTP_200_OK)
+    
+class ObtenerLinksEvaluaciones(APIView):
+    def get(self, request):
+        username = request.query_params.get('username')
+        objetivo_id = request.query_params.get('objetivo_id')
+        try:
+            try:
+                user_id = obtener_dni(username) 
+            except ValueError as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            except User.DoesNotExist as e:
+                return Response({'error': str(e)}, status=status.HTTP_404_NOT_FOUND)
+            # Filtrar las evaluaciones asociadas
+            evaluaciones = PersonaObjetivoEvaluacion.objects.filter(
+                user_id=user_id,
+                objetivo_id=objetivo_id
+            ).exclude(
+                evaluacion__isnull=True  # Asegurarse de que haya evaluación
+            ).values_list('evaluacion__link', flat=True)
+
+            # Devolver los resultados en formato JSON
+            return Response({'links': list(evaluaciones)}, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            # Manejo de errores
             return Response(
-                {"error": "La escena especificada no existe"},
+                {'error': 'Ocurrió un error al obtener los links.', 'details': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+def ObtenerEscenaObjetivo(escena_id, objetivo_id):
+    try: 
+        escena_objetivo = EscenaObjetivo.objects.get(
+            objetivo_id=objetivo_id, 
+            escena_id=escena_id
+        )
+    except EscenaObjetivo.DoesNotExist:
+        return None  # Devuelve None si no se encuentra el objeto
+    except ValueError as e:
+        return None  # Maneja errores de valor en caso de parámetros inválidos
+
+    # Retornar el objeto encontrado
+    return escena_objetivo
+
+class ObtenerPersonaObjetivoID(APIView):
+    def get(self, request):
+        username = request.query_params.get('username')
+        escena_id = request.query_params.get('escena_id')
+        objetivo_id = request.query_params.get('objetivo_id')
+
+        try:
+            user_id = obtener_dni(username) 
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist as e:
+            return Response({'error': str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+        # Obtener la escena objetivo
+        escena_objetivo = ObtenerEscenaObjetivo(escena_id, objetivo_id)
+        if not escena_objetivo:
+            return Response(
+                {'error': 'ObjetivoEscena no encontrado.'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+        try:
+            persona_objetivo = PersonaObjetivoEscena.objects.get(
+                user_id=user_id, 
+                escena_objetivo=escena_objetivo
+            )
+        except PersonaObjetivoEscena.DoesNotExist:
+            return Response(
+                {'error': 'PersonaObjetivoEscena no encontrado.'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        # Retornar el id en la respuesta
+        return Response({'id': persona_objetivo.id}, status=status.HTTP_200_OK)
+    
+class MarcarVideoVistoAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            persona_objetivo_escena_id = request.data.get('persona_objetivo_escena_id') 
 
-        # Validar relaciones opcionales
-        personaobjetivo_user = None
-        if personaobjetivo_user_id:
-            try:
-                personaobjetivo_user = Escenavideo.objects.get(id=personaobjetivo_user_id)
-            except Escenavideo.DoesNotExist:
+            if not persona_objetivo_escena_id:
                 return Response(
-                    {"error": "La persona objetivo (user) especificada no existe"},
+                    {'error': 'Error al obtener datos. Se requiere el ID de la Persona Objetivo Escena.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Verificamos si existe el objeto PersonaObjetivoEscena
+            try:
+                persona_objetivo_escena = PersonaObjetivoEscena.objects.get(id=persona_objetivo_escena_id)
+            except PersonaObjetivoEscena.DoesNotExist:
+                return Response(
+                    {'error': 'Persona objetivo escena no encontrada'},
                     status=status.HTTP_404_NOT_FOUND
                 )
 
-        personaobjetivo_objetivo = None
-        if personaobjetivo_objetivo_id:
-            try:
-                personaobjetivo_objetivo = Escenavideo.objects.get(id=personaobjetivo_objetivo_id)
-            except Escenavideo.DoesNotExist:
-                return Response(
-                    {"error": "La persona objetivo (objetivo) especificada no existe"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-
-        # Crear el comentario en una transacción
-        with transaction.atomic():
-            comentario = Comentario.objects.create(
-                escena=escena,
-                personaobjetivo_user=personaobjetivo_user,
-                personaobjetivo_objetivo=personaobjetivo_objetivo,
-                texto=texto
+            # Intentamos crear un nuevo registro de video visto
+            video_visto, created = Videosvistos.objects.get_or_create(
+                persona_objetivo_escena=persona_objetivo_escena,
+                defaults={'visto': True}
             )
 
-        return Response(
-            {"message": "Comentario registrado exitosamente", "comentario_id": comentario.id},
-            status=status.HTTP_201_CREATED
-        )
+            if created:
+                return Response(
+                    {'message': 'Video marcado como visto correctamente'},
+                    status=status.HTTP_201_CREATED  # Nuevo registro creado
+                )
+            else:
+                return Response(
+                    {'message': 'El video ya estaba marcado como visto'},
+                    status=status.HTTP_200_OK  # Registro ya existente
+                )
 
-    except Exception as e:
-        return Response(
-            {"error": f"Error inesperado: {str(e)}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        except Exception as e:
+            return Response(
+                {'error': f'Error interno del servidor: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
