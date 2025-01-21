@@ -63,7 +63,7 @@ class PreguntaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Pregunta
-        fields = ['texto', 'tipo', 'opciones', 'correcta']
+        fields = ['id', 'texto', 'tipo', 'opciones', 'correcta']
 
     def create(self, validated_data):
         opciones_data = validated_data.pop('opciones', [])
@@ -91,7 +91,17 @@ class FormularioSerializer(serializers.ModelSerializer):
         return formulario
 
 
+from rest_framework import serializers
+
+class BulkRespuestaSerializer(serializers.ListSerializer):
+    def create(self, validated_data):
+        # Crea múltiples instancias de Respuesta a la vez
+        respuestas = [Respuesta(**item) for item in validated_data]
+        return Respuesta.objects.bulk_create(respuestas)
+
 class RespuestaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Respuesta
         fields = '__all__'
+        list_serializer_class = BulkRespuestaSerializer
+
