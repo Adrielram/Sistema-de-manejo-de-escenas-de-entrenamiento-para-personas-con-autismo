@@ -1,12 +1,13 @@
+// components/Footer.tsx
 import React from "react";
 import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="mt-auto bottom-0 bg-[#F6512B] text-white py-6 relative z-20">
-      <div className=" flex flex-col justify-center text-center md:flex-row md:space-y-0 md:space-x-12 md:items-center">
+    <footer className="mt-auto w-full bg-[#F6512B] text-white py-6 relative z-20">
+      <div className="flex flex-col justify-center text-center md:flex-row md:space-y-0 md:space-x-12 md:items-center">
         {/* Address Section */}
-        <div className="flex items-center justify-center ">
+        <div className="flex items-center justify-center">
           <Image
             width={24}
             height={24}
@@ -14,7 +15,7 @@ export default function Footer() {
             alt="Location Icon"
             className="w-6 h-6"
           />
-          <p className="text-sm md:text-base ">
+          <p className="text-sm md:text-base">
             Moreto 732, Ciudad de Buenos Aires, ARGENTINA
           </p>
         </div>

@@ -63,8 +63,8 @@ class Grupo(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(
         max_length=100, 
-        blank=True, 
-        null=True
+        unique=True, 
+        null=False
     )
     centrodesalud_id = models.ForeignKey(
         Centrodesalud, 
