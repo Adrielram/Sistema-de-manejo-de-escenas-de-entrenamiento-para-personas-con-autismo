@@ -1,6 +1,6 @@
 "use client";
 import Formulario from '../../../../../components/Formulario';
-import ResponderForm from '../../../../../components/ResponderForm';
+//import ResponderForm from '../../../../../components/ResponderForm';
 import { enviarFormulario } from '../../../../../utils/api';
 
 const CreateAssesment: React.FC = () => { 
@@ -22,7 +22,7 @@ const CreateAssesment: React.FC = () => {
           Crear Evaluacion
         </h1>
         <Formulario onSubmit={manejarEnvio} />
-        <ResponderForm />
+        {/*<ResponderForm />*/}
     </div>
     </div>
 

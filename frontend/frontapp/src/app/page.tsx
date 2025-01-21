@@ -1,28 +1,11 @@
 "use client"
 import React from 'react';
-import Formulario from '../components/Formulario';
-import { enviarFormulario } from '../utils/api';
-import ResponderForm from '../components/ResponderForm';
+import RevisionFormulario from '../components/RevisionFormulario';
 
-const CrearFormulario: React.FC = () => {
-  const manejarEnvio = async (formulario) => {
-    const resultado = await enviarFormulario(formulario);
-    if (!resultado.success){
-      alert("No se pudo crear el formulario.")
-    }else{
-      alert("Formulario creado exitosamente");
-      console.log('Formulario creado:', resultado);
-    }
-    
-  };
-
-  return (
-    <div>      
-      <Formulario onSubmit={manejarEnvio} />
-      <ResponderForm />
-
-    </div>
-  );
+const CrearFormulario = () => {
+  return(
+    <RevisionFormulario formularioId={1} pacienteDni={40333444} terapeutaDni={31222333} />
+  )
 };
 
 export default CrearFormulario;

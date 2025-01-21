@@ -105,14 +105,9 @@ class BulkRespuestaSerializer(serializers.ListSerializer):
     def create(self, validated_data):
         # Crea múltiples instancias de Respuesta a la vez
         respuestas = [Respuesta(**item) for item in validated_data]
-        return Respuesta.objects.bulk_create(respuestas)
-
-class RespuestaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Respuesta
-        fields = '__all__'
-        list_serializer_class = BulkRespuestaSerializer
-
+        # Guarda las respuestas en la base de datos
+        respuestas_guardadas = Respuesta.objects.bulk_create(respuestas)
+        return respuestas_guardadas  
 
 
 class ProfesionalCentroSerializer(serializers.ModelSerializer):  
@@ -124,3 +119,20 @@ class PatientGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grupo
         fields = ['id', 'nombre', 'centrodesalud_id']
+
+from .models import ComentarioProfesional
+class ComentarioProfesionalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ComentarioProfesional
+        fields = '__all__'
+
+class RespuestaSerializer(serializers.ModelSerializer):
+    comentarios = ComentarioProfesionalSerializer(many=True, read_only=True)
+    nombre_pregunta = serializers.SerializerMethodField()
+    class Meta:
+        model = Respuesta
+        fields = ['id', 'pregunta', 'paciente', 'respuesta', 'correcta', 'nota', 'comentarios', 'nombre_pregunta']
+        list_serializer_class = BulkRespuestaSerializer
+
+    def get_nombre_pregunta(self, obj):        
+        return obj.pregunta.texto if obj.pregunta else None

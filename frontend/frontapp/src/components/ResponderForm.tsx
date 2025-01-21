@@ -12,7 +12,7 @@ const ResponderForm = () => {
   const router = useRouter();
 
   useEffect(() => {
-    fetch(`${baseUrl}formularios/8/`)
+    fetch(`${baseUrl}formularios/1/`)
       .then((res) => res.json())
       .then((data) => setFormulario(data))
       .catch((err) => setError("Error al cargar el formulario"));

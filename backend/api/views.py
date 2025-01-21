@@ -658,18 +658,22 @@ class RespuestaListCreateView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         # Verificar si se envió un conjunto de respuestas
-        if isinstance(request.data, list):
-            serializer = self.get_serializer(data=request.data, many=True)
-        else:
-            serializer = self.get_serializer(data=request.data)
+        many = isinstance(request.data, list)
+        serializer = self.get_serializer(data=request.data, many=many)
 
         serializer.is_valid(raise_exception=True)
 
         # Guardar las respuestas
         self.perform_create(serializer)
 
+        # Recuperar las instancias guardadas
+        if many:
+            data = RespuestaSerializer(Respuesta.objects.filter(pk__in=[r.pk for r in serializer.instance]), many=True).data
+        else:
+            data = RespuestaSerializer(serializer.instance).data
+
         # Devolver respuesta
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
         # Sobrescribir para manejar lógica adicional
@@ -684,3 +688,40 @@ class RespuestaListCreateView(generics.CreateAPIView):
 
         serializer.save()
 
+
+class RespuestasFormularioView(APIView):   
+
+    def get(self, request, formulario_id, paciente_dni):
+        # Obtener las respuestas del formulario para el paciente
+        respuestas = Respuesta.objects.filter(
+            pregunta__formulario_id=formulario_id,
+            paciente__dni=paciente_dni
+        ).select_related('pregunta', 'paciente', 'pregunta__formulario')
+
+        if not respuestas.exists():
+            return Response({"detail": "No se encontraron respuestas para este formulario y paciente."}, status=404)
+
+        # Obtener los datos del formulario
+        formulario = respuestas.first().pregunta.formulario
+        formulario_data = {
+            "id": formulario.id,
+            "titulo": formulario.titulo,
+            "descripcion": formulario.descripcion,
+        }
+
+        # Serializar las respuestas
+        serializer = RespuestaSerializer(respuestas, many=True)
+
+        # Combinar los datos del formulario con las respuestas
+        response_data = {
+            "formulario": formulario_data,
+            "respuestas": serializer.data
+        }
+
+        return Response(response_data)
+
+    
+class CrearComentarioProfesionalView(generics.CreateAPIView):
+    queryset = ComentarioProfesional.objects.all()
+    serializer_class = ComentarioProfesionalSerializer
+    

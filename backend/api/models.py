@@ -381,6 +381,17 @@ class Respuesta(models.Model):
     paciente = models.ForeignKey(User, on_delete=models.CASCADE, related_name="respuestas")
     respuesta = models.TextField()
     correcta = models.BooleanField(null=True)  # Solo para verificación automática
+    nota = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)  # Nota de 0 a 10
 
     def __str__(self):
         return f"Respuesta de {self.paciente.username} a {self.pregunta.texto}"
+    
+class ComentarioProfesional(models.Model):
+    respuesta = models.ForeignKey(Respuesta, related_name="comentarios", on_delete=models.CASCADE)
+    terapeuta = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comentarios")
+    texto = models.TextField()
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comentario de {self.terapeuta.username} en {self.respuesta}"
+

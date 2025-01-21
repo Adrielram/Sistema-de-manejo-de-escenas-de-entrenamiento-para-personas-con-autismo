@@ -37,6 +37,8 @@ urlpatterns = [
     path('getCenterProfesional/', GetCentroProfesionalView.as_view(), name='getCenterProfesional'),
     path('get_goals_centroprofesional/', GetCentroProfesionalObjetivosView.as_view(), name='get_goals_centroprofesional'),
     path('goal/<int:pk>/delete/', DeleteGoalView.as_view(), name='delete_goal'),
+    path('formularios/<int:formulario_id>/<int:paciente_dni>/', RespuestasFormularioView.as_view(), name='respuestas_formulario'),
+    path('comentario_profesional/', CrearComentarioProfesionalView.as_view(), name='crear_comentario'),
 ]
 
 urlpatterns += [path('', include(router.urls))]
