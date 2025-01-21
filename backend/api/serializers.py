@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Objetivo, Escena, CentroProfesional, Centrodesalud
+from .models import User, Objetivo, Escena, CentroProfesional, Centrodesalud, Comentario, Videosvistos
 
 class PacienteSerializer(serializers.ModelSerializer):
     padreACargo = serializers.SerializerMethodField()
@@ -48,3 +48,23 @@ class CentroSaludSerializer(serializers.ModelSerializer):
     class Meta:
         model = Centrodesalud
         fields = ['id', 'nombre', 'direccion_id_dir']
+
+class ComentarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comentario
+        fields = [
+            'id',
+            'user',
+            'escena',
+            'comentario_contestado',
+            'texto',
+            'visibilidad',
+        ]
+
+class VideosVistosSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Videosvistos
+        fields = ['persona_objetivo_escena', 'visto']
+
+    def create(self, validated_data):
+        return super().create(validated_data)
