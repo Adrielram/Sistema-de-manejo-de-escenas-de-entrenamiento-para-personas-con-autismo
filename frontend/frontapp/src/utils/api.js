@@ -67,4 +67,35 @@ export const create_scene = async (nuevaEscena) => {
     }
   };
 
+
+  export const create_group = async (nuevoGrupo) => {
+    try {
+        const addGroupUrl = `${baseUrl}create_patient_group/`;    
+        console.log(baseUrl);
+        const response = await fetch(addGroupUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                nombre_grupo: nuevoGrupo.nombre_grupo,
+                nombre_centro: nuevoGrupo.nombre_centro,
+            }),
+        });
+  
+        const data = await response.json();
+        
+        if (response.status === 201) {
+            return { success: true, data };
+        } else {
+            return { success: false, error: data.error || 'Error desconocido' };
+        }
+    } catch (error) {
+        console.error('Error en la solicitud:', error);
+        return { 
+            success: false, 
+            error: error.message || 'Error desconocido'
+        };
+    }
+  };
  

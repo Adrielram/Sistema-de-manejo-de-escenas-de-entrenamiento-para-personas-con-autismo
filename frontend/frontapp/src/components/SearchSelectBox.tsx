@@ -11,8 +11,8 @@ interface MultiSearchSelectBoxProps {
   getItemLabel: (item: Item) => string;
   selectedItems: Item[];
   onSelectItems: (items: Item[]) => void;
-  apiUrl: string; // URL para la API de escenas
-  resetTrigger: boolean; // Nuevo prop para indicar cuándo resetear el componente
+  apiUrl: string; // URL para la API de búsqueda
+  resetTrigger?: boolean; // Nuevo prop para indicar cuándo resetear el componente
 
 }
 

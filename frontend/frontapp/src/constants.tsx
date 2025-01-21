@@ -1,5 +1,8 @@
 import { BsPeopleFill } from "react-icons/bs"; // <BsPeopleFill /> icono de personas
 import { BiSolidSpreadsheet } from "react-icons/bi"; // <BiSolidSpreadsheet /> icono de evaluacion
+
+import { GiHealthNormal } from "react-icons/gi";
+
 import { MdContentCopy } from "react-icons/md"; // <MdContentCopy /> icono de contenido
 import { ImVideoCamera } from "react-icons/im"; // <ImVideoCamera /> icono de escena
 import { GoGoal } from "react-icons/go"; // <GoGoal /> icono de objetivo
@@ -9,6 +12,12 @@ import { IoIosAdd } from "react-icons/io"; // <IoIosAdd /> icono de agregar
 import { SideNavItem } from './types';
 
 export const SIDENAV_ITEMS: SideNavItem[] = [
+    {
+      title: 'Centros de Salud', // Nuevo título
+      path: '/therapist', // Ruta del botón
+      icon: <GiHealthNormal />, // Puedes usar otro ícono que prefieras
+      submenu: false, // No tiene submenú
+    },
     {
       title: 'Contenidos',
       path: '/therapist/selection',

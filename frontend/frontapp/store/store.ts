@@ -50,9 +50,29 @@ const verifySession = async () => {
   }
 };
 
+const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+const checkCookieExists = async () => {
+  try {
+    const response = await fetch(`${baseUrl}check-cookie/`, {
+      method: "GET",
+      credentials: "include",  // Asegura que las cookies se envíen
+    });
+    const data = await response.json();
+    return data.exists;  // Devuelve true si existe, false si no
+  } catch (error) {
+    console.error("Error al verificar si la cookie existe:", error);
+    return false;
+  }
+};
+
 // Crear el persistor y verificar la cookie durante el rehydrate
-export const persistor = persistStore(store, null, () => {
-  verifySession(); // Verificar la cookie después de rehidratar el estado
+export const persistor = persistStore(store, null, async () => {
+  const hasCookie = await checkCookieExists();
+  if (hasCookie) {
+    await verifySession(); // Verifica la sesión solo si existe la cookie
+  } else {
+    store.dispatch(clearUser()); // Limpia el estado si no hay cookie JWT
+  }
 });
 // Tipo del estado global
 export type RootState = ReturnType<typeof store.getState>;

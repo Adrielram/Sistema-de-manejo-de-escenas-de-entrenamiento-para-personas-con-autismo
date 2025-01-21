@@ -13,7 +13,7 @@ export default function Therapist() {
   const dispatch = useDispatch();
   const router = useRouter();
   const handleSetCentroSalud = (center: string) => {
-    dispatch(setCenter({ center })); 
+    dispatch(setCenter({ center: center })); 
     router.push('/therapist/selection'); 
   };
   const [selectedCentersToAssociate, setselectedCentersToAssociate] = useState([]);

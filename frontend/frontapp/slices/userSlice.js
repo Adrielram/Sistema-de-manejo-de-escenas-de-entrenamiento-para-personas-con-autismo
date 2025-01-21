@@ -15,7 +15,6 @@ const userSlice = createSlice({
       state.isLoggedIn = action.payload.loggedIn;
       state.username = action.payload.username;
       state.role=action.payload.role;
-      state.center=action.payload.centro;
     },
     clearUser: (state) => {
       state.isLoggedIn = false;
