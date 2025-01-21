@@ -180,6 +180,20 @@ const VerVideo = () => {
         </div>
       </div>
 
+      
+      <div>
+        <h1>Comentarios</h1>
+        {/* Renderizado de comentarios */}
+        {Object.keys(comentariosHashSet).map((principalId) => (
+          <div key={principalId} className="mb-4">
+            <ComentarioPaciente
+              idComentario={parseInt(principalId)}
+              respuestas={comentariosHashSet[parseInt(principalId)]}
+            />
+          </div>
+        ))}
+      </div>
+      
       {/* Añadir comentario */}
       <div className="mt-4">
         <h3 className="text-lg font-semibold text-gray-800 mb-2">
@@ -202,18 +216,6 @@ const VerVideo = () => {
             Añadir
           </button>
         </div>
-      </div>
-      <div>
-        <h1>Comentarios</h1>
-        {/* Renderizado de comentarios */}
-        {Object.keys(comentariosHashSet).map((principalId) => (
-          <div key={principalId} className="mb-4">
-            <ComentarioPaciente
-              idComentario={parseInt(principalId)}
-              respuestas={comentariosHashSet[parseInt(principalId)]}
-            />
-          </div>
-        ))}
       </div>
     </div>
   );
