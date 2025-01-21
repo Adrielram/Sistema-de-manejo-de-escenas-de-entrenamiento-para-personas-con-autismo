@@ -28,6 +28,9 @@ urlpatterns = [
     path('get_associated_centers/<str:username>/', AssociatedCentersListView.as_view(), name='get_associated_centers'),
     path('associate_center/', AssociateCenterView.as_view(), name='associate_center'),
     path('disassociate_center/', DisassociateCenterView.as_view(), name='desassociate_center'),
+    path('getCenterProfesional/', GetCentroProfesionalView.as_view(), name='getCenterProfesional'),
+    path('get_goals_centroprofesional/', GetCentroProfesionalObjetivosView.as_view(), name='get_goals_centroprofesional'),
+    path('goal/<int:pk>/delete/', DeleteGoalView.as_view(), name='delete_goal'),
 ]
 
 

@@ -1,48 +1,91 @@
 "use client";
 
 import { useState } from "react";
-import Button from "./SmallButton"; // Asegúrate de que la ruta sea correcta
-import PaginadoItem from "./PaginadoItem"; // Importa el nuevo componente
+import Button from "./SmallButton";
+import PaginadoItem from "./PaginadoItem";
+import { OptionsProps } from "../types"; 
 
 type Dictionary = { [key: string]: string };
 
 interface BoxPaginadoProps {
   data: Dictionary;
-  mostrarImagen: boolean;
+  options: OptionsProps;
+  img: string;
+  edit_path: string;
+  showImage: boolean;
+  currentPage: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
+  itemsPerPage: number;
+  onItemDeleted?: (id: string) => void;
 }
 
-export default function BoxPaginado({ data, mostrarImagen}: BoxPaginadoProps) {
-  const [currentPage, setCurrentPage] = useState<number>(0);
-  const itemsPerPage = 5;
-
-  const keys = Object.keys(data); // Obtener las claves del diccionario
-  const totalPages = Math.ceil(keys.length / itemsPerPage);
-  
+export default function BoxPaginado({ 
+  data: initialData, 
+  options,
+  img,
+  edit_path,
+  showImage,
+  currentPage, 
+  totalItems: initialTotalItems,
+  onPageChange,
+  itemsPerPage,
+  onItemDeleted
+}: BoxPaginadoProps) {
+  const [data, setData] = useState<Dictionary>(initialData);
+  const [totalItems, setTotalItems] = useState(initialTotalItems);
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const handleNext = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage((prev) => prev + 1);
+    if (currentPage < totalPages) {
+      onPageChange(currentPage + 1);
     }
   };
 
   const handlePrev = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prev) => prev - 1);
+    if (currentPage > 1) {
+      onPageChange(currentPage - 1);
     }
   };
+  
+  const handleDelete = (deletedId: string) => {
+    // Actualizar el estado local eliminando el objetivo
+    setData(prevData => {
+      const newData = { ...prevData };
+      delete newData[deletedId];
+      return newData;
+    });
 
-  // Obtener los elementos para la página actual
-  const paginatedItems = keys.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+    // Actualizar el total de items
+    setTotalItems(prev => prev - 1);
+
+    // Notificar al componente padre si es necesario
+    if (onItemDeleted) {
+      onItemDeleted(deletedId);
+    }
+
+    // Si la página actual queda vacía después de la eliminación, retroceder una página
+    const itemsInCurrentPage = Object.keys(data).length;
+    if (itemsInCurrentPage === 1 && currentPage > 1) {
+      onPageChange(currentPage - 1);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
       <hr className="border-none h-1 mb-4 bg-[#f6512b]" />
-      <div className="grid grid-cols-1 gap-2">
-        {paginatedItems.map((key) => (
-          <PaginadoItem key={key} dni={key} nombre={data[key]} mostrarImagen={mostrarImagen} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Object.entries(data).map(([key, value]) => (
+          <PaginadoItem 
+            key={key} 
+            id={key} 
+            name={value} 
+            showImage={showImage} 
+            options={options} 
+            img={img} 
+            edit_path={`${edit_path}${key}`}
+            onDelete={handleDelete}
+          />
         ))}
       </div>
 
@@ -52,18 +95,18 @@ export default function BoxPaginado({ data, mostrarImagen}: BoxPaginadoProps) {
           font_bold="font-bold"
           onClick={handlePrev}
           className={`px-4 py-2 rounded ${
-            currentPage === 0 ? "opacity-50 cursor-not-allowed" : ""
+            currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
           }`}
         />
         <span className="text-gray-700 font-bold">
-          Página {currentPage + 1} de {totalPages}
+          Página {currentPage} de {totalPages}
         </span>
         <Button
           title="Siguiente"
           font_bold="font-bold"
           onClick={handleNext}
           className={`px-4 py-2 rounded ${
-            currentPage === totalPages - 1 ? "opacity-50 cursor-not-allowed" : ""
+            currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
           }`}
         />
       </div>

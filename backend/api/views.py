@@ -17,6 +17,7 @@ from django.core.paginator import Paginator
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters
+from rest_framework.exceptions import NotFound
 
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
@@ -360,6 +361,7 @@ def crear_escena(request):
 
 class NameFilter(filters.FilterSet):
     nombre = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
+    centro_profesional = filters.NumberFilter(field_name='centro_profesional', lookup_expr='exact')
 
     def __init__(self, *args, **kwargs):
         model = kwargs.pop('model', None)
@@ -369,7 +371,14 @@ class NameFilter(filters.FilterSet):
 
     class Meta:
         model = None  # Se establece dinámicamente
-        fields = ['nombre']
+        fields = ['nombre', 'centro_profesional']
+
+class ObjetivosListView(generics.ListAPIView):    
+    queryset = Objetivo.objects.all()
+    serializer_class = ObjetivoSerializerList
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
 
 class EscenaListView(generics.ListAPIView):
     queryset = Escena.objects.all()
@@ -378,12 +387,6 @@ class EscenaListView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
 
-class ObjetivosListView(generics.ListAPIView):    
-    queryset = Objetivo.objects.all()
-    serializer_class = ObjetivoSerializerList
-    pagination_class = DynamicPagination
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = NameFilter
 
 class CentrosSaludListView(generics.ListAPIView):
     queryset = Centrodesalud.objects.all()
@@ -482,6 +485,79 @@ class DisassociateCenterView(generics.CreateAPIView):
             return Response({
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
+
+class GetCentroProfesionalView(generics.RetrieveAPIView):
+    serializer_class = ProfesionalCentroSerializer
+
+    def get(self, request, *args, **kwargs):
+        username = request.query_params.get('username')
+        centername = request.query_params.get('centername')
+        # username = self.kwargs.get('username')
+        # centername = self.kwargs.get('centername')
+        print("username: ",username)
+        print("centername: ",centername)
+
+        if not username or not centername:
+            return Response({
+                'error': 'Se requieren los parámetros username y centername'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            center = Centrodesalud.objects.get(nombre=centername)
+            user = User.objects.get(nombre=username)
+            centerprofesional = CentroProfesional.objects.get(centrodesalud=center, profesional=user)
+
+            serializer = self.get_serializer(centerprofesional)
+            return Response(serializer.data)
+
+        except Centrodesalud.DoesNotExist:
+            return Response({
+                'error': 'Centro de salud no encontrado'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except User.DoesNotExist:
+            return Response({
+                'error': 'Usuario no encontrado'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except CentroProfesional.DoesNotExist:
+            return Response({
+                'error': 'Relación centro-profesional no encontrada'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+class GetCentroProfesionalObjetivosView(generics.ListAPIView):
+    serializer_class = ObjetivoSerializerList
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+
+    def get_queryset(self):
+        username = self.request.query_params.get('username')
+        centername = self.request.query_params.get('centername')
+        
+        if not username or not centername:
+            return Response({
+                'error': 'Se requieren los parámetros username y centername'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            center = Centrodesalud.objects.get(nombre=centername)
+            user = User.objects.get(username=username)
+            centro_profesional = CentroProfesional.objects.get(
+                centrodesalud=center, 
+                profesional=user
+            )
+            
+            return Objetivo.objects.filter(centro_profesional=centro_profesional)
+
+        except Centrodesalud.DoesNotExist:
+            raise NotFound('Centro de salud no encontrado')
+        except User.DoesNotExist:
+            raise NotFound('Usuario no encontrado')
+        except CentroProfesional.DoesNotExist:
+            raise NotFound('Relación centro-profesional no encontrada')
+        
+class DeleteGoalView(generics.DestroyAPIView):
+    queryset = Objetivo.objects.all() 
+    serializer_class = ObjetivoSerializer
 
 @api_view(['GET'])
 def buscar_padres(request):

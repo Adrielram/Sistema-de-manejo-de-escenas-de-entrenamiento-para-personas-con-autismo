@@ -2,11 +2,50 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.hashers import make_password
 from datetime import datetime
 from api.models import *
+import mysql.connector
+from django.conf import settings
 
 class Command(BaseCommand):
     help = 'Loads sample data into database'
 
     def handle(self, *args, **options):
+        # Conectar a MySQL y reiniciar la base de datos
+        self.stdout.write("Resetting database...")
+        try:
+            db_config = {
+                'host': settings.DATABASES['default']['HOST'],
+                'user': settings.DATABASES['default']['USER'],
+                'password': settings.DATABASES['default']['PASSWORD'],
+                'port': settings.DATABASES['default'].get('PORT', 3306),
+            }
+            connection = mysql.connector.connect(**db_config)
+            cursor = connection.cursor()
+            db_name = settings.DATABASES['default']['NAME']
+
+            # Eliminar y volver a crear la base de datos
+            cursor.execute(f"DROP DATABASE IF EXISTS {db_name};")
+            cursor.execute(f"CREATE DATABASE {db_name};")
+            connection.commit()
+
+            self.stdout.write(f"Database {db_name} reset successfully.")
+        except mysql.connector.Error as err:
+            self.stderr.write(f"Error resetting database: {err}")
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
+
+        # Aplicar las migraciones
+        self.stdout.write("Applying migrations...")
+        from django.core.management import call_command
+        call_command('makemigrations')
+        call_command('migrate')
+
+        # Cargar los datos
+        self.stdout.write("Loading sample data...")
+        self.load_sample_data()
+
+    def load_sample_data(self, *args, **options):
         # Create addresses
         residencias = [
             Residencia.objects.create(
@@ -117,6 +156,62 @@ class Command(BaseCommand):
             link="https://ejemplo.com/video2",
             nombre="Escena 2"
         )
+        escena_3 = Escena.objects.create(
+            idioma="Español",
+            acento="neutro",
+            complejidad=2,
+            condiciones="Normal",
+            link="https://ejemplo.com/video3",
+            nombre="Escena 3"
+        )
+        escena_4 = Escena.objects.create(
+            idioma="Español",
+            acento="neutro",
+            complejidad=4,
+            condiciones="Normal",
+            link="https://ejemplo.com/video4",
+            nombre="Escena 4"
+        )
+        escena_5 = Escena.objects.create(
+            idioma="Español",
+            acento="neutro",
+            complejidad=3,
+            condiciones="Normal",
+            link="https://ejemplo.com/video5",
+            nombre="Escena 5"
+        )
+        escena_6 = Escena.objects.create(
+            idioma="Español",
+            acento="neutro",
+            complejidad=5,
+            condiciones="Normal",
+            link="https://ejemplo.com/video6",
+            nombre="Escena 6"
+        )
+        escena_7 = Escena.objects.create(
+            idioma="Español",
+            acento="neutro",
+            complejidad=1,
+            condiciones="Normal",
+            link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
+            nombre="Escena 1"
+        )
+        escena_8 = Escena.objects.create(
+            idioma="Español",
+            acento="neutro",
+            complejidad=1,
+            condiciones="Normal",
+            link="https://drive.google.com/file/d/1qzY31odKmd2FlrjU0VK4dkfezlzEcoaJ/preview",
+            nombre="Escena 2"
+        )
+        escena_9 = Escena.objects.create(
+            idioma="Español",
+            acento="neutro",
+            complejidad=1,
+            condiciones="Normal",
+            link="https://drive.google.com/file/d/1yPgHYRagTJXTqlrGhNkZDEy5zNY4-f77/preview",
+            nombre="Escena 3"
+        )
 
         # Create objectives
         objetivo_1 = Objetivo.objects.create(
@@ -128,7 +223,31 @@ class Command(BaseCommand):
         objetivo_2 = Objetivo.objects.create(
             nombre="Objetivo 2",
             descripcion="Segundo objetivo de prueba",
-            escena=escena_2,
+            escena=escena_3,
+            centro_profesional=centro_prof
+        )
+        objetivo_3 = Objetivo.objects.create(
+            nombre="Messi",
+            descripcion="Tenes que vencer a goku",
+            escena=escena_5,
+            centro_profesional=centro_prof
+        )
+        objetivo_4 = Objetivo.objects.create(
+            nombre="CR7",
+            descripcion="Tenes que vencer a vegeta",
+            escena=escena_6,
+            centro_profesional=centro_prof
+        )
+        objetivo_5 = Objetivo.objects.create(
+            nombre="Ronaldinho",
+            descripcion="Tenes que vencer a krillin",
+            escena=escena_6,
+            centro_profesional=centro_prof
+        )
+        objetivo_6 = Objetivo.objects.create(
+            nombre="neymar",
+            descripcion="Tenes que vencer a yamcha",
+            escena=escena_1,
             centro_profesional=centro_prof
         )
 
@@ -139,32 +258,68 @@ class Command(BaseCommand):
 
         # Create scene-objective relationship
         escena_obj_1 = EscenaObjetivo.objects.create(
-            escena=escena_1,
+            escena=escena_2,
             objetivo=objetivo_1
         )
         escena_obj_2 = EscenaObjetivo.objects.create(
-            escena=escena_2,
+            escena=escena_4,
             objetivo=objetivo_2
+        )
+        escena_obj_3 = EscenaObjetivo.objects.create(
+            escena=escena_7,
+            objetivo=objetivo_3
+        )
+        escena_obj_4 = EscenaObjetivo.objects.create(
+            escena=escena_8,
+            objetivo=objetivo_3
+        )
+        escena_obj_5 = EscenaObjetivo.objects.create(
+            escena=escena_9,
+            objetivo=objetivo_3
+        )
+        escena_obj_6 = EscenaObjetivo.objects.create(
+            escena=escena_7,
+            objetivo=objetivo_4
+        )
+        escena_obj_7 = EscenaObjetivo.objects.create(
+            escena=escena_8,
+            objetivo=objetivo_5
+        )
+        escena_obj_8 = EscenaObjetivo.objects.create(
+            escena=escena_9,
+            objetivo=objetivo_6
         )
 
         # Create person-objective-scene relationship
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_1,
+            escena_objetivo=escena_obj_3,
             orden=1,
             es_alternativo=False
         )
         persona_obj_esc_2 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_2,
+            escena_objetivo=escena_obj_4,
             orden=2,
+            es_alternativo=False
+        )
+        persona_obj_esc_3 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_5,
+            orden=3,
             es_alternativo=False
         )
 
         # Create evaluation
+        # evaluacion = Evaluacion.objects.create(
+        #     nombre="Evaluación 1",
+        #     link="https://ejemplo.com/eval1",
+        #     centro_salud_id=centro_prof,
+        #     profesional_id=centro_prof
+        # )
         evaluacion = Evaluacion.objects.create(
-            nombre="Evaluación 1",
-            link="https://ejemplo.com/eval1",
+            nombre="La matadora",
+            link="https://docs.google.com/forms/d/e/1FAIpQLSfx8STfx-3if-hoIpA2f4mB-_ewwMSLRpbgXVaS_23TLYsJyw/viewform?usp=header",
             centro_salud_id=centro_prof,
             profesional_id=centro_prof
         )
@@ -172,7 +327,7 @@ class Command(BaseCommand):
         # Create person-objective-evaluation
         PersonaObjetivoEvaluacion.objects.create(
             user_id=paciente,
-            objetivo_id=objetivo_1,
+            objetivo_id=objetivo_3,
             resultado="Progresando bien",
             progreso=75,
             evaluacion=evaluacion
@@ -187,15 +342,6 @@ class Command(BaseCommand):
         Personagrupo.objects.create(
             user_id=terapeuta,
             grupo_id=grupo
-        )
-
-        # Create notifications
-        Notificacion.objects.create(
-            destinatario=terapeuta,
-            remitente=admin,
-            mensaje="Bienvenido al sistema",
-            estado="pendiente",
-            timestamp=datetime.now()
         )
 
         comentario_respuesta = Comentario.objects.create(

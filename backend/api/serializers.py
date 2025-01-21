@@ -10,6 +10,7 @@ class PacienteSerializer(serializers.ModelSerializer):
 
     def get_padreACargo(self, obj):
         return obj.user_id_padre.nombre if obj.user_id_padre else ''
+    
 class ObjetivoSerializer(serializers.ModelSerializer):
     video_explicativo_id = serializers.PrimaryKeyRelatedField(
         queryset=Escena.objects.all(), source='escena'
