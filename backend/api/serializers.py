@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from .models import User, Objetivo, Escena, CentroProfesional, Centrodesalud, Grupo
 from .models import User, Objetivo, Escena, CentroProfesional, Centrodesalud, Comentario, Videosvistos, Grupo
 
 # Primero define los serializadores
