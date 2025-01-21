@@ -18,29 +18,31 @@ interface Escena {
 }
 
 const VerVideo = () => {
-
   const [videos, setVideos] = useState<string[]>([]);
   const [quizzes, setQuizzes] = useState<string[]>([]);
   const [escenas, setEscenas] = useState<Escena[]>([]);
-  const [poe, setPoe] = useState<string>();
+  const [escena, setEscena] = useState<Escena>();
+  const [poe, setPoe] = useState<number>();
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [completedQuizzes, setCompletedQuizzes] = useState<number[]>([]);
-  const [index ,setIndex ] = useState<number>();
   const { username } = useSelector((state: RootState) => state.user);
-  //const { objetivoId } = useSelector((state: RootState) => state.user)
   const objetivoId = 3;
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [reloadComentarios, setReloadComentarios] = useState(false);
 
   const [formData, setFormData] = useState({
     user: username, 
-    escena: '',
+    escena: 0,
     texto: '',
     visibilidad: true,
     comentario_respondido: null,
   });
 
+  
+
   useEffect(() => {
-    const fetchPersObjEsc = async (escena_id) => {
+    const fetchPersObjEsc = async (escena_id: number) => {
       try {
         const response = await fetch(
           `http://localhost:8000/api/get-persona-obj-esc/?username=${username}&objetivo_id=${objetivoId}&escena_id=${escena_id}`
@@ -58,19 +60,14 @@ const VerVideo = () => {
       }
     };
 
-    if (escenas.length > 0 && index >= 0 && index < escenas.length) {
-      const escenaActual = escenas[index];
-      if (escenaActual) {
-        fetchPersObjEsc(escenaActual.id);
-      }
+    const escenaActual = escena;
+    if (escenaActual) {
+      fetchPersObjEsc(escenaActual.id);
     }
-  }, [username,escenas, index]);
-
-
+  }, [escena, username]);
 
   useEffect(() => {
     const LoadData = async () => {
-      setIndex(1);
       try {
         // Fetch para obtener las escenas relacionadas al objetivo
         const response = await fetch(`http://localhost:8000/api/get-escenas-obj/?objetivo_id=${objetivoId}`);
@@ -81,10 +78,14 @@ const VerVideo = () => {
         
         const data = await response.json();
         setEscenas(data);
-        setFormData((prev) => ({ ...prev, escena: data[0].id }));
-        // Obtener los links de las escenas
-        const videos = data.map((escena) => escena.link);
-        setVideos(videos);
+        if (data.length > 0) {
+          const primeraEscena = data[0];
+          setEscena(primeraEscena);
+          const e = primeraEscena.id;
+          setFormData((prev) => ({ ...prev, escena: e }));
+        }
+  
+        setVideos(data.map((escena: Escena) => escena.link));
   
         // Fetch para obtener las evaluaciones asociadas al objetivo y usuario
         const evaluacionesResponse = await fetch(`http://localhost:8000/api/get-evaluaciones/?username=${username}&objetivo_id=${objetivoId}`);
@@ -94,59 +95,89 @@ const VerVideo = () => {
         }
   
         const evaluacionesData = await evaluacionesResponse.json();
-        const evaluacionLinks = evaluacionesData.links; 
-        setQuizzes(evaluacionLinks);
-
+        setQuizzes(evaluacionesData.links); 
   
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Error en LoadData:', error);
       }
     };
   
-    // Ejecutar la función
     LoadData();
-  }, [username, objetivoId]);
+  }, [username, objetivoId]); // Elimina `escena` de las dependencias
 
   const handleVerSiguienteVideo = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
     try {
-      if (currentVideoIndex + 1 >= escenas.length) {
+      const nextIndex = currentVideoIndex + 1;
+  
+      // Verifica si hay más videos para mostrar
+      if (nextIndex >= escenas.length) {
         console.error('No hay más videos para mostrar');
         return;
       }
   
-      // Incrementar el índice del video actual
-      setCurrentVideoIndex((prevIndex) => {
-        const nextIndex = prevIndex + 1;
-        setIndex(nextIndex);
-        marcarVideoComoVisto(poe[0]);
-        const escena = escenas[nextIndex].id.toString();
-        setFormData((prev) => ({ ...prev, escena })); 
-        return nextIndex; 
-      });
+      // Actualiza el índice y la escena actual
+      setCurrentVideoIndex(nextIndex);
+      const siguienteEscena = escenas[nextIndex]; // Obtiene la siguiente escena
+      setEscena(siguienteEscena);
+  
+      // Marca el video como visto solo después de que `poe` se haya actualizado
+      if (poe) {
+        marcarVideoComoVisto(poe);
+      }
+  
+      // Actualiza el formData con la nueva escena
+      setFormData((prev) => ({ ...prev, escena: siguienteEscena.id }));
+  
     } catch (error) {
       console.error('Error en handleVerSiguienteVideo:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
-  
 
-  const marcarVideoComoVisto = async (personaObjetivoEscenaId) => {
+  const handleVerVideoAnterior = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      const previousIndex = currentVideoIndex - 1;
+  
+      // Verifica si hay un video anterior
+      if (previousIndex < 0) {
+        console.error('No hay más videos para mostrar hacia atrás');
+        return;
+      }
+  
+      // Actualiza el índice y la escena actual
+      setCurrentVideoIndex(previousIndex);
+      const escenaAnterior = escenas[previousIndex]; // Obtiene la escena anterior
+      setEscena(escenaAnterior);
+  
+      // Actualiza el formData con la nueva escena
+      setFormData((prev) => ({ ...prev, escena: escenaAnterior.id }));
+  
+    } catch (error) {
+      console.error('Error en handleVerVideoAnterior:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+  const marcarVideoComoVisto = async (personaObjetivoEscenaId: number) => {
     try {
       const response = await fetch('http://localhost:8000/api/video-visto/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          persona_objetivo_escena_id: personaObjetivoEscenaId, 
-        }),
+        body: JSON.stringify({ persona_objetivo_escena_id: personaObjetivoEscenaId }),
       });
   
       if (!response.ok) {
         throw new Error('Error al marcar el video como visto');
       }
-  
-      const data = await response.json();
-      console.log(data.message); // Mensaje de éxito
     } catch (error) {
       console.error('Error al marcar el video como visto:', error);
     }
@@ -162,10 +193,9 @@ const VerVideo = () => {
   };
 
   const handleCompletarObjetivo = () => {
-    
+    marcarVideoComoVisto(poe);
     router.push('./principal');
   };
-
 
   const allQuizzesCompleted = completedQuizzes.length === quizzes.length;
 
@@ -196,14 +226,25 @@ const VerVideo = () => {
             {currentVideoIndex < videos.length - 1 && (
               <button
                 onClick={handleVerSiguienteVideo}
-                className="bg-green-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full"
+                disabled={isLoading} 
+                className={`bg-green-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Ver siguiente video
+                {isLoading ? 'Cargando...' : 'Ver siguiente video'}
+              </button>
+              
+            )}
+            {currentVideoIndex > 0 && (
+              <button
+                onClick={handleVerVideoAnterior}
+                disabled={isLoading}
+                className={`bg-red-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isLoading ? 'Cargando...' : 'Ver video anterior'}
               </button>
             )}
           </div>
-          {/* Quizzes */}
-          {currentVideoIndex === videos.length - 1 && (
+            {/* Quizzes */}
+            {currentVideoIndex === videos.length - 1 && (
             <div className="flex flex-col items-center w-full max-w-sm bg-white border border-gray-300 rounded-lg shadow-md p-4 mt-4">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Quizzes Disponibles
@@ -225,12 +266,10 @@ const VerVideo = () => {
                   </div>
                 ))}
               </div>
-
-              {/* Botón "Completar objetivo" */}
               {allQuizzesCompleted && (
                 <button
                   onClick={handleCompletarObjetivo}
-                  className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all mt-4 w-full"
+                  className="bg-green-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full mt-4"
                 >
                   Completar objetivo
                 </button>
@@ -239,11 +278,15 @@ const VerVideo = () => {
           )}
         </div>
       </div>
-      <h1>{poe}</h1>
-      <NuevoComentario formData={formData} setFormData={setFormData} />
+      {/* Comentarios */}
       <div className="mt-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">Comentarios</h3>
-        <Comentario />
+        <h2 className="text-xl font-semibold mb-2">Comentarios</h2>
+        <Comentario/>
+        <NuevoComentario
+          formData={formData}
+          setFormData={setFormData}
+          onCommentAdded={() => setReloadComentarios(!reloadComentarios)} // Llama a esta función cuando se agrega un comentario
+        />
       </div>
     </div>
   );

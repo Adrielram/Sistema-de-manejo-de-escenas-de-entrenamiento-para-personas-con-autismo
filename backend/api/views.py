@@ -519,44 +519,29 @@ class ObtenerPersonaObjetivoID(APIView):
         return Response({'id': persona_objetivo.id}, status=status.HTTP_200_OK)
     
 class MarcarVideoVistoAPIView(APIView):
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         try:
-            persona_objetivo_escena_id = request.data.get('persona_objetivo_escena_id') 
-
-            if not persona_objetivo_escena_id:
-                return Response(
-                    {'error': 'Error al obtener datos. Se requiere el ID de la Persona Objetivo Escena.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            persona_objetivo_escena_id = request.data.get('persona_objetivo_escena_id')
             
-            # Verificamos si existe el objeto PersonaObjetivoEscena
-            try:
-                persona_objetivo_escena = PersonaObjetivoEscena.objects.get(id=persona_objetivo_escena_id)
-            except PersonaObjetivoEscena.DoesNotExist:
-                return Response(
-                    {'error': 'Persona objetivo escena no encontrada'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-
-            # Intentamos crear un nuevo registro de video visto
+            # Intentamos obtener el registro existente
             video_visto, created = Videosvistos.objects.get_or_create(
-                persona_objetivo_escena=persona_objetivo_escena,
+                persona_objetivo_escena_id=persona_objetivo_escena_id,
                 defaults={'visto': True}
             )
-
-            if created:
-                return Response(
-                    {'message': 'Video marcado como visto correctamente'},
-                    status=status.HTTP_201_CREATED  # Nuevo registro creado
-                )
-            else:
-                return Response(
-                    {'message': 'El video ya estaba marcado como visto'},
-                    status=status.HTTP_200_OK  # Registro ya existente
-                )
-
+            
+            # Si el registro ya existía, actualizamos visto a True
+            if not created:
+                video_visto.visto = True
+                video_visto.save()
+            
+            serializer = VideosVistosSerializer(video_visto)
+            
+            return Response({
+                'message': 'Video marcado como visto exitosamente',
+                'data': serializer.data
+            }, status=status.HTTP_200_OK)
+            
         except Exception as e:
-            return Response(
-                {'error': f'Error interno del servidor: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
