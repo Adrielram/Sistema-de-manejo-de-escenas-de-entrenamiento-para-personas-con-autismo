@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Objetivo, Escena, CentroProfesional, EscenaObjetivo, Objetivoscumplir, Centrodesalud, Grupo
+from .models import User, Objetivo, Escena, CentroProfesional, Centrodesalud, Comentario, Videosvistos, EscenaObjetivo, Objetivoscumplir, Centrodesalud, Grupo
 
 class PacienteSerializer(serializers.ModelSerializer):
     padreACargo = serializers.SerializerMethodField()
@@ -66,3 +66,22 @@ class PatientGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grupo
         fields = ['id', 'nombre', 'centrodesalud_id']
+class ComentarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comentario
+        fields = [
+            'id',
+            'user',
+            'escena',
+            'comentario_contestado',
+            'texto',
+            'visibilidad',
+        ]
+
+class VideosVistosSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Videosvistos
+        fields = ['persona_objetivo_escena', 'visto']
+
+    def create(self, validated_data):
+        return super().create(validated_data)

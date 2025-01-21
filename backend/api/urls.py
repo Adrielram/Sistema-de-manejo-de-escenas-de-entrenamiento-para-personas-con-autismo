@@ -33,6 +33,11 @@ urlpatterns = [
     path('getCenterProfesional/', GetCentroProfesionalView.as_view(), name='getCenterProfesional'),
     path('get_goals_centroprofesional/', GetCentroProfesionalObjetivosView.as_view(), name='get_goals_centroprofesional'),
     path('goal/<int:pk>/delete/', DeleteGoalView.as_view(), name='delete_goal'),
+    path('registrar_comentario/', registrar_comentario.as_view(), name='registrar_comentario'),
+    path('get-escenas-obj/', EscenasSegunUsuarioObjetivo.as_view(), name='get-escenas-obj'),
+    path('get-evaluaciones/', ObtenerLinksEvaluaciones.as_view(), name='get-evaluaciones'),
+    path('get-persona-obj-esc/', ObtenerPersonaObjetivoID.as_view(), name='get-persona-obj-esc'),
+    path('video-visto/', MarcarVideoVistoAPIView.as_view(), name='video-visto')
 ]
 
 
