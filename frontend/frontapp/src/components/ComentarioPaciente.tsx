@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import {useSelector} from 'react-redux';
+import { RootState } from "../../store/store";
 
 interface Comentario {
   id: number;
@@ -6,18 +8,19 @@ interface Comentario {
   visibilidad: boolean;
   usuario: string;
   idComentarioPadre: number | null;
-  usuarioRespondido?: string|null;
+  usuarioRespondido?: string | null;
 }
 
 interface ComentarioPacienteProps {
   idComentario: number;
   respuestas: number[];
+  onResponder: (idComentario: number) => void; // Prop agregada para manejar respuestas
 }
 
-const ComentarioPaciente: React.FC<ComentarioPacienteProps> = ({ idComentario, respuestas }) => {
+const ComentarioPaciente: React.FC<ComentarioPacienteProps> = ({ idComentario, respuestas, onResponder }) => {
   const [comentario, setComentario] = useState<Comentario | null>(null);
   const [mostrarRespuestas, setMostrarRespuestas] = useState(false);
-
+  const { username,role } = useSelector((state: RootState) => state.user);
   useEffect(() => {
     const fetchComentario = async () => {
       try {
@@ -40,9 +43,6 @@ const ComentarioPaciente: React.FC<ComentarioPacienteProps> = ({ idComentario, r
   }
 
   const esComentarioPrincipal = comentario.idComentarioPadre === null;
-  const handleResponder = () => {
-    console.log(`Responder al comentario con ID: ${idComentario}`);
-  };
 
   return (
     <div className={`border border-gray-200 p-4 mb-3 rounded-lg ${
@@ -50,14 +50,18 @@ const ComentarioPaciente: React.FC<ComentarioPacienteProps> = ({ idComentario, r
     }`}>
       {!esComentarioPrincipal && (
         <p className="italic mb-2">
-          @{comentario.usuarioRespondido} {/* Use usuarioRespondido instead of usuario */}
+          @{comentario.usuarioRespondido}
         </p>
       )}
-      
-      <p>{comentario.visibilidad ? comentario.texto : "Este comentario está oculto"}</p>
+      <p className='text-red-700'>{comentario.usuario}</p>
+      <p>
+      {comentario.visibilidad || role === 'terapeuta' || role === 'admin' || comentario.usuario=== username 
+        ? comentario.texto 
+        : "Este comentario está oculto"}
+      </p>
       
       <button 
-        onClick={handleResponder}
+        onClick={() => onResponder(idComentario)} // Llama a la función pasada desde el padre
         className="mt-3 text-xs bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 transition-colors"
       >
         Responder
@@ -79,6 +83,7 @@ const ComentarioPaciente: React.FC<ComentarioPacienteProps> = ({ idComentario, r
                   key={respuestaId} 
                   idComentario={respuestaId} 
                   respuestas={[]} 
+                  onResponder={onResponder} // Pasar la función correctamente
                 />
               ))}
             </div>

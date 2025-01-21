@@ -26,7 +26,12 @@ const VerVideo = () => {
     visibilidad: true,
     comentario_respondido: 0,
   });
-
+  const handleResponder = (idComentario: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      comentario_respondido: idComentario,
+    }));
+  };
   useEffect(() => {
     // Fetch para obtener el HashSet de comentarios
     const fetchComentarios = async () => {
@@ -70,10 +75,16 @@ const VerVideo = () => {
               <ComentarioPaciente
                 idComentario={parseInt(principalId)}
                 respuestas={comentariosHashSet[parseInt(principalId)]}
+                onResponder={handleResponder}
               />
             </div>
           ))}
         </div>
+        {formData.comentario_respondido !== 0 && (
+          <p className="text-sm text-gray-600 mt-2">
+            Respondiendo al comentario con ID: {formData.comentario_respondido}
+          </p>
+        )}
         <NuevoComentario
           formData={formData}
           setFormData={setFormData}

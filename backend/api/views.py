@@ -536,21 +536,35 @@ def get_dni(request):
 
 class registrar_comentario(APIView):
     def post(self, request):
-        data = request.data.copy() 
-        # Modificar el campo 'user' para usar el DNI
+        data = request.data.copy()
+
+        # Intentar convertir `user` al DNI
         try:
             data['user'] = obtener_dni(request.data['user'])
         except Exception as e:
             return Response({'error': f'Error obteniendo el DNI: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
+        # Si `comentario_respondido` no es 0 o None, buscar el comentario correspondiente
+        comentario_respondido_id = data.get('comentario_respondido', None)
+        if comentario_respondido_id:
+            try:
+                comentario_contestado = Comentario.objects.get(id=comentario_respondido_id)
+                data['comentario_contestado'] = comentario_contestado.id
+            except Comentario.DoesNotExist:
+                return Response({'error': 'El comentario al que se está respondiendo no existe.'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            data['comentario_contestado'] = None
+
         # Pasar los datos modificados al serializer
         serializer = ComentarioSerializer(data=data)
         if serializer.is_valid():
             serializer.save()  # Guardar el comentario
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+
         # Si el serializer no es válido, retornar los errores
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
     
 
 class EscenasSegunUsuarioObjetivo(APIView):
@@ -778,7 +792,7 @@ class ComentarioDetalleAPIView(APIView):
             # Construir la respuesta
             response_data = {
                 "id": comentario.id,
-                "texto": comentario.texto if comentario.visibilidad else "Comentario oculto",
+                "texto": comentario.texto,
                 "visibilidad": comentario.visibilidad,
                 "usuario": comentario.user.nombre,  # Nombre del usuario que comentó
                 "idComentarioPadre": None,  # Valor por defecto
