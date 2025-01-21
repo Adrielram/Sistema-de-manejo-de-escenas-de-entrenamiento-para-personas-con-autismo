@@ -631,3 +631,56 @@ def buscar_padres(request):
         'total_paginas': paginator.num_pages,
         'pagina_actual': page_obj.number
     })
+
+from rest_framework import generics, status
+from rest_framework.response import Response
+from .models import Formulario, Pregunta, Respuesta
+from .serializers import FormularioSerializer, PreguntaSerializer, RespuestaSerializer
+
+
+class FormularioListCreateView(generics.ListCreateAPIView):
+    queryset = Formulario.objects.all()
+    serializer_class = FormularioSerializer
+
+
+class FormularioDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Formulario.objects.all()
+    serializer_class = FormularioSerializer
+
+
+class PreguntaListCreateView(generics.ListCreateAPIView):
+    queryset = Pregunta.objects.all()
+    serializer_class = PreguntaSerializer
+
+
+class RespuestaListCreateView(generics.CreateAPIView):
+    serializer_class = RespuestaSerializer
+
+    def create(self, request, *args, **kwargs):
+        # Verificar si se envió un conjunto de respuestas
+        if isinstance(request.data, list):
+            serializer = self.get_serializer(data=request.data, many=True)
+        else:
+            serializer = self.get_serializer(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+
+        # Guardar las respuestas
+        self.perform_create(serializer)
+
+        # Devolver respuesta
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_create(self, serializer):
+        # Sobrescribir para manejar lógica adicional
+        respuestas = serializer.validated_data
+        for respuesta_data in respuestas:
+            pregunta = respuesta_data['pregunta']
+            respuesta = respuesta_data['respuesta']
+
+            # Verificación automática si aplica
+            if pregunta.tipo == 'multiple-choice' and pregunta.correcta:
+                respuesta_data['correcta'] = (respuesta == pregunta.correcta)
+
+        serializer.save()
+

@@ -57,6 +57,64 @@ class CentroSaludSerializer(serializers.ModelSerializer):
         model = Centrodesalud
         fields = ['id', 'nombre', 'direccion_id_dir']
 
+from rest_framework import serializers
+from .models import Formulario, Pregunta, Opcion, Respuesta
+
+
+class OpcionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Opcion
+        fields = ['texto']
+
+class PreguntaSerializer(serializers.ModelSerializer):
+    opciones = OpcionSerializer(many=True, required=False)
+
+    class Meta:
+        model = Pregunta
+        fields = ['id', 'texto', 'tipo', 'opciones', 'correcta']
+
+    def create(self, validated_data):
+        opciones_data = validated_data.pop('opciones', [])
+        pregunta = Pregunta.objects.create(**validated_data)
+        for opcion_data in opciones_data:
+            Opcion.objects.create(pregunta=pregunta, **opcion_data)
+        return pregunta
+
+
+class FormularioSerializer(serializers.ModelSerializer):
+    preguntas = PreguntaSerializer(many=True)
+
+    class Meta:
+        model = Formulario
+        fields = ['titulo', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'preguntas']
+
+    def create(self, validated_data):
+        preguntas_data = validated_data.pop('preguntas')
+        formulario = Formulario.objects.create(**validated_data)
+        for pregunta_data in preguntas_data:
+            opciones_data = pregunta_data.pop('opciones', [])
+            pregunta = Pregunta.objects.create(formulario=formulario, **pregunta_data)
+            for opcion_data in opciones_data:
+                Opcion.objects.create(pregunta=pregunta, **opcion_data)
+        return formulario
+
+
+from rest_framework import serializers
+
+class BulkRespuestaSerializer(serializers.ListSerializer):
+    def create(self, validated_data):
+        # Crea múltiples instancias de Respuesta a la vez
+        respuestas = [Respuesta(**item) for item in validated_data]
+        return Respuesta.objects.bulk_create(respuestas)
+
+class RespuestaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Respuesta
+        fields = '__all__'
+        list_serializer_class = BulkRespuestaSerializer
+
+
+
 class ProfesionalCentroSerializer(serializers.ModelSerializer):  
     class Meta:
         model = CentroProfesional

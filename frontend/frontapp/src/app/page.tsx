@@ -1,28 +1,28 @@
-'use client'
-import React from "react";
+"use client"
+import React from 'react';
+import Formulario from '../components/Formulario';
+import { enviarFormulario } from '../utils/api';
+import ResponderForm from '../components/ResponderForm';
 
-import { useState } from "react";
-import DropDownList from "../components/DropDownList";
-//import { Button } from "@headlessui/react";
-
-export default function Home() {
-
-  const names = ["Voces del Espectro", "Superando Barreras", "Mentes Maravillosas", "Diferentes, Iguales"]; // Opciones de la lista
-  const [selectedName, setSelectedName] = useState<string | null>(null); // Nombre seleccionado
-
-  const handleSelect = (name: string) => {
-    setSelectedName(name); 
-    console.log("Opción seleccionada:", name);
+const CrearFormulario: React.FC = () => {
+  const manejarEnvio = async (formulario) => {
+    const resultado = await enviarFormulario(formulario);
+    if (!resultado.success){
+      alert("No se pudo crear el formulario.")
+    }else{
+      alert("Formulario creado exitosamente");
+      console.log('Formulario creado:', resultado);
+    }
+    
   };
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-black">
-      <div>
-        <h1 className="mb-4 text-2xl font-bold">
-          Seleccionaste: {selectedName || "Ninguno"}
-        </h1>
-        <DropDownList items={names} listName="Asociar Grupo" onSelect={handleSelect} />
-      </div>
-    </main>
+    <div>      
+      <Formulario onSubmit={manejarEnvio} />
+      <ResponderForm />
+
+    </div>
   );
-}
+};
+
+export default CrearFormulario;

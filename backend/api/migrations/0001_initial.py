@@ -124,6 +124,31 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='Comentario',
+            fields=[
+                ('id', models.AutoField(primary_key=True, serialize=False)),
+                ('texto', models.TextField(blank=True, null=True)),
+                ('visibilidad', models.BooleanField(default=True)),
+                ('comentario_contestado', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='comentarios_comentario_contestado', to='api.comentario')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comentarios_user', to=settings.AUTH_USER_MODEL)),
+                ('escena', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comentarios_escena', to='api.escena')),
+            ],
+            options={
+                'db_table': 'comentario',
+            },
+        ),
+        migrations.CreateModel(
+            name='CentroProfesionalEscena',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('centro_profesional', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='centro_profesional_id', to='api.centroprofesional')),
+                ('escena_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.escena')),
+            ],
+            options={
+                'db_table': 'centroProfesionalEscena',
+            },
+        ),
+        migrations.CreateModel(
             name='Evaluacion',
             fields=[
                 ('id', models.AutoField(primary_key=True, serialize=False)),
@@ -135,6 +160,17 @@ class Migration(migrations.Migration):
             options={
                 'db_table': 'evaluacion',
             },
+        ),
+        migrations.CreateModel(
+            name='Formulario',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('titulo', models.CharField(max_length=255)),
+                ('descripcion', models.TextField(blank=True, null=True)),
+                ('es_verificacion_automatica', models.BooleanField(default=False)),
+                ('fecha_creacion', models.DateTimeField(auto_now_add=True)),
+                ('creado_por', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='formularios', to=settings.AUTH_USER_MODEL)),
+            ],
         ),
         migrations.CreateModel(
             name='Grupo',
@@ -164,6 +200,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(primary_key=True, serialize=False)),
                 ('nombre', models.CharField(default='Sin Nombre', max_length=100)),
                 ('descripcion', models.CharField(max_length=255)),
+                ('centro_profesional', models.ForeignKey(db_column='centroProfesional_id', on_delete=django.db.models.deletion.CASCADE, related_name='objetivo_centro_salud_id', to='api.centroprofesional')),
                 ('centro_profesional', models.ForeignKey(db_column='centroProfesional_id', on_delete=django.db.models.deletion.CASCADE, related_name='objetivo_centro_salud_id', to='api.centroprofesional')),
                 ('escena', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='objetivo_explicativo', to='api.escena')),
             ],
@@ -206,7 +243,13 @@ class Migration(migrations.Migration):
         ),
         migrations.CreateModel(
             name='PersonaObjetivoEscena',
+            name='PersonaObjetivoEscena',
             fields=[
+                ('id', models.AutoField(primary_key=True, serialize=False)),
+                ('orden', models.IntegerField(blank=True, null=True)),
+                ('es_alternativo', models.BooleanField()),
+                ('escena_objetivo', models.ForeignKey(blank=True, db_column='objetivo_id', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='objetivo_relations', to='api.escenaobjetivo')),
+                ('user_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
                 ('id', models.AutoField(primary_key=True, serialize=False)),
                 ('orden', models.IntegerField(blank=True, null=True)),
                 ('es_alternativo', models.BooleanField()),
@@ -214,6 +257,7 @@ class Migration(migrations.Migration):
                 ('user_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
+                'db_table': 'personaEscenaObjetivo',
                 'db_table': 'personaEscenaObjetivo',
             },
         ),
@@ -223,6 +267,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('resultado', models.TextField(blank=True, null=True)),
                 ('progreso', models.IntegerField()),
+                ('evaluacion', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='api.evaluacion')),
                 ('evaluacion', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='api.evaluacion')),
                 ('objetivo_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.objetivo')),
                 ('user_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
@@ -242,9 +287,47 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(primary_key=True, serialize=False)),
                 ('visto', models.BooleanField(default=False)),
                 ('persona_objetivo_escena', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='videosvistos_persona_objetivo_escena', to='api.personaobjetivoescena')),
+                ('persona_objetivo_escena', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='videosvistos_persona_objetivo_escena', to='api.personaobjetivoescena')),
             ],
             options={
                 'db_table': 'videosVistos',
+            },
+        ),
+        migrations.AddConstraint(
+            model_name='centroprofesional',
+            constraint=models.UniqueConstraint(fields=('centrodesalud', 'profesional'), name='unique_centrodesalud_profesional'),
+        ),
+        migrations.AddConstraint(
+            model_name='comentario',
+            constraint=models.UniqueConstraint(fields=('id', 'user', 'escena'), name='unique_escena_user_comentario'),
+        ),
+        migrations.AddConstraint(
+            model_name='centroprofesionalescena',
+            constraint=models.UniqueConstraint(fields=('centro_profesional', 'escena_id'), name='unique_centro_salud_profesional_escena'),
+        ),
+        migrations.AddConstraint(
+            model_name='escenaobjetivo',
+            constraint=models.UniqueConstraint(fields=('escena', 'objetivo'), name='unique_escena_objetivo'),
+        ),
+        migrations.AddConstraint(
+            model_name='objetivoscumplir',
+            constraint=models.UniqueConstraint(fields=('objetivo', 'objetivo_previo'), name='unique_objetivo_objetivo_previo'),
+        ),
+        migrations.AddConstraint(
+            model_name='personagrupo',
+            constraint=models.UniqueConstraint(fields=('user_id', 'grupo_id'), name='unique_user_grupo'),
+        ),
+        migrations.AddConstraint(
+            model_name='personaobjetivoescena',
+            constraint=models.UniqueConstraint(fields=('user_id', 'escena_objetivo'), name='unique_user_escena_objetivo'),
+        ),
+        migrations.AddConstraint(
+            model_name='personaobjetivoevaluacion',
+            constraint=models.UniqueConstraint(fields=('user_id', 'objetivo_id', 'evaluacion'), name='unique_user_objetivo_evaluacion'),
+        ),
+        migrations.AddConstraint(
+            model_name='videosvistos',
+            constraint=models.UniqueConstraint(fields=('persona_objetivo_escena', 'id'), name='unique_escena_user_objetivo_videos_vistos'),
             },
         ),
         migrations.AddConstraint(
