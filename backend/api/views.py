@@ -267,7 +267,7 @@ class ObjetivoBusquedaView(generics.ListAPIView):
 
     
 
-
+'''
 class EscenasPorObjetivoListView(generics.ListAPIView):
     #queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
@@ -285,6 +285,37 @@ class EscenasPorObjetivoListView(generics.ListAPIView):
         return Escena.objects.filter(
             id__in=relaciones.values_list('escena', flat=True)
         )
+'''
+
+class EscenasPorObjetivoListView(generics.ListAPIView):
+    serializer_class = EscenaSerializer
+    filter_backends = [DjangoFilterBackend]
+
+    def get_queryset(self):
+        # Obtén el ID del objetivo y el usuario de la request
+        objetivo_id = self.request.GET.get('objetivo_id', None)
+        username = self.request.query_params.get('username', None)
+
+        if not objetivo_id:
+            return Escena.objects.none()  # Devuelve un queryset vacío si no hay objetivo_id
+
+        # Filtra las relaciones por el ID del objetivo
+        relaciones = EscenaObjetivo.objects.filter(objetivo=objetivo_id)
+
+        # Obtén las escenas asociadas al objetivo (TODAS)
+        escenas_objetivo = Escena.objects.filter(
+            id__in=relaciones.values_list('escena', flat=True)
+        )
+
+        # Filtra las escenas que el usuario no ha visto
+        #escenas_vistas = Videosvistos.objects.filter(
+        #    persona_objetivo_escena__persona=username,
+        #    persona_objetivo_escena__objetivo_id=objetivo_id,
+        #    visto=True
+        #).values_list('persona_objetivo_escena__escena_id', flat=True)
+
+        return escenas_objetivo
+
 
 class PacienteListView(APIView):
     def get(self, request):
