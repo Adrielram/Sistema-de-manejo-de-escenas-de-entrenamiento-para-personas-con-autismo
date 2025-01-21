@@ -1,15 +1,49 @@
 from rest_framework import serializers
-from .models import User, Objetivo, Escena, CentroProfesional, Centrodesalud
+from .models import User, Objetivo, Escena, CentroProfesional, Centrodesalud, Grupo
 
-class PacienteSerializer(serializers.ModelSerializer):
-    padreACargo = serializers.SerializerMethodField()
+# Primero define los serializadores
+class CentrodesaludSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Centrodesalud
+        fields = ['id', 'nombre']
 
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'nombre', 'dni', 'padreACargo']
+        fields = ['dni', 'nombre']
 
-    def get_padreACargo(self, obj):
-        return obj.user_id_padre.nombre if obj.user_id_padre else ''
+class TerapeutaSerializer(UserSerializer):
+    class Meta:
+        model = User
+        fields = ['dni', 'nombre']
+
+    def to_representation(self, instance):
+        # Solo devolver usuarios con rol 'terapeuta'
+        if instance.role != 'terapeuta':
+            return None
+        return super().to_representation(instance)
+
+class PacienteSerializer(UserSerializer):
+    class Meta:
+        model = User
+        fields = ['dni', 'nombre']
+
+    def to_representation(self, instance):
+        # Solo devolver usuarios con rol 'paciente'
+        if instance.role != 'paciente':
+            return None
+        return super().to_representation(instance)
+
+# Ahora define el GrupoSerializer
+class GrupoSerializer(serializers.ModelSerializer):
+    terapeutas = TerapeutaSerializer(many=True)
+    pacientes = PacienteSerializer(many=True)
+    centrodesalud = CentrodesaludSerializer()
+
+    class Meta:
+        model = Grupo
+        fields = ['id', 'nombre', 'centrodesalud', 'terapeutas', 'pacientes']
+
 class ObjetivoSerializer(serializers.ModelSerializer):
     video_explicativo_id = serializers.PrimaryKeyRelatedField(
         queryset=Escena.objects.all(), source='escena'
@@ -43,8 +77,3 @@ class EscenaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Escena
         fields = ['id', 'idioma', 'acento', 'condiciones', 'complejidad', 'link', 'nombre']
-
-class CentroSaludSerializer(serializers.ModelSerializer):  
-    class Meta:
-        model = Centrodesalud
-        fields = ['id', 'nombre', 'direccion_id_dir']
