@@ -25,9 +25,14 @@ urlpatterns = [
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
+    path('registrar_comentario/', registrar_comentario.as_view(), name='registrar_comentario'),
+    path('get-escenas-obj/', EscenasSegunUsuarioObjetivo.as_view(), name='get-escenas-obj'),
+    path('get-evaluaciones/', ObtenerLinksEvaluaciones.as_view(), name='get-evaluaciones'),
+    path('get-persona-obj-esc/', ObtenerPersonaObjetivoID.as_view(), name='get-persona-obj-esc'),
+    path('video-visto/', MarcarVideoVistoAPIView.as_view(), name='video-visto')
     path('comentarios/', ComentarioDetalleAPIView.as_view(), name='comentario-detalle'),
     path('comentarios/lista/', ComentariosListaAPIView.as_view(), name='comentarios-lista'),
     path('check-cookie/', check_cookie, name='check_cookie'),
-]
+    ]
 
 urlpatterns += [path('', include(router.urls))]

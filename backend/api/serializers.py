@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Objetivo, Escena, CentroProfesional, Residencia, Centrodesalud
+from .models import User, Objetivo, Escena, CentroProfesional, Residencia, Centrodesalud, Comentario
 from datetime import datetime
 
 class PacienteSerializer(serializers.ModelSerializer):
@@ -78,3 +78,15 @@ class CentroSaludSerializer(serializers.ModelSerializer):
     class Meta:
         model = Centrodesalud
         fields = ['id', 'nombre', 'direccion_id_dir']
+
+class ComentarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comentario
+        fields = [
+            'id',
+            'user',
+            'escena',
+            'comentario_contestado',
+            'texto',
+            'visibilidad',
+        ]
