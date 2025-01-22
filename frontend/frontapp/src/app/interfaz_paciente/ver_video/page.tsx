@@ -5,7 +5,9 @@ import Comentario from "../../../components/Comentario";
 import { NuevoComentario } from "../../../components/NuevoComentario";
 import { useRouter } from "next/navigation";
 import { useSelector } from 'react-redux';
-import { RootState } from "../../../../store/store"; 
+import { RootState } from "../../../../store/store";
+import { useDispatch } from "react-redux";
+import { setIdEscena } from "../../../../slices/userSlice";
 
 interface Escena {
   id: number;
@@ -26,14 +28,14 @@ const VerVideo = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [completedQuizzes, setCompletedQuizzes] = useState<number[]>([]);
   const { username } = useSelector((state: RootState) => state.user);
-  const objetivoId = 3;
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [reloadComentarios, setReloadComentarios] = useState(false);
-
+  const { idEscena, objetivoId } = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     user: username, 
-    escena: 0,
+    escena: idEscena,
     texto: '',
     visibilidad: true,
     comentario_respondido: null,
@@ -42,10 +44,11 @@ const VerVideo = () => {
   
 
   useEffect(() => {
-    const fetchPersObjEsc = async (escena_id: number) => {
+    const fetchPersObjEsc = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8000/api/get-persona-obj-esc/?username=${username}&objetivo_id=${objetivoId}&escena_id=${escena_id}`
+          `http://localhost:8000/api/get-persona-obj-esc/?username=${username}&objetivo_id=${objetivoId}&escena_id=${idEscena}`
+          //`http://localhost:8000/api/get-persona-obj-esc/?username=paciente1&objetivo_id=3&escena_id=7`
         );
         
         if (!response.ok) {
@@ -62,7 +65,7 @@ const VerVideo = () => {
 
     const escenaActual = escena;
     if (escenaActual) {
-      fetchPersObjEsc(escenaActual.id);
+      fetchPersObjEsc();
     }
   }, [escena, username]);
 
@@ -78,13 +81,19 @@ const VerVideo = () => {
         
         const data = await response.json();
         setEscenas(data);
-        if (data.length > 0) {
-          const primeraEscena = data[0];
-          setEscena(primeraEscena);
-          const e = primeraEscena.id;
-          setFormData((prev) => ({ ...prev, escena: e }));
+  
+        // Encuentra el índice de la escena actual en las escenas obtenidas
+        const index = data.findIndex((escena: Escena) => escena.id === idEscena);
+  
+        if (index !== -1) {
+          setCurrentVideoIndex(index); // Actualiza currentVideoIndex
+          setEscena(data[index]); // Establece la escena actual
+          setFormData((prev) => ({ ...prev, escena: data[index].id })); // Actualiza el formData
+        } else {
+          console.error('La escena actual no se encuentra en las escenas disponibles.');
         }
   
+        // Actualiza la lista de videos con los enlaces de las escenas
         setVideos(data.map((escena: Escena) => escena.link));
   
         // Fetch para obtener las evaluaciones asociadas al objetivo y usuario
@@ -95,7 +104,7 @@ const VerVideo = () => {
         }
   
         const evaluacionesData = await evaluacionesResponse.json();
-        setQuizzes(evaluacionesData.links); 
+        setQuizzes(evaluacionesData.links);
   
       } catch (error) {
         console.error('Error en LoadData:', error);
@@ -121,6 +130,7 @@ const VerVideo = () => {
       setCurrentVideoIndex(nextIndex);
       const siguienteEscena = escenas[nextIndex]; // Obtiene la siguiente escena
       setEscena(siguienteEscena);
+      dispatch(setIdEscena({idEscena: siguienteEscena.id}));
   
       // Marca el video como visto solo después de que `poe` se haya actualizado
       if (poe) {
@@ -153,7 +163,8 @@ const VerVideo = () => {
       setCurrentVideoIndex(previousIndex);
       const escenaAnterior = escenas[previousIndex]; // Obtiene la escena anterior
       setEscena(escenaAnterior);
-  
+      dispatch(setIdEscena({idEscena:escenaAnterior.id}));
+
       // Actualiza el formData con la nueva escena
       setFormData((prev) => ({ ...prev, escena: escenaAnterior.id }));
   

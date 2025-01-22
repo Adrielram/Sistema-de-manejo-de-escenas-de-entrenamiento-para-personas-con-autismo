@@ -304,11 +304,9 @@ class Command(BaseCommand):
         # Create scene-objective relationship
         escena_obj_1 = EscenaObjetivo.objects.create(
             escena=escena_2,
-            escena=escena_2,
             objetivo=objetivo_1
         )
         escena_obj_2 = EscenaObjetivo.objects.create(
-            escena=escena_4,
             escena=escena_4,
             objetivo=objetivo_2
         )
@@ -345,13 +343,11 @@ class Command(BaseCommand):
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_3,
-            escena_objetivo=escena_obj_3,
             orden=1,
             es_alternativo=False
         )
         persona_obj_esc_2 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_4,
             escena_objetivo=escena_obj_4,
             orden=2,
             es_alternativo=False
@@ -415,8 +411,6 @@ class Command(BaseCommand):
         evaluacion = Evaluacion.objects.create(
             nombre="La matadora",
             link="https://docs.google.com/forms/d/e/1FAIpQLSfx8STfx-3if-hoIpA2f4mB-_ewwMSLRpbgXVaS_23TLYsJyw/viewform?usp=header",
-            nombre="La matadora",
-            link="https://docs.google.com/forms/d/e/1FAIpQLSfx8STfx-3if-hoIpA2f4mB-_ewwMSLRpbgXVaS_23TLYsJyw/viewform?usp=header",
             centro_salud_id=centro_prof,
             profesional_id=centro_prof
         )
@@ -424,7 +418,6 @@ class Command(BaseCommand):
         # Create person-objective-evaluation
         PersonaObjetivoEvaluacion.objects.create(
             user_id=paciente,
-            objetivo_id=objetivo_3,
             objetivo_id=objetivo_3,
             resultado="Progresando bien",
             progreso=75,
@@ -446,19 +439,12 @@ class Command(BaseCommand):
             user=paciente,
             escena=escena_1,
             texto="En el minuto 1:31 no entiendo que dice el letrero",
-            user=paciente,
-            escena=escena_1,
-            texto="En el minuto 1:31 no entiendo que dice el letrero",
         )
         Comentario.objects.create(
             user=terapeuta,
             escena=escena_1,
             texto="El letrero dice aguante messi",
-            comentario_contestado=comentario_respuesta
-            user=terapeuta,
-            escena=escena_1,
-            texto="El letrero dice aguante messi",
-            comentario_contestado=comentario_respuesta
+            comentario_contestado=comentario_respuesta,
         )
 
         Videosvistos.objects.create(

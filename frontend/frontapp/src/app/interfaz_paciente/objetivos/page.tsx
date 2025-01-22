@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import ScrollVerticalYHorizontal from "../../../components/ScrollVerticalYHorizontal";
 import SearchBar from "../../../components/Buscador";
 import { useDispatch, useSelector } from 'react-redux';
-import { setObjetivoId } from "../../../../slices/userSlice";
+import { setIdEscena, setObjetivoId } from "../../../../slices/userSlice";
 import { RootState } from "../../../../store/store";
 import { useRouter } from 'next/navigation';
 
@@ -170,8 +170,9 @@ export default function Page() {
   };
 
   const handleEscenaClick = (escenaID: number) => {
-    window.alert(`Escena ${escenaID}`)
-    //router.push('./ver_video');
+    //window.alert(`Escena ${escenaID}`)
+    dispatch(setIdEscena({idEscena: escenaID}));
+    router.push('./ver_video');
   }
 
 
