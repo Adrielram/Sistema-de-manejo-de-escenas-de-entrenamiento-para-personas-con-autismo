@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import ComentarioPaciente from "../../../components/ComentarioPaciente";
 import { NuevoComentario } from "../../../components/NuevoComentario";
 import { useSelector } from 'react-redux';
@@ -13,10 +13,9 @@ const VerVideo = () => {
     [key: number]: number[];
   }>({}); // HashSet con comentarios principales y sus respuestas
 
-  const idPersona = 43305894; // Supongamos que es el ID de la persona actual
-  const idEscena = 1; // ID de la escena
+  //const { idEscena } = useSelector((state: RootState) => state.user); PONER CUANDO ANDE LO DE REDUX
+  const idEscena = 1; // ID de la escena (QUITAR CUANDO ANDE LO DE REDUX)
 
-  // Estado para controlar la actualización
   const [reloadComentarios, setReloadComentarios] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -25,13 +24,36 @@ const VerVideo = () => {
     texto: '',
     visibilidad: true,
     comentario_respondido: 0,
+    usuarioRespondido: '', // Nuevo campo para guardar el nombre del usuario respondido
   });
-  const handleResponder = (idComentario: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      comentario_respondido: idComentario,
-    }));
+
+  const nuevoComentarioRef = useRef<HTMLDivElement>(null); // Referencia al componente NuevoComentario
+
+  const handleResponder = async (idComentario: number) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/comentarios/?idComentario=${idComentario}`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setFormData((prev) => ({
+          ...prev,
+          comentario_respondido: idComentario,
+          usuarioRespondido: data.usuario, // Asigna el nombre del usuario respondido
+        }));
+
+        // Scroll al fondo de la página
+        if (nuevoComentarioRef.current) {
+          nuevoComentarioRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      } else {
+        console.error(data.error);
+      }
+    } catch (error) {
+      console.error("Error al obtener el usuario del comentario:", error);
+    }
   };
+
   useEffect(() => {
     // Fetch para obtener el HashSet de comentarios
     const fetchComentarios = async () => {
@@ -60,15 +82,13 @@ const VerVideo = () => {
     };
 
     fetchComentarios();
-  }, [idPersona, idEscena, reloadComentarios]); // Dependencia adicional para recargar comentarios
+  }, [ idEscena, reloadComentarios]); // Dependencia adicional para recargar comentarios
 
   return (
     <div className="flex flex-col px-4 py-4 min-h-screen">
-      {/* Contenedor principal */}
       <div className="mt-4">
         <h3 className="text-lg font-semibold text-gray-800 mb-2">Comentarios</h3>
         <div>
-          <h1>Comentarios</h1>
           {/* Renderizado de comentarios */}
           {Object.keys(comentariosHashSet).map((principalId) => (
             <div key={principalId} className="mb-4">
@@ -81,15 +101,25 @@ const VerVideo = () => {
           ))}
         </div>
         {formData.comentario_respondido !== 0 && (
-          <p className="text-sm text-gray-600 mt-2">
-            Respondiendo al comentario con ID: {formData.comentario_respondido}
-          </p>
+          <div className="flex items-center text-sm text-gray-600 mt-2">
+            <p>Respondiendo a @{formData.user}</p>
+            <button
+              onClick={() =>
+                setFormData((prev) => ({ ...prev, comentario_respondido: 0 }))
+              }
+              className="ml-2 text-red-500 hover:text-red-700 transition-colors"
+            >
+              &#x2716; {/* Código Unicode para la cruz roja */}
+            </button>
+          </div>
         )}
-        <NuevoComentario
-          formData={formData}
-          setFormData={setFormData}
-          onCommentAdded={() => setReloadComentarios(!reloadComentarios)} // Llama a esta función cuando se agrega un comentario
-        />
+        <div ref={nuevoComentarioRef}>
+          <NuevoComentario
+            formData={formData}
+            setFormData={setFormData}
+            onCommentAdded={() => setReloadComentarios(!reloadComentarios)} // Llama a esta función cuando se agrega un comentario
+          />
+        </div>
       </div>
     </div>
   );
