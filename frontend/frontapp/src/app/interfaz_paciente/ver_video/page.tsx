@@ -19,14 +19,14 @@ interface Escena {
 
 const VerVideo = () => {
   const [videos, setVideos] = useState<string[]>([]);
-  const [quizzes, setQuizzes] = useState<string[]>([]);
+  const [quizzes, setQuizzes] = useState({ formularios: [] });
   const [escenas, setEscenas] = useState<Escena[]>([]);
   const [escena, setEscena] = useState<Escena>();
   const [poe, setPoe] = useState<number>();
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [completedQuizzes, setCompletedQuizzes] = useState<number[]>([]);
   const { username } = useSelector((state: RootState) => state.user);
-  const objetivoId = 3;
+  const objetivoId = 1;
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [reloadComentarios, setReloadComentarios] = useState(false);
@@ -46,11 +46,7 @@ const VerVideo = () => {
       try {
         const response = await fetch(
           `http://localhost:8000/api/get-persona-obj-esc/?username=${username}&objetivo_id=${objetivoId}&escena_id=${escena_id}`
-        );
-        
-        if (!response.ok) {
-          throw new Error('Error al obtener el id');
-        }
+        );       
         
         const data = await response.json();
         setPoe(data.id); 
@@ -95,7 +91,8 @@ const VerVideo = () => {
         }
   
         const evaluacionesData = await evaluacionesResponse.json();
-        setQuizzes(evaluacionesData.links); 
+        setQuizzes(evaluacionesData); 
+        console.log("Evaluaciones data: ", JSON.stringify(evaluacionesData));
   
       } catch (error) {
         console.error('Error en LoadData:', error);
@@ -187,9 +184,9 @@ const VerVideo = () => {
     router.push('./ver_objetivos');
   };
 
-  const handleQuizClick = (index: number) => {
-    window.open(quizzes[index], "_blank");
-    setCompletedQuizzes((prev) => [...new Set([...prev, index])]);
+  const handleQuizClick = (index: number) => {      
+    router.push(`/interfaz_paciente/evaluacion/${index}`);      
+    //setCompletedQuizzes((prev) => [...new Set([...prev, index])]);
   };
 
   const handleCompletarObjetivo = () => {
@@ -197,7 +194,8 @@ const VerVideo = () => {
     router.push('./principal');
   };
 
-  const allQuizzesCompleted = completedQuizzes.length === quizzes.length;
+  const allQuizzesCompleted = completedQuizzes.length === (quizzes?.formularios?.length || 0);
+
 
   return (
     <div className="flex flex-col px-4 py-4 min-h-screen">
@@ -245,36 +243,36 @@ const VerVideo = () => {
           </div>
             {/* Quizzes */}
             {currentVideoIndex === videos.length - 1 && (
-            <div className="flex flex-col items-center w-full max-w-sm bg-white border border-gray-300 rounded-lg shadow-md p-4 mt-4">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Quizzes Disponibles
-              </h3>
-              <div className="flex flex-col space-y-2 w-full">
-                {quizzes.map((quizLink, index) => (
-                  <div key={index} className="flex items-center w-full">
-                    <button
-                      onClick={() => handleQuizClick(index)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all flex-grow"
-                    >
-                      Quiz {index + 1}
-                    </button>
-                    {completedQuizzes.includes(index) && (
-                      <span className="ml-2 text-green-500 font-semibold">
-                        ✔
-                      </span>
-                    )}
-                  </div>
-                ))}
+              <div className="flex flex-col items-center w-full max-w-sm bg-white border border-gray-300 rounded-lg shadow-md p-4 mt-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  Quizzes Disponibles
+                </h3>
+                <div className="flex flex-col space-y-2 w-full">
+                  {quizzes?.formularios && quizzes.formularios.map((quiz) => (
+                    <div key={quiz.id} className="flex items-center w-full">
+                      <button
+                        onClick={() => handleQuizClick(quiz.id)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all flex-grow"
+                      >
+                        {quiz.titulo}
+                      </button>
+                      {completedQuizzes.includes(quiz.id) && (
+                        <span className="ml-2 text-green-500 font-semibold">
+                          ✔
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {allQuizzesCompleted && (
+                  <button
+                    onClick={handleCompletarObjetivo}
+                    className="bg-green-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full mt-4"
+                  >
+                    Completar objetivo
+                  </button>
+                )}
               </div>
-              {allQuizzesCompleted && (
-                <button
-                  onClick={handleCompletarObjetivo}
-                  className="bg-green-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full mt-4"
-                >
-                  Completar objetivo
-                </button>
-              )}
-            </div>
           )}
         </div>
       </div>

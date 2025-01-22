@@ -243,7 +243,7 @@ class PersonaObjetivoEvaluacion(models.Model):
     resultado = models.TextField(blank=True, null=True)
     progreso = models.IntegerField()
     evaluacion = models.ForeignKey(
-        'Evaluacion', 
+        'Formulario', 
         on_delete=models.CASCADE, 
         blank=True, 
         null=True

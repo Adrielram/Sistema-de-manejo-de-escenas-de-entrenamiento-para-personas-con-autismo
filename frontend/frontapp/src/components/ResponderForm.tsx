@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const ResponderForm = ({ idform, onSubmitted }) => {
+const ResponderForm = ({ idform, onSubmitted = () => {}}) => {
   const [formulario, setFormulario] = useState(null);
   const [respuestas, setRespuestas] = useState({});
   const [error, setError] = useState("");
@@ -82,6 +82,7 @@ const ResponderForm = ({ idform, onSubmitted }) => {
         setRespuestas({});
         onSubmitted(); // Llamar a la función pasada por props
       }
+      router.push(`/interfaz_paciente/ver_video/`);      
     } catch (err) {
       console.error(err);
       setError("Error al enviar las respuestas");

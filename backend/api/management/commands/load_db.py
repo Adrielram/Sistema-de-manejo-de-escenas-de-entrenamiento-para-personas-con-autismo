@@ -2,7 +2,6 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.hashers import make_password
 from datetime import datetime
 from api.models import *
-import mysql.connector
 from django.conf import settings
 
 class Command(BaseCommand):
@@ -10,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Conectar a MySQL y reiniciar la base de datos
-        self.stdout.write("Resetting database...")
+        '''self.stdout.write("Resetting database...")
         try:
             db_config = {
                 'host': settings.DATABASES['default']['HOST'],
@@ -42,7 +41,7 @@ class Command(BaseCommand):
         call_command('migrate')
 
         # Cargar los datos
-        self.stdout.write("Loading sample data...")
+        self.stdout.write("Loading sample data...")'''
         self.load_sample_data()
 
     def load_sample_data(self, *args, **options):
@@ -212,62 +211,6 @@ class Command(BaseCommand):
             link="https://drive.google.com/file/d/1yPgHYRagTJXTqlrGhNkZDEy5zNY4-f77/preview",
             nombre="Escena 3"
         )
-        escena_3 = Escena.objects.create(
-            idioma="Español",
-            acento="neutro",
-            complejidad=2,
-            condiciones="Normal",
-            link="https://ejemplo.com/video3",
-            nombre="Escena 3"
-        )
-        escena_4 = Escena.objects.create(
-            idioma="Español",
-            acento="neutro",
-            complejidad=4,
-            condiciones="Normal",
-            link="https://ejemplo.com/video4",
-            nombre="Escena 4"
-        )
-        escena_5 = Escena.objects.create(
-            idioma="Español",
-            acento="neutro",
-            complejidad=3,
-            condiciones="Normal",
-            link="https://ejemplo.com/video5",
-            nombre="Escena 5"
-        )
-        escena_6 = Escena.objects.create(
-            idioma="Español",
-            acento="neutro",
-            complejidad=5,
-            condiciones="Normal",
-            link="https://ejemplo.com/video6",
-            nombre="Escena 6"
-        )
-        escena_7 = Escena.objects.create(
-            idioma="Español",
-            acento="neutro",
-            complejidad=1,
-            condiciones="Normal",
-            link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
-            nombre="Escena 1"
-        )
-        escena_8 = Escena.objects.create(
-            idioma="Español",
-            acento="neutro",
-            complejidad=1,
-            condiciones="Normal",
-            link="https://drive.google.com/file/d/1qzY31odKmd2FlrjU0VK4dkfezlzEcoaJ/preview",
-            nombre="Escena 2"
-        )
-        escena_9 = Escena.objects.create(
-            idioma="Español",
-            acento="neutro",
-            complejidad=1,
-            condiciones="Normal",
-            link="https://drive.google.com/file/d/1yPgHYRagTJXTqlrGhNkZDEy5zNY4-f77/preview",
-            nombre="Escena 3"
-        )
 
         # Create objectives
         objetivo_1 = Objetivo.objects.create(
@@ -304,31 +247,6 @@ class Command(BaseCommand):
             nombre="neymar",
             descripcion="Tenes que vencer a yamcha",
             escena=escena_1,
-            escena=escena_3,
-            centro_profesional=centro_prof
-        )
-        objetivo_3 = Objetivo.objects.create(
-            nombre="Messi",
-            descripcion="Tenes que vencer a goku",
-            escena=escena_5,
-            centro_profesional=centro_prof
-        )
-        objetivo_4 = Objetivo.objects.create(
-            nombre="CR7",
-            descripcion="Tenes que vencer a vegeta",
-            escena=escena_6,
-            centro_profesional=centro_prof
-        )
-        objetivo_5 = Objetivo.objects.create(
-            nombre="Ronaldinho",
-            descripcion="Tenes que vencer a krillin",
-            escena=escena_6,
-            centro_profesional=centro_prof
-        )
-        objetivo_6 = Objetivo.objects.create(
-            nombre="neymar",
-            descripcion="Tenes que vencer a yamcha",
-            escena=escena_1,
             centro_profesional=centro_prof
         )
 
@@ -340,37 +258,11 @@ class Command(BaseCommand):
         # Create scene-objective relationship
         escena_obj_1 = EscenaObjetivo.objects.create(
             escena=escena_2,
-            escena=escena_2,
             objetivo=objetivo_1
         )
         escena_obj_2 = EscenaObjetivo.objects.create(
             escena=escena_4,
-            escena=escena_4,
             objetivo=objetivo_2
-        )
-        escena_obj_3 = EscenaObjetivo.objects.create(
-            escena=escena_7,
-            objetivo=objetivo_3
-        )
-        escena_obj_4 = EscenaObjetivo.objects.create(
-            escena=escena_8,
-            objetivo=objetivo_3
-        )
-        escena_obj_5 = EscenaObjetivo.objects.create(
-            escena=escena_9,
-            objetivo=objetivo_3
-        )
-        escena_obj_6 = EscenaObjetivo.objects.create(
-            escena=escena_7,
-            objetivo=objetivo_4
-        )
-        escena_obj_7 = EscenaObjetivo.objects.create(
-            escena=escena_8,
-            objetivo=objetivo_5
-        )
-        escena_obj_8 = EscenaObjetivo.objects.create(
-            escena=escena_9,
-            objetivo=objetivo_6
         )
         escena_obj_3 = EscenaObjetivo.objects.create(
             escena=escena_7,
@@ -401,21 +293,13 @@ class Command(BaseCommand):
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_3,
-            escena_objetivo=escena_obj_3,
             orden=1,
             es_alternativo=False
         )
         persona_obj_esc_2 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_4,
-            escena_objetivo=escena_obj_4,
             orden=2,
-            es_alternativo=False
-        )
-        persona_obj_esc_3 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_5,
-            orden=3,
             es_alternativo=False
         )
         persona_obj_esc_3 = PersonaObjetivoEscena.objects.create(
@@ -432,30 +316,12 @@ class Command(BaseCommand):
         #     centro_salud_id=centro_prof,
         #     profesional_id=centro_prof
         # )
-        # evaluacion = Evaluacion.objects.create(
-        #     nombre="Evaluación 1",
-        #     link="https://ejemplo.com/eval1",
-        #     centro_salud_id=centro_prof,
-        #     profesional_id=centro_prof
-        # )
         evaluacion = Evaluacion.objects.create(
-            nombre="La matadora",
-            link="https://docs.google.com/forms/d/e/1FAIpQLSfx8STfx-3if-hoIpA2f4mB-_ewwMSLRpbgXVaS_23TLYsJyw/viewform?usp=header",
             nombre="La matadora",
             link="https://docs.google.com/forms/d/e/1FAIpQLSfx8STfx-3if-hoIpA2f4mB-_ewwMSLRpbgXVaS_23TLYsJyw/viewform?usp=header",
             centro_salud_id=centro_prof,
             profesional_id=centro_prof
-        )
-
-        # Create person-objective-evaluation
-        PersonaObjetivoEvaluacion.objects.create(
-            user_id=paciente,
-            objetivo_id=objetivo_3,
-            objetivo_id=objetivo_3,
-            resultado="Progresando bien",
-            progreso=75,
-            evaluacion=evaluacion
-        )
+        )       
 
         # Create group memberships
         Personagrupo.objects.create(
@@ -472,15 +338,8 @@ class Command(BaseCommand):
             user=paciente,
             escena=escena_1,
             texto="En el minuto 1:31 no entiendo que dice el letrero",
-            user=paciente,
-            escena=escena_1,
-            texto="En el minuto 1:31 no entiendo que dice el letrero",
         )
         Comentario.objects.create(
-            user=terapeuta,
-            escena=escena_1,
-            texto="El letrero dice aguante messi",
-            comentario_contestado=comentario_respuesta
             user=terapeuta,
             escena=escena_1,
             texto="El letrero dice aguante messi",
@@ -497,4 +356,3 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(self.style.SUCCESS('Successfully loaded sample data'))
-

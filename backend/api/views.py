@@ -855,34 +855,55 @@ class EscenasSegunUsuarioObjetivo(APIView):
 
         return Response(list(escenas), status=status.HTTP_200_OK)
     
-class ObtenerLinksEvaluaciones(APIView):
+class ObtenerEvaluaciones(APIView):
     def get(self, request):
         username = request.query_params.get('username')
         objetivo_id = request.query_params.get('objetivo_id')
         try:
+            # Obtener el ID del usuario
             try:
                 user_id = obtener_dni(username) 
             except ValueError as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
             except User.DoesNotExist as e:
                 return Response({'error': str(e)}, status=status.HTTP_404_NOT_FOUND)
-            # Filtrar las evaluaciones asociadas
-            evaluaciones = PersonaObjetivoEvaluacion.objects.filter(
+
+            # Filtrar los formularios asociados al usuario y objetivo
+            formularios = PersonaObjetivoEvaluacion.objects.filter(
                 user_id=user_id,
                 objetivo_id=objetivo_id
             ).exclude(
-                evaluacion__isnull=True  # Asegurarse de que haya evaluación
-            ).values_list('evaluacion__link', flat=True)
+                evaluacion__isnull=True  # Asegurarse de que haya evaluación asociada
+            ).values(
+                'evaluacion__id', 
+                'evaluacion__titulo', 
+                'evaluacion__descripcion', 
+                'evaluacion__es_verificacion_automatica', 
+                'evaluacion__fecha_creacion'
+            )
+
+            # Transformar los datos en una lista de diccionarios
+            formularios_list = [
+                {
+                    'id': formulario['evaluacion__id'],
+                    'titulo': formulario['evaluacion__titulo'],
+                    'descripcion': formulario['evaluacion__descripcion'],
+                    'es_verificacion_automatica': formulario['evaluacion__es_verificacion_automatica'],
+                    'fecha_creacion': formulario['evaluacion__fecha_creacion']
+                }
+                for formulario in formularios
+            ]
 
             # Devolver los resultados en formato JSON
-            return Response({'links': list(evaluaciones)}, status=status.HTTP_200_OK)
+            return Response({'formularios': formularios_list}, status=status.HTTP_200_OK)
         
         except Exception as e:
-            # Manejo de errores
+            # Manejo de errores genéricos
             return Response(
-                {'error': 'Ocurrió un error al obtener los links.', 'details': str(e)},
+                {'error': 'Ocurrió un error al obtener los formularios.', 'details': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
         
 def ObtenerEscenaObjetivo(escena_id, objetivo_id):
     try: 
@@ -959,3 +980,62 @@ class MarcarVideoVistoAPIView(APIView):
             return Response({
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
+        
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import PersonaObjetivoEvaluacion, User, Objetivo, Formulario
+
+class CargarPersonaObjetivoEvaluacion(APIView):
+    def post(self, request):
+        """
+        Carga datos en la tabla PersonaObjetivoEvaluacion a partir de un JSON enviado en la solicitud.
+        """
+        data = request.data
+
+        try:
+            # Extraer los datos del JSON
+            user_id = data.get('user_id')
+            objetivo_id = data.get('objetivo_id')
+            resultado = data.get('resultado', None)
+            progreso = data.get('progreso')
+            evaluacion_id = data.get('evaluacion_id', None)
+
+            # Validar que los campos requeridos estén presentes
+            if not user_id or not objetivo_id or progreso is None:
+                return Response(
+                    {'error': 'Faltan datos requeridos: user_id, objetivo_id o progreso.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Obtener las instancias relacionadas
+            try:
+                user = User.objects.get(dni=user_id)
+                objetivo = Objetivo.objects.get(id=objetivo_id)
+                evaluacion = Formulario.objects.get(id=evaluacion_id) if evaluacion_id else None
+            except User.DoesNotExist:
+                return Response({'error': 'El usuario especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+            except Objetivo.DoesNotExist:
+                return Response({'error': 'El objetivo especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+            except Formulario.DoesNotExist:
+                return Response({'error': 'El formulario especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+
+            # Crear el registro en la tabla PersonaObjetivoEvaluacion
+            persona_objetivo_evaluacion = PersonaObjetivoEvaluacion.objects.create(
+                user_id=user,
+                objetivo_id=objetivo,
+                resultado=resultado,
+                progreso=progreso,
+                evaluacion=evaluacion
+            )
+
+            return Response(
+                {'message': 'Registro creado exitosamente.', 'id': persona_objetivo_evaluacion.id},
+                status=status.HTTP_201_CREATED
+            )
+
+        except Exception as e:
+            return Response(
+                {'error': 'Ocurrió un error al crear el registro.', 'details': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

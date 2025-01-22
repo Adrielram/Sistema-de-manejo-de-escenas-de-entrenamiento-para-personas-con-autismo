@@ -8,7 +8,7 @@ from .views import ObjetivoViewSet, EscenaListView, ObjetivosListView
 router = DefaultRouter()
 router.register(r'create_objetivo', ObjetivoViewSet, basename='objetivo')
 
-urlpatterns = [
+urlpatterns = [	
     # Definir las rutas para las vistas que tengas en tu aplicación
     path('example/', views.example_view, name='example'),
     path('login/', login, name='login'),
@@ -26,9 +26,9 @@ urlpatterns = [
     path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
     path('registrar_comentario/', registrar_comentario.as_view(), name='registrar_comentario'),
     path('get-escenas-obj/', EscenasSegunUsuarioObjetivo.as_view(), name='get-escenas-obj'),
-    path('get-evaluaciones/', ObtenerLinksEvaluaciones.as_view(), name='get-evaluaciones'),
+    path('get-evaluaciones/', ObtenerEvaluaciones.as_view(), name='get-evaluaciones'),
     path('get-persona-obj-esc/', ObtenerPersonaObjetivoID.as_view(), name='get-persona-obj-esc'),
-    path('video-visto/', MarcarVideoVistoAPIView.as_view(), name='video-visto')
+    path('video-visto/', MarcarVideoVistoAPIView.as_view(), name='video-visto'),
     path('formularios/', FormularioListCreateView.as_view(), name='formulario-list-create'),
     path('formularios/<int:pk>/', FormularioDetailView.as_view(), name='formulario-detail'),
     path('preguntas/', PreguntaListCreateView.as_view(), name='pregunta-list-create'),
@@ -47,6 +47,8 @@ urlpatterns = [
     path('respuestas/<int:respuesta_id>/actualizar-nota/', ActualizarNotaRespuestaView.as_view(), name='actualizar-nota'),
     path('registrar-respuesta/', registrar_respuesta, name='registrar-respuesta'),
     path('obtener_estado_revision/', obtener_estado_revision, name='obtener_estado_revision'),
+    path('cargar-persona-objetivo-evaluacion/', CargarPersonaObjetivoEvaluacion.as_view(), name='cargar_persona_objetivo_evaluacion'),
 ]
+
 
 urlpatterns += [path('', include(router.urls))]
