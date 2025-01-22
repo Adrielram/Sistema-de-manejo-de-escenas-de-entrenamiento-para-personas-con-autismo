@@ -40,7 +40,6 @@ class Command(BaseCommand):
         # Aplicar las migraciones
         self.stdout.write("Applying migrations...")
         from django.core.management import call_command
-        call_command('makemigrations')
         call_command('migrate')
 
         # Cargar los datos

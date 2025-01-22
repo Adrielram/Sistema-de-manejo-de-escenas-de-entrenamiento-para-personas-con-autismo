@@ -7,8 +7,6 @@ router = DefaultRouter()
 router.register(r'create_objetivo', ObjetivoViewSet, basename='objetivo')
 
 
-
-
 urlpatterns = [
     # Definir las rutas para las vistas que tengas en tu aplicación
     path('example/', views.example_view, name='example'),
@@ -32,8 +30,10 @@ urlpatterns = [
     path('get-escenas-obj/', EscenasSegunUsuarioObjetivo.as_view(), name='get-escenas-obj'),
     path('get-evaluaciones/', ObtenerLinksEvaluaciones.as_view(), name='get-evaluaciones'),
     path('get-persona-obj-esc/', ObtenerPersonaObjetivoID.as_view(), name='get-persona-obj-esc'),
-    path('video-visto/', MarcarVideoVistoAPIView.as_view(), name='video-visto')
-]
-
+    path('video-visto/', MarcarVideoVistoAPIView.as_view(), name='video-visto'),
+    path('comentarios/', ComentarioDetalleAPIView.as_view(), name='comentario-detalle'),
+    path('comentarios/lista/', ComentariosListaAPIView.as_view(), name='comentarios-lista'),
+    path('check-cookie/', check_cookie, name='check_cookie'),
+    ]
 
 urlpatterns += [path('', include(router.urls))]

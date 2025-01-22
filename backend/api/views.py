@@ -734,21 +734,35 @@ def get_dni(request):
 
 class registrar_comentario(APIView):
     def post(self, request):
-        data = request.data.copy() 
-        # Modificar el campo 'user' para usar el DNI
+        data = request.data.copy()
+
+        # Intentar convertir `user` al DNI
         try:
             data['user'] = obtener_dni(request.data['user'])
         except Exception as e:
             return Response({'error': f'Error obteniendo el DNI: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
+        # Si `comentario_respondido` no es 0 o None, buscar el comentario correspondiente
+        comentario_respondido_id = data.get('comentario_respondido', None)
+        if comentario_respondido_id:
+            try:
+                comentario_contestado = Comentario.objects.get(id=comentario_respondido_id)
+                data['comentario_contestado'] = comentario_contestado.id
+            except Comentario.DoesNotExist:
+                return Response({'error': 'El comentario al que se está respondiendo no existe.'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            data['comentario_contestado'] = None
+
         # Pasar los datos modificados al serializer
         serializer = ComentarioSerializer(data=data)
         if serializer.is_valid():
             serializer.save()  # Guardar el comentario
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+
         # Si el serializer no es válido, retornar los errores
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
     
 
 class EscenasSegunUsuarioObjetivo(APIView):
@@ -872,6 +886,119 @@ class MarcarVideoVistoAPIView(APIView):
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
-            return Response({
-                'error': str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': f'Error interno del servidor: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+def check_cookie(request):
+    # Verificar si la cookie 'jwt' está presente
+    if 'jwt' in request.COOKIES:
+        return JsonResponse({"exists": True})
+    return JsonResponse({"exists": False})
+
+class ComentariosListaAPIView(APIView):
+    '''
+        Interfaz que devuelve un hashset de comentarios agrupados por hilo principal.
+    '''
+    def get(self, request, *args, **kwargs):
+        try:
+            # Obtener el id_escena desde los parámetros de consulta
+            id_escena = request.query_params.get('id_escena', None)
+
+            if not id_escena:
+                return Response(
+                    {"error": "El parámetro 'id_escena' es requerido."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Obtener todos los comentarios de la escena
+            comentarios = Comentario.objects.filter(escena_id=id_escena).values('id', 'comentario_contestado')
+
+            # Crear un diccionario temporal para mapear cada comentario con su comentario_contestado
+            comentarios_map = {}
+            for comentario in comentarios:
+                comentarios_map[comentario['id']] = comentario['comentario_contestado']
+
+            # Crear el hashset final usando la función de recursión
+            hashset = {}
+            for comentario_id in comentarios_map.keys():
+                hilo_principal = self._obtener_hilo_principal(comentarios_map, comentario_id)
+                if hilo_principal not in hashset:
+                    hashset[hilo_principal] = []
+                if comentarios_map[comentario_id]:  # Si tiene un comentario contestado, agrégalo como respuesta
+                    hashset[hilo_principal].append(comentario_id)
+
+            # Eliminar duplicados en las listas del hashset
+            for key in hashset:
+                hashset[key] = list(set(hashset[key]))
+
+            return Response({"hashset": hashset}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": f"Error inesperado: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def _obtener_hilo_principal(self, comentarios_map, comentario_id):
+        """
+        Función recursiva para encontrar el hilo principal de un comentario.
+        """
+        comentario_contestado = comentarios_map.get(comentario_id)
+        if comentario_contestado is None:  # Es un comentario principal
+            return comentario_id
+        return self._obtener_hilo_principal(comentarios_map, comentario_contestado)
+        
+class ComentarioDetalleAPIView(APIView):
+    """
+    Endpoint para obtener un comentario específico por ID, incluyendo información
+    del usuario que comentó y, si es una respuesta, del usuario al que se responde.
+    """
+    def get(self, request):
+        # Obtener el parámetro id_comentario
+        id_comentario = request.query_params.get('idComentario')
+
+        # Validar que el parámetro esté presente
+        if not id_comentario:
+            return Response(
+                {"error": "El parámetro 'idComentario' es obligatorio."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Buscar el comentario por ID con sus relaciones
+            comentario = Comentario.objects.select_related(
+                'user',
+                'comentario_contestado',
+                'comentario_contestado__user'
+            ).get(id=id_comentario)
+
+            # Construir la respuesta
+            response_data = {
+                "id": comentario.id,
+                "texto": comentario.texto,
+                "visibilidad": comentario.visibilidad,
+                "usuario": comentario.user.nombre,  # Nombre del usuario que comentó
+                "idComentarioPadre": None,  # Valor por defecto
+            }
+
+            # Si es una respuesta a otro comentario, incluir información adicional
+            if comentario.comentario_contestado:
+                response_data.update({
+                    "idComentarioPadre": comentario.comentario_contestado.id,
+                    "usuarioRespondido": comentario.comentario_contestado.user.nombre
+                })
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Comentario.DoesNotExist:
+            return Response(
+                {"error": "No se encontró un comentario con el ID proporcionado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": f"Error inesperado: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
