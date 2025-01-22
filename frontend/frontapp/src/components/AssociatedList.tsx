@@ -13,30 +13,31 @@ interface AssociatedListProps {
   onRemove: (id: string) => void;
   style?: React.CSSProperties;
 }
+
 const AssociatedList: React.FC<AssociatedListProps> = ({ title, items, onRemove, style }) => {
   return (
     <div className="associated-list bg-white p-4 rounded-lg shadow-md" style={style}>
       <h2 className="text-lg font-bold mb-2">{title}</h2>
       <hr className="border-0 h-[3px] bg-orange-500 mb-4" />
       <ul className="list-none p-0 m-0">
-        {items.map(item => {
+        {items.map((item) => {
           const key = item.dni || item.id;
-          console.log(key) // Aceptar ambas propiedades
           if (!key) {
             console.error("El item no tiene una clave válida:", item);
             return null; // Salta este elemento si no tiene clave
           }
-          
+
           const name = item.nombre || item.name; // Aceptar ambas propiedades
-          
-          console.log("Clave del item:", key); // Verifica qué clave se usa (dni o id)
-          
+
           return (
-            <li key={key} className="flex justify-between items-center py-2 border-b last:border-b-0">
+            <li
+              key={key}
+              className="flex justify-between items-center py-2 border-b last:border-b-0"
+            >
               <span>{name}</span>
               <button
                 className="text-red-500 hover:text-red-700 focus:outline-none"
-                   onClick={() => onRemove(String(item.id || item.dni))}  // Usa directamente id o dni
+                onClick={() => onRemove(String(item.id || item.dni))} // Usa directamente id o dni
                 aria-label={`Eliminar ${item.name || item.nombre}`}
               >
                 🗑️
@@ -56,5 +57,6 @@ const AssociatedList: React.FC<AssociatedListProps> = ({ title, items, onRemove,
     </div>
   );
 };
+
 
 export default AssociatedList;

@@ -8,27 +8,23 @@ const GenericDropdown = ({
   title, 
   items, 
   onSelect,
-  labelKey = "name",
   valueKey = "id",
   placeholder = "Buscar...",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Filtrar elementos según el campo "name" o "nombre"
   const filteredItems = items.filter((item) => {
-    const label = item[labelKey]?.toString().toLowerCase() || "";
-    return label.includes(searchQuery.toLowerCase());
+    const label = item.name || item.nombre || ""; // Prioriza "name" y luego "nombre"
+    return label.toString().toLowerCase().includes(searchQuery.toLowerCase());
   });
-  
-  console.log('Items recibidos:', items);
-  console.log('Items filtrados:', filteredItems);
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (event) => {
     setSearchQuery(event.target.value);
   };
 
   const handleSelect = (item) => {
-    console.log('Item seleccionado:', item);
     onSelect(item);
     setIsOpen(false);
   };
@@ -42,12 +38,10 @@ const GenericDropdown = ({
       >
         <span>{title}</span>
         <span
-          className={`
-            inline-block w-0 h-0 ml-2.5 border-l-[5px] border-l-transparent 
+          className={`inline-block w-0 h-0 ml-2.5 border-l-[5px] border-l-transparent 
             border-r-[5px] border-r-transparent border-t-[5px] border-t-[#f6512b] 
             transition-transform duration-200
-            ${isOpen ? 'rotate-180' : 'rotate-0'}
-          `}
+            ${isOpen ? "rotate-180" : "rotate-0"}`}
         />
       </button>
 
@@ -72,15 +66,18 @@ const GenericDropdown = ({
             />
           </div>
 
-          {filteredItems.map((item, index) => (
-            <div
-              key={`${item[valueKey]}-${index}`}
-              onClick={() => handleSelect(item)}
-              className="p-2.5 cursor-pointer border-b border-gray-200 bg-white hover:bg-gray-50 transition-colors duration-200"
-            >
-              {item[labelKey]}
-            </div>
-          ))}
+          {filteredItems.map((item, index) => {
+            const label = item.name || item.nombre || "Sin Nombre"; // Mostrar algo por defecto si no hay nombre
+            return (
+              <div
+                key={`${item[valueKey]}-${index}`}
+                onClick={() => handleSelect(item)}
+                className="p-2.5 cursor-pointer border-b border-gray-200 bg-white hover:bg-gray-50 transition-colors duration-200"
+              >
+                {label}
+              </div>
+            );
+          })}
 
           {/* Mensaje si no hay coincidencias */}
           {filteredItems.length === 0 && (

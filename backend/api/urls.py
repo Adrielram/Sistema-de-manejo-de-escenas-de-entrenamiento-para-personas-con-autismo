@@ -6,6 +6,7 @@ from rest_framework.routers import DefaultRouter
 from .views import ObjetivoViewSet, EscenaListView, ObjetivosListView
 from django.urls import path
 from .views import delete_health_center
+from .views import UpdateGroupAssociationsView
 
 router = DefaultRouter()
 router.register(r'create_objetivo', ObjetivoViewSet, basename='objetivo')
@@ -35,6 +36,7 @@ urlpatterns = [
     path('get_groups/', views.get_groups, name='get_groups'),
     path('update_group/<int:group_id>/', views.update_group, name='update_group'),
     path('personagrupo/<int:grupo_id>/<int:user_id>/', views.delete_person_group, name='delete_person_group'),
+    path('update_group_associations/<int:group_id>/', UpdateGroupAssociationsView.as_view(), name='update_group_associations'),
 ]
 
 

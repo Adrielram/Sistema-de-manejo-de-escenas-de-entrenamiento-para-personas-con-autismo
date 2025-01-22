@@ -132,7 +132,7 @@ const CreateGroupPage = () => {
         <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 z-10 w-auto flex justify-center">
           <button 
             onClick={handleSave}
-            className="px-5 py-2.5 bg-[#f6512b] hover:bg-[#d94421] rounded-full text-white font-bold text-base cursor-pointer transition-colors duration-300 shadow-lg hover:shadow-xl"
+            className="px-4 py-2 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-colors"
           >
             Crear grupo
           </button>

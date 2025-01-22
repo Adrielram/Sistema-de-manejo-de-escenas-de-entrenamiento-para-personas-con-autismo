@@ -150,6 +150,7 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'dni',  # Cómo se llamará el campo en el token JWT ESTO SE HIZO PARA QUE ANDE EL SERIALIZER AL MOMENTO DE UTILIZAR COOKIES
 }
 CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Dirección de tu frontend (Next.js en desarrollo)
     "http://frontend:3000",  # Nombre del servicio en Docker Compose
@@ -162,3 +163,14 @@ CORS_ORIGIN_WHITELIST = [
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",  # Mismo dominio para CSRF
 ]
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo

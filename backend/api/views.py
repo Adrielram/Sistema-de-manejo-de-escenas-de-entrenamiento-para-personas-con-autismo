@@ -16,7 +16,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Centrodesalud
-from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from datetime import datetime
 from django.db import IntegrityError
@@ -46,7 +45,6 @@ import json
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
 
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import Grupo, Personagrupo, User
@@ -55,8 +53,49 @@ from .models import Grupo, Personagrupo, User
 
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
-from django.http import JsonResponse
-from .models import Grupo
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from .models import Personagrupo
+
+class UpdateGroupAssociationsView(APIView):
+    def put(self, request, group_id):
+        print("Method:", request.method)
+        print("Data:", request.data)
+        
+        try:
+            data = request.data
+            selected_therapists = data.get('therapists', [])
+            selected_patients = data.get('patients', [])
+
+            existing_associations = set(
+                Personagrupo.objects.filter(grupo_id_id=group_id)
+                .values_list('user_id_id', flat=True)
+            )
+            new_associations = set(selected_therapists + selected_patients)
+
+            # Eliminar solo las asociaciones que ya no están en la lista
+            to_delete = existing_associations - new_associations
+            Personagrupo.objects.filter(
+                grupo_id_id=group_id, 
+                user_id_id__in=to_delete
+            ).delete()
+
+            # Crear solo las nuevas asociaciones
+            for user_id in new_associations:
+                Personagrupo.objects.get_or_create(
+                    grupo_id_id=group_id, 
+                    user_id_id=user_id
+                )
+
+            return Response({'message': 'Asociaciones actualizadas'})
+            
+        except Exception as e:
+            print("Error:", str(e))
+            return Response({'error': str(e)}, status=400)
+
+    
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
