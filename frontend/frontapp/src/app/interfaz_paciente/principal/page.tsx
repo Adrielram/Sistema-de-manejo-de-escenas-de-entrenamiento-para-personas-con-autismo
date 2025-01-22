@@ -7,10 +7,10 @@ import { useRouter } from 'next/navigation';
 const PacientePrincipal = () => {
   const router = useRouter();
   const HandleOnClick = () => {
-    router.push('/paciente/video');
+    router.push('/paciente/ver_video');
   };
   const HandleOnClickObj = () => {
-    router.push('./objetivos_prueba');
+    router.push('./objetivos');
   };
   return ( 
     <div className=" md:min-h-screen w-full flex items-start md:items-center justify-center md:justify-start p-0 pt-4 md:p-8  bg-[#f5af76]">
