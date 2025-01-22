@@ -7,7 +7,7 @@ import { RootState } from '../../../../store/store';
 
 
 const VerHijos = () => {
-  const { username } = useSelector((state: RootState) => state.user) // ESTO ES EL DNI DEL PADRE, LO DEBERIA OBTENER DEL USUARIO LOGUEADO
+  const { username } = useSelector((state: RootState) => state.user) 
   const [hijos, setHijos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,10 +21,10 @@ const VerHijos = () => {
           throw new Error('Error al obtener el DNI');
         }
         const data = await response.json();
-        return data.dni; // Retornamos el DNI
+        return data.dni; 
       } catch (error) {
         setError(error.message);
-        throw error; // Lanza el error para detener la ejecución
+        throw error; 
       }
     };
   
@@ -36,7 +36,7 @@ const VerHijos = () => {
           throw new Error('Error al obtener los hijos');
         }
         const data = await response.json();
-        setHijos(data); // Guardamos los hijos en el estado
+        setHijos(data);
       } catch (error) {
         setError(error.message);
       } finally {
@@ -44,7 +44,6 @@ const VerHijos = () => {
       }
     };
   
-    // Controlador principal
     const fetchData = async () => {
       setLoading(true);
       try {
