@@ -33,7 +33,11 @@ urlpatterns = [
     path('getCenterProfesional/', GetCentroProfesionalView.as_view(), name='getCenterProfesional'),
     path('get_goals_centroprofesional/', GetCentroProfesionalObjetivosView.as_view(), name='get_goals_centroprofesional'),
     path('goal/<int:pk>/delete/', DeleteGoalView.as_view(), name='delete_goal'),
+    path('scenes/', ListsScenesView.as_view(), name='list_scenes'),
+    path('scene/<int:pk>/delete/', DeleteSceneView.as_view(), name='delete_scene'),
+    path('group/<int:pk>/delete/', DeleteGroupView.as_view(), name='delete_group'),
+    path('users/<str:username>/groups/', GroupsPerUserView.as_view(), name='groups_per_user'),
+    path('group/<int:group_id>/patients/', PatientsPerGroupView.as_view(), name='patients_per_group'),
 ]
-
 
 urlpatterns += [path('', include(router.urls))]

@@ -601,10 +601,69 @@ class GetCentroProfesionalObjetivosView(generics.ListAPIView):
             raise NotFound('Usuario no encontrado')
         except CentroProfesional.DoesNotExist:
             raise NotFound('Relación centro-profesional no encontrada')
-        
+
 class DeleteGoalView(generics.DestroyAPIView):
-    queryset = Objetivo.objects.all() 
+    queryset = Objetivo.objects.all()
     serializer_class = ObjetivoSerializer
+
+class ListsScenesView(generics.ListAPIView):
+    queryset = Escena.objects.all()
+    serializer_class = EscenaSerializer
+
+class DeleteSceneView(generics.DestroyAPIView):
+    queryset = Escena.objects.all()
+    serializer_class = ObjetivoSerializer
+
+class DeleteGroupView(generics.DestroyAPIView):
+    queryset = Grupo.objects.all()
+    serializer_class = GrupoSerializer
+
+class GroupsPerUserView(generics.ListAPIView):
+    serializer_class = GrupoSerializer
+
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        
+        user = User.objects.get(username=username)
+        
+        persona_grupo_qs = Personagrupo.objects.filter(user_id=user)
+        
+        grupos_ids = persona_grupo_qs.values_list('grupo_id', flat=True)
+        return Grupo.objects.filter(id__in=grupos_ids)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if not queryset.exists():
+            raise NotFound("El usuario no tiene grupos asociados.")
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+class PatientsPerGroupView(generics.ListAPIView):
+    serializer_class = PacienteSerializer
+
+    def get_queryset(self):
+        group_id = self.kwargs.get('group_id')
+        
+        try:
+            group = Grupo.objects.get(id=group_id)
+
+        except Grupo.DoesNotExist:
+            raise NotFound("El grupo especificado no existe.")
+
+        persona_grupo_qs = Personagrupo.objects.filter(grupo_id=group)            
+
+        users_dni = persona_grupo_qs.values_list('user_id__dni', flat=True)
+
+        return User.objects.filter(dni__in=users_dni, role='paciente')
+        
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if not queryset.exists():
+            raise NotFound("El grupo no tiene pacientes asociados.")
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def buscar_padres(request):

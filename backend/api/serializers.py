@@ -66,3 +66,8 @@ class PatientGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grupo
         fields = ['id', 'nombre', 'centrodesalud_id']
+
+class GrupoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Grupo
+        fields = ['id', 'nombre', 'centrodesalud_id']
