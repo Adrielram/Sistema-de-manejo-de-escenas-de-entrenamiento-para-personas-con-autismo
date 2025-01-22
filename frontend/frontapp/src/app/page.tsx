@@ -3,7 +3,6 @@ import React from "react";
 
 import { useState } from "react";
 import DropDownList from "../components/DropDownList";
-//import { Button } from "@headlessui/react";
 
 export default function Home() {
 

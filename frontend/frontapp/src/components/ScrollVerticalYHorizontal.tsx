@@ -1,83 +1,45 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import BigButton from "./BigButton";
 
-export default function ScrollVerticalYHorizontal() {
+interface Props {
+  elementos: Array<{ id: number; titulo: string }>;
+  onObjetivoClick: (id: number) => void;
+  selectedObjetivoId: number | null;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+function ScrollVerticalYHorizontalComponent({
+  elementos,
+  onObjetivoClick,
+  selectedObjetivoId,
+  currentPage,
+  totalPages,
+  onPageChange,
+}: Props) {
   const [isPortrait, setIsPortrait] = useState<boolean>(false);
-  //const [elementos, setElementos] = useState<{ id: number; texto: string }[]>(
-  //  []
-  //);
-
- const elementos = [
-    { id: 1, texto: "Objetivo 1" },
-    { id: 2, texto: "Objetivo 2" },
-    { id: 3, texto: "Objetivo 3" },
-    { id: 4, texto: "Objetivo 4" },
-    { id: 5, texto: "Objetivo 5" },
-    { id: 6, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
-    { id: 7, texto: "Objetivo 2" },
-    { id: 8, texto: "Objetivo 3" },
-    { id: 9, texto: "Objetivo 4" },
-    { id: 10, texto: "Objetivo 5" },
-    { id: 11, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
-    { id: 12, texto: "Objetivo 2" },
-    { id: 13, texto: "Objetivo 3" },
-    { id: 14, texto: "Objetivo 4" },
-    { id: 15, texto: "Objetivo 5" },
-    { id: 16, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
-    { id: 17, texto: "Objetivo 2" },
-    { id: 18, texto: "Objetivo 3" },
-    { id: 19, texto: "Objetivo 4" },
-  ];
-
-  /* useEffect(() => {
-    const fetchObjetivos = async () => {
-      try {
-        const response = await fetch("localhost:8000/api/objetivos");
-        if (!response.ok) {
-          throw new Error(`Error en la solicitud: ${response.status}`);
-        }
-        const data = await response.json();
-        setElementos(data);
-      } catch (error) {
-        console.error("Error al obtener los objetivos:", error);
-        setElementos([]); // En caso de error, dejamos la lista vacía
-      }
-    };
-
-    fetchObjetivos();
-  }, []);
- */
 
   useEffect(() => {
     const updateOrientation = () => {
       setIsPortrait(window.innerHeight > window.innerWidth);
     };
-
     const mediaQuery = window.matchMedia("(orientation: portrait)");
     setIsPortrait(mediaQuery.matches);
-
     mediaQuery.addEventListener("change", updateOrientation);
-
     return () => {
       mediaQuery.removeEventListener("change", updateOrientation);
     };
   }, []);
 
-
-  const handleButtonClick = () => {
-    //aca vamos a hacer la funcionalidad del boton
-  };
-
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Lista de Elementos</h1>
+    <div className="w-full flex flex-col gap-2">
       <div
         className={`overflow-auto ${
           isPortrait ? "overflow-x-scroll" : "overflow-y-scroll"
         } ${
-          isPortrait ? "max-h-96" : "h-[calc(100vh-100px)]"
+          isPortrait ? "max-h-64" : "max-h-[400px]"
         } bg-gray-100 rounded-lg shadow`}
       >
         <ul
@@ -92,16 +54,52 @@ export default function ScrollVerticalYHorizontal() {
               style={{ minWidth: isPortrait ? "fit-content" : "150px" }}
             >
               <BigButton
-                title={elemento.texto}
-                color="bg-blue-600"
+                title={elemento.titulo}
+                color={
+                  selectedObjetivoId === elemento.id ? "bg-blue-800" : "bg-blue-600"
+                }
                 font_bold="font-bold"
                 hover="hover:bg-blue-700"
-                onClick={() => handleButtonClick()}
+                onClick={() => onObjetivoClick(elemento.id)}
               />
             </li>
           ))}
         </ul>
       </div>
+
+      {/* Controles de paginación */}
+      <div className="flex justify-between items-center px-4 py-2 bg-gray-50 rounded-lg">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className={`px-4 py-1.5 text-sm rounded ${
+            currentPage === 1
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+          }`}
+        >
+          Anterior
+        </button>
+        <span className="text-sm">
+          Página {currentPage} de {totalPages}
+        </span>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-1.5 text-sm rounded ${
+            currentPage === totalPages
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+          }`}
+        >
+          Siguiente
+        </button>
+      </div>
     </div>
   );
 }
+
+// Memorizar el componente para evitar re-renderización innecesaria
+const ScrollVerticalYHorizontal = memo(ScrollVerticalYHorizontalComponent);
+
+export default ScrollVerticalYHorizontal;
