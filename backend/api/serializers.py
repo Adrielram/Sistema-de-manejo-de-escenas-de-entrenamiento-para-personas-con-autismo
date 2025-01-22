@@ -131,7 +131,7 @@ class RespuestaSerializer(serializers.ModelSerializer):
     nombre_pregunta = serializers.SerializerMethodField()
     class Meta:
         model = Respuesta
-        fields = ['id', 'pregunta', 'paciente', 'respuesta', 'correcta', 'nota', 'comentarios', 'nombre_pregunta']
+        fields = ['id', 'pregunta', 'paciente', 'respuesta', 'correcta', 'nota', 'comentarios', 'nombre_pregunta', 'intento_id', 'fecha_intento']
         list_serializer_class = BulkRespuestaSerializer
 
     def get_nombre_pregunta(self, obj):        

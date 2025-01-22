@@ -42,6 +42,7 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [comentarios, setComentarios] = useState<{ [key: number]: string }>({});
+  const [nuevasNotas, setNuevasNotas] = useState<{ [key: number]: string }>({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,17 +54,67 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
           throw new Error("Error al cargar los datos del formulario.");
         }
         const data = await response.json();
+        console.log("Data revision: ", JSON.stringify(data));
+  
         setFormulario(data.formulario);
-        setRespuestas(data.respuestas);
+  
+        // Obtener el último intento por fecha
+        const ultimoIntentoId = data.respuestas.reduce((max, current) =>
+          new Date(current.fecha_intento) > new Date(max.fecha_intento) ? current : max
+        ).intento_id;
+  
+        // Filtrar las respuestas del último intento
+        const respuestasUltimoIntento = data.respuestas.filter(
+          (respuesta) => respuesta.intento_id === ultimoIntentoId
+        );
+  
+        setRespuestas(respuestasUltimoIntento);
       } catch (err) {
         setError("Error al cargar los datos del formulario.");
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchData();
   }, [formularioId, pacienteDni]);
+  
+
+  const handleActualizarNota = async (respuestaId: number) => {
+    const nuevaNota = nuevasNotas[respuestaId];
+    if (!nuevaNota || isNaN(Number(nuevaNota)) || Number(nuevaNota) < 0 || Number(nuevaNota) > 10) {
+      alert("Por favor, ingrese un valor numérico válido para la nota.");
+      return;
+    }  
+    try {
+      const response = await fetch(`http://localhost:8000/api/respuestas/${respuestaId}/actualizar-nota/`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ nota: nuevaNota }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Error al actualizar la nota.");
+      }
+  
+      // Actualiza las respuestas localmente
+      setRespuestas((prevRespuestas) =>
+        prevRespuestas.map((respuesta) =>
+          respuesta.id === respuestaId
+            ? { ...respuesta, nota: nuevaNota }
+            : respuesta
+        )
+      );
+      setNuevasNotas((prev) => ({ ...prev, [respuestaId]: "" }));
+  
+      alert("Nota actualizada correctamente.");
+    } catch (err) {
+      console.error(err);
+      alert("Hubo un error al actualizar la nota.");
+    }
+  };
 
   const handleAddComment = async (respuestaId: number) => {
     if (!comentarios[respuestaId]) return;
@@ -104,7 +155,7 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
     } catch (err) {
       console.error(err);
     }
-  };
+  };  
 
   if (loading) return <p className="text-center text-gray-600">Cargando datos...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
@@ -119,20 +170,25 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
       )}
 
       <ul className="space-y-4">
-        {respuestas.map((respuesta) => (
+        {respuestas.map((respuesta) => (          
           <li
             key={respuesta.id}
             className="p-4 border border-gray-300 rounded-lg shadow-sm"
           >
-            <p className="font-medium text-gray-700">
-              <strong>Pregunta: {respuesta.nombre_pregunta}</strong>
+            <p className="font-medium text-gray-700 flex justify-between">
+              <span>
+                <strong>Pregunta: {respuesta.nombre_pregunta}</strong>
+              </span>
+              <span className="text-gray-600">
+                <strong>Nota:</strong> {respuesta.nota || "Pendiente"}
+              </span>
             </p>
             <p className="font-medium text-gray-700">
               <strong>Respuesta: {respuesta.respuesta}</strong> 
             </p>
             <p className="text-gray-600">
               <strong>Correcta:</strong> {" "}
-              {respuesta.correcta !== null ? (respuesta.correcta ? "Sí" : "No") : "Pendiente"}
+              {respuesta.correcta !== null ? (respuesta.correcta ? "Sí" : "No") : "Pendiente"}              
             </p>
 
             <div className="mt-4">
@@ -164,6 +220,32 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
               >
                 Enviar Comentario
               </button>
+            </div>
+            <div className="mt-4">
+              <label className="block text-gray-700 font-medium">Asignar nota:</label>
+              <div className="flex gap-4">
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  step="0.1"
+                  className="mt-2 p-2 border border-gray-300 rounded-lg w-20 focus:outline-none focus:ring focus:ring-blue-300"
+                  placeholder="0-10"
+                  value={nuevasNotas[respuesta.id] || ""}
+                  onChange={(e) =>
+                    setNuevasNotas((prev) => ({
+                      ...prev,
+                      [respuesta.id]: e.target.value,
+                    }))
+                  }
+                />
+                <button
+                  className="mt-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                  onClick={() => handleActualizarNota(respuesta.id)}
+                >
+                  Guardar Nota
+                </button>
+              </div>
             </div>
           </li>
         ))}

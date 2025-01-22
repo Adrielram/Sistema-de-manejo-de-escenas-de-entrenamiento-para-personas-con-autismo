@@ -676,9 +676,13 @@ class RespuestaListCreateView(generics.CreateAPIView):
         return Response(data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
+        intento_id = uuid.uuid4()
+        fecha_actual = datetime.now()
         # Sobrescribir para manejar lógica adicional
         respuestas = serializer.validated_data
         for respuesta_data in respuestas:
+            respuesta_data['intento_id'] = intento_id
+            respuesta_data['fecha_intento'] = fecha_actual
             pregunta = respuesta_data['pregunta']
             respuesta = respuesta_data['respuesta']
 
@@ -724,4 +728,69 @@ class RespuestasFormularioView(APIView):
 class CrearComentarioProfesionalView(generics.CreateAPIView):
     queryset = ComentarioProfesional.objects.all()
     serializer_class = ComentarioProfesionalSerializer
+
+class ActualizarNotaRespuestaView(APIView):
+    def patch(self, request, respuesta_id):
+        try:
+            respuesta = Respuesta.objects.get(id=respuesta_id)
+        except Respuesta.DoesNotExist:
+            return Response({"error": "Respuesta no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+        
+        nota = request.data.get("nota")
+        if nota is None:
+            return Response({"error": "El campo 'nota' es requerido."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            respuesta.nota = float(nota)
+            respuesta.save()
+            return Response({"mensaje": "Nota actualizada correctamente."}, status=status.HTTP_200_OK)
+        except ValueError:
+            return Response({"error": "El valor de 'nota' debe ser un número válido."}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import FormularioPacienteRevision
+
+@api_view(['POST'])
+def registrar_respuesta(request):
+    formulario_id = request.data.get('formulario_id')
+    paciente_dni = request.data.get('paciente_dni')
+    verificado_automatico = request.data.get('verificado_automatico', False)
+    revision = not verificado_automatico
+
+    revision_entry, created = FormularioPacienteRevision.objects.get_or_create(
+        formulario_id=formulario_id,
+        paciente_dni=paciente_dni,
+        defaults={'revision': revision, 'verificado_automatico': verificado_automatico},
+    )
+    return Response({"status": "ok", "revision": revision_entry.revision})
+
+@api_view(['PATCH'])
+def habilitar_revision(request, revision_id):
+    revision_entry = FormularioPacienteRevision.objects.get(id=revision_id)
+    revision_entry.revision = True
+    revision_entry.save()
+    return Response({"status": "ok", "revision": revision_entry.revision})
+
+@api_view(['GET'])
+def obtener_estado_revision(request):
+    formulario_id = request.query_params.get('formulario_id')
+    paciente_dni = request.query_params.get('paciente_dni')
+    
+    if not formulario_id or not paciente_dni:
+        return Response({"error": "Los parámetros formulario_id y paciente_dni son requeridos."}, status=400)
+
+    try:
+        revision_entry = FormularioPacienteRevision.objects.get(
+            formulario_id=formulario_id, paciente_dni=paciente_dni
+        )
+        return Response({
+            "revision": revision_entry.revision,
+            "volver_a_realizar": revision_entry.volver_a_realizar
+        })
+    except FormularioPacienteRevision.DoesNotExist:
+        return Response({"revision": False})
+
+
     

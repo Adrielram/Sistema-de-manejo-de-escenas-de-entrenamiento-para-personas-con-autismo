@@ -1,9 +1,8 @@
-'use client'
+'use client';
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const ResponderForm = () => {  
-
+const ResponderForm = ({ idform, onSubmitted }) => {
   const [formulario, setFormulario] = useState(null);
   const [respuestas, setRespuestas] = useState({});
   const [error, setError] = useState("");
@@ -12,11 +11,11 @@ const ResponderForm = () => {
   const router = useRouter();
 
   useEffect(() => {
-    fetch(`${baseUrl}formularios/1/`)
+    fetch(`${baseUrl}formularios/${idform}/`)
       .then((res) => res.json())
       .then((data) => setFormulario(data))
-      .catch((err) => setError("Error al cargar el formulario"));
-  }, []);
+      .catch(() => setError("Error al cargar el formulario"));
+  }, [idform]);
 
   const handleInputChange = (preguntaId, value) => {
     setRespuestas({ ...respuestas, [preguntaId]: value });
@@ -26,6 +25,17 @@ const ResponderForm = () => {
     e.preventDefault();
 
     if (!formulario) return;
+
+    // Validar que todas las preguntas tengan respuesta
+  const faltanRespuestas = formulario.preguntas.some((pregunta) => {
+    const respuesta = respuestas[pregunta.id];
+    return !respuesta || respuesta.trim() === ""; // Verifica si está vacía
+  });
+
+  if (faltanRespuestas) {
+    alert("Por favor, completa todas las respuestas antes de enviar.");
+    return; // Detener el envío
+  }
 
     const respuestasAEnviar = formulario.preguntas.map((pregunta) => {
       const respuesta = respuestas[pregunta.id] || "";
@@ -38,7 +48,7 @@ const ResponderForm = () => {
         pregunta: pregunta.id,
         respuesta,
         correcta,
-        paciente: 40333444, 
+        paciente: 40333444, // Ajusta esto según el paciente actual
       };
     });
 
@@ -46,7 +56,17 @@ const ResponderForm = () => {
       await fetch(`${baseUrl}respuestas/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(respuestasAEnviar), // Enviar como objeto
+        body: JSON.stringify(respuestasAEnviar),
+      });
+
+      await fetch(`${baseUrl}registrar-respuesta/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          formulario_id: idform,
+          paciente_dni: 40333444, // Ajusta según el paciente actual
+          verificado_automatico: formulario.es_verificacion_automatica,
+        }),
       });
 
       if (formulario.es_verificacion_automatica) {
@@ -58,8 +78,9 @@ const ResponderForm = () => {
         });
         setResultados(nuevosResultados);
       } else {
-        alert("Respuestas enviadas correctamente");
-        //router.push("/gracias"); // Redirigir a otra ruta si no es verificación automática
+        alert("Formulario enviado. Espera la revisión del terapeuta.");
+        setRespuestas({});
+        onSubmitted(); // Llamar a la función pasada por props
       }
     } catch (err) {
       console.error(err);

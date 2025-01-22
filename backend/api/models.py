@@ -375,13 +375,15 @@ class Opcion(models.Model):
     def __str__(self):
         return self.texto
 
-
+import uuid
 class Respuesta(models.Model):
     pregunta = models.ForeignKey(Pregunta, related_name="respuestas", on_delete=models.CASCADE)
     paciente = models.ForeignKey(User, on_delete=models.CASCADE, related_name="respuestas")
     respuesta = models.TextField()
     correcta = models.BooleanField(null=True)  # Solo para verificación automática
     nota = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)  # Nota de 0 a 10
+    intento_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    fecha_intento = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Respuesta de {self.paciente.username} a {self.pregunta.texto}"
@@ -394,4 +396,11 @@ class ComentarioProfesional(models.Model):
 
     def __str__(self):
         return f"Comentario de {self.terapeuta.username} en {self.respuesta}"
-
+    
+class FormularioPacienteRevision(models.Model):
+    formulario = models.ForeignKey('Formulario', on_delete=models.CASCADE)
+    paciente_dni = models.CharField(max_length=20)
+    revision = models.BooleanField(default=False)  # Si el terapeuta habilitó la revisión
+    verificado_automatico = models.BooleanField(default=False)  # Si se corrigió automáticamente
+    fecha_respuesta = models.DateTimeField(auto_now_add=True)
+    volver_a_realizar = models.BooleanField(default=False)
