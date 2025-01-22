@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Comentario from "../../../components/Comentario";
 import { NuevoComentario } from "../../../components/NuevoComentario";
 import { useRouter } from "next/navigation";
 import { useSelector } from 'react-redux';
@@ -30,7 +29,6 @@ const VerVideo = () => {
   const { username } = useSelector((state: RootState) => state.user);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [reloadComentarios, setReloadComentarios] = useState(false);
   const { idEscena, objetivoId } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
@@ -288,16 +286,6 @@ const VerVideo = () => {
             </div>
           )}
         </div>
-      </div>
-      {/* Comentarios */}
-      <div className="mt-4">
-        <h2 className="text-xl font-semibold mb-2">Comentarios</h2>
-        <Comentario/>
-        <NuevoComentario
-          formData={formData}
-          setFormData={setFormData}
-          onCommentAdded={() => setReloadComentarios(!reloadComentarios)} // Llama a esta función cuando se agrega un comentario
-        />
       </div>
     </div>
   );
