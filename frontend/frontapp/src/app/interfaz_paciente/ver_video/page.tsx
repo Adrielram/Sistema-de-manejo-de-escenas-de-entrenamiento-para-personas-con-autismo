@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { NuevoComentario } from "../../../components/NuevoComentario";
+import { useRouter } from "next/navigation";
 import { useSelector } from 'react-redux';
 import { RootState } from "../../../../store/store";
 import { useDispatch } from "react-redux";
@@ -35,8 +36,7 @@ const VerVideo = () => {
     escena: idEscena,
     texto: '',
     visibilidad: true,
-    comentario_respondido: 0,
-    usuarioRespondido: '', // Nuevo campo para guardar el nombre del usuario respondido
+    comentario_respondido: null,
   });
 
   
@@ -210,30 +210,26 @@ const VerVideo = () => {
 
   return (
     <div className="flex flex-col px-4 py-4 min-h-screen">
-      <div className="mt-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">Comentarios</h3>
-        <div>
-          {/* Renderizado de comentarios */}
-          {Object.keys(comentariosHashSet).map((principalId) => (
-            <div key={principalId} className="mb-4">
-              <ComentarioPaciente
-                idComentario={parseInt(principalId)}
-                respuestas={comentariosHashSet[parseInt(principalId)]}
-                onResponder={handleResponder}
-              />
-            </div>
-          ))}
+      {/* Contenedor principal */}
+      <div className="flex flex-col lg:flex-row items-stretch">
+        {/* Video */}
+        <div className="mr-0 lg:mr-4 mb-4 lg:mb-0 relative w-full max-w-[854px]">
+          <iframe
+            src={videos[currentVideoIndex]}
+            className="rounded-lg shadow-lg border-0 w-full h-full"
+            allow="autoplay; fullscreen"
+            style={{ aspectRatio: "16 / 9" }}
+          ></iframe>
         </div>
-        {formData.comentario_respondido !== 0 && (
-          <div className="flex items-center text-sm text-gray-600 mt-2">
-            <p>Respondiendo a @{formData.user}</p>
+
+        {/* Botones de acción */}
+        <div className="flex flex-col items-center justify-center flex-grow h-full">
+          <div className="flex flex-col justify-center flex-grow space-y-4 w-full max-w-sm">
             <button
-              onClick={() =>
-                setFormData((prev) => ({ ...prev, comentario_respondido: 0 }))
-              }
-              className="ml-2 text-red-500 hover:text-red-700 transition-colors"
+              onClick={handleVerListaObjetivos}
+              className="bg-blue-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full"
             >
-              &#x2716; {/* Código Unicode para la cruz roja */}
+              Ver lista de objetivos
             </button>
 
             {currentVideoIndex < videos.length - 1 && (
@@ -296,4 +292,3 @@ const VerVideo = () => {
 };
 
 export default VerVideo;
-
