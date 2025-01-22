@@ -1,28 +1,69 @@
-'use client'
-import React from "react";
+"use client"
+/*import React from 'react';
+import RevisionFormulario from '../components/RevisionFormulario';
 
-import { useState } from "react";
-import DropDownList from "../components/DropDownList";
-//import { Button } from "@headlessui/react";
+const CrearFormulario = () => {
+  return(
+    {/*<RevisionFormulario formularioId={1} pacienteDni={40333444} terapeutaDni={31222333} />}
+    
+  )
+};
 
-export default function Home() {
+export default CrearFormulario;*/
 
-  const names = ["Voces del Espectro", "Superando Barreras", "Mentes Maravillosas", "Diferentes, Iguales"]; // Opciones de la lista
-  const [selectedName, setSelectedName] = useState<string | null>(null); // Nombre seleccionado
+import { useState, useEffect } from "react";
+import ResponderForm from "../components/ResponderForm";
+import RevisionFormulario from "../components/RevisionFormulario";
 
-  const handleSelect = (name: string) => {
-    setSelectedName(name); 
-    console.log("Opción seleccionada:", name);
+const Page = () => {
+  const [volverRealizar, setvolverRealizar] = useState(false);
+  const [habilitado, setHabilitado] = useState(false);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL; 
+  const formularioId = 1;
+  const pacienteDni = 40333444;
+
+  const checkRevisionStatus = async () => {
+
+    const response = await fetch(
+      `${baseUrl}obtener_estado_revision/?formulario_id=${formularioId}&paciente_dni=${pacienteDni}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );    
+    const data = await response.json();
+    console.log("Data revision: ",  JSON.stringify(data));
+    setHabilitado(data.revision);
+    setvolverRealizar(data.volver_a_realizar);
   };
 
+  useEffect(() => {
+    checkRevisionStatus();
+  }, []);
+
   return (
-    <main className="flex items-center justify-center min-h-screen bg-black">
-      <div>
-        <h1 className="mb-4 text-2xl font-bold">
-          Seleccionaste: {selectedName || "Ninguno"}
-        </h1>
-        <DropDownList items={names} listName="Asociar Grupo" onSelect={handleSelect} />
-      </div>
-    </main>
+    <div>
+      {volverRealizar && (
+        <ResponderForm
+          idform={formularioId}
+          onSubmitted={() => {
+            setvolverRealizar(false);
+          }}
+        />
+      )}
+      {habilitado && (
+        <RevisionFormulario
+          formularioId={formularioId}
+          pacienteDni={pacienteDni}
+          terapeutaDni={31222333}
+        />
+      )}
+      {!habilitado && (
+        <p>Esperando que el terapeuta habilite la revisión.</p>
+      )}
+    </div>
   );
-}
+};
+
+export default Page;
+
