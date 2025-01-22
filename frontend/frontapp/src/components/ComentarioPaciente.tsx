@@ -56,7 +56,7 @@ const ComentarioPaciente: React.FC<ComentarioPacienteProps> = ({ idComentario, r
       )}
       <p className='text-red-700'>{comentario.usuario}</p>
       <p>
-      {comentario.visibilidad || role === 'terapeuta' || role === 'admin' || comentario.usuario=== username 
+      {comentario.visibilidad || role === 'terapeuta' || role === 'admin' || role === 'padre' || comentario.usuario === username 
         ? comentario.texto 
         : "Este comentario está oculto"}
       </p>
