@@ -27,7 +27,7 @@ const store = configureStore({
 // Verificar la cookie JWT y actualizar el estado de Redux
 const verifySession = async () => {
   try {
-    const response = await fetch("http://backend:8000/api/verify-session/", {
+    const response = await fetch("http://localhost:8000/api/verify-session/", {
       method: "GET",
       credentials: "include", // Esto envía las cookies al backend
     });
