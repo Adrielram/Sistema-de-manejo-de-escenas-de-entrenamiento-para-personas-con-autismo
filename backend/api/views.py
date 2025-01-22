@@ -759,12 +759,20 @@ def registrar_respuesta(request):
     verificado_automatico = request.data.get('verificado_automatico', False)
     revision = not verificado_automatico
 
-    revision_entry, created = FormularioPacienteRevision.objects.get_or_create(
+    # Crear una nueva entrada sin modificar las existentes
+    nueva_respuesta = FormularioPacienteRevision.objects.create(
         formulario_id=formulario_id,
         paciente_dni=paciente_dni,
-        defaults={'revision': revision, 'verificado_automatico': verificado_automatico},
+        revision=revision,
+        verificado_automatico=verificado_automatico,
     )
-    return Response({"status": "ok", "revision": revision_entry.revision})
+    return Response({
+        "status": "ok",
+        "formulario_id": formulario_id,
+        "paciente_dni": paciente_dni,
+        "fecha_respuesta": nueva_respuesta.fecha_respuesta,
+    })
+
 
 @api_view(['PATCH'])
 def habilitar_revision(request, revision_id):
@@ -791,9 +799,69 @@ def obtener_estado_revision(request):
         })
     except FormularioPacienteRevision.DoesNotExist:
         return Response({"revision": False})
-
-
     
+@api_view(['GET'])
+def verificar_formulario_completado(request, formulario_id, username):
+    paciente_dni = obtener_dni(username) 
+    try:
+        entry = FormularioPacienteRevision.objects.filter(
+            formulario_id=formulario_id,
+            paciente_dni=paciente_dni,
+            volver_a_realizar=False
+        ).latest('fecha_respuesta')  # Seleccionar la entrada más reciente
+        
+        return Response({
+            "status": "completado",
+            "formulario_id": formulario_id,
+            "paciente_dni": paciente_dni,
+            "fecha_respuesta": entry.fecha_respuesta,
+        })
+    except FormularioPacienteRevision.DoesNotExist:
+        return Response({
+            "status": "no_completado",
+            "formulario_id": formulario_id,
+            "paciente_dni": paciente_dni,
+        })    
+    
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import FormularioPacienteRevision
+
+from django.db.models import Max
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import FormularioPacienteRevision
+
+@api_view(['GET'])
+def listar_formularios_completados(request, username):
+    """
+    Lista el formulario más reciente para cada formulario_id asociado al paciente.
+    """
+    paciente_dni = obtener_dni(username)
+    try:
+        # Obtener el formulario más reciente para cada formulario_id
+        formularios = (
+            FormularioPacienteRevision.objects.filter(
+                paciente_dni=paciente_dni,
+                volver_a_realizar=False  # Solo formularios completados
+            )
+            .values('formulario_id')  # Agrupar por formulario_id
+            .annotate(ultima_fecha=Max('fecha_respuesta'))  # Obtener la fecha más reciente
+        )
+
+        # Filtrar los registros originales para obtener las tuplas completas
+        formularios_mas_recientes = FormularioPacienteRevision.objects.filter(
+            paciente_dni=paciente_dni,
+            volver_a_realizar=False,
+            fecha_respuesta__in=[f['ultima_fecha'] for f in formularios]  # Fechas más recientes
+        ).values('formulario_id', 'fecha_respuesta', 'revision', 'verificado_automatico')
+
+        return Response(list(formularios_mas_recientes), status=200)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
 
 def obtener_dni(username):
     if not username:

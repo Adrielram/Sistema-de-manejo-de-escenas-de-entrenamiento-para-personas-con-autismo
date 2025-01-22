@@ -81,8 +81,8 @@ const ResponderForm = ({ idform, onSubmitted = () => {}}) => {
         alert("Formulario enviado. Espera la revisión del terapeuta.");
         setRespuestas({});
         onSubmitted(); // Llamar a la función pasada por props
-      }
-      router.push(`/interfaz_paciente/ver_video/`);      
+      }      
+      router.push(`/interfaz_paciente/ver_video?completedFormId=${idform}`);      
     } catch (err) {
       console.error(err);
       setError("Error al enviar las respuestas");
@@ -102,7 +102,7 @@ const ResponderForm = ({ idform, onSubmitted = () => {}}) => {
         {formulario.preguntas.map((pregunta) => (
           <div 
             key={pregunta.id} 
-            className={`border-b pb-4 ${resultados[pregunta.id] === true ? "bg-green-100" : resultados[pregunta.id] === false ? "bg-red-100" : ""}`}
+            className={`border-b pb-4`}
           >
             <label className="block font-medium text-gray-800 mb-2">
               {pregunta.texto}

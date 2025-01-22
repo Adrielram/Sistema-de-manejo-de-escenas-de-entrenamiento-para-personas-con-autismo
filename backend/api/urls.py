@@ -43,11 +43,13 @@ urlpatterns = [
     path('get_goals_centroprofesional/', GetCentroProfesionalObjetivosView.as_view(), name='get_goals_centroprofesional'),
     path('goal/<int:pk>/delete/', DeleteGoalView.as_view(), name='delete_goal'),
     path('formularios/<int:formulario_id>/<int:paciente_dni>/', RespuestasFormularioView.as_view(), name='respuestas_formulario'),
+    path('verificar_form_completado/<int:formulario_id>/<str:username>/', verificar_formulario_completado, name='verificar_form_completado'),
     path('comentario_profesional/', CrearComentarioProfesionalView.as_view(), name='crear_comentario'),
     path('respuestas/<int:respuesta_id>/actualizar-nota/', ActualizarNotaRespuestaView.as_view(), name='actualizar-nota'),
     path('registrar-respuesta/', registrar_respuesta, name='registrar-respuesta'),
     path('obtener_estado_revision/', obtener_estado_revision, name='obtener_estado_revision'),
     path('cargar-persona-objetivo-evaluacion/', CargarPersonaObjetivoEvaluacion.as_view(), name='cargar_persona_objetivo_evaluacion'),
+    path('listar_formularios_completados/<str:username>/', views.listar_formularios_completados, name='listar_formularios_completados'),
 ]
 
 

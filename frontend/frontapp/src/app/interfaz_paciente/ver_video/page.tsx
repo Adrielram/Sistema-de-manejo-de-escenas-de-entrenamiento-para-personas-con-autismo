@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Comentario from "../../../components/Comentario";
 import { NuevoComentario } from "../../../components/NuevoComentario";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector } from 'react-redux';
 import { RootState } from "../../../../store/store"; 
 
@@ -30,7 +30,9 @@ const VerVideo = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [reloadComentarios, setReloadComentarios] = useState(false);
-
+  const searchParams = useSearchParams();
+  const completedFormId = searchParams.get('completedFormId');
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const [formData, setFormData] = useState({
     user: username, 
     escena: 0,
@@ -38,6 +40,38 @@ const VerVideo = () => {
     visibilidad: true,
     comentario_respondido: null,
   });
+
+  useEffect(() => {
+    const verificarFormulario = async (formId: string) => {
+      const response = await fetch(`${baseUrl}verificar_form_completado/${formId}/${username}/`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'completado') {
+          setCompletedQuizzes((prev) => [...new Set([...prev, parseInt(formId, 10)])]);
+        }
+      }
+    };
+
+    if (completedFormId) {
+      verificarFormulario(completedFormId);
+    }
+  }, [completedFormId]);
+
+  useEffect(() => {
+    const cargarFormulariosCompletados = async () => {
+      const response = await fetch(`${baseUrl}listar_formularios_completados/${username}/`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Data: ", JSON.stringify(data));
+        const completedIds = data.map((form: { formulario_id: number }) => form.formulario_id);
+        setCompletedQuizzes(completedIds);
+      }
+    };
+
+    cargarFormulariosCompletados();
+  }, []); // Solo se ejecuta al renderizar el componente por primera vez
+
+ 
 
   
 
@@ -252,7 +286,9 @@ const VerVideo = () => {
                     <div key={quiz.id} className="flex items-center w-full">
                       <button
                         onClick={() => handleQuizClick(quiz.id)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all flex-grow"
+                        disabled={completedQuizzes.includes(quiz.id)}
+                        className={`bg-blue-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all flex-grow 
+                          ${completedQuizzes.includes(quiz.id) ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-blue-600'}`}
                       >
                         {quiz.titulo}
                       </button>
