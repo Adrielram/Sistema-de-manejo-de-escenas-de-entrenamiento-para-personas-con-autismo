@@ -85,7 +85,7 @@ const scenes = () => {
               elem={scene} 
               img='/icon/pelicula.png' 
               opciones={opProps}
-              edit_path={`/therapist/scenes/${scene.id}`}
+              edit_path={`/therapist/selection/scenes/${scene.id}`}
             />
           </li>
         ))}

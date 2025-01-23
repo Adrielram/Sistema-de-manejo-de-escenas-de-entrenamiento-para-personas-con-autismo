@@ -6,7 +6,9 @@ from rest_framework.routers import DefaultRouter
 from .views import ObjetivoViewSet, EscenaListView, ObjetivosListView
 
 router = DefaultRouter()
-router.register(r'create_objetivo', ObjetivoViewSet, basename='objetivo')
+router.register(r'create_objetivo', ObjetivoViewSet, basename='create_objetivo')
+router.register(r'objetivos', ObjetivoViewSet, basename='objetivo')
+
 
 urlpatterns = [
     # Definir las rutas para las vistas que tengas en tu aplicación
@@ -33,6 +35,11 @@ urlpatterns = [
     path('getCenterProfesional/', GetCentroProfesionalView.as_view(), name='getCenterProfesional'),
     path('get_goals_centroprofesional/', GetCentroProfesionalObjetivosView.as_view(), name='get_goals_centroprofesional'),
     path('goal/<int:pk>/delete/', DeleteGoalView.as_view(), name='delete_goal'),
+    path('goal/ResolveNamesToIds/', ResolveNamesToIds.as_view(), name='ResolveNamesToIds'),
+    path('escenaById/<int:pk>/', EscenaById.as_view(), name='escenaById'),
+    path('scenes/<int:pk>', EscenaUpdateView.as_view(), name='escena-update'),
+
+
 ]
 
 

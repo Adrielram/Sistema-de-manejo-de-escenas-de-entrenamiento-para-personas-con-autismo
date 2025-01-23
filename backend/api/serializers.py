@@ -12,35 +12,66 @@ class PacienteSerializer(serializers.ModelSerializer):
         return obj.user_id_padre.nombre if obj.user_id_padre else ''
     
 class ObjetivoSerializer(serializers.ModelSerializer):
-    video_explicativo_id = serializers.PrimaryKeyRelatedField(
-        queryset=Escena.objects.all(), source='escena'
-    )  # Relación con la escena del video explicativo
-    centro_salud_id = serializers.PrimaryKeyRelatedField(
-        queryset=CentroProfesional.objects.all()
-    )  # Relación con centro de salud
-    profesional_id = serializers.PrimaryKeyRelatedField(
-        queryset=CentroProfesional.objects.all()
-    )  # Relación con profesional
+   video_explicativo_id = serializers.PrimaryKeyRelatedField(
+       queryset=Escena.objects.all(), source='escena'
+   )
+   centro_profesional = serializers.PrimaryKeyRelatedField(
+       queryset=CentroProfesional.objects.all()
+   )
+   escenas = serializers.PrimaryKeyRelatedField(
+       many=True,
+       queryset=Escena.objects.all(),
+       required=False
+   )
+   objetivos = serializers.PrimaryKeyRelatedField(
+       many=True, 
+       queryset=Objetivo.objects.all(),
+       required=False
+   )
 
-    class Meta:
-        model = Objetivo
-        fields = ['id', 'nombre', 'descripcion', 'video_explicativo_id', 'centro_salud_id', 'profesional_id']
+   class Meta:
+       model = Objetivo
+       fields = ['id', 'nombre', 'descripcion', 'video_explicativo_id', 'centro_profesional', 'escenas', 'objetivos']
 
-    def create(self, validated_data):
-        # Extraer el video explicativo y las escenas
-        video_explicativo = validated_data.pop('escena')
-        escenas_ids = validated_data.pop('escenas', [])
-        objetivos_ids = validated_data.pop('objetivos', [])
-        # Crear el objetivo
-        objetivo = Objetivo.objects.create(escena=video_explicativo, **validated_data)
-        # Crear las relaciones EscenaObjetivo
-        for escena_id in escenas_ids:
-            escena = Escena.objects.get(id=escena_id)
-            EscenaObjetivo.objects.create(objetivo=objetivo, escena=escena)
-        for objetivo_id in objetivos_ids:
-            objetivo_previo = Objetivo.objects.get(id=objetivo_id)
-            Objetivoscumplir.objects.create(objetivo=objetivo, objetivo_previo=objetivo_previo)
-        return objetivo
+   def create(self, validated_data):
+       escenas_data = validated_data.pop('escenas', [])
+       objetivos_data = validated_data.pop('objetivos', [])
+       
+       objetivo = Objetivo.objects.create(**validated_data)
+       
+       for escena in escenas_data:
+           EscenaObjetivo.objects.create(objetivo=objetivo, escena=escena)
+           
+       for objetivo_previo in objetivos_data:
+           Objetivoscumplir.objects.create(objetivo=objetivo, objetivo_previo=objetivo_previo)
+           
+       return objetivo
+   
+   def update(self, instance, validated_data):
+        # Actualizar los campos básicos
+        instance.nombre = validated_data.get('nombre', instance.nombre)
+        instance.descripcion = validated_data.get('descripcion', instance.descripcion)
+        instance.escena = validated_data.get('escena', instance.escena)
+        instance.centro_profesional = validated_data.get('centro_profesional', instance.centro_profesional)
+
+        # Manejar escenas
+        if 'escenas' in validated_data:
+            # Eliminar las relaciones existentes
+            EscenaObjetivo.objects.filter(objetivo=instance).delete()
+            # Crear las nuevas relaciones
+            for escena in validated_data['escenas']:
+                EscenaObjetivo.objects.create(objetivo=instance, escena=escena)
+
+        # Manejar objetivos previos
+        if 'objetivos' in validated_data:
+            # Eliminar las relaciones existentes
+            Objetivoscumplir.objects.filter(objetivo=instance).delete()
+            # Crear las nuevas relaciones
+            for objetivo_previo in validated_data['objetivos']:
+                Objetivoscumplir.objects.create(objetivo=instance, objetivo_previo=objetivo_previo)
+
+        instance.save()
+        return instance
 
 class ObjetivoSerializerList(serializers.ModelSerializer):
     class Meta:
@@ -51,6 +82,22 @@ class EscenaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Escena
         fields = ['id', 'idioma', 'acento', 'condiciones', 'complejidad', 'link', 'nombre']
+
+    def update(self, instance, validated_data):
+        """
+        Custom update method to handle null conditions
+        """
+        # Update each field from validated data
+        instance.nombre = validated_data.get('nombre', instance.nombre)
+        instance.idioma = validated_data.get('idioma', instance.idioma)
+        instance.acento = validated_data.get('acento', instance.acento)
+        instance.condiciones = validated_data.get('condiciones', instance.condiciones)
+        instance.complejidad = validated_data.get('complejidad', instance.complejidad)
+        instance.link = validated_data.get('link', instance.link)
+        
+        # Save the updated instance
+        instance.save()
+        return instance
 
 class CentroSaludSerializer(serializers.ModelSerializer):  
     class Meta:

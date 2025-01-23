@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.http import JsonResponse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.decorators import api_view
@@ -25,6 +25,7 @@ import json
 
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.generics import UpdateAPIView
 
 class DynamicPagination(PageNumberPagination):
     page_size_query_param = "limit"
@@ -81,6 +82,7 @@ def login(request):
     return Response(serializer.errors, status=400)
 
 
+
 @api_view(['POST'])
 def logout(request):
     response = Response({"message": "Logout successful"})
@@ -129,7 +131,18 @@ class PacienteListView(APIView):
 
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
+class ResolveNamesToIds(APIView):
+    def post(self, request):
+        center_name = request.data.get('center_name')
+        username = request.data.get('username')
+        
+        center = get_object_or_404(Centrodesalud, nombre=center_name)
+        user = get_object_or_404(User, username=username)
+        center_professional = CentroProfesional.objects.get(centrodesalud=center, profesional=user)
+        return Response({
+            'center_professional': center_professional.id
+        }) 
+    
 class ObjetivoViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
@@ -144,22 +157,37 @@ class ObjetivoViewSet(viewsets.ViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    def update(self, request, pk=None):
+        try:
+            # Obtener el objetivo que se desea actualizar
+            objetivo = Objetivo.objects.get(pk=pk)
+        except Objetivo.DoesNotExist:
+            return Response({'error': 'Objetivo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Serializar los datos
+        serializer = ObjetivoSerializer(objetivo, data=request.data, partial=False)  # `partial=False` porque es un PUT
+        if serializer.is_valid():
+            objetivo = serializer.save()
+            return Response({
+                'message': 'Objetivo actualizado con éxito',
+                'objetivo': serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class EscenaUpdateView(UpdateAPIView):
+    queryset = Escena.objects.all()
+    serializer_class = EscenaSerializer
 
 @api_view(['GET'])
 def get_goal_data(request, objetivo_id):
     try:
-        # Obtener el objetivo principal
-        objetivo = Objetivo.objects.get(pk=objetivo_id)
+        # Obtener el objetivo principal usando get_object_or_404 para manejar la excepción
+        objetivo = get_object_or_404(Objetivo, pk=objetivo_id)
         
-        # Obtener la escena explicativa asociada
-        escena_explicativa = {
-            "id": objetivo.escena.id,
-            "nombre": objetivo.escena.nombre,
-            "idioma": objetivo.escena.idioma,
-            "acento": objetivo.escena.acento,
-            "complejidad": objetivo.escena.complejidad,
-            "link": objetivo.escena.link,
-        }
+        # Serializar el objetivo para obtener todos los campos del serializer
+        serializer = ObjetivoSerializer(objetivo)
+        serialized_objetivo = serializer.data
 
         # Obtener las escenas relacionadas a través de EscenaObjetivo
         escenas_relacionadas = [
@@ -174,18 +202,15 @@ def get_goal_data(request, objetivo_id):
             for relacion in EscenaObjetivo.objects.filter(objetivo=objetivo)
         ]
 
-        # Preparar la respuesta
-        response = {
-            "id": objetivo.id,
-            "nombre": objetivo.nombre,
-            "descripcion": objetivo.descripcion,
-            "escena_explicativa": escena_explicativa,
-            "escenas_relacionadas": escenas_relacionadas,
-        }
+        # Añadir las escenas relacionadas al diccionario serializado
+        serialized_objetivo['escenas_relacionadas'] = escenas_relacionadas
 
-        return JsonResponse(response, status=200)
+        # Si necesitas una escena explicativa específica, añádela aquí, aunque ya está en video_explicativo_id
+        # Puedes omitirla si ya está representada por video_explicativo_id en el serializer
+
+        return Response(serialized_objetivo, status=200)
     except Objetivo.DoesNotExist:
-        return JsonResponse({"error": "Objetivo no encontrado"}, status=404)
+        return Response({"error": "Objetivo no encontrado"}, status=404)
         
 from django.db import transaction
 
@@ -405,6 +430,12 @@ def get_related_centers(self):
         profesional = User.objects.get(username=username)
         return CentroProfesional.objects.filter(profesional=profesional).values_list('centrodesalud', flat=True)
 
+class EscenaById(APIView):
+    def get(self, request, pk):
+        # Obtener el objeto Escena por su ID (pk)
+        escena = get_object_or_404(Escena, pk=pk)
+        serializer = EscenaSerializer(escena)
+        return Response(serializer.data)
 class NotAssociatedCentersListView(generics.ListAPIView):
     serializer_class = CentroSaludSerializer
     pagination_class = DynamicPagination
@@ -631,3 +662,5 @@ def buscar_padres(request):
         'total_paginas': paginator.num_pages,
         'pagina_actual': page_obj.number
     })
+
+

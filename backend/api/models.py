@@ -99,7 +99,10 @@ class Objetivo(models.Model):
     id = models.AutoField(primary_key=True)  # Aunque esto es implícito en Django y no es necesario declararlo
     nombre = models.CharField(
         max_length=100, 
-        default="Sin Nombre"
+        default="Sin Nombre",
+        unique=True,
+        null=False,
+        blank=False
     )
     descripcion = models.CharField(max_length=255)
     escena = models.ForeignKey(
