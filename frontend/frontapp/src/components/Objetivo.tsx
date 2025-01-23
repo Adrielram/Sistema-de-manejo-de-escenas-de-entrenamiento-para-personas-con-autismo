@@ -9,7 +9,6 @@ const Objetivo = ({
   expanded,
   onExpand,
   onNavigate,
-  resultado,
   progreso,
 }: {
   id: number;
@@ -17,8 +16,7 @@ const Objetivo = ({
   descripcion: string;
   expanded: boolean;
   onExpand: (id: number) => void;
-  onNavigate: (id: number) => void;
-  resultado: string;
+  onNavigate: (id: number) => void;  
   progreso: number; // Añadido para recibir el progreso
 }) => {
   return (
@@ -29,14 +27,21 @@ const Objetivo = ({
       {expanded && (
         <div>
           <p>{descripcion}</p>
-          <ProgressBar progress={progreso} /> {/* Usar la barra de progreso aquí */}
-          <p>{resultado}</p>
-          <button
-            onClick={() => onNavigate(id)}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-          >
-            Ver comentarios
-          </button>
+          <ProgressBar progress={progreso} /> {/* Usar la barra de progreso aquí */}       
+          <div className='flex gap-4'>
+            <button
+              onClick={() => onNavigate(id)}
+              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              Ver comentarios
+            </button>
+            <button
+              onClick={() => onNavigate(id)}
+              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              Ver evaluaciones
+            </button>
+          </div>  
         </div>
       )}
     </div>

@@ -15,6 +15,7 @@ type ObjetivoData = {
 };
 
 type PersonaObjetivo = {
+  id: number;
   progreso: number;
   objetivo_id: ObjetivoData;  
   resultado: string | null;
@@ -63,6 +64,7 @@ const ObjetivoList = () => {
         
         const data = await response.json();
         setObjetivos(data);
+        console.log("Objetivos Data: ", JSON.stringify(data));
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -111,16 +113,15 @@ const ObjetivoList = () => {
         {objetivos.length === 0 ? (
           <div className="text-gray-600 text-center">No hay objetivos disponibles</div>
         ) : (
-          objetivos.map(({ progreso, objetivo_id, resultado }) => (
+          objetivos.map(({ id, progreso, objetivo_id }) => (
             <Objetivo
-              key={objetivo_id.id}
+              key={id}
               id={objetivo_id.id}
               titulo={objetivo_id.nombre}
               descripcion={objetivo_id.descripcion}
               expanded={expandedId === objetivo_id.id}
               onExpand={handleExpand}
-              onNavigate={handleNavigate}
-              resultado={resultado}
+              onNavigate={handleNavigate}              
               progreso={progreso}
             />
           ))

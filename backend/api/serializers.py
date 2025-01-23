@@ -46,7 +46,7 @@ class PersonaObjetivoEvaluacionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PersonaObjetivoEvaluacion
-        fields = ['progreso', 'objetivo_id', 'resultado']
+        fields = ['id', 'progreso', 'objetivo_id', 'resultado']
 
 class EscenaSerializer(serializers.ModelSerializer):
     class Meta:
