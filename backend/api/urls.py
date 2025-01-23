@@ -34,10 +34,14 @@ urlpatterns = [
     path('get_goals_centroprofesional/', GetCentroProfesionalObjetivosView.as_view(), name='get_goals_centroprofesional'),
     path('goal/<int:pk>/delete/', DeleteGoalView.as_view(), name='delete_goal'),
     path('scenes/', ListsScenesView.as_view(), name='list_scenes'),
+    path('get_scenes/', GetScenesView.as_view(), name='get_scenes'),
     path('scene/<int:pk>/delete/', DeleteSceneView.as_view(), name='delete_scene'),
     path('group/<int:pk>/delete/', DeleteGroupView.as_view(), name='delete_group'),
     path('users/<str:username>/groups/', GroupsPerUserView.as_view(), name='groups_per_user'),
+    path('get_groups_per_user/', GetGroupsPerUserView.as_view(), name='get_groups_per_user'),
     path('group/<int:group_id>/patients/', PatientsPerGroupView.as_view(), name='patients_per_group'),
+    path('forms_per_user/', GetFormsPerUserView.as_view(), name='forms_per_user'),
+    path('assesment/<int:pk>/delete/', DeleteAssesmentView.as_view(), name='delete_assesment'),
 ]
 
 urlpatterns += [path('', include(router.urls))]

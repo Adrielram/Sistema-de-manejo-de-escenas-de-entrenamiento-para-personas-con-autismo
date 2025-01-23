@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Objetivo, Escena, CentroProfesional, EscenaObjetivo, Objetivoscumplir, Centrodesalud, Grupo
+from .models import User, Objetivo, Escena, CentroProfesional, EscenaObjetivo, Objetivoscumplir, Centrodesalud, Grupo, Formulario
 
 class PacienteSerializer(serializers.ModelSerializer):
     padreACargo = serializers.SerializerMethodField()
@@ -71,3 +71,8 @@ class GrupoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grupo
         fields = ['id', 'nombre', 'centrodesalud_id']
+
+class FormularioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Formulario
+        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'fecha_creacion']

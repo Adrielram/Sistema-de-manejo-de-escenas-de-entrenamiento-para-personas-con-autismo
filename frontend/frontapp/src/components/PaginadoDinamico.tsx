@@ -12,6 +12,7 @@ interface BoxPaginadoProps {
   options: OptionsProps;
   img: string;
   edit_path: string;
+  item_type: string;
   showImage: boolean;
   currentPage: number;
   totalItems: number;
@@ -25,6 +26,7 @@ export default function BoxPaginado({
   options,
   img,
   edit_path,
+  item_type,
   showImage,
   currentPage, 
   totalItems: initialTotalItems,
@@ -84,6 +86,7 @@ export default function BoxPaginado({
             options={options} 
             img={img} 
             edit_path={`${edit_path}${key}`}
+            item_type={item_type}
             onDelete={handleDelete}
           />
         ))}

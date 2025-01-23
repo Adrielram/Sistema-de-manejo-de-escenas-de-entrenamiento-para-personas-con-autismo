@@ -610,6 +610,11 @@ class ListsScenesView(generics.ListAPIView):
     queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
 
+class GetScenesView(generics.ListAPIView):
+    queryset = Escena.objects.all()
+    serializer_class = EscenaSerializer
+    pagination_class = DynamicPagination
+
 class DeleteSceneView(generics.DestroyAPIView):
     queryset = Escena.objects.all()
     serializer_class = ObjetivoSerializer
@@ -629,6 +634,7 @@ class GroupsPerUserView(generics.ListAPIView):
         persona_grupo_qs = Personagrupo.objects.filter(user_id=user)
         
         grupos_ids = persona_grupo_qs.values_list('grupo_id', flat=True)
+
         return Grupo.objects.filter(id__in=grupos_ids)
 
     def list(self, request, *args, **kwargs):
@@ -638,6 +644,24 @@ class GroupsPerUserView(generics.ListAPIView):
         
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+    
+class GetGroupsPerUserView(generics.ListAPIView):
+    serializer_class = GrupoSerializer
+    pagination_class = DynamicPagination
+
+    def get_queryset(self):
+        username = self.request.query_params.get('username')
+
+        if not username:
+            raise NotFound("El parámetro 'username' es requerido.")
+        
+        user = User.objects.get(username=username)
+        
+        persona_grupo_qs = Personagrupo.objects.filter(user_id=user)
+        
+        grupos_ids = persona_grupo_qs.values_list('grupo_id', flat=True)
+
+        return Grupo.objects.filter(id__in=grupos_ids)
 
 class PatientsPerGroupView(generics.ListAPIView):
     serializer_class = PacienteSerializer
@@ -664,6 +688,26 @@ class PatientsPerGroupView(generics.ListAPIView):
         
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class GetFormsPerUserView(generics.ListAPIView):
+    serializer_class = FormularioSerializer
+    pagination_class = DynamicPagination
+
+    def get_queryset(self):
+        username = self.request.query_params.get('username')
+        if not username:
+            raise NotFound("El parámetro 'username' es requerido.")
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise NotFound(f"Usuario con username '{username}' no encontrado.")
+
+        return Formulario.objects.filter(creado_por=user)
+
+class DeleteAssesmentView(generics.DestroyAPIView):
+    queryset = Formulario.objects.all()
+    serializer_class = FormularioSerializer
 
 @api_view(['GET'])
 def buscar_padres(request):

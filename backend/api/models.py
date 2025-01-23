@@ -116,6 +116,7 @@ class Objetivo(models.Model):
     class Meta:   
         db_table = 'objetivo'
 
+# ! borrar
 class Evaluacion(models.Model): 
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(
@@ -138,6 +139,19 @@ class Evaluacion(models.Model):
     )
     class Meta:
         db_table = 'evaluacion'      
+
+class Formulario(models.Model):
+    nombre = models.CharField(max_length=255) # * creo que voy a necesitar cambiarlo a 'nombre'
+    descripcion = models.TextField(blank=True, null=True)
+    es_verificacion_automatica = models.BooleanField(default=False)
+    creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def _str_(self):
+        return self.nombre
+
+    class Meta:
+        db_table = 'formulario'      
 
 class CentroProfesionalEscena(models.Model):    
     escena_id = models.ForeignKey(
@@ -243,7 +257,7 @@ class PersonaObjetivoEvaluacion(models.Model):
     resultado = models.TextField(blank=True, null=True)
     progreso = models.IntegerField()
     evaluacion = models.ForeignKey(
-        'Evaluacion', 
+        'Formulario', 
         on_delete=models.CASCADE, 
         blank=True, 
         null=True
@@ -339,3 +353,6 @@ class Notificacion(models.Model):
 
     def __str__(self):
         return f"De {self.remitente} a {self.destinatario} - {self.estado}"
+    
+    class Meta:
+        db_table = 'notificacion'

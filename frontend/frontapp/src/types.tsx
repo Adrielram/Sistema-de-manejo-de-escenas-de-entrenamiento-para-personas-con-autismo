@@ -21,4 +21,5 @@ export type OptionsProps = {
   buttonComments?: boolean; // Muestra botón de "Comentarios"
   buttonEdit?: boolean; // Muestra botón de "Editar"
   buttonSeguimiento?: boolean; // Muestra botón de "Seguimiento"
+  seePatientsButton?: boolean; // Muestra botón de "Ver Pacientes"
 };

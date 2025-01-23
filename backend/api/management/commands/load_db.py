@@ -324,13 +324,56 @@ class Command(BaseCommand):
             profesional_id=centro_prof
         )
 
+        formulario_1 = Formulario.objects.create(
+            nombre="Formulario 1",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 2",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 3",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 4",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 5",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 6",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+
         # Create person-objective-evaluation
         PersonaObjetivoEvaluacion.objects.create(
             user_id=paciente,
             objetivo_id=objetivo_3,
             resultado="Progresando bien",
             progreso=75,
-            evaluacion=evaluacion
+            evaluacion=formulario_1
         )
 
         # Create group memberships
