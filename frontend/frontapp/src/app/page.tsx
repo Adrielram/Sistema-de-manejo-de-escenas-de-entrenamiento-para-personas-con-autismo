@@ -19,8 +19,8 @@ const Page = () => {
   const [volverRealizar, setvolverRealizar] = useState(false);
   const [habilitado, setHabilitado] = useState(false);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL; 
-  const formularioId = 1;
-  const pacienteDni = 40333444;
+  const formularioId = 3;
+  const pacienteDni = "paciente1";
 
   const checkRevisionStatus = async () => {
 
@@ -51,14 +51,15 @@ const Page = () => {
           }}
         />
       )}
-      {habilitado && (
+      {!habilitado && (
         <RevisionFormulario
           formularioId={formularioId}
           pacienteDni={pacienteDni}
           terapeutaDni={31222333}
+          rolUsuario="terapeuta"
         />
       )}
-      {!habilitado && (
+      {habilitado && (
         <p>Esperando que el terapeuta habilite la revisión.</p>
       )}
     </div>

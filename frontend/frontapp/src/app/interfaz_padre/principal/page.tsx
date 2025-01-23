@@ -37,6 +37,7 @@ const VerHijos = () => {
         }
         const data = await response.json();
         setHijos(data);
+        console.log("DATA HIJOS:  ", JSON.stringify(data));
       } catch (error) {
         setError(error.message);
       } finally {

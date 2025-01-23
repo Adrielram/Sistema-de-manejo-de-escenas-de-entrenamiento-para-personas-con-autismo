@@ -28,14 +28,16 @@ interface Formulario {
 
 interface RespuestasFormularioProps {
   formularioId: number;
-  pacienteDni: number;
-  terapeutaDni: number;
+  pacienteDni: string;
+  terapeutaDni?: number;
+  rolUsuario: "terapeuta" | "persona";
 }
 
 const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
   formularioId,
   pacienteDni,
   terapeutaDni,
+  rolUsuario,
 }) => {
   const [formulario, setFormulario] = useState<Formulario | null>(null);
   const [respuestas, setRespuestas] = useState<Respuesta[]>([]);
@@ -201,52 +203,60 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
                 ))}
               </ul>
             </div>
-
-            <div className="mt-4">
-              <textarea
-                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                placeholder="Agregar un comentario"
-                value={comentarios[respuesta.id] || ""}
-                onChange={(e) =>
-                  setComentarios((prev) => ({
-                    ...prev,
-                    [respuesta.id]: e.target.value,
-                  }))
-                }
-              ></textarea>
-              <button
-                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                onClick={() => handleAddComment(respuesta.id)}
-              >
-                Enviar Comentario
-              </button>
-            </div>
-            <div className="mt-4">
-              <label className="block text-gray-700 font-medium">Asignar nota:</label>
-              <div className="flex gap-4">
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  step="0.1"
-                  className="mt-2 p-2 border border-gray-300 rounded-lg w-20 focus:outline-none focus:ring focus:ring-blue-300"
-                  placeholder="0-10"
-                  value={nuevasNotas[respuesta.id] || ""}
-                  onChange={(e) =>
-                    setNuevasNotas((prev) => ({
-                      ...prev,
-                      [respuesta.id]: e.target.value,
-                    }))
-                  }
-                />
-                <button
-                  className="mt-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                  onClick={() => handleActualizarNota(respuesta.id)}
-                >
-                  Guardar Nota
-                </button>
-              </div>
-            </div>
+            {rolUsuario === "terapeuta" && (
+              <>
+                <div className="mt-4">
+                  <textarea
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                    placeholder="Agregar un comentario"
+                    value={comentarios[respuesta.id] || ""}
+                    onChange={(e) =>
+                      setComentarios((prev) => ({
+                        ...prev,
+                        [respuesta.id]: e.target.value,
+                      }))
+                    }
+                  ></textarea>
+                  <button
+                    className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    onClick={() => handleAddComment(respuesta.id)}
+                  >
+                    Enviar Comentario
+                  </button>
+                </div>              
+              </>
+            )}
+           
+            {rolUsuario === "terapeuta" && (
+              <>
+                <div className="mt-4">
+                <label className="block text-gray-700 font-medium">Asignar nota:</label>
+                  <div className="flex gap-4">
+                    <input
+                      type="number"
+                      min="0"
+                      max="10"
+                      step="0.1"
+                      className="mt-2 p-2 border border-gray-300 rounded-lg w-20 focus:outline-none focus:ring focus:ring-blue-300"
+                      placeholder="0-10"
+                      value={nuevasNotas[respuesta.id] || ""}
+                      onChange={(e) =>
+                        setNuevasNotas((prev) => ({
+                          ...prev,
+                          [respuesta.id]: e.target.value,
+                        }))
+                      }
+                    />
+                    <button
+                      className="mt-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                      onClick={() => handleActualizarNota(respuesta.id)}
+                    >
+                      Guardar Nota
+                    </button> 
+                  </div> 
+                </div>                        
+              </>           
+            )}
           </li>
         ))}
       </ul>
