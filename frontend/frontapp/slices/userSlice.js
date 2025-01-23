@@ -4,7 +4,7 @@ const initialState = {
   isLoggedIn: false,
   username: "",
   role: "",
-  centro: "",
+  center: "",  
   userId: "",
   objetivoId: "",
 };
@@ -17,19 +17,18 @@ const userSlice = createSlice({
       state.isLoggedIn = action.payload.loggedIn;
       state.username = action.payload.username;
       state.role=action.payload.role;
-      state.centro=action.payload.centro;
     },
     clearUser: (state) => {
       state.isLoggedIn = false;
       state.username = "";
       state.role="";
-      state.centro="";
+      state.center="";
       state.userId= "";
       state.objetivoId = "";
     },
 
-    setCentroSalud: (state, action) => {
-      state.centro = action.payload.centro;
+    setCenter: (state, action) => {
+      state.center = action.payload.center;
     },
     setUserId: (state,action) => {
       state.userId = action.payload.userId;
@@ -41,5 +40,5 @@ const userSlice = createSlice({
 }
 });
 
-export const { setUser, clearUser ,setUserId, setObjetivoId} = userSlice.actions;
+export const { setUser, clearUser, setCenter, setUserId, setObjetivoId} = userSlice.actions;
 export default userSlice.reducer;

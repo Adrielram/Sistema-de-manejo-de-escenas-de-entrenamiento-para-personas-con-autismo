@@ -63,8 +63,8 @@ class Grupo(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(
         max_length=100, 
-        blank=True, 
-        null=True
+        unique=True, 
+        null=False
     )
     centrodesalud_id = models.ForeignKey(
         Centrodesalud, 
@@ -243,7 +243,7 @@ class PersonaObjetivoEvaluacion(models.Model):
     resultado = models.TextField(blank=True, null=True)
     progreso = models.IntegerField()
     evaluacion = models.ForeignKey(
-        'Evaluacion', 
+        'Formulario', 
         on_delete=models.CASCADE, 
         blank=True, 
         null=True
@@ -280,19 +280,20 @@ class Videosvistos(models.Model):
 
 class Comentario(models.Model):
     id = models.AutoField(primary_key=True)
-    persona_objetivo_escena = models.ForeignKey(
-        'PersonaObjetivoEscena',
-        on_delete=models.CASCADE,
-        related_name='comentarios_persona_objetivo_escena',
-        blank=True,
-        null=True
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='comentarios_user'
     )
-    texto = models.TextField(blank=True, null=True)
-    visibilidad = models.BooleanField(default=True)
-    comentario_respondido = models.ForeignKey(
+    escena = models.ForeignKey(
+        Escena, 
+        on_delete=models.CASCADE, 
+        related_name='comentarios_escena'
+    )
+    comentario_contestado = models.ForeignKey(
         'Comentario',
         on_delete=models.CASCADE,
-        related_name='comentarios_comentario_respondido',
+        related_name='comentarios_comentario_contestado',
         blank=True,
         null=True
     )
@@ -301,8 +302,8 @@ class Comentario(models.Model):
         db_table = 'comentario'
         constraints = [
             models.UniqueConstraint(
-                fields=['persona_objetivo_escena', 'id'],
-                name='unique_escena_user_objetivo_comentario'
+                fields=['id', 'user', 'escena'],
+                name='unique_escena_user_comentario'
             )
         ]
 
@@ -336,3 +337,68 @@ class Notificacion(models.Model):
 
     def __str__(self):
         return f"De {self.remitente} a {self.destinatario} - {self.estado}"
+    
+from django.db import models
+class Formulario(models.Model):
+    titulo = models.CharField(max_length=255)
+    descripcion = models.TextField(blank=True, null=True)
+    es_verificacion_automatica = models.BooleanField(default=False)
+    creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.titulo
+
+
+class Pregunta(models.Model):
+    TIPOS_PREGUNTA = [
+        ('multiple-choice', 'Multiple Choice'),
+        ('respuesta-corta', 'Respuesta Corta'),
+        ('respuesta-larga', 'Respuesta Larga'),
+    ]
+
+    formulario = models.ForeignKey(Formulario, related_name="preguntas", on_delete=models.CASCADE)
+    texto = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=TIPOS_PREGUNTA)
+    correcta = models.CharField(max_length=255, blank=True, null=True)  # Solo para verificación automática
+
+    def __str__(self):
+        return self.texto
+
+
+class Opcion(models.Model):
+    pregunta = models.ForeignKey(Pregunta, related_name="opciones", on_delete=models.CASCADE)
+    texto = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.texto
+
+import uuid
+class Respuesta(models.Model):
+    pregunta = models.ForeignKey(Pregunta, related_name="respuestas", on_delete=models.CASCADE)
+    paciente = models.ForeignKey(User, on_delete=models.CASCADE, related_name="respuestas")
+    respuesta = models.TextField()
+    correcta = models.BooleanField(null=True)  # Solo para verificación automática
+    nota = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)  # Nota de 0 a 10
+    intento_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    fecha_intento = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Respuesta de {self.paciente.username} a {self.pregunta.texto}"
+    
+class ComentarioProfesional(models.Model):
+    respuesta = models.ForeignKey(Respuesta, related_name="comentarios", on_delete=models.CASCADE)
+    terapeuta = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comentarios")
+    texto = models.TextField()
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comentario de {self.terapeuta.username} en {self.respuesta}"
+    
+class FormularioPacienteRevision(models.Model):
+    formulario = models.ForeignKey('Formulario', on_delete=models.CASCADE)
+    paciente_dni = models.CharField(max_length=20)
+    revision = models.BooleanField(default=False)  # Si el terapeuta habilitó la revisión
+    verificado_automatico = models.BooleanField(default=False)  # Si se corrigió automáticamente
+    fecha_respuesta = models.DateTimeField(auto_now_add=True)
+    volver_a_realizar = models.BooleanField(default=False)

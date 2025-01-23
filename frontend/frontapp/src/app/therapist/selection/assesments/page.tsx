@@ -1,69 +1,69 @@
 import React from 'react'
 
-import Box from '../../../components/Box'
-import SmallButton from '../../../components/SmallButton'
+import Box from '../../../../components/Box'
+import SmallButton from '../../../../components/SmallButton'
 
-const goals = () => {
-  const goals = [
+const assesments = () => {
+  const assesments = [
     {
-    id: 1234,
-    name: 'Objetivo 1',
+    id: 3311,
+    name: 'Evaluacion 1',
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
     link: 'httppblablabla',
     subgoals: [{title: 'Objetivo 2'}, {title: 'Objetivo 3'}, {title: 'Objetivo 4'}],
     scenes: [{name: 'Escena 2'}, {name: 'Escena 3'}, {name: 'Escena 4'}],
     },
     {
-      id: 5678,
-      name: 'Objetivo 2',
+      id: 3312,
+      name: 'Evaluacion 2',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
       scenes: [{name: 'Escena 5'}, {name: 'Escena 6'}, {name: 'Escena 7'}],
     },
     {
-      id: 1111,
-      name: 'Objetivo 3',
+      id: 3313,
+      name: 'Evaluacion 3',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
       scenes: [{name: 'Escena 5'}, {name: 'Escena 6'}, {name: 'Escena 7'}],
     },
     {
-      id: 2222,
-      name: 'Objetivo 4',
+      id: 3314,
+      name: 'Evaluacion 4',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
       scenes: [{name: 'Escena 5'}, {name: 'Escena 6'}, {name: 'Escena 7'}],
     },
     {
-      id: 3333,
-      name: 'Objetivo 5',
+      id: 3315,
+      name: 'Evaluacion 5',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
       scenes: [{name: 'Escena 5'}, {name: 'Escena 6'}, {name: 'Escena 7'}],
     },
     {
-      id: 4444,
-      name: 'Objetivo 6',
+      id: 3316,
+      name: 'Evaluacion 6',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
       scenes: [{name: 'Escena 5'}, {name: 'Escena 6'}, {name: 'Escena 7'}],
     },
     {
-      id: 5555,
-      name: 'Objetivo 7',
+      id: 3317,
+      name: 'Evaluacion 7',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
       scenes: [{name: 'Escena 5'}, {name: 'Escena 6'}, {name: 'Escena 7'}],
     },
     {
-      id: 6666,
-      name: 'Objetivo 8',
+      id: 3318,
+      name: 'Evaluacion 8',
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra nec, mattis ac neque. Duis vulputate commodo lectus, ac blandit elit tincidunt id. Sed rhoncus, tortor sed eleifend tristique, tortor',
       link: 'httppblablabla',
       subgoals: [{title: 'Objetivo 5'}, {title: 'Objetivo 6'}, {title: 'Objetivo 7'}],
@@ -79,13 +79,13 @@ const goals = () => {
   return (
     <div>
       <div className="flex flex-row flex-wrap justify-center gap-x-14">
-        {goals.map((goal, index) => (
-          <li key={index}>
+        {assesments.map((assesment, index) => (
+          <li key={index} className='list-none'>
             <Box 
-              elem={goal} 
-              img='/icon/diana.png' 
+              elem={assesment} 
+              img='/icon/evaluacion.png' 
               opciones={opProps}
-              edit_path={`/therapist/goals/${goal.id}`}
+              edit_path= {`/therapist/assesments/${assesment.id}`}
             />
           </li>
         ))}
@@ -98,4 +98,4 @@ const goals = () => {
   )
 }
 
-export default goals
+export default assesments
