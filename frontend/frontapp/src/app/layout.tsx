@@ -6,9 +6,9 @@ import "./globals.css";
 
 // Asegúrate de importar ReduxProvider desde la ruta correcta
 import Provider from "../../store/provider";
+import { Inter } from 'next/font/google';
 
-
-
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
 
@@ -23,11 +23,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }){
   return (
-        <div>
-          <Provider>
-          <main className = "mt-14">{children}</main>
-          </Provider>
-        </div>
+    <html lang="en">
+    <body className={`min-h-screen bg-white ${inter.className}`}>
+      <div>
+        <Provider>
+        <main className = "mt-14">{children}</main>
+        </Provider>
+      </div>
+    </body>
+  </html>
   );
 }
 
