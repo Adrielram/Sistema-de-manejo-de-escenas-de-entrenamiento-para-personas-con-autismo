@@ -6,7 +6,9 @@ const initialState = {
   role: "",
   centro: "",
   objetivoId: "",
-  idEscena: ""
+  idEscena: "",
+  userId: "",
+  objetivoId: "",
 };
 
 const userSlice = createSlice({
@@ -25,9 +27,18 @@ const userSlice = createSlice({
       state.centro="";
       state.objetivoId="";
       state.idEscena="";
+      state.userId= "";
+      state.objetivoId = "";
     },
+
     setCentroSalud: (state, action) => {
       state.centro = action.payload.centro;
+    },
+    setObjetivoId: (state, action) => {
+      state.objetivoId = action.payload.objetivoId;
+    },
+    setUserId: (state,action) => {
+      state.userId = action.payload.userId;
     },
     setObjetivoId: (state, action) => {
       state.objetivoId = action.payload.objetivoId;
@@ -36,7 +47,9 @@ const userSlice = createSlice({
       state.idEscena = action.payload.idEscena;
     } 
   }
-});
+  
+}
+);
 
-export const { setUser, clearUser, setCentroSalud, setObjetivoId, setIdEscena} = userSlice.actions;
+export const { setUser, clearUser ,setUserId, setObjetivoId, setIdEscena} = userSlice.actions;
 export default userSlice.reducer;

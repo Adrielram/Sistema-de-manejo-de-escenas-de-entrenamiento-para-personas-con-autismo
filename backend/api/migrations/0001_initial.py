@@ -165,6 +165,7 @@ class Migration(migrations.Migration):
                 ('nombre', models.CharField(default='Sin Nombre', max_length=100)),
                 ('descripcion', models.CharField(max_length=255)),
                 ('centro_profesional', models.ForeignKey(db_column='centroProfesional_id', on_delete=django.db.models.deletion.CASCADE, related_name='objetivo_centro_salud_id', to='api.centroprofesional')),
+                ('centro_profesional', models.ForeignKey(db_column='centroProfesional_id', on_delete=django.db.models.deletion.CASCADE, related_name='objetivo_centro_salud_id', to='api.centroprofesional')),
                 ('escena', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='objetivo_explicativo', to='api.escena')),
             ],
             options={
@@ -224,6 +225,7 @@ class Migration(migrations.Migration):
                 ('resultado', models.TextField(blank=True, null=True)),
                 ('progreso', models.IntegerField()),
                 ('evaluacion', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='api.evaluacion')),
+                ('evaluacion', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='api.evaluacion')),
                 ('objetivo_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.objetivo')),
                 ('user_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
@@ -236,11 +238,18 @@ class Migration(migrations.Migration):
             name='direccion_id_dir',
             field=models.ForeignKey(db_column='direccion_id_dir', on_delete=django.db.models.deletion.CASCADE, to='api.residencia'),
         ),
+        migrations.AddField(
+            model_name='centrodesalud',
+            name='direccion_id_dir',
+            field=models.ForeignKey(db_column='direccion_id_dir', on_delete=django.db.models.deletion.CASCADE, to='api.residencia'),
+        ),
         migrations.CreateModel(
             name='Videosvistos',
             fields=[
                 ('id', models.AutoField(primary_key=True, serialize=False)),
+                ('id', models.AutoField(primary_key=True, serialize=False)),
                 ('visto', models.BooleanField(default=False)),
+                ('persona_objetivo_escena', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='videosvistos_persona_objetivo_escena', to='api.personaobjetivoescena')),
                 ('persona_objetivo_escena', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='videosvistos_persona_objetivo_escena', to='api.personaobjetivoescena')),
             ],
             options={
