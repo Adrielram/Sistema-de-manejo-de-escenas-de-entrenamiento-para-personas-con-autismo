@@ -4,49 +4,11 @@ from datetime import datetime
 from api.models import *
 import mysql.connector
 from django.conf import settings
-import mysql.connector
-from django.conf import settings
 
 class Command(BaseCommand):
     help = 'Loads sample data into database'
 
     def handle(self, *args, **options):
-        # Conectar a MySQL y reiniciar la base de datos
-        self.stdout.write("Resetting database...")
-        try:
-            db_config = {
-                'host': settings.DATABASES['default']['HOST'],
-                'user': settings.DATABASES['default']['USER'],
-                'password': settings.DATABASES['default']['PASSWORD'],
-                'port': settings.DATABASES['default'].get('PORT', 3306),
-            }
-            connection = mysql.connector.connect(**db_config)
-            cursor = connection.cursor()
-            db_name = settings.DATABASES['default']['NAME']
-
-            # Eliminar y volver a crear la base de datos
-            cursor.execute(f"DROP DATABASE IF EXISTS {db_name};")
-            cursor.execute(f"CREATE DATABASE {db_name};")
-            connection.commit()
-
-            self.stdout.write(f"Database {db_name} reset successfully.")
-        except mysql.connector.Error as err:
-            self.stderr.write(f"Error resetting database: {err}")
-        finally:
-            if connection.is_connected():
-                cursor.close()
-                connection.close()
-
-        # Aplicar las migraciones
-        self.stdout.write("Applying migrations...")
-        from django.core.management import call_command
-        call_command('migrate')
-
-        # Cargar los datos
-        self.stdout.write("Loading sample data...")
-        self.load_sample_data()
-
-    def load_sample_data(self, *args, **options):
         # Conectar a MySQL y reiniciar la base de datos
         self.stdout.write("Resetting database...")
         try:
@@ -232,7 +194,7 @@ class Command(BaseCommand):
             complejidad=1,
             condiciones="Normal",
             link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
-            nombre="Escena 7"
+            nombre="Escena 1"
         )
         escena_8 = Escena.objects.create(
             idioma="Español",
@@ -288,12 +250,6 @@ class Command(BaseCommand):
             escena=escena_1,
             centro_profesional=centro_prof
         )
-        objetivo_7 = Objetivo.objects.create(
-            nombre="maradona",
-            descripcion="Tenes que vencer a piccolo",
-            escena=escena_6,
-            centro_profesional=centro_prof
-        )
 
         Objetivoscumplir.objects.create(
             objetivo=objetivo_2,
@@ -333,10 +289,6 @@ class Command(BaseCommand):
             escena=escena_9,
             objetivo=objetivo_6
         )
-        escena_obj_9 = EscenaObjetivo.objects.create(
-            escena=escena_7,
-            objetivo=objetivo_7
-        )
 
         # Create person-objective-scene relationship
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
@@ -357,50 +309,8 @@ class Command(BaseCommand):
             orden=3,
             es_alternativo=False
         )
-        persona_obj_esc_4 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_6,
-            orden=3,
-            es_alternativo=False
-        )
-        persona_obj_esc_5 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_1,
-            orden=3,
-            es_alternativo=False
-        )
-        persona_obj_esc_6 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_2,
-            orden=3,
-            es_alternativo=False
-        )
-        persona_obj_esc_7 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_7,
-            orden=3,
-            es_alternativo=False
-        )
-        persona_obj_esc_8 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_8,
-            orden=3,
-            es_alternativo=False
-        )
-        persona_obj_esc_9 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_9,
-            orden=3,
-            es_alternativo=False
-        )
 
         # Create evaluation
-        # evaluacion = Evaluacion.objects.create(
-        #     nombre="Evaluación 1",
-        #     link="https://ejemplo.com/eval1",
-        #     centro_salud_id=centro_prof,
-        #     profesional_id=centro_prof
-        # )
         # evaluacion = Evaluacion.objects.create(
         #     nombre="Evaluación 1",
         #     link="https://ejemplo.com/eval1",
@@ -414,13 +324,56 @@ class Command(BaseCommand):
             profesional_id=centro_prof
         )
 
+        formulario_1 = Formulario.objects.create(
+            nombre="Formulario 1",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 2",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 3",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 4",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 5",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 6",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+
         # Create person-objective-evaluation
         PersonaObjetivoEvaluacion.objects.create(
             user_id=paciente,
             objetivo_id=objetivo_3,
             resultado="Progresando bien",
             progreso=75,
-            evaluacion=evaluacion
+            evaluacion=formulario_1
         )
 
         # Create group memberships
@@ -443,7 +396,7 @@ class Command(BaseCommand):
             user=terapeuta,
             escena=escena_1,
             texto="El letrero dice aguante messi",
-            comentario_contestado=comentario_respuesta,
+            comentario_contestado=comentario_respuesta
         )
 
         Videosvistos.objects.create(
