@@ -10,6 +10,7 @@ interface PaginadoItemProps {
   options: OptionsProps;
   img: string;
   edit_path?: string;
+  item_type: string;
   onDelete: (id: string) => void;
 }
 
@@ -18,7 +19,8 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   name, 
   options, 
   img, 
-  edit_path, 
+  edit_path,
+  item_type, 
   showImage, 
   onDelete 
 }) => {
@@ -26,7 +28,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/goal/${id}/delete/`, {
+      const response = await fetch(`http://localhost:8000/api/${item_type}/${id}/delete/`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -34,17 +36,22 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
       });
 
       if (response.ok) {
-        alert("Objetivo eliminado correctamente.");
+        alert(`${item_type} eliminado correctamente.`);
         // Llamamos a la función onDelete para actualizar el estado en el componente padre
         onDelete(id);
       } else {
         const errorData = await response.json();
-        alert(`Error al eliminar el objetivo: ${errorData.error || "Error desconocido"}`);
+        alert(`Error al eliminar el ${item_type}: ${errorData.error || "Error desconocido"}`);
       }
     } catch (error) {
-      console.error("Error eliminando el objetivo:", error);
-      alert("Hubo un problema al intentar eliminar el objetivo.");
+      console.error(`Error eliminando el ${item_type}:`, error);
+      alert(`Hubo un problema al intentar eliminar el ${item_type}.`);
     }
+  };
+
+  const handleSeePatients = () => {
+    // misma ruta que edit porque comparten ruta dinamica
+    router.push(`${edit_path}?action=seePatients`);
   };
 
   const handleVer = () => {
@@ -56,7 +63,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   };
 
   const handleEdit = () => {
-    router.push(edit_path);
+    router.push(`${edit_path}?action=edit`);
   };
 
   const handleSeguimiento = () => {
@@ -118,6 +125,14 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
             className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
           >
             Comentarios
+          </button>
+        )}
+        {options.seePatientsButton && (
+          <button
+            onClick={handleSeePatients}
+            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
+          >
+            Ver Pacientes
           </button>
         )}
       </div>

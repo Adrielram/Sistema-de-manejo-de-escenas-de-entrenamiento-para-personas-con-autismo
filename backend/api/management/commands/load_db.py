@@ -248,6 +248,7 @@ class Command(BaseCommand):
             nombre="neymar",
             descripcion="Tenes que vencer a yamcha",
             escena=escena_1,
+            escena=escena_2,
             centro_profesional=centro_prof
         )
 
@@ -289,11 +290,19 @@ class Command(BaseCommand):
             escena=escena_9,
             objetivo=objetivo_6
         )
+            escena=escena_1,
+            objetivo=objetivo_1
+        )
+        escena_obj_2 = EscenaObjetivo.objects.create(
+            escena=escena_2,
+            objetivo=objetivo_2
+        )
 
         # Create person-objective-scene relationship
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_3,
+            escena_objetivo=escena_obj_1,
             orden=1,
             es_alternativo=False
         )
@@ -320,17 +329,70 @@ class Command(BaseCommand):
         evaluacion = Evaluacion.objects.create(
             nombre="La matadora",
             link="https://docs.google.com/forms/d/e/1FAIpQLSfx8STfx-3if-hoIpA2f4mB-_ewwMSLRpbgXVaS_23TLYsJyw/viewform?usp=header",
+            escena_objetivo=escena_obj_2,
+            orden=2,
+            es_alternativo=False
+        )
+
+        # Create evaluation
+        evaluacion = Evaluacion.objects.create(
+            nombre="Evaluación 1",
+            link="https://ejemplo.com/eval1",
             centro_salud_id=centro_prof,
             profesional_id=centro_prof
+        )
+
+        formulario_1 = Formulario.objects.create(
+            nombre="Formulario 1",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 2",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 3",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 4",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 5",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 6",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
         )
 
         # Create person-objective-evaluation
         PersonaObjetivoEvaluacion.objects.create(
             user_id=paciente,
             objetivo_id=objetivo_3,
+            objetivo_id=objetivo_1,
             resultado="Progresando bien",
             progreso=75,
-            evaluacion=evaluacion
+            evaluacion=formulario_1
         )
 
         # Create group memberships
@@ -342,6 +404,15 @@ class Command(BaseCommand):
         Personagrupo.objects.create(
             user_id=terapeuta,
             grupo_id=grupo
+        )
+
+        # Create notifications
+        Notificacion.objects.create(
+            destinatario=terapeuta,
+            remitente=admin,
+            mensaje="Bienvenido al sistema",
+            estado="pendiente",
+            timestamp=datetime.now()
         )
 
         comentario_respuesta = Comentario.objects.create(

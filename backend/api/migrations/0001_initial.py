@@ -284,3 +284,4 @@ class Migration(migrations.Migration):
             constraint=models.UniqueConstraint(fields=('persona_objetivo_escena', 'id'), name='unique_escena_user_objetivo_videos_vistos'),
         ),
     ]
+
