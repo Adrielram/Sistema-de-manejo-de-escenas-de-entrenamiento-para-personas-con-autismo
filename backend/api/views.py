@@ -127,46 +127,6 @@ class PacienteListView(APIView):
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from .models import User
-
-@api_view(['GET'])
-def get_dni(request):
-    username = request.query_params.get('username')
-    if not username:
-        return Response({'error': 'Se requiere el parámetro username'}, status=400)
-    
-    try:
-        user = User.objects.get(username=username)
-        return Response({'dni': user.dni})
-    except User.DoesNotExist:
-        return Response({'error': f'No se encontró un usuario con username: {username}'}, status=404)
-
-
-@api_view(['GET'])
-def hijos_list_view(request):
-    padre_id = request.query_params.get('padre_id')
-
-    if not padre_id:
-        return Response(
-            {"error": "El ID del padre es requerido."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    try:
-        # Obtener los usuarios hijos filtrados por `user_id_padre`
-        hijos = User.objects.filter(user_id_padre=padre_id)
-
-        # Serializar los datos de los hijos usando PacienteSerializer
-        serializer = PacienteSerializer(hijos, many=True)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response(
-            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
 
 
 class ObjetivoViewSet(viewsets.ViewSet):
@@ -321,6 +281,144 @@ def signIn(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+
+# @api_view(['POST'])
+# def listar_comentarios(request):
+#     user_id = request.data.get('user_id')
+#     objetivo_id = request.data.get('objetivo_id')
+
+#     # Comprobar si se proporcionaron ambos IDs
+#     if user_id is None or objetivo_id is None:
+#         return Response({'error': 'user_id y objetivo_id son requeridos'}, status=status.HTTP_400_BAD_REQUEST)
+
+#     # Obtener los comentarios principales hechos por el usuario en el objetivo
+#     comentarios_usuario = Comentario.objects.filter(
+#         user_id=user_id,
+#         objetivo_id=objetivo_id,
+#         reply_to__isnull=True  # Solo comentarios principales del usuario
+#     )
+
+#     # Lista para almacenar todos los comentarios y sus respuestas
+#     data = []
+
+#     # Iterar sobre los comentarios principales
+#     for comentario in comentarios_usuario:
+#         # Obtener las respuestas para el comentario actual
+#         respuestas = Comentario.objects.filter(reply_to=comentario)
+
+#         # Crear un diccionario para el comentario con sus respuestas
+#         comentario_data = {
+#             'id': comentario.id,
+#             'texto': comentario.texto,
+#             'usuario': comentario.user_id.id,
+#             'respuestas': []
+#         }
+
+#         # Formatear las respuestas
+#         for respuesta in respuestas:
+#             comentario_data['respuestas'].append({
+#                 'id': respuesta.id,
+#                 'texto': respuesta.texto,
+#                 'usuario': respuesta.user_id.id
+#             })
+
+#         # Agregar el comentario formateado a la lista
+#         data.append(comentario_data)
+
+#     # Retornar la respuesta como un objeto Response de DRF
+#     return Response({'comentarios': data})
+
+@api_view(['GET'])
+def hijos_list_view(request):
+    padre_id = request.query_params.get('padre_id')
+
+    if not padre_id:
+        return Response(
+            {"error": "El ID del padre es requerido."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        # Obtener los usuarios hijos filtrados por `user_id_padre`
+        hijos = User.objects.filter(user_id_padre=padre_id)
+
+        # Serializar los datos de los hijos usando PacienteSerializer
+        serializer = PacienteSerializer(hijos, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+from django.db.models import Avg
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import PersonaObjetivoEvaluacion, Objetivo
+
+@api_view(['GET'])
+def objetivos_evaluacion_usuario(request):
+    user_id = request.query_params.get('user_id')
+    if not user_id:
+        return Response({"error": "Falta el parámetro 'user_id'."}, status=400)
+
+    # Agrupar por objetivo_id y calcular el progreso promedio
+    objetivos_agrupados = (
+        PersonaObjetivoEvaluacion.objects
+        .filter(user_id=user_id)
+        .values('objetivo_id')  # Solo obtenemos los IDs para la agrupación
+        .annotate(
+            progreso_promedio=Avg('progreso')
+        )
+    )
+
+    if not objetivos_agrupados:
+        return Response({"error": "No se encontraron objetivos para este usuario."}, status=404)
+
+    # Serializar los datos agrupados manualmente
+    data = []
+    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=[o['objetivo_id'] for o in objetivos_agrupados])}
+    for obj in objetivos_agrupados:
+        # Luego, en el bucle:
+        objetivo = objetivos_map[obj['objetivo_id']]
+        data.append({
+            "id": obj['objetivo_id'],  # ID del objetivo
+            "progreso": obj['progreso_promedio'],  # Progreso promedio
+            "objetivo_id": {  # Datos relacionados del objetivo
+                "id": objetivo.id,
+                "nombre": objetivo.nombre,
+                "descripcion": objetivo.descripcion
+            },
+            "resultado": None  # Puedes ajustar esto según tus necesidades
+        })
+
+    return Response(data)
+
+
+
+
+@api_view(['GET'])
+def obtener_nombre_por_dni(request):
+    dni = request.query_params.get('dni')  
+
+    try:
+        user = User.objects.get(dni=dni)  
+        return Response({"nombre": user.nombre}, status=status.HTTP_200_OK)  
+    except User.DoesNotExist:
+        return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def get_dni(request):
+    username = request.query_params.get('username')
+    if not username:
+        return Response({'error': 'Se requiere el parámetro username'}, status=400)
+    
+    try:
+        user = User.objects.get(username=username)
+        return Response({'dni': user.dni})
+    except User.DoesNotExist:
+        return Response({'error': f'No se encontró un usuario con username: {username}'}, status=404)
 
 @api_view(['POST'])
 def crear_escena(request):
