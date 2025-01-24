@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { OptionsProps } from "../types"; 
+import { OptionsProps } from "../types";
 
 interface PaginadoItemProps {
   id: string;
@@ -10,6 +10,10 @@ interface PaginadoItemProps {
   options: OptionsProps;
   img: string;
   edit_path?: string;
+  patients_list_path?: string;
+  supervision_path?: string;
+  comments_path?: string;
+  revision_path?: string;
   item_type: string;
   onDelete: (id: string) => void;
 }
@@ -20,6 +24,10 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   options, 
   img, 
   edit_path,
+  patients_list_path,
+  supervision_path,
+  comments_path,
+  revision_path,
   item_type, 
   showImage, 
   onDelete 
@@ -50,26 +58,29 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   };
 
   const handleSeePatients = () => {
-    // misma ruta que edit porque comparten ruta dinamica
-    router.push(`${edit_path}?action=seePatients`);
+    router.push(`${patients_list_path}?group_id=${id}`);
+  };
+
+  const handleComments = () => {
+    router.push(`${comments_path}?patient_id=${id}`);
+  };
+  
+  const handleEdit = () => {
+    router.push(`${edit_path}${id}`);
+  };
+  
+  const handleSupervision = () => {
+    router.push(`${supervision_path}?patient_id=${id}`);
+  };
+  
+  const handleRevision = () => {
+    router.push(`${revision_path}?form_id=${id}`);
   };
 
   const handleVer = () => {
     alert(`Ver detalles de ${name}`);
   };
-
-  const handleComments = () => {
-    alert(`Ver comentarios de ${name}`);
-  };
-
-  const handleEdit = () => {
-    router.push(`${edit_path}?action=edit`);
-  };
-
-  const handleSeguimiento = () => {
-    alert(`Ver seguimiento de ${name}`);
-  };
-
+  
   return (
     <div className="bg-white p-2 sm:p-5 rounded-lg shadow-lg flex flex-col items-center justify-center space-y-1 border-2 border-gray-400 w-full max-w-xs sm:w-[200px] h-auto sm:h-[300px] text-sm sm:text-base mt-5">
       {/* Imagen */}
@@ -84,7 +95,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
       </div>
 
       {/* Contenido */}
-      <div className="flex flex-col items-center justify-center space-y-2 w-full h-[120px]">
+      <div className="flex flex-col items-center justify-center space-y-2 w-full sm:h-[120px]">
         <p className="text-sm sm:text-base font-medium text-black text-center">
           {name}
         </p>
@@ -94,7 +105,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
       </div>
 
       {/* Botones y acciones */}
-      <div className="flex flex-wrap justify-center w-full space-x-2 pb-6">
+      <div className="flex flex-col justify-center w-64 sm:w-full space-y-2 py-2">
         {options.buttonVer && (
           <button
             onClick={handleVer}
@@ -103,23 +114,23 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
             Ver
           </button>
         )}
-        {options.buttonEdit && (
+        {options.editButton && (
           <button
-          onClick={handleEdit}
-          className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
+            onClick={handleEdit}
+            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
           >
-            EDITAR
+            Editar
           </button>
         )}
-        {options.buttonSeguimiento && (
+        {options.supervisionButton && (
           <button
-          onClick={handleSeguimiento}
-          className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
+            onClick={handleSupervision}
+            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
           >
             Seguimiento
           </button>
         )}
-        {options.buttonComments && (
+        {options.commentsButton && (
           <button
             onClick={handleComments}
             className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
@@ -132,7 +143,15 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
             onClick={handleSeePatients}
             className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
           >
-            Ver Pacientes
+            Pacientes
+          </button>
+        )}
+        {options.revisionButton && (
+          <button
+            onClick={handleRevision}
+            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
+          >
+            Pacientes
           </button>
         )}
       </div>

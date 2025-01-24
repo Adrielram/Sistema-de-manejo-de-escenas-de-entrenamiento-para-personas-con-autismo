@@ -83,7 +83,7 @@ const GoalsPage: React.FC = () => {
 
   const opProps = {
     trashBin: true, 
-    buttonEdit: true,
+    editButton: true,
   }
 
   return (
@@ -102,7 +102,7 @@ const GoalsPage: React.FC = () => {
             currentPage={currentPage}
             totalItems={totalItems}
             onPageChange={handlePageChange}
-            itemsPerPage={4}
+            itemsPerPage={8}
             onItemDeleted={handleItemDeleted}
           />
         </div>

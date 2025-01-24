@@ -1,10 +1,10 @@
 import React from 'react'
 
-export default async function patients({ params }: { params: Promise<{ edit_patient: string }> }) {
-  const { edit_patient } = await params;
+export default async function patients({ params }: { params: Promise<{ group_id: string }> }) {
+  const { group_id } = await params;
   return (
     <>
-      <h1 className="text-black">{edit_patient}</h1>
+      <h1 className="text-black">Group ID:{group_id}</h1>
     </>
   )
 }

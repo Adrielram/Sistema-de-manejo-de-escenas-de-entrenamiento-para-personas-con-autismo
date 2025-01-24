@@ -37,7 +37,7 @@ urlpatterns = [
     path('get-escenas-obj/', EscenasSegunUsuarioObjetivo.as_view(), name='get-escenas-obj'),
     path('get-evaluaciones/', ObtenerLinksEvaluaciones.as_view(), name='get-evaluaciones'),
     path('get-persona-obj-esc/', ObtenerPersonaObjetivoID.as_view(), name='get-persona-obj-esc'),
-    path('video-visto/', MarcarVideoVistoAPIView.as_view(), name='video-visto')
+    path('video-visto/', MarcarVideoVistoAPIView.as_view(), name='video-visto'),
     path('scenes/', ListsScenesView.as_view(), name='list_scenes'),
     path('get_scenes/', GetScenesView.as_view(), name='get_scenes'),
     path('scene/<int:pk>/delete/', DeleteSceneView.as_view(), name='delete_scene'),
@@ -45,6 +45,7 @@ urlpatterns = [
     path('users/<str:username>/groups/', GroupsPerUserView.as_view(), name='groups_per_user'),
     path('get_groups_per_user/', GetGroupsPerUserView.as_view(), name='get_groups_per_user'),
     path('group/<int:group_id>/patients/', PatientsPerGroupView.as_view(), name='patients_per_group'),
+    path('get_patients_per_group/', GetPatientsPerGroupView.as_view(), name='get_patients_per_group'),
     path('forms_per_user/', GetFormsPerUserView.as_view(), name='forms_per_user'),
     path('assesment/<int:pk>/delete/', DeleteAssesmentView.as_view(), name='delete_assesment'),
 ]

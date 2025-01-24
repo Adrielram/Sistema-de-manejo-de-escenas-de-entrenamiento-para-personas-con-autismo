@@ -83,7 +83,7 @@ const GroupsPage: React.FC = () => {
 
   const opProps = {
     trashBin: true, 
-    buttonEdit: true,
+    editButton: true,
     seePatientsButton: true,
   }
 
@@ -98,12 +98,13 @@ const GroupsPage: React.FC = () => {
             options={opProps}
             img='/icon/silueta_de_multiples_usuarios.png'
             edit_path="/therapist/selection/group_of_patients/"
+            patients_list_path="/therapist/selection/group_of_patients/patients/"
             item_type="group"
             showImage={showImage}
             currentPage={currentPage}
             totalItems={totalItems}
             onPageChange={handlePageChange}
-            itemsPerPage={4}
+            itemsPerPage={8}
             onItemDeleted={handleItemDeleted}
           />
         </div>
