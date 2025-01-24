@@ -4,10 +4,12 @@ import SingleSearchSelectBox from "../../../../../components/SingleSearchSelectB
 import SearchSelectBox from "../../../../../components/SearchSelectBox";
 import { useSelector } from 'react-redux';
 import { RootState } from "../../../../../../store/store";
+import { useRouter } from 'next/navigation';
 
 const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ params }) => {
   // Use React.use to unwrap the Promise
   const { edit_goal } = use(params);
+  const router = useRouter();
 
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -97,6 +99,8 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
       console.log("Objetivo actualizado con éxito:", data);
       alert("Objetivo actualizado con éxito.");
       // Here you could redirect or clear the form
+      router.push('/therapist/selection/goals'); // Redirige a una página de listado de escenas
+
     } catch (error) {
       console.error("Network error while updating objetivo:", error);
       alert("Error de red al intentar actualizar el objetivo.");

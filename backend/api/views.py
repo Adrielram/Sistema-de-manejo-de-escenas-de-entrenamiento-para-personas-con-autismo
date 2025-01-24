@@ -179,6 +179,10 @@ class EscenaUpdateView(UpdateAPIView):
     queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
 
+class GrupoUpdateView(UpdateAPIView):
+    queryset = Grupo.objects.all()
+    serializer_class = GrupoSerializer
+
 @api_view(['GET'])
 def get_goal_data(request, objetivo_id):
     try:
@@ -435,6 +439,13 @@ class EscenaById(APIView):
         # Obtener el objeto Escena por su ID (pk)
         escena = get_object_or_404(Escena, pk=pk)
         serializer = EscenaSerializer(escena)
+        return Response(serializer.data)
+    
+class GrupoById(APIView):
+    def get(self, request, pk):
+        # Obtener el objeto Grupo por su ID (pk)
+        grupo = get_object_or_404(Grupo, pk=pk)
+        serializer = GrupoSerializer(grupo)
         return Response(serializer.data)
 class NotAssociatedCentersListView(generics.ListAPIView):
     serializer_class = CentroSaludSerializer

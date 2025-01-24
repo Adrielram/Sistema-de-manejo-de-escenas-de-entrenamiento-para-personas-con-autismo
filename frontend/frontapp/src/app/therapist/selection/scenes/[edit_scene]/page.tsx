@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation';
 
-const EditScene: React.FC<{ params: { edit_scene: string } }> = ({ params }) => {
+const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ params }) => {
+  const [sceneId, setSceneId] = useState<string | null>(null);
   const [titulo, setTitulo] = useState("");
   const [idioma, setIdioma] = useState("");
   const [acento, setAcento] = useState("");
@@ -10,19 +12,28 @@ const EditScene: React.FC<{ params: { edit_scene: string } }> = ({ params }) => 
   const [complejidad, setComplejidad] = useState(0);
   const [linkVideo, setLinkVideo] = useState("");
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const router = useRouter();
 
-  const sceneId = params.edit_scene;
+  // Extraer `edit_scene` de `params` y guardarlo en el estado
+  useEffect(() => {
+    const unwrapParams = async () => {
+      console.log("params:", params); // <-- Log para verificar params
+      const resolvedParams = await params; // Espera a que la promesa se resuelva
+      setSceneId(resolvedParams.edit_scene); // Almacena `edit_scene` en el estado
+    };
+    unwrapParams();
+  }, [params]);
 
   // Cargar los datos de la escena al montar el componente
   useEffect(() => {
+    if (!sceneId) return;
+
     const fetchScene = async () => {
       try {
-        console.log("Fetching scene with ID:", sceneId);
-        const response = await fetch(`${baseUrl}escenaById/${sceneId}`); // Reemplaza con tu endpoint
+        const response = await fetch(`${baseUrl}escenaById/${sceneId}/`);
         if (!response.ok) {
           throw new Error("Error al obtener los datos de la escena");
         }
-
         const data = await response.json();
         setTitulo(data.nombre || "");
         setIdioma(data.idioma || "");
@@ -68,6 +79,8 @@ const EditScene: React.FC<{ params: { edit_scene: string } }> = ({ params }) => 
 
       if (response.ok) {
         alert("Escena actualizada exitosamente");
+        router.push('/therapist/selection/scenes'); // Redirige a una página de listado de escenas
+
       } else {
         const errorData = await response.json();
         alert(`Error al actualizar la escena: ${errorData.error}`);
