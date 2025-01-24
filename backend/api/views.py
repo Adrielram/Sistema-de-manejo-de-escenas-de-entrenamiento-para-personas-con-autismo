@@ -194,18 +194,18 @@ class ObjetivosUsuarioListView(generics.ListAPIView):
     def list(self, request, *args, **kwargs):
         """
         Personaliza la respuesta para formatear los resultados
-        con el formato deseado (id, titulo).
+        con el formato deseado (id, titulo, descripcion).
         """
         queryset = self.get_queryset()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             # Personalizar los datos para devolver 'titulo' en lugar de 'nombre'
-            data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
+            data = [{'id': item['id'], 'titulo': item['nombre'], 'descripcion': item['descripcion']} for item in serializer.data]
             return self.get_paginated_response(data)
 
         serializer = self.get_serializer(queryset, many=True)
-        data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
+        data = [{'id': item['id'], 'titulo': item['nombre'], 'descripcion': item['descripcion']} for item in serializer.data]
         return Response(data)
 
 
@@ -262,7 +262,7 @@ class ObjetivoBusquedaView(generics.ListAPIView):
         serializer = self.get_serializer(queryset, many=True)
         
         # Asegúrate de que el formato de respuesta incluya id y titulo
-        data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
+        data = [{'id': item['id'], 'titulo': item['nombre'], 'descripcion': item['descripcion']} for item in serializer.data]
         return Response(data)
 
     

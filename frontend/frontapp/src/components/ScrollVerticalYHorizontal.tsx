@@ -3,7 +3,7 @@
 import { useState, useEffect, memo } from "react";
 
 interface Props {
-  elementos: Array<{ id: number; titulo: string }>;
+  elementos: Array<{ id: number; titulo: string; descripcion: string }>;
   onObjetivoClick: (id: number) => void;
   selectedObjetivoId: number | null;
   currentPage: number;
@@ -60,6 +60,13 @@ function ScrollVerticalYHorizontalComponent({
                 }`}
               >
                 <span className="text-base font-medium">{elemento.titulo}</span>
+                <p
+                  className={`flex-1 ml-4 text-right ${
+                    isPortrait ? "hidden" : "block"
+                  }`}
+                >
+                  Descripcion: {elemento.descripcion}
+                </p>
                 {selectedObjetivoId === elemento.id && (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

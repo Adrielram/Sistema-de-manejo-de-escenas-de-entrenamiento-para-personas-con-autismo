@@ -19,6 +19,7 @@ interface PaginatedResponse {
 interface Objetivo {
   id: number;
   titulo: string;
+  descripcion: string;
 }
 
 interface Escena {
@@ -56,6 +57,7 @@ export default function Page() {
       const mappedResults = data.results.map((obj) => ({
         id: obj.id,
         titulo: obj.titulo,
+        descripcion: obj.descripcion,
       }));
   
       // Actualizar objetivos y páginas
@@ -199,6 +201,7 @@ export default function Page() {
                       }`}
                     >
                       <span className="text-base font-medium">{objetivo.titulo}</span>
+                      {objetivo.descripcion && <p className="flex-1 ml-4 text-right">Descripcion: {objetivo.descripcion}</p>}
                       {objetivoSeleccionado === objetivo.id && (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -224,14 +227,20 @@ export default function Page() {
         ) : (
           <>
             <h2 className="text-xl font-bold mb-2 mt-6">Objetivos</h2>
-            <ScrollVerticalYHorizontal
-              elementos={objetivos}
-              onObjetivoClick={handleObjetivoClick}
-              selectedObjetivoId={objetivoSeleccionado}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
+            {objetivos.length > 0 ? (
+              <ScrollVerticalYHorizontal
+                elementos={objetivos}
+                onObjetivoClick={handleObjetivoClick}
+                selectedObjetivoId={objetivoSeleccionado}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                No se encontraron objetivos para mostrar.
+              </div>
+            )}
           </>
         )}
       </div>
