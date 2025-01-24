@@ -267,37 +267,67 @@ def create_health_center(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            nombre = data.get("nombre")
-            provincia = data.get("provincia")
-            ciudad = data.get("ciudad")
-            calle = data.get("calle")
-            numero = data.get("numero")
+            nombre = data.get("nombre", "").strip()
+            provincia = data.get("provincia", "").strip()
+            ciudad = data.get("ciudad", "").strip()
+            calle = data.get("calle", "").strip()
+            numero = data.get("numero", "").strip()
 
-            # Validar que no haya campos vacíos
-            if not nombre or not provincia or not ciudad or not calle or not numero:
-                return JsonResponse({"error": "Faltan campos obligatorios"}, status=400)
+            # Validaciones más estrictas
+            errors = []
+            if not nombre:
+                errors.append("El nombre del centro es obligatorio")
+            if not provincia:
+                errors.append("La provincia es obligatoria")
+            if not ciudad:
+                errors.append("La ciudad es obligatoria")
+            if not calle:
+                errors.append("La calle es obligatoria")
+            if not numero:
+                errors.append("El número es obligatorio")
+            
+            if errors:
+                return JsonResponse({"errors": errors}, status=400)
 
-            # Crear una nueva instancia de Residencia
-            residencia = Residencia.objects.create(
-                provincia=provincia,
-                ciudad=ciudad,
-                calle=calle,
-                numero=numero
-            )
+            # Usar transacción para garantizar atomicidad
+            with transaction.atomic():
+                # Verificar si ya existe una residencia idéntica
+                residencia, created = Residencia.objects.get_or_create(
+                    provincia=provincia,
+                    ciudad=ciudad,
+                    calle=calle,
+                    numero=numero
+                )
 
-            # Crear el centro de salud asociado a la nueva residencia
-            centro_de_salud = Centrodesalud.objects.create(
-                nombre=nombre,
-                direccion_id_dir=residencia
-            )
+                # Verificar si ya existe un centro de salud con los mismos datos
+                centro_existente = Centrodesalud.objects.filter(
+                    nombre=nombre,
+                    direccion_id_dir=residencia
+                ).exists()
 
-            return JsonResponse({'message': 'Centro de salud creado con éxito'}, status=201)
+                if centro_existente:
+                    return JsonResponse({
+                        'message': 'Un centro de salud con estos datos ya existe'
+                    }, status=400)
+
+                # Crear nuevo centro de salud
+                centro_de_salud = Centrodesalud.objects.create(
+                    nombre=nombre,
+                    direccion_id_dir=residencia
+                )
+
+            return JsonResponse({
+                'message': 'Centro de salud creado con éxito', 
+                'id': centro_de_salud.id
+            }, status=201)
 
         except Exception as e:
-            return JsonResponse({'message': str(e)}, status=400)
+            return JsonResponse({
+                'message': 'Error interno del servidor',
+                'error_details': str(e)
+            }, status=500)
 
     return JsonResponse({'message': 'Método no permitido'}, status=405)
-
 
 #El siguiente metodo trae las provincias y ciudades para la lista desplegable de la creacion de un centro
 @permission_classes([AllowAny])

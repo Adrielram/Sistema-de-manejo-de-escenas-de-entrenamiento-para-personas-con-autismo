@@ -11,8 +11,8 @@ export default function Page() {
   const [numero, setNumero] = useState<string>("");
   const [provinciaSeleccionada, setProvinciaSeleccionada] = useState<string>("");
   const [ciudadSeleccionada, setCiudadSeleccionada] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
-  // Cargar provincias y ciudades
   useEffect(() => {
     const fetchProvincesAndCities = async () => {
       try {
@@ -32,14 +32,15 @@ export default function Page() {
     fetchProvincesAndCities();
   }, []);
 
-  // Manejar el cambio de provincia y filtrar ciudades
   const handleProvinciaChange = (selected: string) => {
     setProvinciaSeleccionada(selected);
-    setCiudadSeleccionada(""); // Limpiar la ciudad seleccionada al cambiar de provincia
+    setCiudadSeleccionada(""); 
+    setErrorMessage("");
   };
 
-  // Guardar el centro de salud
   const handleSubmit = async () => {
+    setErrorMessage("");
+
     const payload = {
       nombre: nombreCentro,
       provincia: provinciaSeleccionada,
@@ -57,42 +58,53 @@ export default function Page() {
         body: JSON.stringify(payload),
       });
 
+      const responseData = await response.json();
+
       if (response.ok) {
         alert("Centro de salud creado con éxito");
-        // Limpiar campos después de guardar
         setNombreCentro("");
         setProvinciaSeleccionada("");
         setCiudadSeleccionada("");
         setCalle("");
         setNumero("");
       } else {
-        alert("Error al guardar el centro de salud. Intenta nuevamente.");
+        setErrorMessage(responseData.message || "Error al guardar el centro de salud");
       }
     } catch (error) {
       console.error("Error de conexión:", error);
-      alert("Hubo un problema al conectarse al servidor.");
+      setErrorMessage("Hubo un problema al conectarse al servidor.");
     }
   };
 
   return (
     <div
       style={{
-        backgroundColor: "#f0f0f0", // Fondo gris claro
-        padding: "40px", // Espaciado para separar del borde
-        minHeight: "100vh", // Asegura que cubra toda la altura de la pantalla
+        backgroundColor: "#f0f0f0",
+        padding: "40px", 
+        minHeight: "100vh", 
       }}
     >
       <div
         style={{
           padding: "20px",
-          backgroundColor: "#fff", // Fondo blanco para los componentes internos
-          borderRadius: "10px", // Bordes redondeados
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // Sombra sutil
+          backgroundColor: "#fff", 
+          borderRadius: "10px", 
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", 
           color: "black",
           margin: "0 auto",
-          maxWidth: "800px", // Centra y limita el ancho
+          maxWidth: "800px", 
         }}
       >
+        {errorMessage && (
+          <div style={{ 
+            color: 'red', 
+            marginBottom: '20px', 
+            textAlign: 'center' 
+          }}>
+            {errorMessage}
+          </div>
+        )}
+
         <div>
           <label>Nombre del Centro de Salud</label>
           <input
@@ -173,7 +185,6 @@ export default function Page() {
         </button>
       </div>
   
-      {/* Media Query para pantallas pequeñas */}
       <style jsx>{`
         @media (max-width: 600px) {
           div > div {
@@ -194,4 +205,4 @@ export default function Page() {
       `}</style>
     </div>
   );
-}  
+}
