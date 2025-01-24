@@ -962,3 +962,59 @@ class MarcarVideoVistoAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
+import spacy
+import numpy as np
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .models import Patologia
+
+class SpacyPatologiasView(APIView):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.nlp = spacy.load('es_core_news_lg')
+        self.vectores_patologias = self.crear_vectores_patologias()
+
+    def crear_vectores_patologias(self):
+        vectores = {}
+        patologias = Patologia.objects.all()
+        print([p.nombre for p in patologias])          
+        for patologia in patologias:
+            print("entre al for")
+            doc = self.nlp(patologia.descripcion)
+            word_vectors = [token.vector for token in doc if token.has_vector]
+            print(f"Description for {patologia.nombre}: {patologia.descripcion}")
+            print(f"Number of tokens with vectors for {patologia.nombre}: {len(word_vectors)}")
+            vector_patologia = np.mean(word_vectors, axis=0) if word_vectors else None
+            vectores[patologia.nombre] = vector_patologia
+            print(f"Vector for {patologia.nombre}: {vector_patologia is not None}")
+            
+        return vectores
+
+    def encontrar_patologias_similares(self, texto_input, umbral=0.7):
+        doc_input = self.nlp(texto_input)
+        input_vector = np.mean([token.vector for token in doc_input if token.has_vector], axis=0)
+        
+        patologias_similares = []
+        
+        for nombre, vector_patologia in self.vectores_patologias.items():
+            if vector_patologia is not None:
+                similitud = np.dot(input_vector, vector_patologia) / (
+                    np.linalg.norm(input_vector) * np.linalg.norm(vector_patologia)
+                )
+                
+                if similitud > umbral:
+                    patologias_similares.append({
+                        'nombre': nombre,
+                        'similitud': float(similitud)
+                    })
+        
+        return sorted(patologias_similares, key=lambda x: x['similitud'], reverse=True)
+
+    def post(self, request):
+        texto_input = request.data.get('texto', '')
+        
+        patologias_detectadas = self.encontrar_patologias_similares(texto_input)
+        
+        return Response({
+            'patologias': patologias_detectadas
+        })

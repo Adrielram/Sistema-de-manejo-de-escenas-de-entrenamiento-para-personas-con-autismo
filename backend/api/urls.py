@@ -40,7 +40,7 @@ urlpatterns = [
     path('grupoById/<int:pk>/', GrupoById.as_view(), name='grupoById'),
     path('scenes/<int:pk>', EscenaUpdateView.as_view(), name='escena-update'),
     path('groups/<int:pk>', GrupoUpdateView.as_view(), name='grupo-update'),
-
+    path('spacy-patologias/', SpacyPatologiasView.as_view(), name='spacy-patologias'),
     path('registrar_comentario/', registrar_comentario.as_view(), name='registrar_comentario'),
     path('get-escenas-obj/', EscenasSegunUsuarioObjetivo.as_view(), name='get-escenas-obj'),
     path('get-evaluaciones/', ObtenerLinksEvaluaciones.as_view(), name='get-evaluaciones'),

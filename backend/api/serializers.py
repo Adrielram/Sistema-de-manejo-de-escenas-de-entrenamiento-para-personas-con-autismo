@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Objetivo, Escena, CentroProfesional, Centrodesalud, Comentario, Videosvistos, EscenaObjetivo, Objetivoscumplir, Centrodesalud, Grupo, Formulario
+from .models import Patologia, User, Objetivo, Escena, CentroProfesional, Centrodesalud, Comentario, Videosvistos, EscenaObjetivo, Objetivoscumplir, Centrodesalud, Grupo, Formulario
 
 class PacienteSerializer(serializers.ModelSerializer):
     padreACargo = serializers.SerializerMethodField()
@@ -81,7 +81,7 @@ class ObjetivoSerializerList(serializers.ModelSerializer):
 class EscenaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Escena
-        fields = ['id', 'idioma', 'acento', 'condiciones', 'complejidad', 'link', 'nombre']
+        fields = ['id', 'idioma', 'acento', 'condiciones', 'complejidad', 'link', 'nombre', 'descripcion']
 
     def update(self, instance, validated_data):
         """
@@ -143,3 +143,10 @@ class FormularioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Formulario
         fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'fecha_creacion']
+
+
+class PatologiaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patologia
+        fields = ['id', 'nombre', 'descripcion']
+

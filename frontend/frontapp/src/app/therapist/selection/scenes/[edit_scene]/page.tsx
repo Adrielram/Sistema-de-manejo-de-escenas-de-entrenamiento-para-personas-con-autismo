@@ -13,7 +13,7 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
   const [linkVideo, setLinkVideo] = useState("");
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
-
+  const [descripcion, setDescripcion] = useState("");
   // Extraer `edit_scene` de `params` y guardarlo en el estado
   useEffect(() => {
     const unwrapParams = async () => {
@@ -40,6 +40,7 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
         setAcento(data.acento || "");
         setCondicion(data.condiciones || "");
         setComplejidad(data.complejidad || 0);
+        setDescripcion(data.descripcion || "");
         setLinkVideo(data.link || "");
       } catch (error) {
         console.error(error);
@@ -53,7 +54,7 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!titulo || !idioma || !linkVideo || !acento || !complejidad) {
+    if (!titulo || !idioma || !linkVideo || !acento || !complejidad || !descripcion)  {
       alert("Todos los campos son obligatorios");
       return;
     }
@@ -63,6 +64,7 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
       nombre: titulo,
       idioma: idioma,
       acento: acento,
+      descripcion: descripcion,
       condiciones: condiciones === "" ? null : condiciones, // Reemplaza cadena vacía por null
       complejidad: complejidad,
       link: linkVideo,
@@ -113,7 +115,18 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
                 placeholder="Ingrese el título"
               />
             </div>
-
+            <div>
+              <label htmlFor="descripcion" className="block font-semibold text-gray-700 mb-2">
+                Descripción
+              </label>
+              <textarea
+                id="descripcion"
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF] min-h-[200px]"
+                placeholder="Ingrese la descripción"
+              />
+            </div> 
             <div>
               <label htmlFor="idioma" className="block font-semibold text-gray-700 mb-2">
                 Idioma

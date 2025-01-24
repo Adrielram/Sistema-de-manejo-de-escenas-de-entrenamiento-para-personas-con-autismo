@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 
 class Centrodesalud(models.Model):
     id = models.AutoField(primary_key=True)
@@ -42,12 +43,14 @@ class User(AbstractUser):
         'auth.Permission',
         related_name='custom_user_permissions'
     )  
+    patologia = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta: 
         db_table = 'user'
 
 class Escena(models.Model):
     id = models.AutoField(primary_key=True)
+    descripcion = models.CharField(max_length=255)
     idioma = models.CharField(max_length=40)
     acento = models.CharField(max_length=40, default="neutro")
     complejidad = models.IntegerField()
@@ -118,30 +121,7 @@ class Objetivo(models.Model):
     )
     class Meta:   
         db_table = 'objetivo'
-
-# ! borrar
-class Evaluacion(models.Model): 
-    id = models.AutoField(primary_key=True)
-    nombre = models.CharField(
-        max_length=255, 
-        blank=True, 
-        null=True
-    )
-    link = models.CharField(max_length=2000)
-    centro_salud_id = models.ForeignKey(
-        CentroProfesional, 
-        on_delete=models.CASCADE, 
-        db_column='centroProfesional_id', 
-        related_name='evaluacion_centro_salud_id'
-    )
-    profesional_id = models.ForeignKey(
-        CentroProfesional, 
-        on_delete=models.CASCADE, 
-        db_column='centroProfesional_id_profesional', 
-        related_name='evaluacion_profesional_id'
-    )
-    class Meta:
-        db_table = 'evaluacion'      
+   
 
 class Formulario(models.Model):
     nombre = models.CharField(max_length=255) # * creo que voy a necesitar cambiarlo a 'nombre'
@@ -186,6 +166,26 @@ class EscenaObjetivo(models.Model):
             models.UniqueConstraint(
                 fields=['escena', 'objetivo'], 
                 name='unique_escena_objetivo'
+            )
+        ]
+class Personagrupo(models.Model):
+    user_id = models.ForeignKey(
+        'User', 
+        on_delete=models.CASCADE, 
+        related_name='personagrupos'
+    )
+    grupo_id = models.ForeignKey(
+        Grupo, 
+        on_delete=models.CASCADE, 
+        related_name='miembros'
+    )
+
+    class Meta:
+        db_table = 'personaGrupo'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user_id', 'grupo_id'], 
+                name='unique_user_grupo'
             )
         ]
 
@@ -233,26 +233,6 @@ class Objetivoscumplir(models.Model):
             )
         ]
 
-class Personagrupo(models.Model):
-    user_id = models.ForeignKey(
-        'User', 
-        on_delete=models.CASCADE, 
-        related_name='personagrupos'
-    )
-    grupo_id = models.ForeignKey(
-        Grupo, 
-        on_delete=models.CASCADE, 
-        related_name='miembros'
-    )
-
-    class Meta:
-        db_table = 'personaGrupo'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user_id', 'grupo_id'], 
-                name='unique_user_grupo'
-            )
-        ]
 
 class PersonaObjetivoEvaluacion(models.Model):
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)
@@ -359,3 +339,34 @@ class Notificacion(models.Model):
     
     class Meta:
         db_table = 'notificacion'
+
+
+
+class Patologia(models.Model):
+    id = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=255)
+    descripcion = models.TextField(max_length=255)
+
+    class Meta:
+        db_table = 'patologia'
+
+    def __str__(self):
+        return self.nombre
+    
+def validate_percentage(value):
+    if value < 0 or value > 100:
+        raise ValidationError('El valor de certeza debe estar entre 0 y 100.')
+    
+class PersonaPatologia(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    patologia_id = models.ForeignKey(Patologia, on_delete=models.CASCADE)
+    certeza = models.FloatField(validators=[validate_percentage], null=True)
+    class Meta:
+        db_table = 'personaPatologia'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user_id', 'patologia_id'],
+                name='unique_user_patologia'
+            )
+        ]
+
