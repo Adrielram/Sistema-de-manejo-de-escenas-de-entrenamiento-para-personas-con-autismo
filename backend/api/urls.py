@@ -53,6 +53,7 @@ urlpatterns = [
     path('users/<str:username>/groups/', GroupsPerUserView.as_view(), name='groups_per_user'),
     path('get_groups_per_user/', GetGroupsPerUserView.as_view(), name='get_groups_per_user'),
     path('group/<int:group_id>/patients/', PatientsPerGroupView.as_view(), name='patients_per_group'),
+    path('get_patients_per_group/', GetPatientsPerGroupView.as_view(), name='get_patients_per_group'),
     path('forms_per_user/', GetFormsPerUserView.as_view(), name='forms_per_user'),
     path('assesment/<int:pk>/delete/', DeleteAssesmentView.as_view(), name='delete_assesment'),
 ]

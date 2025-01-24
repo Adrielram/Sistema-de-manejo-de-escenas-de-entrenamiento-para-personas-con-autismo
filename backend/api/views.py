@@ -30,7 +30,7 @@ from rest_framework.generics import UpdateAPIView
 class DynamicPagination(PageNumberPagination):
     page_size_query_param = "limit"
     max_page_size = 20
-    page_size = 4
+    page_size = 8
 
 def check_cookie(request):
     # Verificar si la cookie 'jwt' está presente
@@ -730,6 +730,25 @@ class PatientsPerGroupView(generics.ListAPIView):
         
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class GetPatientsPerGroupView(generics.ListAPIView):
+    serializer_class = PacienteSerializer
+    pagination_class = DynamicPagination
+
+    def get_queryset(self):
+        group_id = self.request.query_params.get('group_id')
+        
+        try:
+            group = Grupo.objects.get(id=group_id)
+
+        except Grupo.DoesNotExist:
+            raise NotFound("El grupo especificado no existe.")
+
+        persona_grupo_qs = Personagrupo.objects.filter(grupo_id=group)            
+
+        users_dni = persona_grupo_qs.values_list('user_id__dni', flat=True)
+
+        return User.objects.filter(dni__in=users_dni, role='paciente')
 
 class GetFormsPerUserView(generics.ListAPIView):
     serializer_class = FormularioSerializer
