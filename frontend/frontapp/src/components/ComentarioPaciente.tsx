@@ -61,12 +61,15 @@ const ComentarioPaciente: React.FC<ComentarioPacienteProps> = ({ idComentario, r
         : "Este comentario está oculto"}
       </p>
       
-      <button 
-        onClick={() => onResponder(idComentario)} // Llama a la función pasada desde el padre
-        className="mt-3 text-xs bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 transition-colors"
-      >
-        Responder
-      </button>
+      {/* Verificar si el rol no es 'padre' antes de mostrar el botón respopnder */}
+      {role !== 'padre' && (
+        <button 
+          onClick={() => onResponder(idComentario)} // Llama a la función pasada desde el padre
+          className="mt-3 text-xs bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 transition-colors"
+        >
+          Responder
+        </button>
+      )}
 
       {respuestas.length > 0 && (
         <div className="mt-3">
