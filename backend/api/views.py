@@ -834,7 +834,105 @@ class registrar_comentario(APIView):
         
         # Si el serializer no es válido, retornar los errores
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+class ComentariosListaAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            # Obtener el id_escena desde los parámetros de consulta
+            id_escena = request.query_params.get('id_escena', None)
+
+            if not id_escena:
+                return Response(
+                    {"error": "El parámetro 'id_escena' es requerido."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Obtener todos los comentarios de la escena
+            comentarios = Comentario.objects.filter(escena_id=id_escena).values('id', 'comentario_contestado')
+
+            # Crear un diccionario temporal para mapear cada comentario con su comentario_contestado
+            comentarios_map = {}
+            for comentario in comentarios:
+                comentarios_map[comentario['id']] = comentario['comentario_contestado']
+
+            # Crear el hashset final usando la función de recursión
+            hashset = {}
+            for comentario_id in comentarios_map.keys():
+                hilo_principal = self._obtener_hilo_principal(comentarios_map, comentario_id)
+                if hilo_principal not in hashset:
+                    hashset[hilo_principal] = []
+                if comentarios_map[comentario_id]:  # Si tiene un comentario contestado, agrégalo como respuesta
+                    hashset[hilo_principal].append(comentario_id)
+
+            # Eliminar duplicados en las listas del hashset
+            for key in hashset:
+                hashset[key] = list(set(hashset[key]))
+
+            return Response({"hashset": hashset}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": f"Error inesperado: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def _obtener_hilo_principal(self, comentarios_map, comentario_id):
+        """
+        Función recursiva para encontrar el hilo principal de un comentario.
+        """
+        comentario_contestado = comentarios_map.get(comentario_id)
+        if comentario_contestado is None:  # Es un comentario principal
+            return comentario_id
+        return self._obtener_hilo_principal(comentarios_map, comentario_contestado)    
+
+class ComentarioDetalleAPIView(APIView):
+    def get(self, request):
+        # Obtener el parámetro id_comentario
+        id_comentario = request.query_params.get('idComentario')
+
+        # Validar que el parámetro esté presente
+        if not id_comentario:
+            return Response(
+                {"error": "El parámetro 'idComentario' es obligatorio."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Buscar el comentario por ID con sus relaciones
+            comentario = Comentario.objects.select_related(
+                'user',
+                'comentario_contestado',
+                'comentario_contestado__user'
+            ).get(id=id_comentario)
+
+            # Construir la respuesta
+            response_data = {
+                "id": comentario.id,
+                "texto": comentario.texto,
+                "visibilidad": comentario.visibilidad,
+                "usuario": comentario.user.nombre,  # Nombre del usuario que comentó
+                "idComentarioPadre": None,  # Valor por defecto
+            }
+
+            # Si es una respuesta a otro comentario, incluir información adicional
+            if comentario.comentario_contestado:
+                response_data.update({
+                    "idComentarioPadre": comentario.comentario_contestado.id,
+                    "usuarioRespondido": comentario.comentario_contestado.user.nombre
+                })
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Comentario.DoesNotExist:
+            return Response(
+                {"error": "No se encontró un comentario con el ID proporcionado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": f"Error inesperado: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class EscenasSegunUsuarioObjetivo(APIView):
     def get(self, request):

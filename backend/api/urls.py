@@ -56,6 +56,8 @@ urlpatterns = [
     path('get_patients_per_group/', GetPatientsPerGroupView.as_view(), name='get_patients_per_group'),
     path('forms_per_user/', GetFormsPerUserView.as_view(), name='forms_per_user'),
     path('assesment/<int:pk>/delete/', DeleteAssesmentView.as_view(), name='delete_assesment'),
+    path('comentarios/lista/', ComentariosListaAPIView.as_view(), name='comentarios-lista'),
+    path('comentarios/', ComentarioDetalleAPIView.as_view(), name='comentario-detalle'),
 ]
 
 urlpatterns += [path('', include(router.urls))]

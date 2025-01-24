@@ -81,6 +81,7 @@ const ScenesPage: React.FC = () => {
   const opProps = {
     trashBin: true, 
     editButton: true,
+    scenesCommentsButton: true,
   }
 
   return (
@@ -94,6 +95,7 @@ const ScenesPage: React.FC = () => {
             options={opProps}
             img='/icon/pelicula.png'
             edit_path="/therapist/selection/scenes/"
+            scenes_comments_path="/therapist/selection/scenes/comments/"
             item_type="scene"
             showImage={showImage}
             currentPage={currentPage}

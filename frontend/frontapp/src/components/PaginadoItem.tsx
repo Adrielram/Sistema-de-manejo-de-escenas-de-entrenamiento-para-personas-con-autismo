@@ -14,6 +14,7 @@ interface PaginadoItemProps {
   supervision_path?: string;
   comments_path?: string;
   revision_path?: string;
+  scenes_comments_path?: string;
   item_type: string;
   onDelete: (id: string) => void;
 }
@@ -28,6 +29,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   supervision_path,
   comments_path,
   revision_path,
+  scenes_comments_path,
   item_type, 
   showImage, 
   onDelete 
@@ -63,6 +65,10 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
 
   const handleComments = () => {
     router.push(`${comments_path}?patient_dni=${id}`);
+  };
+
+  const handleScenesComments = () => {
+    router.push(`${scenes_comments_path}?scene_id=${id}`);
   };
   
   const handleEdit = () => {
@@ -152,6 +158,14 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
             className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
           >
             Pacientes
+          </button>
+        )}
+        {options.scenesCommentsButton && (
+          <button
+            onClick={handleScenesComments}
+            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
+          >
+            Comentarios
           </button>
         )}
       </div>
