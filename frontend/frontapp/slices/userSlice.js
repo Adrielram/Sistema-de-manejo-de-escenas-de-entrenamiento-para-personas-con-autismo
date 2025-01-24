@@ -9,6 +9,7 @@ const initialState = {
   idEscena: "",
   userId: "",
   objetivoId: "",
+  hijoNombre: "",
 };
 
 const userSlice = createSlice({
@@ -29,6 +30,7 @@ const userSlice = createSlice({
       state.idEscena="";
       state.userId= "";
       state.objetivoId = "";
+      state.hijoNombre = "";
     },
 
     setCentroSalud: (state, action) => {
@@ -45,11 +47,14 @@ const userSlice = createSlice({
     },
     setIdEscena: (state, action) => {
       state.idEscena = action.payload.idEscena;
-    } 
+    },
+    setHijoNombre(state, action) {
+      state.hijoNombre = action.payload.hijoNombre;
+    },
   }
   
 }
 );
 
-export const { setUser, clearUser ,setUserId, setObjetivoId, setIdEscena} = userSlice.actions;
+export const { setUser, clearUser ,setUserId, setObjetivoId, setIdEscena,setHijoNombre} = userSlice.actions;
 export default userSlice.reducer;

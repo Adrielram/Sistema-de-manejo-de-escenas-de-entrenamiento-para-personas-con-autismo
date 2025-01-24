@@ -4,7 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
-import { setUserId } from "../../slices/userSlice";
+import { setUserId,setHijoNombre } from "../../slices/userSlice";
 import { useSelector} from 'react-redux';
 import { RootState } from "../../store/store";
 
@@ -68,6 +68,7 @@ const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
   const handleSeguimiento = () => {
     if (role  === "padre"){
       dispatch(setUserId({userId:datosPaciente.dni}));
+      dispatch(setHijoNombre({hijoNombre:datosPaciente.nombre})); //FUNCIONA PORQUE EL NOMBRE DE API.USER ES EL MISMO QUE EL USERNAME
       router.push(`http://localhost:3000/interfaz_padre/ver_seguimiento/`);
     }
     else {

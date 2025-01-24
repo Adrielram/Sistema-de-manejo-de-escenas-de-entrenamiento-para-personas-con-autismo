@@ -104,7 +104,6 @@ const VerVideo = () => {
       try {
         const response = await fetch(
           `http://localhost:8000/api/get-persona-obj-esc/?username=${username}&objetivo_id=${objetivoId}&escena_id=${idEscena}`
-          //`http://localhost:8000/api/get-persona-obj-esc/?username=paciente1&objetivo_id=3&escena_id=7`
         );
         
         if (!response.ok) {
