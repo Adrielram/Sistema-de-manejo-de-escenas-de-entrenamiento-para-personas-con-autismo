@@ -4,49 +4,11 @@ from datetime import datetime
 from api.models import *
 import mysql.connector
 from django.conf import settings
-import mysql.connector
-from django.conf import settings
 
 class Command(BaseCommand):
     help = 'Loads sample data into database'
 
     def handle(self, *args, **options):
-        # Conectar a MySQL y reiniciar la base de datos
-        self.stdout.write("Resetting database...")
-        try:
-            db_config = {
-                'host': settings.DATABASES['default']['HOST'],
-                'user': settings.DATABASES['default']['USER'],
-                'password': settings.DATABASES['default']['PASSWORD'],
-                'port': settings.DATABASES['default'].get('PORT', 3306),
-            }
-            connection = mysql.connector.connect(**db_config)
-            cursor = connection.cursor()
-            db_name = settings.DATABASES['default']['NAME']
-
-            # Eliminar y volver a crear la base de datos
-            cursor.execute(f"DROP DATABASE IF EXISTS {db_name};")
-            cursor.execute(f"CREATE DATABASE {db_name};")
-            connection.commit()
-
-            self.stdout.write(f"Database {db_name} reset successfully.")
-        except mysql.connector.Error as err:
-            self.stderr.write(f"Error resetting database: {err}")
-        finally:
-            if connection.is_connected():
-                cursor.close()
-                connection.close()
-
-        # Aplicar las migraciones
-        self.stdout.write("Applying migrations...")
-        from django.core.management import call_command
-        call_command('migrate')
-
-        # Cargar los datos
-        self.stdout.write("Loading sample data...")
-        self.load_sample_data()
-
-    def load_sample_data(self, *args, **options):
         # Conectar a MySQL y reiniciar la base de datos
         self.stdout.write("Resetting database...")
         try:
@@ -149,6 +111,28 @@ class Command(BaseCommand):
             role="paciente",
             direccion_id_dir=residencias[1]
         )
+        
+        paciente2 = User.objects.create(
+            username="paciente2",
+            password=make_password("pac123"),
+            dni=44333222,
+            nombre="Paciente Dos",
+            fecha_nac=datetime(2010, 5, 20),
+            genero="M",
+            role="paciente",
+            direccion_id_dir=residencias[1]
+        )
+
+        paciente3 = User.objects.create(
+            username="paciente3",
+            password=make_password("pac123"),
+            dni=44112233,
+            nombre="Paciente Tres",
+            fecha_nac=datetime(2010, 5, 20),
+            genero="M",
+            role="paciente",
+            direccion_id_dir=residencias[1]
+        )
 
         padre = User.objects.create(
             username="padre1",
@@ -184,7 +168,8 @@ class Command(BaseCommand):
             complejidad=1,
             condiciones="Normal",
             link="https://ejemplo.com/video1",
-            nombre="Escena 1"
+            nombre="Escena 1",
+            descripcion = "Esta escena reflexiona sobre la importancia de la amistad"
         )
         escena_2 = Escena.objects.create(
             idioma="Español",
@@ -192,7 +177,9 @@ class Command(BaseCommand):
             complejidad=1,
             condiciones="Normal",
             link="https://ejemplo.com/video2",
-            nombre="Escena 2"
+            nombre="Escena 2",
+            descripcion = "Esta escena refleja la importancia de la familia"
+
         )
         escena_3 = Escena.objects.create(
             idioma="Español",
@@ -200,7 +187,9 @@ class Command(BaseCommand):
             complejidad=2,
             condiciones="Normal",
             link="https://ejemplo.com/video3",
-            nombre="Escena 3"
+            nombre="Escena 3",
+            descripcion = "Esta escena demuestra la importancia de la educación"
+
         )
         escena_4 = Escena.objects.create(
             idioma="Español",
@@ -208,7 +197,8 @@ class Command(BaseCommand):
             complejidad=4,
             condiciones="Normal",
             link="https://ejemplo.com/video4",
-            nombre="Escena 4"
+            nombre="Escena 4",
+            descripcion = "Esta escena refuerza la importancia de la juventud"
         )
         escena_5 = Escena.objects.create(
             idioma="Español",
@@ -216,7 +206,8 @@ class Command(BaseCommand):
             complejidad=3,
             condiciones="Normal",
             link="https://ejemplo.com/video5",
-            nombre="Escena 5"
+            nombre="Escena 5",
+            descripcion = "Esta escena refuerza la importancia de la juventud"
         )
         escena_6 = Escena.objects.create(
             idioma="Español",
@@ -224,7 +215,8 @@ class Command(BaseCommand):
             complejidad=5,
             condiciones="Normal",
             link="https://ejemplo.com/video6",
-            nombre="Escena 6"
+            nombre="Escena 6",
+            descripcion = "Esta escena refuerza la importancia de la juventud"
         )
         escena_7 = Escena.objects.create(
             idioma="Español",
@@ -232,7 +224,8 @@ class Command(BaseCommand):
             complejidad=1,
             condiciones="Normal",
             link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
-            nombre="Escena 7"
+            nombre="Escena 1",
+            descripcion = "Esta escena aclara la importancia de los abuelos"
         )
         escena_8 = Escena.objects.create(
             idioma="Español",
@@ -240,7 +233,8 @@ class Command(BaseCommand):
             complejidad=1,
             condiciones="Normal",
             link="https://drive.google.com/file/d/1qzY31odKmd2FlrjU0VK4dkfezlzEcoaJ/preview",
-            nombre="Escena 2"
+            nombre="Escena 2",
+            descripcion = "Esta escena muestra la vida en la fabella"
         )
         escena_9 = Escena.objects.create(
             idioma="Español",
@@ -248,7 +242,8 @@ class Command(BaseCommand):
             complejidad=1,
             condiciones="Normal",
             link="https://drive.google.com/file/d/1yPgHYRagTJXTqlrGhNkZDEy5zNY4-f77/preview",
-            nombre="Escena 3"
+            nombre="Escena 3",
+            descripcion = "Esta escena recomienda comportamientos bajo"
         )
 
         # Create objectives
@@ -286,12 +281,6 @@ class Command(BaseCommand):
             nombre="neymar",
             descripcion="Tenes que vencer a yamcha",
             escena=escena_1,
-            centro_profesional=centro_prof
-        )
-        objetivo_7 = Objetivo.objects.create(
-            nombre="maradona",
-            descripcion="Tenes que vencer a piccolo",
-            escena=escena_6,
             centro_profesional=centro_prof
         )
 
@@ -333,10 +322,6 @@ class Command(BaseCommand):
             escena=escena_9,
             objetivo=objetivo_6
         )
-        escena_obj_9 = EscenaObjetivo.objects.create(
-            escena=escena_7,
-            objetivo=objetivo_7
-        )
 
         # Create person-objective-scene relationship
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
@@ -357,61 +342,49 @@ class Command(BaseCommand):
             orden=3,
             es_alternativo=False
         )
-        persona_obj_esc_4 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_6,
-            orden=3,
-            es_alternativo=False
-        )
-        persona_obj_esc_5 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_1,
-            orden=3,
-            es_alternativo=False
-        )
-        persona_obj_esc_6 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_2,
-            orden=3,
-            es_alternativo=False
-        )
-        persona_obj_esc_7 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_7,
-            orden=3,
-            es_alternativo=False
-        )
-        persona_obj_esc_8 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_8,
-            orden=3,
-            es_alternativo=False
-        )
-        persona_obj_esc_9 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_9,
-            orden=3,
-            es_alternativo=False
-        )
 
-        # Create evaluation
-        # evaluacion = Evaluacion.objects.create(
-        #     nombre="Evaluación 1",
-        #     link="https://ejemplo.com/eval1",
-        #     centro_salud_id=centro_prof,
-        #     profesional_id=centro_prof
-        # )
-        # evaluacion = Evaluacion.objects.create(
-        #     nombre="Evaluación 1",
-        #     link="https://ejemplo.com/eval1",
-        #     centro_salud_id=centro_prof,
-        #     profesional_id=centro_prof
-        # )
-        evaluacion = Evaluacion.objects.create(
-            nombre="La matadora",
-            link="https://docs.google.com/forms/d/e/1FAIpQLSfx8STfx-3if-hoIpA2f4mB-_ewwMSLRpbgXVaS_23TLYsJyw/viewform?usp=header",
-            centro_salud_id=centro_prof,
-            profesional_id=centro_prof
+
+        formulario_1 = Formulario.objects.create(
+            nombre="Formulario 1",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 2",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 3",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 4",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 5",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
+        )
+        Formulario.objects.create(
+            nombre="Formulario 6",
+            descripcion="Lorem ipsum dolor anda a saber como sigue...",
+            es_verificacion_automatica=True,
+            creado_por=terapeuta,
+            fecha_creacion=datetime.now()
         )
 
         # Create person-objective-evaluation
@@ -420,7 +393,7 @@ class Command(BaseCommand):
             objetivo_id=objetivo_3,
             resultado="Progresando bien",
             progreso=75,
-            evaluacion=evaluacion
+            evaluacion=formulario_1
         )
 
         # Create group memberships
@@ -443,7 +416,7 @@ class Command(BaseCommand):
             user=terapeuta,
             escena=escena_1,
             texto="El letrero dice aguante messi",
-            comentario_contestado=comentario_respuesta,
+            comentario_contestado=comentario_respuesta
         )
 
         Videosvistos.objects.create(
@@ -453,6 +426,139 @@ class Command(BaseCommand):
         CentroProfesionalEscena.objects.create(
             escena_id=escena_1,
             centro_profesional=centro_prof
+        )
+        
+        # Ansiedad Social
+        Patologia.objects.create(
+            nombre="Ansiedad Social",
+            descripcion="Miedo a interacciones; Interpretación errónea de señales sociales; Vergüenza/temor al rechazo"
+        )
+
+        # Ansiedad Sensorial
+        Patologia.objects.create(
+            nombre="Ansiedad Sensorial",
+            descripcion="Sobrecarga por ruidos; Hipersensibilidad táctil; Incomodidad con luces/texturas"
+        )
+
+        # Ansiedad por Espera
+        Patologia.objects.create(
+            nombre="Ansiedad por Espera",
+            descripcion="Necesidad de predictibilidad; Frustración por desorden; Ansiedad por rutinas interrumpidas"
+        )
+
+        # Ansiedad Comunicacional
+        Patologia.objects.create(
+            nombre="Ansiedad Comunicacional",
+            descripcion="Dificultad para expresarse; Malentendidos frecuentes; Problemas con lenguaje no verbal"
+        )
+
+        # Ansiedad de Interacción
+        Patologia.objects.create(
+            nombre="Ansiedad de Interacción",
+            descripcion="Miedo a situaciones nuevas; Pánico en ambientes sociales; Dificultad para iniciar conversaciones"
+        )
+
+        # Trastornos de Ansiedad
+        Patologia.objects.create(
+            nombre="Trastornos de Ansiedad",
+            descripcion="Conjunto de trastornos que incluyen diversos tipos de ansiedad"
+        )
+
+        # Ansiedad Generalizada
+        Patologia.objects.create(
+            nombre="Ansiedad Generalizada",
+            descripcion="Preocupación excesiva y persistente sobre varias áreas de la vida"
+        )
+
+        # Ansiedad Anticipatoria
+        Patologia.objects.create(
+            nombre="Ansiedad Anticipatoria",
+            descripcion="Ansiedad sobre eventos futuros, anticipando resultados negativos"
+        )
+
+        # Trastornos Sensoriales
+        Patologia.objects.create(
+            nombre="Trastornos Sensoriales",
+            descripcion="Alteraciones en la percepción sensorial que afectan el procesamiento de estímulos"
+        )
+
+        # Hipersensibilidad Sensorial
+        Patologia.objects.create(
+            nombre="Hipersensibilidad Sensorial",
+            descripcion="Respuesta exagerada a estímulos sensoriales normales"
+        )
+
+        # Trastornos del Neurodesarrollo
+        Patologia.objects.create(
+            nombre="Trastornos del Neurodesarrollo",
+            descripcion="Conjunto de trastornos que afectan el desarrollo neurológico y comportamiento"
+        )
+
+        # Trastorno de Procesamiento Sensorial
+        Patologia.objects.create(
+            nombre="Trastorno de Procesamiento Sensorial",
+            descripcion="Dificultad en la organización y respuesta a la información sensorial"
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad Sensorial")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad Social")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente,
+            patologia_id=Patologia.objects.get(nombre="Trastornos de Ansiedad")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente,
+            patologia_id=Patologia.objects.get(nombre="Hipersensibilidad Sensorial")
+        )
+
+
+        PersonaPatologia.objects.create(
+            user_id=paciente2,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad Comunicacional")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente2,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad de Interacción")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente2,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad Anticipatoria")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente2,
+            patologia_id=Patologia.objects.get(nombre="Trastornos del Neurodesarrollo")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente3,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad por Espera")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente3,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad Generalizada")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente3,
+            patologia_id=Patologia.objects.get(nombre="Trastornos Sensoriales")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente3,
+            patologia_id=Patologia.objects.get(nombre="Trastorno de Procesamiento Sensorial")
         )
 
         self.stdout.write(self.style.SUCCESS('Successfully loaded sample data'))

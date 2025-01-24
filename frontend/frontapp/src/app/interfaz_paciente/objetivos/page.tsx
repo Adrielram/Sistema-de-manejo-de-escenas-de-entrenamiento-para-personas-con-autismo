@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import ScrollVerticalYHorizontal from "../../../components/ScrollVerticalYHorizontal";
 import SearchBar from "../../../components/Buscador";
 import { useDispatch, useSelector } from 'react-redux';
-import { setIdEscena, setObjetivoId } from "../../../../slices/userSlice";
+import { setIdEscena } from "../../../../slices/userSlice";
 import { RootState } from "../../../../store/store";
 import { useRouter } from 'next/navigation';
 
@@ -16,95 +16,30 @@ interface PaginatedResponse {
   results: any[];
 }
 
-interface Objetivo {
-  id: number;
-  titulo: string;
-  descripcion: string;
-}
-
 interface Escena {
   id: number;
   nombre: string;
+  descripcion: string;
+  idioma: string;
+  acento: string;
+  complejidad: number;
+  condiciones: string;
 }
 
 export default function Page() {
-  const [objetivos, setObjetivos] = useState<Objetivo[]>([]);
-  const [escenasActivas, setEscenasActivas] = useState<Escena[]>([]);
-  const [objetivoSeleccionado, setObjetivoSeleccionado] = useState<number | null>(null);
-  const [query, setQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [escenas, setEscenas] = useState<Escena[]>([]);
+  const [escenaSeleccionada, setEscenaSeleccionada] = useState<Escena | null>(null);
+  //const [query, setQuery] = useState("");
   const baseURL = process.env.NEXT_PUBLIC_API_URL;
-  const { username } = useSelector((state: RootState) => state.user);
+  //const { username } = useSelector((state: RootState) => state.user);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [objetivosFiltrados, setObjetivosFiltrados] = useState<Objetivo[]>([]);
-  const [tituloObjetivoSeleccionado, setTituloObjetivoSeleccionado] = useState<string>("");
+  //const [escenasFiltradas, setEscenasFiltradas] = useState<Escena[]>([]);
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const fetchObjetivos = async (page: number = 1) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(
-        `${baseURL}obtener_objetivos_usuario/?username=${username}&page=${page}&limit=6`
-      );
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      const data: PaginatedResponse = await response.json();
-  
-      const mappedResults = data.results.map((obj) => ({
-        id: obj.id,
-        titulo: obj.titulo,
-        descripcion: obj.descripcion,
-      }));
-  
-      // Actualizar objetivos y páginas
-      setObjetivos(mappedResults);
-      setObjetivosFiltrados(mappedResults);
-      setTotalPages(Math.ceil(data.count / 6));
-  
-      // Seleccionar automáticamente el primer objetivo de la nueva página
-      if (mappedResults.length > 0) {
-        const primerObjetivo = mappedResults[0];
-        setObjetivoSeleccionado(primerObjetivo.id);
-        dispatch(setObjetivoId({ objetivoId: primerObjetivo.id }));
-        setTituloObjetivoSeleccionado(primerObjetivo.titulo);
-        fetchEscenas(primerObjetivo.id);
-      } else {
-        // Si no hay resultados en la página, limpiar selección
-        setObjetivoSeleccionado(null);
-        setTituloObjetivoSeleccionado("");
-        setEscenasActivas([]);
-      }
-    } catch (err) {
-      setError("Error al cargar los objetivos");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const fetchEscenas = async (objetivoId: number) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${baseURL}obtener_escenas_por_objetivo/?objetivo_id=${objetivoId}`);
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      const data = await response.json();
-      setEscenasActivas(data);
-    } catch (err) {
-      setError("Error al cargar las escenas");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const fetchObjetivosPorBusqueda = async (searchQuery: string) => {
-    setIsLoading(true);
+  /*const fetchEscenaPorBusqueda = async (searchQuery: string) => {
     try {
       const response = await fetch(
         `${baseURL}buscar_objetivos/?username=${username}&query=${encodeURIComponent(searchQuery)}`
@@ -112,126 +47,105 @@ export default function Page() {
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
-      const data: Objetivo[] = await response.json();
-      setObjetivosFiltrados(data);
+      const data: Escena[] = await response.json();
+      setEscenasFiltradas(data);
   
       // Seleccionar automáticamente el primer objetivo encontrado
       if (data.length > 0) {
-        const primerObjetivo = data[0];
-        setObjetivoSeleccionado(primerObjetivo.id);
-        dispatch(setObjetivoId({ objetivoId: primerObjetivo.id }));
-        setTituloObjetivoSeleccionado(primerObjetivo.titulo);
-        fetchEscenas(primerObjetivo.id);
+        const esc = data[0]
+        setEscenaSeleccionada(esc);
+        dispatch(setIdEscena({ idEscena: esc.id})); 
       } else {
-        // Si no hay resultados, limpiar selección
-        setObjetivoSeleccionado(null);
-        setTituloObjetivoSeleccionado("");
-        setEscenasActivas([]);
+        // Si no hay resultados en la página, limpiar selección
+        setEscenaSeleccionada(null);
+        setEscenas([])
       }
     } catch (err) {
-      setError("Error al buscar objetivos");
       console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
   };
-  
-  useEffect(() => {
-    fetchObjetivos(currentPage);
-    
-  }, [currentPage]);
+  */
 
-  const handleSearch = (searchQuery: string) => {
+  useEffect(() => {
+    const fetchEscenas = async (page: number = 1) => {
+      try {
+        const response = await fetch(`${baseURL}get-escenas-list/?page=${page}&limit=6`);
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        const data: PaginatedResponse = await response.json();
+    
+        const mappedResults = data.results.map((esc) => ({
+          id: esc.id,
+          nombre: esc.nombre, // Asegúrate de que el campo sea 'nombre'
+          descripcion: esc.descripcion,
+          idioma: esc.idioma,
+          acento: esc.acento,
+          complejidad: esc.complejidad,
+          condiciones: esc.condiciones,
+        }));
+    
+        setEscenas(mappedResults);
+        setTotalPages(Math.ceil(data.count / 6));
+    
+        if (mappedResults.length > 0) {
+          const primerEscena = mappedResults[0];
+          setEscenaSeleccionada(primerEscena); 
+          dispatch(setIdEscena({ idEscena: primerEscena.id })); 
+        } else {
+          setEscenaSeleccionada(null);
+          setEscenas([]);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchEscenas(currentPage);
+  }, [currentPage, baseURL, dispatch]);
+
+  /*const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
   
     if (searchQuery.trim() === "") {
       // Realiza una nueva llamada al backend para obtener todos los resultados
-      fetchObjetivosPorBusqueda("");
+      fetchEscenaPorBusqueda("");
       return;
     }
   
-    fetchObjetivosPorBusqueda(searchQuery);
+    fetchEscenaPorBusqueda(searchQuery);
   };
-  
+  */
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
 
-  const handleObjetivoClick = (objetivoId: number) => {
-    const objetivo =
-      objetivos.find((obj) => obj.id === objetivoId) ||
-      objetivosFiltrados.find((obj) => obj.id === objetivoId);
 
-    if (objetivo) {
-      setObjetivoSeleccionado(objetivoId);
-      setTituloObjetivoSeleccionado(objetivo.titulo);
-      fetchEscenas(objetivoId);
-      dispatch(setObjetivoId({objetivoId: objetivoId}));
+  const handleEscenaClick = () => {
+    if (!escenaSeleccionada) {
+      alert('Por favor, selecciona una escena antes de continuar.');
+      return;
     }
+    //window.alert(`Escena ${escenaID}`)
+    router.push('./ver_video');
   };
 
-  const handleEscenaClick = (escenaID: number) => {
-    //window.alert(`Escena ${escenaID}`)
-    dispatch(setIdEscena({idEscena: escenaID}));
-    router.push('./ver_video');
+  const handleMostrarDescripcion = (escenaP: number) => { 
+    const escenaSeleccionada = escenas.find((escena) => escena.id === escenaP);
+    if (escenaSeleccionada) {
+      dispatch(setIdEscena({idEscena: escenaP}));
+      setEscenaSeleccionada(escenaSeleccionada);
+    }
   }
-
 
   return (
     <div className="min-h-screen p-4 flex flex-col md:flex-row md:h-screen gap-6">
       <div className="w-full">
-        <h2 className="text-xl font-bold mb-2">Buscador</h2>
-        <SearchBar onSearch={handleSearch} placeholder="Buscar Objetivo" />
-
-        {query ? (
-          <div className="mt-4">
-            <h2 className="text-lg font-bold mb-2">Resultados de la Búsqueda</h2>
-            <div className="max-h-64 overflow-y-scroll bg-gray-50 rounded-lg shadow p-4">
-              {objetivosFiltrados.length > 0 ? (
-                <ul className="space-y-2">
-                  {objetivosFiltrados.map((objetivo) => (
-                    <li
-                      key={objetivo.id}
-                      onClick={() => handleObjetivoClick(objetivo.id)}
-                      className={`cursor-pointer flex items-center justify-between p-4 rounded-lg shadow-sm border hover:shadow-md transition-shadow ${
-                        objetivoSeleccionado === objetivo.id
-                          ? "bg-blue-100 border-blue-400"
-                          : "bg-white border-gray-200 hover:border-blue-300"
-                      }`}
-                    >
-                      <span className="text-base font-medium">{objetivo.titulo}</span>
-                      {objetivo.descripcion && <p className="flex-1 ml-4 text-right">Descripcion: {objetivo.descripcion}</p>}
-                      {objetivoSeleccionado === objetivo.id && (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 text-blue-600"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-600">No se encontraron resultados.</p>
-              )}
-            </div>
-          </div>
-        ) : (
-          <>
-            <h2 className="text-xl font-bold mb-2 mt-6">Objetivos</h2>
-            {objetivos.length > 0 ? (
+            <h2 className="text-xl font-bold mb-2 mt-6">Escenas</h2>
+            {escenas.length > 0 ? (
               <ScrollVerticalYHorizontal
-                elementos={objetivos}
-                onObjetivoClick={handleObjetivoClick}
-                selectedObjetivoId={objetivoSeleccionado}
+                elementos={escenas}
+                onElementoClick={handleMostrarDescripcion}
+                selectedElementoId={escenaSeleccionada ? escenaSeleccionada.id : null}
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={handlePageChange}
@@ -241,32 +155,50 @@ export default function Page() {
                 No se encontraron objetivos para mostrar.
               </div>
             )}
-          </>
-        )}
       </div>
       <div className="hidden md:block w-0.5 bg-gray-200"></div>
-      <div className="w-full md:w-[45%]">
-        <h2 className="text-xl font-bold mb-2">
-          {tituloObjetivoSeleccionado ? `Escenas - ${tituloObjetivoSeleccionado}` : "Escenas"}
-        </h2>
-        <div className="h-[500px] md:h-[calc(100vh-100px)] overflow-auto bg-gray-100 rounded-lg shadow p-4">
-          <ul className="space-y-4">
-            {escenasActivas.map((escena) => (
-              <li
-                key={escena.id}
-                className="p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-              >
+        <div className="w-full md:w-[45%]">
+          {escenaSeleccionada ? (
+            <>
+              <h2 className="text-2xl font-bold mb-4 text-gray-800">
+                {`Datos completos de la escena: ${escenaSeleccionada.nombre}`}
+              </h2>
+              <div className="max-w-lg mx-auto overflow-auto bg-white rounded-lg shadow-md border border-gray-200 p-6">
+                <ul className="space-y-4">
+                  <li className="text-gray-700">
+                    <span className="font-semibold text-gray-900">Nombre:</span> {escenaSeleccionada.nombre}
+                  </li>
+                  <li className="text-gray-700">
+                    <span className="font-semibold text-gray-900">Descripción:</span> {escenaSeleccionada.descripcion}
+                  </li>
+                  <li className="text-gray-700">
+                    <span className="font-semibold text-gray-900">Complejidad:</span> {escenaSeleccionada.complejidad}
+                  </li>
+                  <li className="text-gray-700">
+                    <span className="font-semibold text-gray-900">Idioma:</span> {escenaSeleccionada.idioma}
+                  </li>
+                  <li className="text-gray-700">
+                    <span className="font-semibold text-gray-900">Acento:</span> {escenaSeleccionada.acento}
+                  </li>
+                  <li className="text-gray-700">
+                    <span className="font-semibold text-gray-900">Condiciones:</span> {escenaSeleccionada.condiciones}
+                  </li>
+                </ul>
                 <button
-                  onClick={() => handleEscenaClick(escena.id)}
-                  className="text-left w-full"
+                  onClick={() => handleEscenaClick()}
+                  className="mt-6 w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200"
                 >
-                  <h3 className="text-lg font-semibold text-blue-600 mb-2">{escena.nombre}</h3>
+                  Ver video
                 </button>
-              </li>
-            ))}
-          </ul>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-6 text-gray-500 bg-gray-100 rounded-lg shadow-md border border-gray-200">
+              <p className="text-lg font-medium">Selecciona una escena para ver los detalles.</p>
+            </div>
+          )}
         </div>
-      </div>
+
     </div>
   );
 }

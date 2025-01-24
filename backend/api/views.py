@@ -155,60 +155,108 @@ def obtener_objetivos_usuario(request):
     # Retorna los resultados en formato JSON
     return JsonResponse(resultados, safe=False)
 '''
+##ESTE SE REEMPLAZO POR EL DE ABAJO
+# class ObjetivosUsuarioListView(generics.ListAPIView):
+#     """
+#     Vista para listar los objetivos de un usuario específico
+#     con paginación dinámica.
+#     """
+#     serializer_class = ObjetivoSerializerList
+#     pagination_class = DynamicPagination
+#     # permission_classes = [IsAuthenticated]
+#     filter_backends = [DjangoFilterBackend]
 
-class ObjetivosUsuarioListView(generics.ListAPIView):
+#     def get_queryset(self):
+#         # Obtén el username del request
+#         username = self.request.GET.get('username', None)
+#         if not username:
+#             return Objetivo.objects.none()  # Devuelve un queryset vacío si no hay username
+
+#         # Filtra el usuario por username
+#         try:
+#             usuario = User.objects.get(username=username)
+#         except User.DoesNotExist:
+#             return Objetivo.objects.none()
+
+#         # Paso 1: Filtrar PersonaObjetivoEscena para este usuario
+#         persona_escena_objetivos = PersonaObjetivoEscena.objects.filter(user_id=usuario)
+
+#         # Paso 2: Obtener los EscenaObjetivo asociados
+#         escena_objetivos = EscenaObjetivo.objects.filter(
+#             id__in=persona_escena_objetivos.values_list('escena_objetivo_id', flat=True)
+#         )
+
+#         # Paso 3: Filtrar Objetivos asociados a esas escenas
+#         return Objetivo.objects.filter(
+#             id__in=escena_objetivos.values_list('objetivo_id', flat=True)
+#         )
+
+#     def list(self, request, *args, **kwargs):
+#         """
+#         Personaliza la respuesta para formatear los resultados
+#         con el formato deseado (id, titulo, descripcion).
+#         """
+#         queryset = self.get_queryset()
+#         page = self.paginate_queryset(queryset)
+#         if page is not None:
+#             serializer = self.get_serializer(page, many=True)
+#             # Personalizar los datos para devolver 'titulo' en lugar de 'nombre'
+#             data = [{'id': item['id'], 'titulo': item['nombre'], 'descripcion': item['descripcion']} for item in serializer.data]
+#             return self.get_paginated_response(data)
+
+#         serializer = self.get_serializer(queryset, many=True)
+#         data = [{'id': item['id'], 'titulo': item['nombre'], 'descripcion': item['descripcion']} for item in serializer.data]
+#         return Response(data)
+
+class EscenaView(generics.ListAPIView):
     """
-    Vista para listar los objetivos de un usuario específico
-    con paginación dinámica.
+    Vista para listar todas las escenas con todos sus datos.
+    Permite la búsqueda y el ordenamiento si es necesario.
     """
-    serializer_class = ObjetivoSerializerList
-    pagination_class = DynamicPagination
-    # permission_classes = [IsAuthenticated]
+    queryset = Escena.objects.all()
+    serializer_class = EscenaSerializer
+    pagination_class = DynamicPagination 
     filter_backends = [DjangoFilterBackend]
-
-    def get_queryset(self):
-        # Obtén el username del request
-        username = self.request.GET.get('username', None)
-        if not username:
-            return Objetivo.objects.none()  # Devuelve un queryset vacío si no hay username
-
-        # Filtra el usuario por username
-        try:
-            usuario = User.objects.get(username=username)
-        except User.DoesNotExist:
-            return Objetivo.objects.none()
-
-        # Paso 1: Filtrar PersonaObjetivoEscena para este usuario
-        persona_escena_objetivos = PersonaObjetivoEscena.objects.filter(user_id=usuario)
-
-        # Paso 2: Obtener los EscenaObjetivo asociados
-        escena_objetivos = EscenaObjetivo.objects.filter(
-            id__in=persona_escena_objetivos.values_list('escena_objetivo_id', flat=True)
-        )
-
-        # Paso 3: Filtrar Objetivos asociados a esas escenas
-        return Objetivo.objects.filter(
-            id__in=escena_objetivos.values_list('objetivo_id', flat=True)
-        )
 
     def list(self, request, *args, **kwargs):
         """
-        Personaliza la respuesta para formatear los resultados
-        con el formato deseado (id, titulo, descripcion).
+        Personaliza la respuesta para devolver los datos en el formato deseado.
         """
-        queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())  # Aplica filtros, búsqueda y ordenamiento
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            # Personalizar los datos para devolver 'titulo' en lugar de 'nombre'
-            data = [{'id': item['id'], 'titulo': item['nombre'], 'descripcion': item['descripcion']} for item in serializer.data]
+            # Personalización de los datos
+            data = [
+                {
+                    'id': item['id'],
+                    'descripcion': item['descripcion'],
+                    'idioma': item['idioma'],
+                    'acento': item['acento'],
+                    'complejidad': item['complejidad'],
+                    'condiciones': item['condiciones'],
+                    'link': item['link'],
+                    'nombre': item['nombre']
+                }
+                for item in serializer.data
+            ]
             return self.get_paginated_response(data)
 
         serializer = self.get_serializer(queryset, many=True)
-        data = [{'id': item['id'], 'titulo': item['nombre'], 'descripcion': item['descripcion']} for item in serializer.data]
+        data = [
+            {
+                'id': item['id'],
+                'descripcion': item['descripcion'],
+                'idioma': item['idioma'],
+                'acento': item['acento'],
+                'complejidad': item['complejidad'],
+                'condiciones': item['condiciones'],
+                'link': item['link'],
+                'nombre': item['nombre']
+            }
+            for item in serializer.data
+        ]
         return Response(data)
-
-
 
 #
 #class ObjetivoFilter(filters.FilterSet):

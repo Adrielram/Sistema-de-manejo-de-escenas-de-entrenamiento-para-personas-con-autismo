@@ -3,9 +3,9 @@
 import { useState, useEffect, memo } from "react";
 
 interface Props {
-  elementos: Array<{ id: number; titulo: string; descripcion: string }>;
-  onObjetivoClick: (id: number) => void;
-  selectedObjetivoId: number | null;
+  elementos: Array<{ id: number; nombre: string; descripcion: string; idioma:string; acento:string; complejidad:number;condiciones:string }>;
+  onElementoClick: (id: number) => void;
+  selectedElementoId: number | null;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -13,8 +13,8 @@ interface Props {
 
 function ScrollVerticalYHorizontalComponent({
   elementos,
-  onObjetivoClick,
-  selectedObjetivoId,
+  onElementoClick,
+  selectedElementoId,
   currentPage,
   totalPages,
   onPageChange,
@@ -52,14 +52,14 @@ function ScrollVerticalYHorizontalComponent({
               style={{ minWidth: isPortrait ? "fit-content" : "auto" }}
             >
               <div
-                onClick={() => onObjetivoClick(elemento.id)}
+                onClick={() => onElementoClick(elemento.id)}
                 className={`w-full cursor-pointer flex items-center justify-between p-4 rounded-lg shadow-sm border hover:shadow-md transition-shadow ${
-                  selectedObjetivoId === elemento.id
+                  selectedElementoId === elemento.id
                     ? "bg-blue-100 border-blue-400"
                     : "bg-white border-gray-200 hover:border-blue-300"
                 }`}
               >
-                <span className="text-base font-medium">{elemento.titulo}</span>
+                <span className="text-base font-medium">{elemento.nombre}</span>
                 <p
                   className={`flex-1 ml-4 text-right ${
                     isPortrait ? "hidden" : "block"
@@ -67,7 +67,7 @@ function ScrollVerticalYHorizontalComponent({
                 >
                   Descripcion: {elemento.descripcion}
                 </p>
-                {selectedObjetivoId === elemento.id && (
+                {selectedElementoId === elemento.id && (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5 text-blue-600"

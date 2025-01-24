@@ -48,6 +48,7 @@ class User(AbstractUser):
 
 class Escena(models.Model):
     id = models.AutoField(primary_key=True)
+    descripcion = models.CharField(max_length=255)
     idioma = models.CharField(max_length=40)
     acento = models.CharField(max_length=40, default="neutro")
     complejidad = models.IntegerField()
@@ -63,8 +64,8 @@ class Grupo(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(
         max_length=100, 
-        blank=True, 
-        null=True
+        unique=True, 
+        null=False
     )
     centrodesalud_id = models.ForeignKey(
         Centrodesalud, 
@@ -99,7 +100,10 @@ class Objetivo(models.Model):
     id = models.AutoField(primary_key=True)  # Aunque esto es implícito en Django y no es necesario declararlo
     nombre = models.CharField(
         max_length=100, 
-        default="Sin Nombre"
+        default="Sin Nombre",
+        unique=True,
+        null=False,
+        blank=False
     )
     descripcion = models.CharField(max_length=255)
     escena = models.ForeignKey(
@@ -115,29 +119,20 @@ class Objetivo(models.Model):
     )
     class Meta:   
         db_table = 'objetivo'
+   
 
-class Evaluacion(models.Model): 
-    id = models.AutoField(primary_key=True)
-    nombre = models.CharField(
-        max_length=255, 
-        blank=True, 
-        null=True
-    )
-    link = models.CharField(max_length=2000)
-    centro_salud_id = models.ForeignKey(
-        CentroProfesional, 
-        on_delete=models.CASCADE, 
-        db_column='centroProfesional_id', 
-        related_name='evaluacion_centro_salud_id'
-    )
-    profesional_id = models.ForeignKey(
-        CentroProfesional, 
-        on_delete=models.CASCADE, 
-        db_column='centroProfesional_id_profesional', 
-        related_name='evaluacion_profesional_id'
-    )
+class Formulario(models.Model):
+    nombre = models.CharField(max_length=255) # * creo que voy a necesitar cambiarlo a 'nombre'
+    descripcion = models.TextField(blank=True, null=True)
+    es_verificacion_automatica = models.BooleanField(default=False)
+    creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def _str_(self):
+        return self.nombre
+
     class Meta:
-        db_table = 'evaluacion'      
+        db_table = 'formulario'      
 
 class CentroProfesionalEscena(models.Model):    
     escena_id = models.ForeignKey(
@@ -169,6 +164,26 @@ class EscenaObjetivo(models.Model):
             models.UniqueConstraint(
                 fields=['escena', 'objetivo'], 
                 name='unique_escena_objetivo'
+            )
+        ]
+class Personagrupo(models.Model):
+    user_id = models.ForeignKey(
+        'User', 
+        on_delete=models.CASCADE, 
+        related_name='personagrupos'
+    )
+    grupo_id = models.ForeignKey(
+        Grupo, 
+        on_delete=models.CASCADE, 
+        related_name='miembros'
+    )
+
+    class Meta:
+        db_table = 'personaGrupo'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user_id', 'grupo_id'], 
+                name='unique_user_grupo'
             )
         ]
 
@@ -216,26 +231,6 @@ class Objetivoscumplir(models.Model):
             )
         ]
 
-class Personagrupo(models.Model):
-    user_id = models.ForeignKey(
-        'User', 
-        on_delete=models.CASCADE, 
-        related_name='personagrupos'
-    )
-    grupo_id = models.ForeignKey(
-        Grupo, 
-        on_delete=models.CASCADE, 
-        related_name='miembros'
-    )
-
-    class Meta:
-        db_table = 'personaGrupo'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user_id', 'grupo_id'], 
-                name='unique_user_grupo'
-            )
-        ]
 
 class PersonaObjetivoEvaluacion(models.Model):
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)
@@ -243,7 +238,7 @@ class PersonaObjetivoEvaluacion(models.Model):
     resultado = models.TextField(blank=True, null=True)
     progreso = models.IntegerField()
     evaluacion = models.ForeignKey(
-        'Evaluacion', 
+        'Formulario', 
         on_delete=models.CASCADE, 
         blank=True, 
         null=True
@@ -339,3 +334,31 @@ class Notificacion(models.Model):
 
     def __str__(self):
         return f"De {self.remitente} a {self.destinatario} - {self.estado}"
+    
+    class Meta:
+        db_table = 'notificacion'
+
+
+
+class Patologia(models.Model):
+    id = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=255)
+    descripcion = models.TextField(max_length=255)
+
+    def __str__(self):
+        return self.nombre
+    
+
+class PersonaPatologia(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    patologia_id = models.ForeignKey(Patologia, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'personaPatologia'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user_id', 'patologia_id'],
+                name='unique_user_patologia'
+            )
+        ]
+
