@@ -62,7 +62,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   };
 
   const handleComments = () => {
-    router.push(`${comments_path}?patient_id=${id}`);
+    router.push(`${comments_path}?patient_dni=${id}`);
   };
   
   const handleEdit = () => {

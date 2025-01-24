@@ -15,6 +15,7 @@ interface BoxPaginadoProps {
   patients_list_path?: string;
   supervision_path?: string;
   comments_path?: string;
+  revision_path?: string;
   item_type: string;
   showImage: boolean;
   currentPage: number;
@@ -32,6 +33,7 @@ export default function BoxPaginado({
   patients_list_path,
   supervision_path,
   comments_path,
+  revision_path,
   item_type,
   showImage,
   currentPage, 
@@ -95,6 +97,7 @@ export default function BoxPaginado({
             patients_list_path={patients_list_path}
             supervision_path={supervision_path}
             comments_path={comments_path}
+            revision_path={revision_path}
             item_type={item_type}
             onDelete={handleDelete}
           />
