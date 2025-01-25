@@ -1,208 +1,138 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import DropDownList from "../../../../components/DropDownList";
+import React, { useState, useEffect } from "react";
+import GenericDropdown from "../../../../components/SearchableDropDown";
+import AssociatedList from "../../../../components/AssociatedList";
 
-export default function Page() {
-  const [nombreCentro, setNombreCentro] = useState<string>("");
-  const [provincias, setProvincias] = useState<string[]>([]);
-  const [ciudades, setCiudades] = useState<string[]>([]);
-  const [calle, setCalle] = useState<string>("");
-  const [numero, setNumero] = useState<string>("");
-  const [provinciaSeleccionada, setProvinciaSeleccionada] = useState<string>("");
-  const [ciudadSeleccionada, setCiudadSeleccionada] = useState<string>("");
-  const [errorMessage, setErrorMessage] = useState<string>("");
+const CreateGroupPage = () => {
+  const [therapists, setTherapists] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [healthCenters, setHealthCenters] = useState([]);
+  const [associatedTherapists, setAssociatedTherapists] = useState([]);
+  const [associatedPatients, setAssociatedPatients] = useState([]);
+  const [associatedHealthCenters, setAssociatedHealthCenters] = useState([]);
+  const [groupName, setGroupName] = useState("");
 
   useEffect(() => {
-    const fetchProvincesAndCities = async () => {
-      try {
-        const response = await fetch("http://127.0.0.1:8000/api/get_info/");
-        if (response.ok) {
-          const data = await response.json();
-          setProvincias(data.provinces.map((item: { provincia: string }) => item.provincia));
-          setCiudades(data.cities.map((item: { ciudad: string }) => item.ciudad));
-        } else {
-          console.error("Error al cargar provincias y ciudades");
-        }
-      } catch (error) {
-        console.error("Error de conexión al cargar provincias y ciudades:", error);
-      }
+    const fetchData = async () => {
+      const healthCentersResponse = await fetch("http://127.0.0.1:8000/api/get_health_centers/");
+      const therapistsResponse = await fetch("http://127.0.0.1:8000/api/get_therapists/");
+      const patientsResponse = await fetch("http://127.0.0.1:8000/api/get_patients/");
+
+      const healthCentersData = await healthCentersResponse.json();
+      const therapistsData = await therapistsResponse.json();
+      const patientsData = await patientsResponse.json();
+
+      setHealthCenters(healthCentersData);
+      setTherapists(therapistsData);
+      setPatients(patientsData);
     };
 
-    fetchProvincesAndCities();
+    fetchData();
   }, []);
 
-  const handleProvinciaChange = (selected: string) => {
-    setProvinciaSeleccionada(selected);
-    setCiudadSeleccionada(""); 
-    setErrorMessage("");
-  };
-
-  const handleSubmit = async () => {
-    setErrorMessage("");
-
-    const payload = {
-      nombre: nombreCentro,
-      provincia: provinciaSeleccionada,
-      ciudad: ciudadSeleccionada,
-      calle,
-      numero,
-    };
-
-    try {
-      const response = await fetch("http://127.0.0.1:8000/api/create_health_center/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const responseData = await response.json();
-
-      if (response.ok) {
-        alert("Centro de salud creado con éxito");
-        setNombreCentro("");
-        setProvinciaSeleccionada("");
-        setCiudadSeleccionada("");
-        setCalle("");
-        setNumero("");
-      } else {
-        setErrorMessage(responseData.message || "Error al guardar el centro de salud");
+  const handleAddItem = (item, setAssociatedItems, associatedItems) => {
+    if (item) {
+      const key = item.dni ? "dni" : "id";
+      if (!associatedItems.find((i) => i[key] === item[key])) {
+        setAssociatedItems((prev) => [...prev, item]);
       }
-    } catch (error) {
-      console.error("Error de conexión:", error);
-      setErrorMessage("Hubo un problema al conectarse al servidor.");
     }
   };
 
-  return (
-    <div
-      style={{
-        backgroundColor: "#f0f0f0",
-        padding: "40px", 
-        minHeight: "100vh", 
-      }}
-    >
-      <div
-        style={{
-          padding: "20px",
-          backgroundColor: "#fff", 
-          borderRadius: "10px", 
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", 
-          color: "black",
-          margin: "0 auto",
-          maxWidth: "800px", 
-        }}
-      >
-        {errorMessage && (
-          <div style={{ 
-            color: 'red', 
-            marginBottom: '20px', 
-            textAlign: 'center' 
-          }}>
-            {errorMessage}
-          </div>
-        )}
+  const handleRemoveItem = (id, setAssociatedItems) => {
+    setAssociatedItems((prev) => prev.filter((i) => String(i.dni || i.id) !== String(id)));
+  };
 
-        <div>
-          <label>Nombre del Centro de Salud</label>
-          <input
-            type="text"
-            value={nombreCentro}
-            onChange={(e) => setNombreCentro(e.target.value)}
-            placeholder="Nombre del centro"
-            style={{
-              width: "100%",
-              marginBottom: "20px",
-            }}
-          />
+  const handleSave = async () => {
+    const healthCenterId = associatedHealthCenters[0]?.dni;
+    const therapistIds = associatedTherapists.map((t) => t.dni);
+    const patientIds = associatedPatients.map((p) => p.dni);
+
+    const response = await fetch("http://127.0.0.1:8000/api/create_group/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: groupName,
+        health_center_id: healthCenterId,
+        therapist_ids: therapistIds,
+        patient_ids: patientIds,
+      }),
+    });
+
+    const result = await response.json();
+    alert(result.message);
+  };
+
+  return (
+    <div className="p-5 text-black min-h-screen flex justify-center">
+      <div className="max-w-3xl w-full">
+        <label htmlFor="groupName" className="block text-center text-sm mb-2">
+          Nombre del grupo:
+        </label>
+        <input
+          id="groupName"
+          type="text"
+          value={groupName}
+          onChange={(e) => setGroupName(e.target.value)}
+          placeholder="Ingrese el nombre del grupo"
+          className="p-2 w-full mb-5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+        />
+
+        <div className="flex flex-wrap gap-5 justify-center">
+          <div className="flex-1 min-w-[300px]">
+            <GenericDropdown
+              title="Asociar Terapeuta"
+              items={therapists}
+              onSelect={(item) => handleAddItem(item, setAssociatedTherapists, associatedTherapists)}
+            />
+            <AssociatedList
+              title="Terapeutas Asociados"
+              items={associatedTherapists}
+              onRemove={(id) => handleRemoveItem(id, setAssociatedTherapists)}
+            />
+          </div>
+
+          <div className="flex-1 min-w-[300px]">
+            <GenericDropdown
+              title="Asociar Paciente"
+              items={patients}
+              onSelect={(item) => handleAddItem(item, setAssociatedPatients, associatedPatients)}
+            />
+            <AssociatedList
+              title="Pacientes Asociados"
+              items={associatedPatients}
+              onRemove={(id) => handleRemoveItem(id, setAssociatedPatients)}
+            />
+          </div>
+
+          <div className="flex-1 min-w-[300px]">
+            <GenericDropdown
+              title="Asociar Centro de Salud"
+              items={healthCenters}
+              onSelect={(item) => handleAddItem(item, setAssociatedHealthCenters, associatedHealthCenters)}
+            />
+            <AssociatedList
+              title="Centros de Salud Asociados"
+              items={associatedHealthCenters}
+              onRemove={(id) => handleRemoveItem(id, setAssociatedHealthCenters)}
+            />
+          </div>
         </div>
-  
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            marginBottom: "20px",
-          }}
-        >
-          <div style={{ width: "48%", marginBottom: "20px" }}>
-            <DropDownList
-              listName="Provincias"
-              items={provincias}
-              onSelect={(selected: string) => handleProvinciaChange(selected)}
-            />
-          </div>
-  
-          <div style={{ width: "48%", marginBottom: "20px" }}>
-            <DropDownList
-              listName="Ciudades"
-              items={ciudades}
-              onSelect={(selected: string) => setCiudadSeleccionada(selected)}
-            />
-          </div>
-  
-          <div style={{ width: "48%", marginBottom: "20px" }}>
-            <label style={{ fontWeight: "bold" }}>Calle</label>
-            <input
-              type="text"
-              value={calle}
-              onChange={(e) => setCalle(e.target.value)}
-              placeholder="Calle"
-              style={{ width: "100%" }}
-            />
-          </div>
-  
-          <div style={{ width: "48%", marginBottom: "20px" }}>
-            <label style={{ fontWeight: "bold" }}>Número</label>
-            <input
-              type="text"
-              value={numero}
-              onChange={(e) => setNumero(e.target.value)}
-              placeholder="Número"
-              style={{ width: "100%" }}
-              pattern="^[0-9]+$"
-              title="Solo se permiten números"
-            />
-          </div>
+
+        <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 z-10 w-auto flex justify-center">
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-colors"
+          >
+            Crear grupo
+          </button>
         </div>
-  
-        <button
-          onClick={handleSubmit}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#f6512b",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px",
-            position: "fixed",
-            bottom: "20px",
-            right: "20px",
-          }}
-        >
-          Guardar Centro de Salud
-        </button>
       </div>
-  
-      <style jsx>{`
-        @media (max-width: 600px) {
-          div > div {
-            width: 100% !important;
-          }
-          input {
-            width: 100%;
-          }
-          .form-container {
-            padding: 10px;
-          }
-          button {
-            width: 90%;
-            bottom: 10px;
-            right: 10px;
-          }
-        }
-      `}</style>
     </div>
   );
-}
+};
+
+export default CreateGroupPage;

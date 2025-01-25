@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react";
 
 interface Item {
-  dni: string;
-  nombre: string;
+  dni?: string;
+  nombre?: string;
   id?: number;
   name?: string;
 }
@@ -10,7 +10,7 @@ interface Item {
 interface AssociatedListProps {
   title: string;
   items: Item[];
-  onRemove: (id: string) => void;
+  onRemove: (id: string | number) => void;
   style?: React.CSSProperties;
 }
 
@@ -24,21 +24,18 @@ const AssociatedList: React.FC<AssociatedListProps> = ({ title, items, onRemove,
           const key = item.dni || item.id;
           if (!key) {
             console.error("El item no tiene una clave válida:", item);
-            return null; // Salta este elemento si no tiene clave
+            return null;
           }
 
-          const name = item.nombre || item.name; // Aceptar ambas propiedades
+          const name = item.nombre || item.name;
 
           return (
-            <li
-              key={key}
-              className="flex justify-between items-center py-2 border-b last:border-b-0"
-            >
+            <li key={key} className="flex justify-between items-center py-2 border-b last:border-b-0">
               <span>{name}</span>
               <button
                 className="text-red-500 hover:text-red-700 focus:outline-none"
-                onClick={() => onRemove(String(item.id || item.dni))} // Usa directamente id o dni
-                aria-label={`Eliminar ${item.name || item.nombre}`}
+                onClick={() => onRemove(key)}
+                aria-label={`Eliminar ${name}`}
               >
                 🗑️
               </button>
@@ -57,6 +54,5 @@ const AssociatedList: React.FC<AssociatedListProps> = ({ title, items, onRemove,
     </div>
   );
 };
-
 
 export default AssociatedList;

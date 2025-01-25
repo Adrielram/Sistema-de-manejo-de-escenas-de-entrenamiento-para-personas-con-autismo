@@ -236,8 +236,18 @@ def create_group(request):
         therapist_ids = request.POST.getlist("therapist_ids")
         patient_ids = request.POST.getlist("patient_ids")
 
+        print("Datos recibidos:")
+        print("group_name:", group_name)
+        print("health_center_id:", health_center_id)
+        print("therapist_ids:", therapist_ids)
+        print("patient_ids:", patient_ids)
+
         # Crear el grupo
-        centro = Centrodesalud.objects.get(id=health_center_id)
+        try:
+            centro = Centrodesalud.objects.get(id=health_center_id)
+        except Centrodesalud.DoesNotExist:
+            return JsonResponse({"error": "Centro de salud no encontrado"}, status=404)
+
         grupo = Grupo.objects.create(nombre=group_name, centrodesalud=centro)
 
         # Asociar terapeutas y pacientes al grupo
@@ -250,6 +260,7 @@ def create_group(request):
             Personagrupo.objects.create(user_id=patient, grupo_id=grupo)
 
         return JsonResponse({"message": "Grupo creado exitosamente!"}, status=201)
+
 
 
 
