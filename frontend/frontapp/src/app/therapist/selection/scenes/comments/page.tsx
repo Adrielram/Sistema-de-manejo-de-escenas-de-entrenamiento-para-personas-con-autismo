@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import ComentarioPaciente from "../../../../../components/ComentarioPaciente";
+import { NuevoComentario } from "../../../../../components/NuevoComentario"
 import { useSearchParams } from "next/navigation";
+import { useSelector } from 'react-redux';
+import { RootState } from "../../../../../../store/store";
 
 const ComentariosEscena = () => {
   const searchParams = useSearchParams();
@@ -12,8 +15,18 @@ const ComentariosEscena = () => {
   }>({});
   const [loadingComentarios, setLoadingComentarios] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadComentarios, setReloadComentarios] = useState(false);
+  const { username } = useSelector((state: RootState) => state.user);
+  const nuevoComentarioRef = useRef<HTMLDivElement>(null);
 
-  //const baseURL = process.env.NEXT_PUBLIC_API_URL;
+  const [formData, setFormData] = useState({
+    user: username, 
+    escena: Number(escenaId),
+    texto: '',
+    visibilidad: true,
+    comentario_respondido: 0,
+    usuarioRespondido: '',
+  });
 
   // Fetch para cargar los comentarios de la escena
   useEffect(() => {
@@ -27,7 +40,6 @@ const ComentariosEscena = () => {
       try {
         setLoadingComentarios(true);
         const response = await fetch(
-          //const response = await fetch(`${baseURL}api/comentarios/lista/?id_escena=${escenaId}`);
           `http://localhost:8000/api/comentarios/lista/?id_escena=${escenaId}`
         );
         const data = await response.json();
@@ -47,7 +59,32 @@ const ComentariosEscena = () => {
     };
 
     fetchComentarios();
-  }, [escenaId]);
+  }, [escenaId, reloadComentarios]);
+
+  const handleResponder = async (idComentario: number) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/comentarios/?idComentario=${idComentario}`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setFormData((prev) => ({
+          ...prev,
+          comentario_respondido: idComentario,
+          usuarioRespondido: data.usuario,
+        }));
+
+        // Scroll al fondo de la página
+        if (nuevoComentarioRef.current) {
+          nuevoComentarioRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      } else {
+        console.error(data.error);
+      }
+    } catch (error) {
+      console.error("Error al obtener el usuario del comentario:", error);
+    }
+  };
 
   if (loadingComentarios) {
     return (
@@ -68,21 +105,42 @@ const ComentariosEscena = () => {
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-4">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Comentarios de la Escena {escenaId}</h1>
+      
       {Object.keys(comentariosHashSet).length > 0 ? (
         Object.keys(comentariosHashSet).map((principalId) => (
           <div key={principalId} className="mb-4">
             <ComentarioPaciente
               idComentario={parseInt(principalId)}
               respuestas={comentariosHashSet[parseInt(principalId)]}
-              onResponder={(id) => {
-                console.log(`Respondiendo al comentario con ID: ${id}`);
-              }}
+              onResponder={handleResponder}
             />
           </div>
         ))
       ) : (
         <p className="text-gray-500 text-center">No existen comentarios para esta escena.</p>
       )}
+
+      {formData.comentario_respondido !== 0 && (
+        <div className="flex items-center text-sm text-gray-600 mt-2">
+          <p>Respondiendo a @{formData.usuarioRespondido}</p>
+          <button
+            onClick={() =>
+              setFormData((prev) => ({ ...prev, comentario_respondido: 0 }))
+            }
+            className="ml-2 text-red-500 hover:text-red-700 transition-colors"
+          >
+            &#x2716;
+          </button>
+        </div>
+      )}
+
+      <div ref={nuevoComentarioRef}>
+        <NuevoComentario
+          formData={formData}
+          setFormData={setFormData}
+          onCommentAdded={() => setReloadComentarios(!reloadComentarios)}
+        />
+      </div>
     </div>
   );
 };

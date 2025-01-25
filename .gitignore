@@ -2,3 +2,4 @@ venv/
 frontend/frontapp/node_modules/
 __pycache__/
 .vscode/
+backend/api/migrations/0001_initial.py
