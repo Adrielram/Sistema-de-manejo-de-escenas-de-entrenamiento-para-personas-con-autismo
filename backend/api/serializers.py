@@ -139,6 +139,8 @@ class GrupoSerializer(serializers.ModelSerializer):
         model = Grupo
         fields = ['id', 'nombre', 'centrodesalud_id']
 
+
+
 class FormularioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Formulario
