@@ -8,6 +8,10 @@ import { ImVideoCamera } from "react-icons/im"; // <ImVideoCamera /> icono de es
 import { GoGoal } from "react-icons/go"; // <GoGoal /> icono de objetivo
 //import { BiSolidEdit } from "react-icons/bi"; // <BiSolidEdit /> icono de edicion
 import { IoIosAdd } from "react-icons/io"; // <IoIosAdd /> icono de agregar
+import { FaPerson } from "react-icons/fa6";
+import { FaUserDoctor } from "react-icons/fa6";
+import { GiHealthNormal } from "react-icons/gi";
+import { FaComments } from "react-icons/fa";
 
 import { SideNavItem } from './types';
 
@@ -78,4 +82,59 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
         },
       ],
     },
+];
+
+export const SIDENAV_ITEMS_ADMIN: SideNavItem[] = [
+  {
+    title: 'Funcionalidades',
+    path: '/admin',
+    icon: <MdContentCopy />,
+    submenu: true,
+    subMenuItems: [
+      {
+          title: 'Centros de Salud',
+          path: '/admin/health_center',
+          icon: <GiHealthNormal  />,
+          submenu: true,
+          subMenuItems: [
+              { 
+                  title: 'Crear Centro de Salud', 
+                  path: '/admin/health_center/create_center' ,
+                  icon: <GiHealthNormal  />,
+              },
+          ],
+      },
+      {
+          title: 'Administrar Terapeutas',
+          path: '/admin/therapists',
+          icon: <FaUserDoctor />,
+          submenu: false,    
+      },
+      {
+          title: 'Administrar Pacientes',
+          path: '/admin/patients',
+          icon: <FaPerson />,
+          submenu: false,
+      },
+      {
+          title: 'Administrar Grupos',
+          path: '/admin/groups',
+          icon: <BsPeopleFill />,
+          submenu: true,
+          subMenuItems: [
+            { 
+              title: 'Crear Grupo', 
+              path: '/admin/groups/create_group',
+              icon: <IoIosAdd />, 
+            },     
+          ],
+      },
+      {
+        title: 'Administrar Comentarios',
+        path: '/admin/comments',
+        icon: <FaComments />,
+        submenu: false,    
+    },
+    ],
+  },
 ];
