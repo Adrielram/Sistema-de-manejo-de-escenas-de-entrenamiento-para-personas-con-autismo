@@ -230,37 +230,42 @@ def get_therapists(request):
 @permission_classes([AllowAny])
 def create_group(request):
     if request.method == "POST":
-        # Datos que vienen del frontend
-        group_name = request.POST.get("name")
-        health_center_id = request.POST.get("health_center_id")
-        therapist_ids = request.POST.getlist("therapist_ids")
-        patient_ids = request.POST.getlist("patient_ids")
-
-        print("Datos recibidos:")
-        print("group_name:", group_name)
-        print("health_center_id:", health_center_id)
-        print("therapist_ids:", therapist_ids)
-        print("patient_ids:", patient_ids)
-
-        # Crear el grupo
         try:
+            data = json.loads(request.body)
+            group_name = data.get("name")
+            health_center_id = data.get("health_center_id")
+            therapist_ids = data.get("therapist_ids", [])
+            patient_ids = data.get("patient_ids", [])
+
+            print("Datos recibidos:")
+            print("group_name:", group_name)
+            print("health_center_id:", health_center_id)
+            print("therapist_ids:", therapist_ids)
+            print("patient_ids:", patient_ids)
+
+            # Crear el grupo
             centro = Centrodesalud.objects.get(id=health_center_id)
+            grupo = Grupo.objects.create(nombre=group_name, centrodesalud_id=centro)
+
+            # Asociar terapeutas y pacientes al grupo usando dni en lugar de id
+            for therapist_id in therapist_ids:
+                therapist = User.objects.get(dni=therapist_id)  # Cambiado de id a dni
+                Personagrupo.objects.create(user_id=therapist, grupo_id=grupo)
+
+            for patient_id in patient_ids:
+                patient = User.objects.get(dni=patient_id)  # Cambiado de id a dni
+                Personagrupo.objects.create(user_id=patient, grupo_id=grupo)
+
+            return JsonResponse({"message": "Grupo creado exitosamente!"}, status=201)
+
         except Centrodesalud.DoesNotExist:
             return JsonResponse({"error": "Centro de salud no encontrado"}, status=404)
+        except User.DoesNotExist:
+            return JsonResponse({"error": "Usuario no encontrado"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
 
-        grupo = Grupo.objects.create(nombre=group_name, centrodesalud=centro)
-
-        # Asociar terapeutas y pacientes al grupo
-        for therapist_id in therapist_ids:
-            therapist = User.objects.get(id=therapist_id)
-            Personagrupo.objects.create(user_id=therapist, grupo_id=grupo)
-
-        for patient_id in patient_ids:
-            patient = User.objects.get(id=patient_id)
-            Personagrupo.objects.create(user_id=patient, grupo_id=grupo)
-
-        return JsonResponse({"message": "Grupo creado exitosamente!"}, status=201)
-
+    return JsonResponse({"error": "Método no permitido"}, status=405)
 
 
 

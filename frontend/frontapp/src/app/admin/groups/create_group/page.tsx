@@ -15,16 +15,19 @@ const CreateGroupPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const healthCentersResponse = await fetch("http://127.0.0.1:8000/api/get_health_centers/");
-      const therapistsResponse = await fetch("http://127.0.0.1:8000/api/get_therapists/");
-      const patientsResponse = await fetch("http://127.0.0.1:8000/api/get_patients/");
-
+      const healthCentersResponse = await fetch("http://localhost:8000/api/get_health_centers/");
+      const therapistsResponse = await fetch("http://localhost:8000/api/get_therapists/");
+      const patientsResponse = await fetch("http://localhost:8000/api/get_patients/");
+      console.log("El valor de los centros es " + healthCentersResponse)
       const healthCentersData = await healthCentersResponse.json();
       const therapistsData = await therapistsResponse.json();
       const patientsData = await patientsResponse.json();
-      console.log("healthCentersData" + healthCentersData)
-      console.log("therapistsData" + therapistsData)
-      console.log("patientsData" + patientsData)
+
+      console.log("Datos recibidos:", {
+        healthCenters: healthCentersData,
+        therapists: therapistsData,
+        patients: patientsData
+      });
 
       setHealthCenters(healthCentersData);
       setTherapists(therapistsData);
@@ -36,37 +39,59 @@ const CreateGroupPage = () => {
 
   const handleAddItem = (item, setAssociatedItems, associatedItems) => {
     if (item) {
-      const key = item.dni ? 'dni' : 'id';
+      const key = item.dni ? "dni" : "id";
       if (!associatedItems.find((i) => i[key] === item[key])) {
         setAssociatedItems((prev) => [...prev, item]);
       }
     }
   };
-  
+
   const handleRemoveItem = (id, setAssociatedItems) => {
-    setAssociatedItems((prev) => prev.filter((i) => i.dni !== id && i.id !== id));
+    setAssociatedItems((prev) => prev.filter((i) => String(i.dni || i.id) !== String(id)));
   };
 
   const handleSave = async () => {
-    const healthCenterId = associatedHealthCenters[0]?.dni;
-    const therapistIds = associatedTherapists.map((t) => t.dni);
-    const patientIds = associatedPatients.map((p) => p.dni);
+    try {
+        const healthCenterId = associatedHealthCenters[0]?.id;
+        if (!healthCenterId) {
+            alert("Seleccione un centro de salud antes de crear el grupo.");
+            return;
+        }
 
-    const response = await fetch("http://127.0.0.1:8000/api/create_group/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: groupName,
-        health_center_id: healthCenterId,
-        therapist_ids: therapistIds,
-        patient_ids: patientIds,
-      }),
-    });
+        const therapistIds = associatedTherapists.map((t) => t.dni);
+        const patientIds = associatedPatients.map((p) => p.dni);
 
-    const result = await response.json();
-    alert(result.message);
+        console.log("Datos a enviar:", JSON.stringify({
+          name: groupName,
+          health_center_id: healthCenterId,
+          therapist_ids: therapistIds,
+          patient_ids: patientIds,
+        }));   
+        const response = await fetch("http://localhost:8000/api/create_group/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                name: groupName,
+                health_center_id: healthCenterId,
+                therapist_ids: therapistIds,
+                patient_ids: patientIds,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error en la creación del grupo');
+        }
+
+        const result = await response.json();
+        alert(result.message);
+    } catch (error) {
+        console.error("Error al guardar:", error);
+        alert("Error al crear el grupo: " + error.message);
+    }
   };
 
   return (
@@ -85,7 +110,6 @@ const CreateGroupPage = () => {
         />
 
         <div className="flex flex-wrap gap-5 justify-center">
-          {/* Dropdown y lista de terapeutas */}
           <div className="flex-1 min-w-[300px]">
             <GenericDropdown
               title="Asociar Terapeuta"
@@ -99,7 +123,6 @@ const CreateGroupPage = () => {
             />
           </div>
 
-          {/* Dropdown y lista de pacientes */}
           <div className="flex-1 min-w-[300px]">
             <GenericDropdown
               title="Asociar Paciente"
@@ -113,7 +136,6 @@ const CreateGroupPage = () => {
             />
           </div>
 
-          {/* Dropdown y lista de centros de salud */}
           <div className="flex-1 min-w-[300px]">
             <GenericDropdown
               title="Asociar Centro de Salud"
@@ -128,9 +150,8 @@ const CreateGroupPage = () => {
           </div>
         </div>
 
-        {/* Botón Guardar */}
         <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 z-10 w-auto flex justify-center">
-          <button 
+          <button
             onClick={handleSave}
             className="px-4 py-2 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-colors"
           >
