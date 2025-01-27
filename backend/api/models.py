@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 
 class Centrodesalud(models.Model):
     id = models.AutoField(primary_key=True)
@@ -42,6 +43,7 @@ class User(AbstractUser):
         'auth.Permission',
         related_name='custom_user_permissions'
     )  
+    patologia = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta: 
         db_table = 'user'
@@ -52,10 +54,9 @@ class Escena(models.Model):
     idioma = models.CharField(max_length=40)
     acento = models.CharField(max_length=40, default="neutro")
     complejidad = models.IntegerField()
-    condiciones = models.CharField(max_length=255)  # Permite valores nulos
+    condicion = models.OneToOneField('Condicion',related_name='escenas', on_delete=models.CASCADE,blank=True,null=True)
     link = models.CharField(max_length=2000)
     nombre = models.CharField(max_length=100, default="Sin Nombre")
-
     class Meta:
         db_table = 'escena'
 
@@ -119,20 +120,7 @@ class Objetivo(models.Model):
     )
     class Meta:   
         db_table = 'objetivo'
-   
-
-class Formulario(models.Model):
-    nombre = models.CharField(max_length=255) # * creo que voy a necesitar cambiarlo a 'nombre'
-    descripcion = models.TextField(blank=True, null=True)
-    es_verificacion_automatica = models.BooleanField(default=False)
-    creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-
-    def _str_(self):
-        return self.nombre
-
-    class Meta:
-        db_table = 'formulario'      
+     
 
 class CentroProfesionalEscena(models.Model):    
     escena_id = models.ForeignKey(
@@ -157,7 +145,7 @@ class CentroProfesionalEscena(models.Model):
 class EscenaObjetivo(models.Model):
     escena = models.ForeignKey('Escena', on_delete=models.CASCADE)
     objetivo = models.ForeignKey('Objetivo', on_delete=models.CASCADE)
-
+    orden = models.IntegerField(blank=True, null=True)
     class Meta:
         db_table = 'escenaObjetivo'
         constraints = [
@@ -198,8 +186,6 @@ class PersonaObjetivoEscena(models.Model):
         blank=True,
         null=True
     )
-    orden = models.IntegerField(blank=True, null=True)
-    es_alternativo = models.BooleanField()
 
     class Meta:
         db_table = 'personaEscenaObjetivo'
@@ -231,6 +217,14 @@ class Objetivoscumplir(models.Model):
             )
         ]
 
+class Condicion(models.Model):
+    id = models.AutoField(primary_key=True)
+    edad = models.IntegerField(blank=True, null=True)
+    objetivo = models.ForeignKey('Objetivo', on_delete=models.CASCADE, null=True)
+    escena = models.OneToOneField('Escena',related_name='condiciones', on_delete=models.CASCADE, null=True)
+    fecha = models.DateTimeField(blank=True, null=True)
+    class Meta:
+        db_table = 'condicion'
 
 class PersonaObjetivoEvaluacion(models.Model):
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)
@@ -255,21 +249,24 @@ class PersonaObjetivoEvaluacion(models.Model):
 
 class Videosvistos(models.Model):
     id = models.AutoField(primary_key=True)
-    persona_objetivo_escena =  models.ForeignKey(
-        'PersonaObjetivoEscena',
+    paciente_id =  models.ForeignKey(
+        'User',
         on_delete=models.CASCADE,
-        related_name='videosvistos_persona_objetivo_escena',
-        blank=True,
-        null=True
+        related_name='videosvistos_paciente_id',
     )
-    visto = models.BooleanField(default=False)
-
+    escena_id =  models.ForeignKey(
+        'Escena',
+        on_delete=models.CASCADE,
+        related_name='videosvistos_escena_id',
+    )
+    fecha = models.DateTimeField(auto_now_add=True)
+    like = models.BooleanField(blank=True, null=True)
     class Meta:     
         db_table = 'videosVistos'
         constraints = [
             models.UniqueConstraint(
-                fields=['persona_objetivo_escena', 'id'],
-                name='unique_escena_user_objetivo_videos_vistos'
+                fields=['paciente_id','escena_id', 'id'],
+                name='unique_escena_user_videos_vistos'
             )
         ]
 
@@ -335,6 +332,7 @@ class Notificacion(models.Model):
     def __str__(self):
         return f"De {self.remitente} a {self.destinatario} - {self.estado}"
     
+
     class Meta:
         db_table = 'notificacion'
 
@@ -345,14 +343,20 @@ class Patologia(models.Model):
     nombre = models.CharField(max_length=255)
     descripcion = models.TextField(max_length=255)
 
+    class Meta:
+        db_table = 'patologia'
+
     def __str__(self):
         return self.nombre
     
-
+def validate_percentage(value):
+    if value < 0 or value > 100:
+        raise ValidationError('El valor de certeza debe estar entre 0 y 100.')
+    
 class PersonaPatologia(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     patologia_id = models.ForeignKey(Patologia, on_delete=models.CASCADE)
-
+    certeza = models.FloatField(validators=[validate_percentage], null=True)
     class Meta:
         db_table = 'personaPatologia'
         constraints = [
@@ -362,3 +366,69 @@ class PersonaPatologia(models.Model):
             )
         ]
 
+
+class Formulario(models.Model):
+    nombre = models.CharField(max_length=255) # * creo que voy a necesitar cambiarlo a 'nombre'
+    descripcion = models.TextField(blank=True, null=True)
+    es_verificacion_automatica = models.BooleanField(default=False)
+    creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def _str_(self):
+        return self.nombre
+
+    class Meta:
+        db_table = 'formulario'    
+
+class Pregunta(models.Model):
+    TIPOS_PREGUNTA = [
+        ('multiple-choice', 'Multiple Choice'),
+        ('respuesta-corta', 'Respuesta Corta'),
+        ('respuesta-larga', 'Respuesta Larga'),
+    ]
+
+    formulario = models.ForeignKey(Formulario, related_name="preguntas", on_delete=models.CASCADE)
+    texto = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=TIPOS_PREGUNTA)
+    correcta = models.CharField(max_length=255, blank=True, null=True)  # Solo para verificación automática
+
+    def __str__(self):
+        return self.texto
+
+
+class Opcion(models.Model):
+    pregunta = models.ForeignKey(Pregunta, related_name="opciones", on_delete=models.CASCADE)
+    texto = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.texto
+
+import uuid
+class Respuesta(models.Model):
+    pregunta = models.ForeignKey(Pregunta, related_name="respuestas", on_delete=models.CASCADE)
+    paciente = models.ForeignKey(User, on_delete=models.CASCADE, related_name="respuestas")
+    respuesta = models.TextField()
+    correcta = models.BooleanField(null=True)  # Solo para verificación automática
+    nota = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)  # Nota de 0 a 10
+    intento_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    fecha_intento = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Respuesta de {self.paciente.username} a {self.pregunta.texto}"
+    
+class ComentarioProfesional(models.Model):
+    respuesta = models.ForeignKey(Respuesta, related_name="comentarios", on_delete=models.CASCADE)
+    terapeuta = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comentarios")
+    texto = models.TextField()
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comentario de {self.terapeuta.username} en {self.respuesta}"
+    
+class FormularioPacienteRevision(models.Model):
+    formulario = models.ForeignKey('Formulario', on_delete=models.CASCADE)
+    paciente_dni = models.CharField(max_length=20)
+    revision = models.BooleanField(default=False)  # Si el terapeuta habilitó la revisión
+    verificado_automatico = models.BooleanField(default=False)  # Si se corrigió automáticamente
+    fecha_respuesta = models.DateTimeField(auto_now_add=True)
+    volver_a_realizar = models.BooleanField(default=False)
