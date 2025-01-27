@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import React from 'react'
 
-const forms = () => {
+const Forms = () => {
   const searchParams = useSearchParams()
   const patient_dni = searchParams.get('patient_dni')
 
@@ -12,4 +12,4 @@ const forms = () => {
   )
 }
 
-export default forms
+export default Forms
