@@ -17,6 +17,7 @@ interface BoxPaginadoProps {
   comments_path?: string;
   revision_path?: string;
   scenes_comments_path?: string;
+  forms_path?: string;
   item_type: string;
   showImage: boolean;
   currentPage: number;
@@ -36,6 +37,7 @@ export default function BoxPaginado({
   comments_path,
   revision_path,
   scenes_comments_path,
+  forms_path,
   item_type,
   showImage,
   currentPage, 
@@ -101,6 +103,7 @@ export default function BoxPaginado({
             comments_path={comments_path}
             revision_path={revision_path}
             scenes_comments_path={scenes_comments_path}
+            forms_path={forms_path}
             item_type={item_type}
             onDelete={handleDelete}
           />
