@@ -63,7 +63,6 @@ urlpatterns = [
     path('comentarios/', ComentarioDetalleAPIView.as_view(), name='comentario-detalle'),
     path('get_reached_goals/', GetReachedGoalsView.as_view(), name='get_reached_goals'),
     path('get_unreached_goals/', GetUnreachedGoalsView.as_view(), name='get_unreached_goals'),
-
     path('create_health_center/', views.create_health_center, name='create_health_center'),
     path('get_health_centers/', views.get_health_centers, name='get_health_centers'),
     path('get_therapists/', views.get_therapists, name='get_therapists'),
