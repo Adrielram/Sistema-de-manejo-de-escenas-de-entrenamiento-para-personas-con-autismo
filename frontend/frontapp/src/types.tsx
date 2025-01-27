@@ -23,4 +23,5 @@ export type OptionsProps = {
   seePatientsButton?: boolean;
   revisionButton?: boolean;
   scenesCommentsButton?: boolean;
+  formsButton?: boolean;
 };

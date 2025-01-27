@@ -2,6 +2,7 @@
 import React, { useState, useEffect, use } from "react";
 import SingleSearchSelectBox from "../../../../../components/SingleSearchSelectBox";
 import SearchSelectBox from "../../../../../components/SearchSelectBox";
+import SortableSearchSelectBox from "../../../../../components/SortableSearchSelectBox";
 import { useSelector } from 'react-redux';
 import { RootState } from "../../../../../../store/store";
 import { useRouter } from 'next/navigation';
@@ -155,7 +156,7 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
 
           </div>          
           <div>
-            <SearchSelectBox
+            <SortableSearchSelectBox
               title="Buscar Escenas"
               searchPlaceholder="Escribe el nombre de la escena..."
               getItemLabel={(item) => item.nombre as string}
