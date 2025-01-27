@@ -99,6 +99,7 @@ class EscenaSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class CentroSaludSerializer(serializers.ModelSerializer):  
     class Meta:
         model = Centrodesalud
@@ -134,6 +135,7 @@ class VideosVistosSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+
 class GrupoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grupo
@@ -165,3 +167,77 @@ class PersonaObjetivoEscenaSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersonaObjetivoEscena
         fields = ['id', 'user_id', 'escena_objetivo', 'orden', 'es_alternativo' ]
+
+class CentrodesaludSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Centrodesalud
+        fields = ['id', 'nombre']
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['dni', 'nombre']
+
+class TerapeutaSerializer(UserSerializer):
+    class Meta:
+        model = User
+        fields = ['dni', 'nombre']
+
+    def to_representation(self, instance):
+        # Solo devolver usuarios con rol 'terapeuta'
+        if instance.role != 'terapeuta':
+            return None
+        return super().to_representation(instance)
+
+class GrupoSerializer(serializers.ModelSerializer):
+    terapeutas = TerapeutaSerializer(many=True)
+    pacientes = PacienteSerializer(many=True)
+    centrodesalud = CentrodesaludSerializer()
+
+    class Meta:
+        model = Grupo
+        fields = ['id', 'nombre', 'centrodesalud', 'terapeutas', 'pacientes']
+
+
+class ObjetivoSerializer(serializers.ModelSerializer):
+    video_explicativo_id = serializers.PrimaryKeyRelatedField(
+        queryset=Escena.objects.all(), source='escena'
+    )  # Relación con la escena del video explicativo
+    centro_salud_id = serializers.PrimaryKeyRelatedField(
+        queryset=CentroProfesional.objects.all()
+    )  # Relación con centro de salud
+    profesional_id = serializers.PrimaryKeyRelatedField(
+        queryset=CentroProfesional.objects.all()
+    )  # Relación con profesional
+
+    class Meta:
+        model = Objetivo
+        fields = ['id', 'nombre', 'descripcion', 'video_explicativo_id', 'centro_salud_id', 'profesional_id']
+
+    def create(self, validated_data):
+        # Extraer el video explicativo
+        video_explicativo = validated_data.pop('escena')
+
+        # Crear el objetivo con los datos validados
+        objetivo = Objetivo.objects.create(escena=video_explicativo, **validated_data)
+
+        return objetivo
+
+
+class PacienteSerializer2(UserSerializer):
+    class Meta:
+        model = User
+        fields = ['dni', 'nombre']
+
+    def to_representation(self, instance):
+        # Solo devolver usuarios con rol 'paciente'
+        if instance.role != 'paciente':
+            return None
+        return super().to_representation(instance)
+
+
+
+
+
+
+
