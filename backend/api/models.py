@@ -371,18 +371,6 @@ class PersonaPatologia(models.Model):
             )
         ]
 
-from django.db import models
-class Formulario(models.Model):
-    titulo = models.CharField(max_length=255)
-    descripcion = models.TextField(blank=True, null=True)
-    es_verificacion_automatica = models.BooleanField(default=False)
-    creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.titulo
-
-
 class Pregunta(models.Model):
     TIPOS_PREGUNTA = [
         ('multiple-choice', 'Multiple Choice'),
