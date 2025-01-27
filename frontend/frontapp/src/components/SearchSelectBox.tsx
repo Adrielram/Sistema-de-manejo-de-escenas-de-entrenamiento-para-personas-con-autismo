@@ -106,7 +106,7 @@ const SearchSelectBox = ({
       <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
         {!loading && items.length === 0 && !error && (
           <div className="text-gray-500 text-center py-4">
-            No hay elementos disponibles
+            Busca Algo! 🚀
           </div>
         )}
 

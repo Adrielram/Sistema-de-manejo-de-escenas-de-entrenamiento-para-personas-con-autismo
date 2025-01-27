@@ -11,7 +11,7 @@ const CreateScene: React.FC = () => {
   const [acento, setAcento] = useState("");
   const [condiciones, setCondicion] = useState<string>("");
   const [complejidad, setComplejidad] = useState(0);
- 
+  const [descripcion, setDescripcion] = useState("");
 
   const [linkVideo, setLinkVideo] = useState("");
 
@@ -27,6 +27,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   // Crear un objeto con los datos
   const nuevaEscena = {
       nombre: titulo,
+      descripcion: descripcion,
       idioma: idioma,
       acento: acento,
       condiciones: condiciones === "" ? null : condiciones, // Reemplaza cadena vacía por null
@@ -45,6 +46,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           setTitulo("");
           setAcento("");
           setIdioma("");
+          setDescripcion("");
           setCondicion("");
           setComplejidad(0);
           setLinkVideo("");
@@ -66,7 +68,6 @@ const handleSubmit = async (e: React.FormEvent) => {
         </h1>
         
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8" >
-        {/* Columna izquierda */}
           <div className="space-y-6 bg-white p-8 rounded-xl shadow-lg border border-blue-100">
             <div>
               <label htmlFor="titulo" className="block font-semibold text-gray-700 mb-2">
@@ -81,6 +82,18 @@ const handleSubmit = async (e: React.FormEvent) => {
                 placeholder="Ingrese el título"
               />
             </div>
+            <div>
+              <label htmlFor="descripcion" className="block font-semibold text-gray-700 mb-2">
+                Descripción
+              </label>
+              <textarea
+                id="descripcion"
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF] min-h-[200px]"
+                placeholder="Ingrese la descripción"
+              />
+            </div> 
 
             <div>
               <label htmlFor="idioma" className="block font-semibold text-gray-700 mb-2">
