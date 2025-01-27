@@ -1031,6 +1031,24 @@ class ObtenerLinksEvaluaciones(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
+class GetPatientForms(generics.ListAPIView):
+    serializer_class = FormularioSerializer
+    pagination_class = DynamicPagination
+
+    def get_queryset(self):
+        user_dni = self.request.query_params.get('user_dni')
+        try:
+            assesments_ids = PersonaObjetivoEvaluacion.objects.filter(
+                user_id=user_dni,
+            ).exclude(
+                evaluacion__isnull=True  # Asegurarse de que haya evaluación
+            ).values_list('evaluacion', flat=True)
+
+            return Formulario.objects.filter(id__in=assesments_ids)
+        
+        except Exception as e:
+            raise Exception(f"Ocurrió un error al obtener los formularios: {str(e)}")
+        
 def ObtenerEscenaObjetivo(escena_id, objetivo_id):
     try: 
         escena_objetivo = EscenaObjetivo.objects.get(

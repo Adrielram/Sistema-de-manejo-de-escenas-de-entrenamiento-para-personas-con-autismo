@@ -164,7 +164,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
             onClick={handleRevision}
             className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
           >
-            Pacientes
+            Revisar
           </button>
         )}
         {options.scenesCommentsButton && (
