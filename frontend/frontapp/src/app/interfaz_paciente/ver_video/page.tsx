@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { NuevoComentario } from "../../../components/NuevoComentario";
 import ComentarioPaciente from "../../../components/ComentarioPaciente";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useSelector } from 'react-redux';
 import { RootState } from "../../../../store/store";
 import { useDispatch } from "react-redux";
@@ -24,7 +24,8 @@ const VerVideo = () => {
   const [quizzes, setQuizzes] = useState({ formularios: [] });
   const [escenas, setEscenas] = useState<Escena[]>([]);
   const [escena, setEscena] = useState<Escena>();
-  const [poe, setPoe] = useState<number>();
+  //const [poe, setPoe] = useState<number>();
+  const [like, setLike] = useState<boolean | null>(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [completedQuizzes, setCompletedQuizzes] = useState<number[]>([]);
   const { username } = useSelector((state: RootState) => state.user);
@@ -100,29 +101,7 @@ const VerVideo = () => {
       }
     };
     fetchComentarios();
-    const fetchPersObjEsc = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:8000/api/get-persona-obj-esc/?username=${username}&objetivo_id=${objetivoId}&escena_id=${idEscena}`
-        );
-        
-        if (!response.ok) {
-          throw new Error('Error al obtener el id');
-        }
-        
-        const data = await response.json();
-        setPoe(data.id); 
-        setFormData((prev) => ({ ...prev, persona_objetivo_escena: data.id }));
-      } catch (error) {
-        console.error('Error en fetchPersObjEsc:', error);
-      }
-    };
-
-    const escenaActual = escena;
-    if (escenaActual) {
-      fetchPersObjEsc();
-    }
-  }, [escena, username, idEscena, reloadComentarios]);
+  }, [idEscena, reloadComentarios]);
 
   useEffect(() => {
     const LoadData = async () => {
@@ -152,15 +131,17 @@ const VerVideo = () => {
         setVideos(data.map((escena: Escena) => escena.link));
   
         // Fetch para obtener las evaluaciones asociadas al objetivo y usuario
-        const evaluacionesResponse = await fetch(`http://localhost:8000/api/get-evaluaciones/?username=${username}&objetivo_id=${objetivoId}`);
+        /*const evaluacionesResponse = await fetch(`http://localhost:8000/api/get-evaluaciones/?username=${username}&objetivo_id=${objetivoId}`);
         
         if (!evaluacionesResponse.ok) {
+          setQuizzes(null);
           throw new Error('Error al obtener las evaluaciones');
         }
   
         const evaluacionesData = await evaluacionesResponse.json();
         setQuizzes(evaluacionesData.links);
-  
+        */
+        setQuizzes(null);
       } catch (error) {
         console.error('Error en LoadData:', error);
       }
@@ -180,17 +161,14 @@ const VerVideo = () => {
         console.error('No hay más videos para mostrar');
         return;
       }
-  
+      //marcar video como visto
+      marcarVideoComoVisto(escena.id);
       // Actualiza el índice y la escena actual
       setCurrentVideoIndex(nextIndex);
       const siguienteEscena = escenas[nextIndex]; // Obtiene la siguiente escena
       setEscena(siguienteEscena);
       dispatch(setIdEscena({idEscena: siguienteEscena.id}));
   
-      // Marca el video como visto solo después de que `poe` se haya actualizado
-      if (poe) {
-        marcarVideoComoVisto(poe);
-      }
   
       // Actualiza el formData con la nueva escena
       setFormData((prev) => ({ ...prev, escena: siguienteEscena.id }));
@@ -231,14 +209,14 @@ const VerVideo = () => {
   };
 
 
-  const marcarVideoComoVisto = async (personaObjetivoEscenaId: number) => {
+  const marcarVideoComoVisto = async (escenaId: number) => {
     try {
       const response = await fetch('http://localhost:8000/api/video-visto/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ persona_objetivo_escena_id: personaObjetivoEscenaId }),
+        body: JSON.stringify({ username: username, escenaId: escenaId, like: like }),
       });
   
       if (!response.ok) {
@@ -250,8 +228,25 @@ const VerVideo = () => {
   };
 
   const handleVerListaObjetivos = () => {
-    router.push('./ver_objetivos');
+    router.push('./objetivos');
   };
+
+  const handleLike= () => {
+    if (like === true){
+      setLike(null);
+    }else{
+      setLike(true);
+    }
+  }
+
+  const handleDislike = () => {
+    if (like === false){
+      setLike(null);
+    }
+    else{
+      setLike(false); 
+    }
+  }
 
   const handleQuizClick = (index: number) => {      
     router.push(`/interfaz_paciente/evaluacion/${index}`);      
@@ -309,6 +304,20 @@ const VerVideo = () => {
                 {isLoading ? 'Cargando...' : 'Ver video anterior'}
               </button>
             )}
+          </div>
+          <div className="flex space-x-4 items-center justify-center mt-4">
+            <button
+              onClick={handleLike}
+              className={`rounded-lg px-4 py-2 shadow hover:bg-blue-600 ${like === true ? 'bg-blue-700 text-white' : 'bg-blue-500 text-white'}`}
+            >
+              👍 {like === true ? 'Me gusta' : 'Me gusta'}
+            </button>
+            <button
+              onClick={handleDislike}
+              className={`rounded-lg px-4 py-2 shadow hover:bg-red-600 ${like === false ? 'bg-red-700 text-white' : 'bg-red-500 text-white'}`}
+            >
+              👎 {like === false ? 'No me gusta' : 'No me gusta'}
+            </button>
           </div>
             {/* Quizzes */}
             {currentVideoIndex === videos.length - 1 && (
