@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, render
 from django.http import JsonResponse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from .models import *
@@ -18,6 +18,8 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters
 from rest_framework.exceptions import NotFound
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.views.decorators.csrf import csrf_exempt
 
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
@@ -1106,6 +1108,7 @@ class MarcarVideoVistoAPIView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
+
 import spacy
 import numpy as np
 from rest_framework.views import APIView
@@ -1162,3 +1165,215 @@ class SpacyPatologiasView(APIView):
         return Response({
             'patologias': patologias_detectadas
         })
+        
+# Admin:
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_person_group(request, grupo_id, user_id):
+    try:
+        # Buscar la relación en la tabla Personagrupo
+        relacion = Personagrupo.objects.get(grupo_id=grupo_id, user_id_id=user_id)
+        relacion.delete()
+        return Response({"message": "Relación eliminada correctamente."}, status=status.HTTP_200_OK)
+    except Personagrupo.DoesNotExist:
+        return Response({"error": "Relación no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+    
+def get_groups(request):
+    if request.method == "GET":
+        grupos = Grupo.objects.all()  # Obtener todos los grupos
+        data = [
+            {
+                "id": grupo.id,
+                "name": grupo.nombre,
+                "health_center": {
+                    "id": grupo.centrodesalud_id.id,
+                    "name": grupo.centrodesalud_id.nombre,
+                },
+                "therapists": [
+                    {
+                        "id": persona.user_id.dni,  # Acceder al campo dni de User
+                        "name": persona.user_id.nombre,  # Acceder al campo nombre de User
+                    }
+                    for persona in Personagrupo.objects.filter(
+                        grupo_id=grupo, user_id__role="terapeuta"
+                    )
+                ],
+                "patients": [
+                    {
+                        "id": persona.user_id.dni,  # Acceder al campo dni de User
+                        "name": persona.user_id.nombre,  # Acceder al campo nombre de User
+                    }
+                    for persona in Personagrupo.objects.filter(
+                        grupo_id=grupo, user_id__role="paciente"
+                    )
+                ],
+            }
+            for grupo in grupos
+        ]
+        return JsonResponse(data, safe=False)
+    
+@csrf_exempt
+def update_group(request, group_id):
+    if request.method == "POST":
+        try:
+            # Obtener el grupo por ID
+            grupo = Grupo.objects.get(id=group_id)
+        except Grupo.DoesNotExist:
+            return JsonResponse({"error": "Grupo no encontrado"}, status=404)
+
+        try:
+            # Parsear el cuerpo de la solicitud
+            body = json.loads(request.body)
+            therapist_ids = body.get("therapist_ids", [])
+            patient_ids = body.get("patient_ids", [])
+
+            # Validar si los usuarios existen
+            all_user_ids = therapist_ids + patient_ids
+            users = User.objects.filter(id__in=all_user_ids)
+
+            if len(users) != len(all_user_ids):
+                return JsonResponse({"error": "Uno o más usuarios no existen"}, status=400)
+
+            # Eliminar todas las relaciones previas de este grupo
+            Personagrupo.objects.filter(grupo_id=grupo).delete()
+
+            # Agregar los terapeutas
+            for therapist_id in therapist_ids:
+                Personagrupo.objects.create(
+                    grupo_id=grupo,
+                    user_id_id=therapist_id,
+                    role="terapeuta"
+                )
+
+            # Agregar los pacientes
+            for patient_id in patient_ids:
+                Personagrupo.objects.create(
+                    grupo_id=grupo,
+                    user_id_id=patient_id,
+                    role="paciente"
+                )
+
+            return JsonResponse({"message": "Grupo actualizado correctamente"})
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Cuerpo de la solicitud inválido"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": f"Error inesperado: {str(e)}"}, status=500)
+    
+    return JsonResponse({"error": "Método no permitido"}, status=405)
+
+# Vista para obtener los centros de salud
+@permission_classes([AllowAny])
+def get_health_centers(request):
+    centros = Centrodesalud.objects.all()
+    serializer = CentrodesaludSerializer(centros, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+# Vista para obtener los terapeutas
+@permission_classes([AllowAny])
+def get_patients(request):
+    pacientes = User.objects.filter(role='paciente')  # Filtrar por el rol de 'paciente'
+    print(pacientes)
+    serializer = PacienteSerializer2(pacientes, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+
+# Vista para obtener los pacientes
+@permission_classes([AllowAny])
+def get_therapists(request):
+    terapeutas = User.objects.filter(role='terapeuta')  # Filtrar por el rol de 'terapeuta'
+    print(terapeutas)
+    serializer = TerapeutaSerializer(terapeutas, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+
+# Vista para crear un grupo
+@permission_classes([AllowAny])
+def create_group(request):
+    if request.method == "POST":
+        # Datos que vienen del frontend
+        group_name = request.POST.get("name")
+        health_center_id = request.POST.get("health_center_id")
+        therapist_ids = request.POST.getlist("therapist_ids")
+        patient_ids = request.POST.getlist("patient_ids")
+
+        # Crear el grupo
+        centro = Centrodesalud.objects.get(id=health_center_id)
+        grupo = Grupo.objects.create(nombre=group_name, centrodesalud=centro)
+
+        # Asociar terapeutas y pacientes al grupo
+        for therapist_id in therapist_ids:
+            therapist = User.objects.get(id=therapist_id)
+            Personagrupo.objects.create(user_id=therapist, grupo_id=grupo)
+
+        for patient_id in patient_ids:
+            patient = User.objects.get(id=patient_id)
+            Personagrupo.objects.create(user_id=patient, grupo_id=grupo)
+
+        return JsonResponse({"message": "Grupo creado exitosamente!"}, status=201)
+    
+@csrf_exempt 
+@permission_classes([AllowAny])
+def create_health_center(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            nombre = data.get("nombre")
+            provincia = data.get("provincia")
+            ciudad = data.get("ciudad")
+            calle = data.get("calle")
+            numero = data.get("numero")
+
+            # Validar que no haya campos vacíos
+            if not nombre or not provincia or not ciudad or not calle or not numero:
+                return JsonResponse({"error": "Faltan campos obligatorios"}, status=400)
+
+            # Crear una nueva instancia de Residencia
+            residencia = Residencia.objects.create(
+                provincia=provincia,
+                ciudad=ciudad,
+                calle=calle,
+                numero=numero
+            )
+
+            # Crear el centro de salud asociado a la nueva residencia
+            centro_de_salud = Centrodesalud.objects.create(
+                nombre=nombre,
+                direccion_id_dir=residencia
+            )
+
+            return JsonResponse({'message': 'Centro de salud creado con éxito'}, status=201)
+
+        except Exception as e:
+            return JsonResponse({'message': str(e)}, status=400)
+
+    return JsonResponse({'message': 'Método no permitido'}, status=405)
+
+@permission_classes([AllowAny])
+def get_provinces_and_cities(request):
+    provinces = Residencia.objects.values('provincia').distinct()
+    cities = Residencia.objects.values('ciudad').distinct()
+    return JsonResponse({
+        "provinces": list(provinces),
+        "cities": list(cities),
+    })
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_health_center(request, center_id):
+    try:
+        center = Centrodesalud.objects.get(id=center_id)
+        center.delete()
+        return Response({"message": "Centro de salud eliminado correctamente."}, status=status.HTTP_200_OK)
+    except Centrodesalud.DoesNotExist:
+        return Response({"error": "Centro de salud no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+@permission_classes([AllowAny])
+def listar_centros_de_salud(request):
+    """
+    Retorna una lista de todos los centros de salud disponibles.
+    """
+    centros = Centrodesalud.objects.all().values('id', 'nombre', 'direccion_id_dir__provincia', 'direccion_id_dir__ciudad', 'direccion_id_dir__calle', 'direccion_id_dir__numero')
+    centros_list = list(centros)
+    return JsonResponse(centros_list, safe=False)
+

@@ -60,6 +60,18 @@ urlpatterns = [
     path('comentarios/', ComentarioDetalleAPIView.as_view(), name='comentario-detalle'),
     path('get_reached_goals/', GetReachedGoalsView.as_view(), name='get_reached_goals'),
     path('get_unreached_goals/', GetUnreachedGoalsView.as_view(), name='get_unreached_goals'),
+    path('health_centers/<int:center_id>/delete/', delete_health_center, name='delete_health_center'),
+    path('health_centers/', views.listar_centros_de_salud, name='listar_centros_de_salud'),
+    path('get_info/', views.get_provinces_and_cities, name='get_provinces_and_cities'),
+    path('create_health_center/', views.create_health_center, name='create_health_center'),
+    path('get_health_centers/', views.get_health_centers, name='get_health_centers'),
+    path('get_therapists/', views.get_therapists, name='get_therapists'),
+    path('get_patients/', views.get_patients, name='get_patients'),
+    path('create_group/', views.create_group, name='create_group'),
+    path('get_groups/', views.get_groups, name='get_groups'),
+    path('update_group/<int:group_id>/', views.update_group, name='update_group'),
+    path('personagrupo/<int:grupo_id>/<int:user_id>/', views.delete_person_group, name='delete_person_group'),
+
 ]
 
 urlpatterns += [path('', include(router.urls))]
