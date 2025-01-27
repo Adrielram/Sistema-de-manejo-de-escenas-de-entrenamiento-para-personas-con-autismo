@@ -749,6 +749,24 @@ class GetPatientsPerGroupView(generics.ListAPIView):
         users_dni = persona_grupo_qs.values_list('user_id__dni', flat=True)
 
         return User.objects.filter(dni__in=users_dni, role='paciente')
+    
+class GetPatientsNotInGroup(generics.ListAPIView):
+    serializer_class = PacienteSerializer
+
+    def get_queryset(self):
+        group_id = self.request.query_params.get('group_id')
+        
+        try:
+            group = Grupo.objects.get(id=group_id)
+
+        except Grupo.DoesNotExist:
+            raise NotFound("El grupo especificado no existe.")
+
+        persona_grupo_qs = Personagrupo.objects.exclude(grupo_id=group)            
+
+        users_dni = persona_grupo_qs.values_list('user_id__dni', flat=True)
+
+        return User.objects.filter(dni__in=users_dni, role='paciente')
 
 class GetFormsPerUserView(generics.ListAPIView):
     serializer_class = FormularioSerializer
@@ -967,51 +985,61 @@ import numpy as np
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Patologia
+from .services.pinecone_service import PineconeService
+from functools import lru_cache
+
 
 class SpacyPatologiasView(APIView):
+    @staticmethod
+    @lru_cache(maxsize=1)
+    def get_nlp_model():
+        return spacy.load('es_core_news_lg')
+    
+    @staticmethod
+    @lru_cache(maxsize=1)
+    def get_pinecone_service():
+        return PineconeService()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.nlp = spacy.load('es_core_news_lg')
-        self.vectores_patologias = self.crear_vectores_patologias()
+        self.nlp = self.get_nlp_model()
+        self.pinecone_service = self.get_pinecone_service()
 
-    def crear_vectores_patologias(self):
-        vectores = {}
-        patologias = Patologia.objects.all()
-        print([p.nombre for p in patologias])          
-        for patologia in patologias:
-            print("entre al for")
-            doc = self.nlp(patologia.descripcion)
-            word_vectors = [token.vector for token in doc if token.has_vector]
-            print(f"Description for {patologia.nombre}: {patologia.descripcion}")
-            print(f"Number of tokens with vectors for {patologia.nombre}: {len(word_vectors)}")
-            vector_patologia = np.mean(word_vectors, axis=0) if word_vectors else None
-            vectores[patologia.nombre] = vector_patologia
-            print(f"Vector for {patologia.nombre}: {vector_patologia is not None}")
-            
-        return vectores
-
-    def encontrar_patologias_similares(self, texto_input, umbral=0.7):
+    def encontrar_patologias_similares(self, texto_input):
+        # Procesar texto de entrada
         doc_input = self.nlp(texto_input)
-        input_vector = np.mean([token.vector for token in doc_input if token.has_vector], axis=0)
         
-        patologias_similares = []
+        # Obtener vectores válidos
+        vectors = [token.vector for token in doc_input if token.has_vector]
         
-        for nombre, vector_patologia in self.vectores_patologias.items():
-            if vector_patologia is not None:
-                similitud = np.dot(input_vector, vector_patologia) / (
-                    np.linalg.norm(input_vector) * np.linalg.norm(vector_patologia)
-                )
-                
-                if similitud > umbral:
-                    patologias_similares.append({
-                        'nombre': nombre,
-                        'similitud': float(similitud)
-                    })
+        # Verificar si hay vectores válidos
+        if not vectors:
+            return []  # o retornar algún mensaje de error
+            
+        # Calcular el vector promedio
+        input_vector = np.mean(vectors, axis=0)
         
-        return sorted(patologias_similares, key=lambda x: x['similitud'], reverse=True)
+        # Verificar que no hay NaN en el vector
+        if np.isnan(input_vector).any():
+            return []  # o retornar algún mensaje de error
+        
+        # Consultar Pinecone
+        try:
+            patologias_similares = self.pinecone_service.query_similar(input_vector)
+            return patologias_similares
+        except Exception as e:
+            print(f"Error al consultar Pinecone: {str(e)}")
+            return []
 
     def post(self, request):
         texto_input = request.data.get('texto', '')
+        
+        # Validar que el texto no esté vacío
+        if not texto_input.strip():
+            return Response({
+                'error': 'El texto de entrada no puede estar vacío',
+                'patologias': []
+            }, status=400)
         
         patologias_detectadas = self.encontrar_patologias_similares(texto_input)
         

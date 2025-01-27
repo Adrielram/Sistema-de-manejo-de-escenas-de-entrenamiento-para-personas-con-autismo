@@ -161,3 +161,7 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
+## PINECONE 
+
+PINECONE_API_KEY = 'pcsk_6RotVr_Nq6iGe36ryodth5paYcaMdtQQowXKKhz4W5gFvChEehTqJ54usNdnHDT2ejXvcH'
+PINECONE_ENV = 'ipathology'
