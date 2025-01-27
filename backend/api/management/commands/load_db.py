@@ -334,7 +334,7 @@ class Command(BaseCommand):
             user_id=paciente,
             escena_objetivo=escena_obj_4,
             orden=2,
-            es_alternativo=False
+            es_alternativo=True
         )
         persona_obj_esc_3 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
