@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import Comentario from "../../../components/Comentario";
+import React, { useEffect, useState, useRef } from "react";
 import { NuevoComentario } from "../../../components/NuevoComentario";
+import ComentarioPaciente from "../../../components/ComentarioPaciente";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector } from 'react-redux';
-import { RootState } from "../../../../store/store"; 
+import { RootState } from "../../../../store/store";
+import { useDispatch } from "react-redux";
+import { setIdEscena } from "../../../../slices/userSlice";
 
 interface Escena {
   id: number;
@@ -26,61 +28,87 @@ const VerVideo = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [completedQuizzes, setCompletedQuizzes] = useState<number[]>([]);
   const { username } = useSelector((state: RootState) => state.user);
-  const objetivoId = 1;
+  const [comentariosHashSet, setComentariosHashSet] = useState<{
+    [key: number]: number[];
+  }>({}); // HashSet con comentarios principales y sus respuestas
+  const [reloadComentarios, setReloadComentarios] = useState(false);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [reloadComentarios, setReloadComentarios] = useState(false);
-  const searchParams = useSearchParams();
-  const completedFormId = searchParams.get('completedFormId');
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const { idEscena, objetivoId } = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     user: username, 
-    escena: 0,
+    escena: Number(idEscena),
     texto: '',
     visibilidad: true,
-    comentario_respondido: null,
+    comentario_respondido: 0,
+    usuarioRespondido: '', // Nuevo campo para guardar el nombre del usuario respondido
+
   });
 
-  useEffect(() => {
-    const verificarFormulario = async (formId: string) => {
-      const response = await fetch(`${baseUrl}verificar_form_completado/${formId}/${username}/`);
+  const nuevoComentarioRef = useRef<HTMLDivElement>(null); // Referencia al componente NuevoComentario
+
+  const handleResponder = async (idComentario: number) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/comentarios/?idComentario=${idComentario}`
+      );
+      const data = await response.json();
       if (response.ok) {
-        const data = await response.json();
-        if (data.status === 'completado') {
-          setCompletedQuizzes((prev) => [...new Set([...prev, parseInt(formId, 10)])]);
+        setFormData((prev) => ({
+          ...prev,
+          comentario_respondido: idComentario,
+          usuarioRespondido: data.usuario, // Asigna el nombre del usuario respondido
+        }));
+
+        // Scroll al fondo de la página
+        if (nuevoComentarioRef.current) {
+          nuevoComentarioRef.current.scrollIntoView({ behavior: "smooth" });
         }
+      } else {
+        console.error(data.error);
       }
-    };
-
-    if (completedFormId) {
-      verificarFormulario(completedFormId);
+    } catch (error) {
+      console.error("Error al obtener el usuario del comentario:", error);
     }
-  }, [completedFormId]);
+  };
 
   useEffect(() => {
-    const cargarFormulariosCompletados = async () => {
-      const response = await fetch(`${baseUrl}listar_formularios_completados/${username}/`);
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Data: ", JSON.stringify(data));
-        const completedIds = data.map((form: { formulario_id: number }) => form.formulario_id);
-        setCompletedQuizzes(completedIds);
-      }
-    };
-
-    cargarFormulariosCompletados();
-  }, []); // Solo se ejecuta al renderizar el componente por primera vez
-
- 
-
-  
-
-  useEffect(() => {
-    const fetchPersObjEsc = async (escena_id: number) => {
+    // Fetch para obtener el HashSet de comentarios
+    const fetchComentarios = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8000/api/get-persona-obj-esc/?username=${username}&objetivo_id=${objetivoId}&escena_id=${escena_id}`
-        );       
+          `http://localhost:8000/api/comentarios/lista/?id_escena=${idEscena}`
+        );
+        const data = await response.json();
+
+        if (response.ok) {
+          // Access the nested hashset data
+          if (data && data.hashset && typeof data.hashset === 'object') {
+            setComentariosHashSet(data.hashset);
+          } else {
+            console.error('Datos inesperados:', data);
+            setComentariosHashSet({});
+          }
+        } else {
+          console.error(data.error);
+          setComentariosHashSet({});
+        }
+      } catch (error) {
+        console.error("Error al obtener los comentarios:", error);
+        setComentariosHashSet({});
+      }
+    };
+    fetchComentarios();
+    const fetchPersObjEsc = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/get-persona-obj-esc/?username=${username}&objetivo_id=${objetivoId}&escena_id=${idEscena}`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Error al obtener el id');
+        }
         
         const data = await response.json();
         setPoe(data.id); 
@@ -92,9 +120,9 @@ const VerVideo = () => {
 
     const escenaActual = escena;
     if (escenaActual) {
-      fetchPersObjEsc(escenaActual.id);
+      fetchPersObjEsc();
     }
-  }, [escena, username]);
+  }, [escena, username, idEscena, reloadComentarios]);
 
   useEffect(() => {
     const LoadData = async () => {
@@ -108,13 +136,19 @@ const VerVideo = () => {
         
         const data = await response.json();
         setEscenas(data);
-        if (data.length > 0) {
-          const primeraEscena = data[0];
-          setEscena(primeraEscena);
-          const e = primeraEscena.id;
-          setFormData((prev) => ({ ...prev, escena: e }));
+  
+        // Encuentra el índice de la escena actual en las escenas obtenidas
+        const index = data.findIndex((escena: Escena) => escena.id === Number(idEscena));
+  
+        if (index !== -1) {
+          setCurrentVideoIndex(index); // Actualiza currentVideoIndex
+          setEscena(data[index]); // Establece la escena actual
+          setFormData((prev) => ({ ...prev, escena: data[index].id })); // Actualiza el formData
+        } else {
+          console.error('La escena actual no se encuentra en las escenas disponibles.');
         }
   
+        // Actualiza la lista de videos con los enlaces de las escenas
         setVideos(data.map((escena: Escena) => escena.link));
   
         // Fetch para obtener las evaluaciones asociadas al objetivo y usuario
@@ -125,8 +159,7 @@ const VerVideo = () => {
         }
   
         const evaluacionesData = await evaluacionesResponse.json();
-        setQuizzes(evaluacionesData); 
-        console.log("Evaluaciones data: ", JSON.stringify(evaluacionesData));
+        setQuizzes(evaluacionesData.links);
   
       } catch (error) {
         console.error('Error en LoadData:', error);
@@ -152,6 +185,7 @@ const VerVideo = () => {
       setCurrentVideoIndex(nextIndex);
       const siguienteEscena = escenas[nextIndex]; // Obtiene la siguiente escena
       setEscena(siguienteEscena);
+      dispatch(setIdEscena({idEscena: siguienteEscena.id}));
   
       // Marca el video como visto solo después de que `poe` se haya actualizado
       if (poe) {
@@ -184,7 +218,8 @@ const VerVideo = () => {
       setCurrentVideoIndex(previousIndex);
       const escenaAnterior = escenas[previousIndex]; // Obtiene la escena anterior
       setEscena(escenaAnterior);
-  
+      dispatch(setIdEscena({idEscena:escenaAnterior.id}));
+
       // Actualiza el formData con la nueva escena
       setFormData((prev) => ({ ...prev, escena: escenaAnterior.id }));
   
@@ -310,18 +345,43 @@ const VerVideo = () => {
                 )}
               </div>
           )}
+        
         </div>
+        
       </div>
-      {/* Comentarios */}
-      <div className="mt-4">
-        <h2 className="text-xl font-semibold mb-2">Comentarios</h2>
-        <Comentario/>
-        <NuevoComentario
-          formData={formData}
-          setFormData={setFormData}
-          onCommentAdded={() => setReloadComentarios(!reloadComentarios)} // Llama a esta función cuando se agrega un comentario
-        />
-      </div>
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">Comentarios</h3>
+        <div>
+          {/* Renderizado de comentarios */}
+          {Object.keys(comentariosHashSet).map((principalId) => (
+            <div key={principalId} className="mb-4">
+              <ComentarioPaciente
+                idComentario={parseInt(principalId)}
+                respuestas={comentariosHashSet[parseInt(principalId)]}
+                onResponder={handleResponder}
+              />
+            </div>
+          ))}
+        </div>
+        {formData.comentario_respondido !== 0 && (
+          <div className="flex items-center text-sm text-gray-600 mt-2">
+            <p>Respondiendo a @{formData.user}</p>
+            <button
+              onClick={() =>
+                setFormData((prev) => ({ ...prev, comentario_respondido: 0 }))
+              }
+              className="ml-2 text-red-500 hover:text-red-700 transition-colors"
+            >
+              &#x2716; {/* Código Unicode para la cruz roja */}
+            </button>
+          </div>
+        )}
+        <div ref={nuevoComentarioRef}>
+          <NuevoComentario
+            formData={formData}
+            setFormData={setFormData}
+            onCommentAdded={() => setReloadComentarios(!reloadComentarios)} // Llama a esta función cuando se agrega un comentario
+          />
+        </div>
     </div>
   );
 };

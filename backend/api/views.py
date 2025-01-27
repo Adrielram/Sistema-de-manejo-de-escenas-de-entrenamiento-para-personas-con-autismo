@@ -1,11 +1,14 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from django.http import HttpResponseRedirect
 from .models import *
 from .serializers import *
+from .forms import *
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework import viewsets, status
@@ -17,6 +20,8 @@ from django.core.paginator import Paginator
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters
+from django.db import transaction
+
 from rest_framework.exceptions import NotFound
 
 #User = get_user_model()  # Modelo de usuario creado por nosotros
@@ -109,10 +114,213 @@ def verify_session(request):
     except Exception as e:
         return Response({"message": "Token inválido o expirado"}, status=401)
     
-
+@api_view(['GET'])
 def objetivos_list(request):
     objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
     return JsonResponse(list(objetivos), safe=False)
+
+'''
+@api_view(['GET'])
+def obj_list_user(request, user_id):
+    objetivos = PersonaObjetivoEscena.objects.filter(user_id=user_id).values()  # Obtiene los objetivos del usuario
+    return JsonResponse(list(objetivos), safe=False)
+    ## CHEQUEAR ESTE BIEN
+'''
+'''
+@api_view(['GET'])
+def obtener_objetivos_usuario(request):
+    # Obtén el 'username' del request
+    username = request.GET.get('username', None)
+
+    if not username:
+        return JsonResponse({'error': 'El campo username es requerido.'}, status=400)
+
+    # Filtra el usuario por 'username' y obtiene su DNI
+    try:
+        usuario = User.objects.get(username=username)  # Usa .get() para obtener un único registro
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'Usuario no encontrado.'}, status=404)
+
+    dni = usuario.dni
+
+    # Filtra las relaciones en PersonaObjetivoEscena asociadas al usuario por su ID
+    relaciones = PersonaObjetivoEscena.objects.filter(user_id=dni)
+
+    # Obtén los nombres y IDs de los objetivos relacionados
+    objetivos = Objetivo.objects.filter(
+        id__in=relaciones.values_list('escena_objetivo', flat=True)
+    ).values('id', 'nombre')
+
+    # Formatea los resultados para incluir 'titulo' en lugar de 'nombre'
+    resultados = [
+        {'id': objetivo['id'], 'titulo': objetivo['nombre']}
+        for objetivo in objetivos
+    ]
+
+    # Retorna los resultados en formato JSON
+    return JsonResponse(resultados, safe=False)
+'''
+
+class ObjetivosUsuarioListView(generics.ListAPIView):
+    """
+    Vista para listar los objetivos de un usuario específico
+    con paginación dinámica.
+    """
+    serializer_class = ObjetivoSerializerList
+    pagination_class = DynamicPagination
+    # permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+
+    def get_queryset(self):
+        # Obtén el username del request
+        username = self.request.GET.get('username', None)
+        if not username:
+            return Objetivo.objects.none()  # Devuelve un queryset vacío si no hay username
+
+        # Filtra el usuario por username
+        try:
+            usuario = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Objetivo.objects.none()
+
+        # Paso 1: Filtrar PersonaObjetivoEscena para este usuario
+        persona_escena_objetivos = PersonaObjetivoEscena.objects.filter(user_id=usuario)
+
+        # Paso 2: Obtener los EscenaObjetivo asociados
+        escena_objetivos = EscenaObjetivo.objects.filter(
+            id__in=persona_escena_objetivos.values_list('escena_objetivo_id', flat=True)
+        )
+
+        # Paso 3: Filtrar Objetivos asociados a esas escenas
+        return Objetivo.objects.filter(
+            id__in=escena_objetivos.values_list('objetivo_id', flat=True)
+        )
+
+    def list(self, request, *args, **kwargs):
+        """
+        Personaliza la respuesta para formatear los resultados
+        con el formato deseado (id, titulo).
+        """
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            # Personalizar los datos para devolver 'titulo' en lugar de 'nombre'
+            data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
+            return self.get_paginated_response(data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
+        return Response(data)
+
+
+
+#
+#class ObjetivoFilter(filters.FilterSet):
+#    search = filters.CharFilter(field_name='titulo', lookup_expr='icontains')
+#    class Meta:
+#        model = Objetivo
+#        fields = ['search']
+
+class ObjetivoFilter(filters.FilterSet):
+    query = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
+
+    class Meta:
+        model = Objetivo
+        fields = ['query']
+
+class ObjetivoBusquedaView(generics.ListAPIView):
+    serializer_class = ObjetivoSerializerList
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_class = ObjetivoFilter
+    pagination_class = None
+
+    def get_queryset(self):
+        username = self.request.query_params.get('username', None)
+        query = self.request.query_params.get('query', '')
+
+        if not username:
+            return Objetivo.objects.none()
+
+        try:
+            usuario = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Objetivo.objects.none()
+
+        # Filtra los objetivos relacionados al usuario a través de PersonaObjetivoEscena y EscenaObjetivo
+        queryset = Objetivo.objects.filter(
+            id__in=EscenaObjetivo.objects.filter(
+                id__in=PersonaObjetivoEscena.objects.filter(
+                    user_id=usuario
+                ).values_list('escena_objetivo_id', flat=True)
+            ).values_list('objetivo_id', flat=True)
+        )
+
+    # Si el query está vacío después de limpiar, devuelve todo el queryset
+        if not query:
+            return queryset
+
+        return queryset.filter(nombre__icontains=query)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        
+        # Asegúrate de que el formato de respuesta incluya id y titulo
+        data = [{'id': item['id'], 'titulo': item['nombre']} for item in serializer.data]
+        return Response(data)
+
+    
+
+'''
+class EscenasPorObjetivoListView(generics.ListAPIView):
+    #queryset = Escena.objects.all()
+    serializer_class = EscenaSerializer
+    #pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+
+    def get_queryset(self):
+        # Obtén el ID del objetivo del request
+        objetivo_id = self.request.GET.get('objetivo_id', None)
+        if not objetivo_id:
+            return Escena.objects.none()  # Devuelve un queryset vacío si no hay objetivo_id
+
+        # Filtra las relaciones por el ID del objetivo
+        relaciones = EscenaObjetivo.objects.filter(objetivo=objetivo_id)
+        return Escena.objects.filter(
+            id__in=relaciones.values_list('escena', flat=True)
+        )
+'''
+
+class EscenasPorObjetivoListView(generics.ListAPIView):
+    serializer_class = EscenaSerializer
+    filter_backends = [DjangoFilterBackend]
+
+    def get_queryset(self):
+        # Obtén el ID del objetivo y el usuario de la request
+        objetivo_id = self.request.GET.get('objetivo_id', None)
+        username = self.request.query_params.get('username', None)
+
+        if not objetivo_id:
+            return Escena.objects.none()  # Devuelve un queryset vacío si no hay objetivo_id
+
+        # Filtra las relaciones por el ID del objetivo
+        relaciones = EscenaObjetivo.objects.filter(objetivo=objetivo_id)
+
+        # Obtén las escenas asociadas al objetivo (TODAS)
+        escenas_objetivo = Escena.objects.filter(
+            id__in=relaciones.values_list('escena', flat=True)
+        )
+
+        # Filtra las escenas que el usuario no ha visto
+        #escenas_vistas = Videosvistos.objects.filter(
+        #    persona_objetivo_escena__persona=username,
+        #    persona_objetivo_escena__objetivo_id=objetivo_id,
+        #    visto=True
+        #).values_list('persona_objetivo_escena__escena_id', flat=True)
+
+        return escenas_objetivo
+
 
 class PacienteListView(APIView):
     def get(self, request):
@@ -123,12 +331,12 @@ class PacienteListView(APIView):
             pacientes = pacientes.filter(
                 models.Q(nombre__icontains=query) |
                 models.Q(dni__icontains=query) |
-                models.Q(genero__icontains=query) |
-                models.Q(username__icontains=query)  # Filtrar por nombre de usuario
+                models.Q(genero__icontains=query)
             ).distinct()  # Evitar duplicados
-
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 
 class ObjetivoViewSet(viewsets.ViewSet):
     def create(self, request):
@@ -187,7 +395,132 @@ def get_goal_data(request, objetivo_id):
     except Objetivo.DoesNotExist:
         return JsonResponse({"error": "Objetivo no encontrado"}, status=404)
         
-from django.db import transaction
+
+class retrieve_user(APIView):
+    
+    def get(self, request):
+        username = request.query_params.get('username', '').strip()
+
+        # Validar que el parámetro 'username' está presente
+        if not username:
+            return Response(
+                {"error": "El parámetro 'username' es obligatorio."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Obtener el usuario con el username proporcionado
+        user = get_object_or_404(User, username=username)
+
+        # Serializar los datos del usuario
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+@api_view(['PUT'])
+def update_user(request):
+    try:
+        # Validar que todos los campos obligatorios estén presentes
+        required_fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'residencia']
+
+        missing_fields = [field for field in required_fields if field not in request.data]
+        if missing_fields:
+            return Response(
+                {"error": f"Faltan los siguientes campos: {', '.join(missing_fields)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Obtener datos de la dirección
+        direccion = request.data.get('residencia', {})
+        id_dir = direccion.get('id_dir')
+        provincia = direccion.get('provincia')
+        ciudad = direccion.get('ciudad')
+        calle = direccion.get('calle')
+        numero = direccion.get('numero')
+
+        # Obtener datos del request
+        dni = request.data.get('dni')
+        nombre = request.data.get('nombre')
+        fecha_nac = request.data.get('fecha_nac')
+        genero = request.data.get('genero')
+        role = request.data.get('role')
+        padre_id = request.data.get('padreACargo', None)  # Obtener el DNI del padre
+
+        # Buscar el usuario por DNI
+        try:
+            user = User.objects.get(dni=dni)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Usuario no encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Validar género
+        if genero not in ['Masculino', 'Femenino']:
+            return Response(
+                {"error": "El género debe ser 'Masculino' o 'Femenino'"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validar rol
+        if role not in [choice[0] for choice in User.ROLE_CHOICES]:
+            return Response(
+                {"error": f"El rol debe ser uno de los siguientes: {[choice[0] for choice in User.ROLE_CHOICES]}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Buscar al padre (si se proporcionó un DNI válido)
+        if padre_id:
+            try:
+                padre = User.objects.get(dni=padre_id)  # Buscar al padre por DNI
+                user.user_id_padre = padre  # Asignar el padre al usuario
+            except User.DoesNotExist:
+                return Response(
+                    {"error": f"No se encontró un usuario con el DNI '{padre_id}'"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        # Actualizar la residencia (dirección) dentro de una transacción
+        with transaction.atomic():
+            # Actualizar la residencia
+            try:
+                residencia = Residencia.objects.get(id_dir=id_dir)
+                residencia.provincia = provincia
+                residencia.ciudad = ciudad
+                residencia.calle = calle
+                residencia.numero = numero
+                residencia.save()
+            except Residencia.DoesNotExist:
+                return Response(
+                    {"error": "Residencia asociada no encontrada"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Actualizar el usuario
+            user.fecha_nac = fecha_nac
+            user.genero = genero
+            user.role = role
+            user.save()  # Guardar todos los cambios del usuario
+
+        return Response(
+            {"message": "Usuario actualizado exitosamente"},
+            status=status.HTTP_200_OK
+        )
+
+    except IntegrityError as e:
+        return Response(
+            {"error": f"Error de integridad: {str(e)}"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except ValidationError as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except Exception as e:
+        return Response(
+            {"error": f"Error inesperado: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
 
 @api_view(['POST'])
 def signIn(request):
@@ -343,6 +676,99 @@ def signIn(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+
+@api_view(['GET'])
+def hijos_list_view(request):
+    padre_id = request.query_params.get('padre_id')
+
+    if not padre_id:
+        return Response(
+            {"error": "El ID del padre es requerido."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        # Obtener los usuarios hijos filtrados por `user_id_padre`
+        hijos = User.objects.filter(user_id_padre=padre_id)
+
+        # Serializar los datos de los hijos usando PacienteSerializer
+        serializer = PacienteSerializer(hijos, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+from django.db.models import Avg
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import PersonaObjetivoEvaluacion, Objetivo
+
+@api_view(['GET'])
+def objetivos_evaluacion_usuario(request):
+    user_id = request.query_params.get('user_id')
+    if not user_id:
+        return Response({"error": "Falta el parámetro 'user_id'."}, status=400)
+
+    # Agrupar por objetivo_id y calcular el progreso promedio
+    objetivos_agrupados = (
+        PersonaObjetivoEvaluacion.objects
+        .filter(user_id=user_id)
+        .values('objetivo_id')  # Solo obtenemos los IDs para la agrupación
+        .annotate(
+            progreso_promedio=Avg('progreso')
+        )
+    )
+
+    if not objetivos_agrupados:
+        return Response({"error": "No se encontraron objetivos para este usuario."}, status=404)
+
+    # Serializar los datos agrupados manualmente
+    data = []
+    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=[o['objetivo_id'] for o in objetivos_agrupados])}
+    for obj in objetivos_agrupados:
+        # Luego, en el bucle:
+        objetivo = objetivos_map[obj['objetivo_id']]
+        data.append({
+            "id": obj['objetivo_id'],  # ID del objetivo
+            "progreso": obj['progreso_promedio'],  # Progreso promedio
+            "objetivo_id": {  # Datos relacionados del objetivo
+                "id": objetivo.id,
+                "nombre": objetivo.nombre,
+                "descripcion": objetivo.descripcion
+            },
+            "resultado": None  # Puedes ajustar esto según tus necesidades
+        })
+
+    return Response(data)
+
+
+
+
+@api_view(['GET'])
+def obtener_nombre_por_dni(request):
+    dni = request.query_params.get('dni')  
+
+    try:
+        user = User.objects.get(dni=dni)  
+        return Response({"nombre": user.nombre}, status=status.HTTP_200_OK)  
+    except User.DoesNotExist:
+        return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def get_dni(request):
+    username = request.query_params.get('username')
+    if not username:
+        return Response({'error': 'Se requiere el parámetro username'}, status=400)
+    
+    try:
+        user = User.objects.get(username=username)
+        return Response({'dni': user.dni})
+    except User.DoesNotExist:
+        return Response({'error': f'No se encontró un usuario con username: {username}'}, status=404)
+
 @api_view(['POST'])
 def crear_escena(request):
     try:
@@ -378,13 +804,6 @@ class NameFilter(filters.FilterSet):
         model = None  # Se establece dinámicamente
         fields = ['nombre', 'centro_profesional']
 
-class ObjetivosListView(generics.ListAPIView):    
-    queryset = Objetivo.objects.all()
-    serializer_class = ObjetivoSerializerList
-    pagination_class = DynamicPagination
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = NameFilter
-
 class EscenaListView(generics.ListAPIView):
     queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
@@ -404,6 +823,7 @@ def get_related_centers(self):
         username = self.kwargs.get('username')
         profesional = User.objects.get(username=username)
         return CentroProfesional.objects.filter(profesional=profesional).values_list('centrodesalud', flat=True)
+
 
 class NotAssociatedCentersListView(generics.ListAPIView):
     serializer_class = CentroSaludSerializer
@@ -886,21 +1306,35 @@ def get_dni(request):
 
 class registrar_comentario(APIView):
     def post(self, request):
-        data = request.data.copy() 
-        # Modificar el campo 'user' para usar el DNI
+        data = request.data.copy()
+
+        # Intentar convertir `user` al DNI
         try:
             data['user'] = obtener_dni(request.data['user'])
         except Exception as e:
             return Response({'error': f'Error obteniendo el DNI: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
+        # Si `comentario_respondido` no es 0 o None, buscar el comentario correspondiente
+        comentario_respondido_id = data.get('comentario_respondido', None)
+        if comentario_respondido_id:
+            try:
+                comentario_contestado = Comentario.objects.get(id=comentario_respondido_id)
+                data['comentario_contestado'] = comentario_contestado.id
+            except Comentario.DoesNotExist:
+                return Response({'error': 'El comentario al que se está respondiendo no existe.'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            data['comentario_contestado'] = None
+
         # Pasar los datos modificados al serializer
         serializer = ComentarioSerializer(data=data)
         if serializer.is_valid():
             serializer.save()  # Guardar el comentario
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+
         # Si el serializer no es válido, retornar los errores
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
     
 
 class EscenasSegunUsuarioObjetivo(APIView):
@@ -1045,65 +1479,119 @@ class MarcarVideoVistoAPIView(APIView):
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
-            return Response({
-                'error': str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import PersonaObjetivoEvaluacion, User, Objetivo, Formulario
-
-class CargarPersonaObjetivoEvaluacion(APIView):
-    def post(self, request):
-        """
-        Carga datos en la tabla PersonaObjetivoEvaluacion a partir de un JSON enviado en la solicitud.
-        """
-        data = request.data
-
-        try:
-            # Extraer los datos del JSON
-            user_id = data.get('user_id')
-            objetivo_id = data.get('objetivo_id')
-            resultado = data.get('resultado', None)
-            progreso = data.get('progreso')
-            evaluacion_id = data.get('evaluacion_id', None)
-
-            # Validar que los campos requeridos estén presentes
-            if not user_id or not objetivo_id or progreso is None:
-                return Response(
-                    {'error': 'Faltan datos requeridos: user_id, objetivo_id o progreso.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # Obtener las instancias relacionadas
-            try:
-                user = User.objects.get(dni=user_id)
-                objetivo = Objetivo.objects.get(id=objetivo_id)
-                evaluacion = Formulario.objects.get(id=evaluacion_id) if evaluacion_id else None
-            except User.DoesNotExist:
-                return Response({'error': 'El usuario especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
-            except Objetivo.DoesNotExist:
-                return Response({'error': 'El objetivo especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
-            except Formulario.DoesNotExist:
-                return Response({'error': 'El formulario especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
-
-            # Crear el registro en la tabla PersonaObjetivoEvaluacion
-            persona_objetivo_evaluacion = PersonaObjetivoEvaluacion.objects.create(
-                user_id=user,
-                objetivo_id=objetivo,
-                resultado=resultado,
-                progreso=progreso,
-                evaluacion=evaluacion
+            return Response(
+                {'error': f'Error interno del servidor: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+def check_cookie(request):
+    # Verificar si la cookie 'jwt' está presente
+    if 'jwt' in request.COOKIES:
+        return JsonResponse({"exists": True})
+    return JsonResponse({"exists": False})
+
+class ComentariosListaAPIView(APIView):
+    '''
+        Interfaz que devuelve un hashset de comentarios agrupados por hilo principal.
+    '''
+    def get(self, request, *args, **kwargs):
+        try:
+            # Obtener el id_escena desde los parámetros de consulta
+            id_escena = request.query_params.get('id_escena', None)
+
+            if not id_escena:
+                return Response(
+                    {"error": "El parámetro 'id_escena' es requerido."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Obtener todos los comentarios de la escena
+            comentarios = Comentario.objects.filter(escena_id=id_escena).values('id', 'comentario_contestado')
+
+            # Crear un diccionario temporal para mapear cada comentario con su comentario_contestado
+            comentarios_map = {}
+            for comentario in comentarios:
+                comentarios_map[comentario['id']] = comentario['comentario_contestado']
+
+            # Crear el hashset final usando la función de recursión
+            hashset = {}
+            for comentario_id in comentarios_map.keys():
+                hilo_principal = self._obtener_hilo_principal(comentarios_map, comentario_id)
+                if hilo_principal not in hashset:
+                    hashset[hilo_principal] = []
+                if comentarios_map[comentario_id]:  # Si tiene un comentario contestado, agrégalo como respuesta
+                    hashset[hilo_principal].append(comentario_id)
+
+            # Eliminar duplicados en las listas del hashset
+            for key in hashset:
+                hashset[key] = list(set(hashset[key]))
+
+            return Response({"hashset": hashset}, status=status.HTTP_200_OK)
+
+        except Exception as e:
             return Response(
-                {'message': 'Registro creado exitosamente.', 'id': persona_objetivo_evaluacion.id},
-                status=status.HTTP_201_CREATED
+                {"error": f"Error inesperado: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def _obtener_hilo_principal(self, comentarios_map, comentario_id):
+        """
+        Función recursiva para encontrar el hilo principal de un comentario.
+        """
+        comentario_contestado = comentarios_map.get(comentario_id)
+        if comentario_contestado is None:  # Es un comentario principal
+            return comentario_id
+        return self._obtener_hilo_principal(comentarios_map, comentario_contestado)
+        
+class ComentarioDetalleAPIView(APIView):
+    """
+    Endpoint para obtener un comentario específico por ID, incluyendo información
+    del usuario que comentó y, si es una respuesta, del usuario al que se responde.
+    """
+    def get(self, request):
+        # Obtener el parámetro id_comentario
+        id_comentario = request.query_params.get('idComentario')
+
+        # Validar que el parámetro esté presente
+        if not id_comentario:
+            return Response(
+                {"error": "El parámetro 'idComentario' es obligatorio."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Buscar el comentario por ID con sus relaciones
+            comentario = Comentario.objects.select_related(
+                'user',
+                'comentario_contestado',
+                'comentario_contestado__user'
+            ).get(id=id_comentario)
+
+            # Construir la respuesta
+            response_data = {
+                "id": comentario.id,
+                "texto": comentario.texto,
+                "visibilidad": comentario.visibilidad,
+                "usuario": comentario.user.nombre,  # Nombre del usuario que comentó
+                "idComentarioPadre": None,  # Valor por defecto
+            }
+
+            # Si es una respuesta a otro comentario, incluir información adicional
+            if comentario.comentario_contestado:
+                response_data.update({
+                    "idComentarioPadre": comentario.comentario_contestado.id,
+                    "usuarioRespondido": comentario.comentario_contestado.user.nombre
+                })
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Comentario.DoesNotExist:
+            return Response(
+                {"error": "No se encontró un comentario con el ID proporcionado."},
+                status=status.HTTP_404_NOT_FOUND
             )
 
         except Exception as e:
             return Response(
-                {'error': 'Ocurrió un error al crear el registro.', 'details': str(e)},
+                {"error": f"Error inesperado: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

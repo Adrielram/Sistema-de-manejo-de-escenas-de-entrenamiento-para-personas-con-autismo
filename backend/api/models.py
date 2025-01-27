@@ -302,6 +302,8 @@ class Comentario(models.Model):
         ]
 
 class Notificacion(models.Model):
+    class Meta:
+        db_table = 'notificacion'
     # Usuario destinatario (admin o terapeuta)
     destinatario = models.ForeignKey(
         User, 

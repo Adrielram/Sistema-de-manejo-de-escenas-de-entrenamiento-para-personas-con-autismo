@@ -1,9 +1,9 @@
 from rest_framework import serializers
-from .models import User, Objetivo, Escena, CentroProfesional, EscenaObjetivo, Objetivoscumplir, Centrodesalud, Grupo, Comentario, Videosvistos
+from .models import User, Objetivo, Escena, CentroProfesional, Residencia, EscenaObjetivo, Objetivoscumplir, Centrodesalud, Grupo, Comentario, Videosvistos
+from datetime import datetime
 
 class PacienteSerializer(serializers.ModelSerializer):
-    padreACargo = serializers.SerializerMethodField()
-
+    padreACargo = serializers.CharField(source='user_id_padre.nombre', read_only=True)
     class Meta:
         model = User
         fields = ['username', 'nombre', 'dni', 'padreACargo']
@@ -46,6 +46,34 @@ class ObjetivoSerializerList(serializers.ModelSerializer):
     class Meta:
         model = Objetivo
         fields = ['id', 'nombre', 'descripcion']
+
+
+
+class ResidenciaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Residencia
+        fields = ['id_dir','provincia', 'ciudad', 'calle', 'numero']
+
+class ResidenciaAllSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Residencia
+        fields = '__all__'  # Incluye todos los campos del modelo Residencia
+
+class UserSerializer(serializers.ModelSerializer):
+    fecha_nac = serializers.SerializerMethodField()  # Personalizar la representación
+    residencia = ResidenciaAllSerializer(source='direccion_id_dir', read_only=True)
+    padreACargo = serializers.CharField(source='user_id_padre.nombre', read_only=True)
+
+    def get_fecha_nac(self, obj):
+        # Convertir fecha_nac a date si es un datetime
+        if isinstance(obj.fecha_nac, datetime):
+            return obj.fecha_nac.date()
+        return obj.fecha_nac  # Si ya es un date o None, retornarlo directamente
+
+    class Meta:
+        model = User
+        fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'residencia', 'padreACargo']
+
 
 class EscenaSerializer(serializers.ModelSerializer):
     class Meta:
