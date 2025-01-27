@@ -770,6 +770,52 @@ class DeleteAssesmentView(generics.DestroyAPIView):
     queryset = Formulario.objects.all()
     serializer_class = FormularioSerializer
 
+class GetReachedGoalsView(generics.ListAPIView):
+    serializer_class = ObjetivoSerializer
+
+    def get_queryset(self):
+        user_dni = self.request.query_params.get('user_dni')
+
+        if not user_dni:
+            raise NotFound("El parámetro 'user_dni' es requerido.")
+        
+        try:
+            user = User.objects.get(dni=user_dni)
+        except User.DoesNotExist:
+            raise NotFound(f"Usuario con username '{user_dni}' no encontrado.")
+        
+        goals_ids = PersonaObjetivoEvaluacion.objects.filter(user_id=user).values_list('objetivo_id', flat=True)
+        
+        if not goals_ids:
+            raise NotFound("No se encontraron objetivos asociados a este usuario.")
+        
+        # Filtrar los objetivos en la tabla Objetivo
+        return Objetivo.objects.filter(id__in=goals_ids)
+
+class GetUnreachedGoalsView(generics.ListAPIView):
+    serializer_class = ObjetivoSerializer
+
+    def get_queryset(self):
+        user_dni = self.request.query_params.get('user_dni')
+
+        if not user_dni:
+            raise NotFound("El parámetro 'user_dni' es requerido.")
+        
+        try:
+            user = User.objects.get(dni=user_dni)
+        except User.DoesNotExist:
+            raise NotFound(f"Usuario con username '{user_dni}' no encontrado.")
+        
+        reached_goals_ids = PersonaObjetivoEvaluacion.objects.filter(user_id=user).values_list('objetivo_id', flat=True)
+        
+        escena_objetivo_list = PersonaObjetivoEscena.objects.filter(user_id=user).values_list('escena_objetivo', flat=True)
+
+        assigned_goals_ids = EscenaObjetivo.objects.filter(id__in=escena_objetivo_list).values_list('objetivo', flat=True)
+
+        unreached_goals = Objetivo.objects.filter(id__in=assigned_goals_ids).exclude(id__in=reached_goals_ids)
+
+        return unreached_goals
+
 @api_view(['GET'])
 def buscar_padres(request):
     query = request.GET.get('query', '').strip()

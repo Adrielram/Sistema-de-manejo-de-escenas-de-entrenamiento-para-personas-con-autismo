@@ -344,7 +344,16 @@ class Command(BaseCommand):
             orden=3,
             es_alternativo=False
         )
-
+        persona_obj_esc_4 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_1,
+            es_alternativo=True
+        )
+        persona_obj_esc_5 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_2,
+            es_alternativo=True
+        )
 
         formulario_1 = Formulario.objects.create(
             nombre="Formulario 1",

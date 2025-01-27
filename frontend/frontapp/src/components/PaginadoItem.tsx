@@ -76,7 +76,8 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   };
   
   const handleSupervision = () => {
-    router.push(`${supervision_path}?patient_id=${id}`);
+    router.push(`${supervision_path}?patient_dni=${id}&patient_name=${name}`);
+    console.log(`Patient name: ${name}`);
   };
   
   const handleRevision = () => {

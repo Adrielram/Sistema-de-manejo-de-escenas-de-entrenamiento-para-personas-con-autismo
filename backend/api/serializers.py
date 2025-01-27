@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Patologia, User, Objetivo, Escena, CentroProfesional, Centrodesalud, Comentario, Videosvistos, EscenaObjetivo, Objetivoscumplir, Centrodesalud, Grupo, Formulario
+from .models import Patologia, User, Objetivo, Escena, CentroProfesional, Centrodesalud, Comentario, Videosvistos, EscenaObjetivo, Objetivoscumplir, Centrodesalud, Grupo, Formulario, PersonaObjetivoEvaluacion, PersonaObjetivoEscena
 
 class PacienteSerializer(serializers.ModelSerializer):
     padreACargo = serializers.SerializerMethodField()
@@ -150,3 +150,18 @@ class PatologiaSerializer(serializers.ModelSerializer):
         model = Patologia
         fields = ['id', 'nombre', 'descripcion']
 
+class PersonaObjetivoEvaluacionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PersonaObjetivoEvaluacion
+        fields = ['id', 'user_id', 'objetivo_id', 'resultado', 'progreso', 'evaluacion']
+        #depth = 1  # Esto permitirá incluir datos relacionados como el `username` y nombres de los objetivos en lugar de solo sus IDs
+
+class EscenaObjetivoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EscenaObjetivo
+        fields = ['escena', 'objetivo' ]
+
+class PersonaObjetivoEscenaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PersonaObjetivoEscena
+        fields = ['id', 'user_id', 'escena_objetivo', 'orden', 'es_alternativo' ]
