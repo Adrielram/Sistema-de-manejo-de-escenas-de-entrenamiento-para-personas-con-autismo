@@ -246,7 +246,8 @@ def signIn(request):
         numero = request.data.get('numero')
         id_padre = request.data.get('id_padre', None)  # Puede ser opcional
         centros_de_salud = request.data.get('centros_de_salud', None)  # Puede ser opcional
-
+        sintomas = request.data.get('sintomas')  # Puede ser opcional
+        texto = request.data.get('texto')  # Puede ser opcional
         print("Centros de salud "+str(centros_de_salud))
         print(f"Datos recibidos: DNI={dni}, Nombre={nombre}, Fecha={fecha_nac}, Genero={genero}, Role={role}")
 
@@ -309,7 +310,8 @@ def signIn(request):
                 genero=genero,
                 role=role,
                 direccion_id_dir=residencia,  # Se pasa el objeto residencia
-                email='adri@example.com'
+                email='adri@example.com',
+
             )
 
             # Asociar padre si el rol es paciente y se proporciona un ID de padre
@@ -329,7 +331,8 @@ def signIn(request):
             print(user.check_password(user.password))
             if role == 'terapeuta':
                 user.is_active = False
-            else:
+            elif role == 'paciente':
+                user.patologia = texto
                 user.is_active = True
             user.save()       
             print(f"Usuario creado: {user}")
@@ -347,7 +350,41 @@ def signIn(request):
                     return Response(
                         {"error": f"Error al asociar centros de salud: {str(e)}"},
                         status=status.HTTP_400_BAD_REQUEST
-                    )                         
+                    )         
+
+            elif role == 'paciente':
+                if sintomas is not None:
+                    for sintoma in sintomas:
+                        # Obtener nombre y certeza del síntoma desde el front
+                        nombre_patologia = sintoma.get('nombre')  # Nombre de la patología
+                        certeza = sintoma.get('similitud')  # Certeza asociada
+
+                        if not nombre_patologia or certeza is None:
+                            return Response(
+                                {"error": f"Faltan datos en el síntoma: {sintoma}"},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+
+                        try:
+                            # Buscar la patología por nombre
+                            patologia = Patologia.objects.get(nombre=nombre_patologia)
+
+                            # Crear el registro en PersonaPatologia
+                            PersonaPatologia.objects.create(
+                                user_id=user,  # Ya tenemos el objeto del usuario creado
+                                patologia_id=patologia,
+                                certeza=certeza
+                            )
+                        except Patologia.DoesNotExist:
+                            return Response(
+                                {"error": f"No se encontró la patología con nombre '{nombre_patologia}'"},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                        except Exception as e:
+                            return Response(
+                                {"error": f"Error al asociar la patología '{nombre_patologia}': {str(e)}"},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
         return Response(
             {"message": "Usuario registrado exitosamente"},
             status=status.HTTP_201_CREATED
@@ -749,24 +786,6 @@ class GetPatientsPerGroupView(generics.ListAPIView):
         users_dni = persona_grupo_qs.values_list('user_id__dni', flat=True)
 
         return User.objects.filter(dni__in=users_dni, role='paciente')
-    
-class GetPatientsNotInGroup(generics.ListAPIView):
-    serializer_class = PacienteSerializer
-
-    def get_queryset(self):
-        group_id = self.request.query_params.get('group_id')
-        
-        try:
-            group = Grupo.objects.get(id=group_id)
-
-        except Grupo.DoesNotExist:
-            raise NotFound("El grupo especificado no existe.")
-
-        persona_grupo_qs = Personagrupo.objects.exclude(grupo_id=group)            
-
-        users_dni = persona_grupo_qs.values_list('user_id__dni', flat=True)
-
-        return User.objects.filter(dni__in=users_dni, role='paciente')
 
 class GetFormsPerUserView(generics.ListAPIView):
     serializer_class = FormularioSerializer
@@ -787,6 +806,52 @@ class GetFormsPerUserView(generics.ListAPIView):
 class DeleteAssesmentView(generics.DestroyAPIView):
     queryset = Formulario.objects.all()
     serializer_class = FormularioSerializer
+
+class GetReachedGoalsView(generics.ListAPIView):
+    serializer_class = ObjetivoSerializer
+
+    def get_queryset(self):
+        user_dni = self.request.query_params.get('user_dni')
+
+        if not user_dni:
+            raise NotFound("El parámetro 'user_dni' es requerido.")
+        
+        try:
+            user = User.objects.get(dni=user_dni)
+        except User.DoesNotExist:
+            raise NotFound(f"Usuario con username '{user_dni}' no encontrado.")
+        
+        goals_ids = PersonaObjetivoEvaluacion.objects.filter(user_id=user).values_list('objetivo_id', flat=True)
+        
+        if not goals_ids:
+            raise NotFound("No se encontraron objetivos asociados a este usuario.")
+        
+        # Filtrar los objetivos en la tabla Objetivo
+        return Objetivo.objects.filter(id__in=goals_ids)
+
+class GetUnreachedGoalsView(generics.ListAPIView):
+    serializer_class = ObjetivoSerializer
+
+    def get_queryset(self):
+        user_dni = self.request.query_params.get('user_dni')
+
+        if not user_dni:
+            raise NotFound("El parámetro 'user_dni' es requerido.")
+        
+        try:
+            user = User.objects.get(dni=user_dni)
+        except User.DoesNotExist:
+            raise NotFound(f"Usuario con username '{user_dni}' no encontrado.")
+        
+        reached_goals_ids = PersonaObjetivoEvaluacion.objects.filter(user_id=user).values_list('objetivo_id', flat=True)
+        
+        escena_objetivo_list = PersonaObjetivoEscena.objects.filter(user_id=user).values_list('escena_objetivo', flat=True)
+
+        assigned_goals_ids = EscenaObjetivo.objects.filter(id__in=escena_objetivo_list).values_list('objetivo', flat=True)
+
+        unreached_goals = Objetivo.objects.filter(id__in=assigned_goals_ids).exclude(id__in=reached_goals_ids)
+
+        return unreached_goals
 
 @api_view(['GET'])
 def buscar_padres(request):
@@ -852,7 +917,105 @@ class registrar_comentario(APIView):
         
         # Si el serializer no es válido, retornar los errores
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+class ComentariosListaAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            # Obtener el id_escena desde los parámetros de consulta
+            id_escena = request.query_params.get('id_escena', None)
+
+            if not id_escena:
+                return Response(
+                    {"error": "El parámetro 'id_escena' es requerido."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Obtener todos los comentarios de la escena
+            comentarios = Comentario.objects.filter(escena_id=id_escena).values('id', 'comentario_contestado')
+
+            # Crear un diccionario temporal para mapear cada comentario con su comentario_contestado
+            comentarios_map = {}
+            for comentario in comentarios:
+                comentarios_map[comentario['id']] = comentario['comentario_contestado']
+
+            # Crear el hashset final usando la función de recursión
+            hashset = {}
+            for comentario_id in comentarios_map.keys():
+                hilo_principal = self._obtener_hilo_principal(comentarios_map, comentario_id)
+                if hilo_principal not in hashset:
+                    hashset[hilo_principal] = []
+                if comentarios_map[comentario_id]:  # Si tiene un comentario contestado, agrégalo como respuesta
+                    hashset[hilo_principal].append(comentario_id)
+
+            # Eliminar duplicados en las listas del hashset
+            for key in hashset:
+                hashset[key] = list(set(hashset[key]))
+
+            return Response({"hashset": hashset}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": f"Error inesperado: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def _obtener_hilo_principal(self, comentarios_map, comentario_id):
+        """
+        Función recursiva para encontrar el hilo principal de un comentario.
+        """
+        comentario_contestado = comentarios_map.get(comentario_id)
+        if comentario_contestado is None:  # Es un comentario principal
+            return comentario_id
+        return self._obtener_hilo_principal(comentarios_map, comentario_contestado)    
+
+class ComentarioDetalleAPIView(APIView):
+    def get(self, request):
+        # Obtener el parámetro id_comentario
+        id_comentario = request.query_params.get('idComentario')
+
+        # Validar que el parámetro esté presente
+        if not id_comentario:
+            return Response(
+                {"error": "El parámetro 'idComentario' es obligatorio."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Buscar el comentario por ID con sus relaciones
+            comentario = Comentario.objects.select_related(
+                'user',
+                'comentario_contestado',
+                'comentario_contestado__user'
+            ).get(id=id_comentario)
+
+            # Construir la respuesta
+            response_data = {
+                "id": comentario.id,
+                "texto": comentario.texto,
+                "visibilidad": comentario.visibilidad,
+                "usuario": comentario.user.nombre,  # Nombre del usuario que comentó
+                "idComentarioPadre": None,  # Valor por defecto
+            }
+
+            # Si es una respuesta a otro comentario, incluir información adicional
+            if comentario.comentario_contestado:
+                response_data.update({
+                    "idComentarioPadre": comentario.comentario_contestado.id,
+                    "usuarioRespondido": comentario.comentario_contestado.user.nombre
+                })
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Comentario.DoesNotExist:
+            return Response(
+                {"error": "No se encontró un comentario con el ID proporcionado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": f"Error inesperado: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class EscenasSegunUsuarioObjetivo(APIView):
     def get(self, request):
@@ -985,61 +1148,51 @@ import numpy as np
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Patologia
-from .services.pinecone_service import PineconeService
-from functools import lru_cache
-
 
 class SpacyPatologiasView(APIView):
-    @staticmethod
-    @lru_cache(maxsize=1)
-    def get_nlp_model():
-        return spacy.load('es_core_news_lg')
-    
-    @staticmethod
-    @lru_cache(maxsize=1)
-    def get_pinecone_service():
-        return PineconeService()
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.nlp = self.get_nlp_model()
-        self.pinecone_service = self.get_pinecone_service()
+        self.nlp = spacy.load('es_core_news_lg')
+        self.vectores_patologias = self.crear_vectores_patologias()
 
-    def encontrar_patologias_similares(self, texto_input):
-        # Procesar texto de entrada
-        doc_input = self.nlp(texto_input)
-        
-        # Obtener vectores válidos
-        vectors = [token.vector for token in doc_input if token.has_vector]
-        
-        # Verificar si hay vectores válidos
-        if not vectors:
-            return []  # o retornar algún mensaje de error
+    def crear_vectores_patologias(self):
+        vectores = {}
+        patologias = Patologia.objects.all()
+        print([p.nombre for p in patologias])          
+        for patologia in patologias:
+            print("entre al for")
+            doc = self.nlp(patologia.descripcion)
+            word_vectors = [token.vector for token in doc if token.has_vector]
+            print(f"Description for {patologia.nombre}: {patologia.descripcion}")
+            print(f"Number of tokens with vectors for {patologia.nombre}: {len(word_vectors)}")
+            vector_patologia = np.mean(word_vectors, axis=0) if word_vectors else None
+            vectores[patologia.nombre] = vector_patologia
+            print(f"Vector for {patologia.nombre}: {vector_patologia is not None}")
             
-        # Calcular el vector promedio
-        input_vector = np.mean(vectors, axis=0)
+        return vectores
+
+    def encontrar_patologias_similares(self, texto_input, umbral=0.7):
+        doc_input = self.nlp(texto_input)
+        input_vector = np.mean([token.vector for token in doc_input if token.has_vector], axis=0)
         
-        # Verificar que no hay NaN en el vector
-        if np.isnan(input_vector).any():
-            return []  # o retornar algún mensaje de error
+        patologias_similares = []
         
-        # Consultar Pinecone
-        try:
-            patologias_similares = self.pinecone_service.query_similar(input_vector)
-            return patologias_similares
-        except Exception as e:
-            print(f"Error al consultar Pinecone: {str(e)}")
-            return []
+        for nombre, vector_patologia in self.vectores_patologias.items():
+            if vector_patologia is not None:
+                similitud = np.dot(input_vector, vector_patologia) / (
+                    np.linalg.norm(input_vector) * np.linalg.norm(vector_patologia)
+                )
+                
+                if similitud > umbral:
+                    patologias_similares.append({
+                        'nombre': nombre,
+                        'similitud': float(similitud)
+                    })
+        
+        return sorted(patologias_similares, key=lambda x: x['similitud'], reverse=True)
 
     def post(self, request):
         texto_input = request.data.get('texto', '')
-        
-        # Validar que el texto no esté vacío
-        if not texto_input.strip():
-            return Response({
-                'error': 'El texto de entrada no puede estar vacío',
-                'patologias': []
-            }, status=400)
         
         patologias_detectadas = self.encontrar_patologias_similares(texto_input)
         

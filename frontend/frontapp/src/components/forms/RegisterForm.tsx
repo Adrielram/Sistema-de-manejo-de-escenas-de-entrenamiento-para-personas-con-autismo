@@ -6,10 +6,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import SearchWithFatherRes from '../SearchWithFatherRes';
+
+interface Symptom {
+  nombre: string;
+  similitud: number;
+}
+
 export default function RegisterForm() {
   
   const [idPadreSeleccionado, setIdPadreSeleccionado] = useState<number | null>(null);
-
+  
   const handlePadreSeleccionado = (dni: number) => {
     setIdPadreSeleccionado(dni); // Almacena el DNI del padre seleccionado
   };
@@ -26,27 +32,71 @@ export default function RegisterForm() {
     calle: '',
     numero: '',
     asociarPadre: '',
+    sintomas: '',
   });
   const [centros, setCentros] = useState<{ id: number; nombre: string }[]>([]); // Inicializar como un array vacío
   const pagina = 1; // Página actual
   const [centrosSeleccionados, setCentrosSeleccionados] = useState<number[]>([]); // IDs de los centros seleccionados
   const [paginaAnterior, setPaginaAnterior] = useState<number | null>(null);
   const [paginaSiguiente, setPaginaSiguiente] = useState<number | null>(null);
-
+  const [sintomas, setSintomas] = useState('');
+  const [sintomasEnviados, setSintomasEnviados] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const router = useRouter();
+  const [sintomasPrediction, setSintomasPrediction] = useState<Symptom[]>([]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
+
+  useEffect(() => {
+    console.log('Sintomas:', sintomasPrediction);
+  }, [sintomasPrediction]); // This effect runs every time sintomasPrediction changes
+
+  const handleSintomasChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setSintomas(e.target.value);
+  };
+
   const handleCentroClick = (id: number) => {
     setCentrosSeleccionados((prev) =>
       prev.includes(id) ? prev.filter((centroId) => centroId !== id) : [...prev, id]
     );
   };
+
+  const enviarSintomas = async () => {
+    setError('');
+    if (!sintomas.trim()) {
+      setError('Debe ingresar sus síntomas antes de enviarlos.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:8000/api/spacy-patologias/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto:sintomas }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al enviar los síntomas');
+      }
+      const data = await response.json(); // Almacena la respuesta del backend
+      console.log(data.patologias); // Depuración: Muestra la respuesta en consola 
+      setSintomasPrediction(data.patologias);
+      console.log('Sintomas', sintomasPrediction);
+      setSintomasEnviados(true);
+      alert('Síntomas enviados exitosamente.');
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
+
   const fetchCentros = async (page: number) => {
     try {
       const response = await fetch(`http://localhost:8000/api/obtener_centros_de_salud/?page=${page}`);
@@ -73,7 +123,10 @@ export default function RegisterForm() {
     e.preventDefault();
     setError('');
     setSuccess(false);
-    
+    if (!sintomasEnviados) {
+      setError('Debe enviar sus síntomas antes de registrarse.');
+      return;
+    }
     if (formData.contrasena !== formData.repetirContrasena) {
       setError('Las contraseñas no coinciden');
       return;
@@ -98,6 +151,8 @@ export default function RegisterForm() {
           id_padre: idPadreSeleccionado || null,
           password: formData.contrasena,
           centros_de_salud: centrosSeleccionados,
+          sintomas: sintomasPrediction || null, // Enviar la predicción de síntomas 
+          texto: sintomas, // Enviar el texto original de los síntomas
         }),
       });
   
@@ -268,7 +323,27 @@ export default function RegisterForm() {
             required
           />
         </div>
-
+        {/* Síntomas */}
+        {formData.rol === 'Paciente' && 
+        (<div>
+          <label className="block text-black">Síntomas y descripción del problema</label>
+          <textarea
+            name="sintomas"
+            value={sintomas}
+            onChange={handleSintomasChange}
+            className="w-full border text-black border-black rounded px-2 py-1"
+            rows={5}
+            required
+          />
+          <button
+            type="button"
+            onClick={enviarSintomas}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            disabled={sintomasEnviados}
+          >
+            {sintomasEnviados ? 'Síntomas enviados' : 'Enviar Síntomas'}
+          </button>
+        </div>)}
         {/* Asociar Padre */}
         {formData.rol === 'Paciente' && (
           <div className="p-3 border border-blue-500 rounded bg-blue-50">
