@@ -1,5 +1,5 @@
 "use client";
-import { create_scene } from '../../../../utils/api'; // Asegúrate de importar correctamente la función
+import { create_scene } from '../../../../../utils/api'; // Asegúrate de importar correctamente la función
 
 import React, { useState } from "react";
 

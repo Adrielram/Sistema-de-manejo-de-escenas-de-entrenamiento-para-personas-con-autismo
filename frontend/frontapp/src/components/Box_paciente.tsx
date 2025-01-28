@@ -2,6 +2,11 @@
 import React from 'react';
 //import ReactDOM from 'react-dom';
 import Image from 'next/image';
+import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { setUserId,setHijoNombre } from "../../slices/userSlice";
+import { useSelector} from 'react-redux';
+import { RootState } from "../../store/store";
 
 // Ruta de las imágenes
 //import photo from '../../public/icon/persona_silueta.png'; // Tu imagen de la silueta
@@ -41,6 +46,9 @@ type BoxPacienteProps = {
 
 
 const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
+  const dispatch = useDispatch();
+  const router = useRouter()
+  const { role } = useSelector((state: RootState) => state.user);
   const handleDelete = () => {
     alert('Eliminar persona');
   };
@@ -58,7 +66,14 @@ const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
   };
 
   const handleSeguimiento = () => {
-    alert(`Ver seguimiento de ${paciente.nombre}`);
+    if (role  === "padre"){
+      dispatch(setUserId({userId:datosPaciente.dni}));
+      dispatch(setHijoNombre({hijoNombre:datosPaciente.nombre})); //FUNCIONA PORQUE EL NOMBRE DE API.USER ES EL MISMO QUE EL USERNAME
+      router.push(`http://localhost:3000/interfaz_padre/ver_seguimiento/`);
+    }
+    else {
+      alert(`Ver seguimiento de ${paciente.nombre}`);
+    }
   };
 
 
