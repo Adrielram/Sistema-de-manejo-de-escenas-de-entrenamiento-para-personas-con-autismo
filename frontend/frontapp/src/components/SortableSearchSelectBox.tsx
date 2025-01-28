@@ -6,40 +6,40 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { SceneWithOrder } from "../types" // Tipo actualizado para incluir "order"
 
-interface Item {
-  id: number;
-  [key: string]: string | number | boolean | undefined;
-}
-
-interface MultiSearchSelectBoxProps {
+interface DraggableSearchSelectBoxProps {
   title: string;
   searchPlaceholder: string;
-  getItemLabel: (item: Item) => string;
-  selectedItems: Item[];
-  onSelectItems: (items: Item[]) => void;
+  getItemLabel: (item: SceneWithOrder) => string;
+  selectedItems: SceneWithOrder[];
+  onSelectItems: (items: SceneWithOrder[]) => void;
   apiUrl: string;
   resetTrigger?: boolean;
 }
 
-// Componente para cada item sorteable
-const SortableItem = ({ item, getItemLabel, onRemove }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: item.id });
+// Componente para cada item sortable
+const SortableItem = ({
+  item,
+  getItemLabel,
+  onRemove,
+}: {
+  item: SceneWithOrder;
+  getItemLabel: (item: SceneWithOrder) => string;
+  onRemove: (item: SceneWithOrder) => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: item.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -76,9 +76,9 @@ const DraggableSearchSelectBox = ({
   onSelectItems,
   apiUrl,
   resetTrigger,
-}: MultiSearchSelectBoxProps) => {
+}: DraggableSearchSelectBoxProps) => {
   const [searchValue, setSearchValue] = useState("");
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<SceneWithOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -126,12 +126,12 @@ const DraggableSearchSelectBox = ({
     }
   }, [searchValue, apiUrl]);
 
-  const handleSelectItem = (item: Item) => {
+  const handleSelectItem = (item: SceneWithOrder) => {
     const isSelected = selectedItems.some((selected) => selected.id === item.id);
     if (isSelected) {
       onSelectItems(selectedItems.filter((selected) => selected.id !== item.id));
     } else {
-      onSelectItems([...selectedItems, item]);
+      onSelectItems([...selectedItems, { ...item, order: selectedItems.length }]);
     }
   };
 
@@ -141,8 +141,15 @@ const DraggableSearchSelectBox = ({
     if (active.id !== over.id) {
       const oldIndex = selectedItems.findIndex((item) => item.id === active.id);
       const newIndex = selectedItems.findIndex((item) => item.id === over.id);
-      
-      onSelectItems(arrayMove(selectedItems, oldIndex, newIndex));
+
+      const reorderedItems = arrayMove(selectedItems, oldIndex, newIndex).map(
+        (item, index) => ({
+          ...item,
+          order: index, // Actualizar el orden
+        })
+      );
+
+      onSelectItems(reorderedItems);
     }
   };
 
@@ -165,9 +172,7 @@ const DraggableSearchSelectBox = ({
 
       <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
         {!loading && items.length === 0 && !error && (
-          <div className="text-gray-500 text-center py-4">
-            Busca Algo! 🚀
-          </div>
+          <div className="text-gray-500 text-center py-4">Busca Algo! 🚀</div>
         )}
 
         {items.map((item) => {
@@ -207,7 +212,7 @@ const DraggableSearchSelectBox = ({
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={selectedItems.map(item => item.id)}
+              items={selectedItems.map((item) => item.id)}
               strategy={verticalListSortingStrategy}
             >
               {selectedItems.map((item) => (
