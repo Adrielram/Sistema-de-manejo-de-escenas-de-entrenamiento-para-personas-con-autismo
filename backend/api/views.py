@@ -1668,7 +1668,7 @@ class RespuestasFormularioView(APIView):
         formulario = respuestas.first().pregunta.formulario
         formulario_data = {
             "id": formulario.id,
-            "titulo": formulario.titulo,
+            "titulo": formulario.nombre,
             "descripcion": formulario.descripcion,
         }
 

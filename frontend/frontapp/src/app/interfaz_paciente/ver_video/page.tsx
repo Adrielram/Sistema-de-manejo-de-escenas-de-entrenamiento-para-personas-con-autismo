@@ -26,7 +26,7 @@ const VerVideo = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [completedQuizzes, setCompletedQuizzes] = useState<number[]>([]);
   const { username } = useSelector((state: RootState) => state.user);
-  const objetivoId = 3;
+  const objetivoId = 1;
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [reloadComentarios, setReloadComentarios] = useState(false);
@@ -290,7 +290,7 @@ const VerVideo = () => {
                         className={`bg-blue-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all flex-grow 
                           ${completedQuizzes.includes(quiz.id) ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-blue-600'}`}
                       >
-                        {quiz.titulo}
+                        {quiz.nombre}
                       </button>
                       {completedQuizzes.includes(quiz.id) && (
                         <span className="ml-2 text-green-500 font-semibold">

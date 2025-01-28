@@ -92,7 +92,7 @@ const ResponderForm = ({ idform, onSubmitted = () => {}}) => {
   if (error) return <p className="text-red-500">{error}</p>;
 
   if (!formulario) return <p>Cargando formulario...</p>;
-
+  console.log("Formularioooo: "+JSON.stringify(formulario));
   return (
     <div className="max-w-4xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">{formulario.titulo}</h1>

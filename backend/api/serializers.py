@@ -166,7 +166,7 @@ class FormularioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Formulario
-        fields = ['titulo', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'preguntas']
+        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'preguntas']
 
     def create(self, validated_data):
         preguntas_data = validated_data.pop('preguntas')
@@ -223,11 +223,6 @@ class GrupoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grupo
         fields = ['id', 'nombre', 'centrodesalud_id']
-
-class FormularioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Formulario
-        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'fecha_creacion']
 
 
 class PatologiaSerializer(serializers.ModelSerializer):

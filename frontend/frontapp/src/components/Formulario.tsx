@@ -7,7 +7,7 @@ interface FormularioProps {
 }
 
 const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
-  const [titulo, setTitulo] = useState("");
+  const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [modoVerificacion, setModoVerificacion] = useState<string | null>(null);
   const [preguntas, setPreguntas] = useState<any[]>([]);
@@ -28,7 +28,7 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
 
   const manejarEnvio = () => {
     const formulario = {
-      titulo,
+      nombre,
       descripcion,
       es_verificacion_automatica: modoVerificacion === "con-verificacion",
       creado_por: 31222333, // Aquí puedes usar el ID del usuario autenticado
@@ -44,8 +44,8 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-1">Título:</label>
         <input
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
           className="w-full p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none"
           placeholder="Ingrese el título del formulario"
         />
