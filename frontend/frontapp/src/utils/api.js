@@ -14,6 +14,7 @@ export const create_objetivo = async (nuevoObjetivo) => {
               descripcion: nuevoObjetivo.descripcion,
               escenaId: nuevoObjetivo.escenaId
           }),
+          credentials: 'include'
       });
 
       const data = await response.json();
@@ -49,6 +50,7 @@ export const create_scene = async (nuevaEscena) => {
                 complejidad:nuevaEscena.complejidad,
                 link: nuevaEscena.link
             }),
+            credentials: 'include'
         });
   
         const data = await response.json();
@@ -81,6 +83,7 @@ export const create_scene = async (nuevaEscena) => {
                 nombre_grupo: nuevoGrupo.nombre_grupo,
                 nombre_centro: nuevoGrupo.nombre_centro,
             }),
+            credentials: 'include'
         });
   
         const data = await response.json();

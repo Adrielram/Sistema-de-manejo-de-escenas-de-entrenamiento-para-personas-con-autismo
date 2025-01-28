@@ -773,6 +773,8 @@ class GrupoById(APIView):
         grupo = get_object_or_404(Grupo, pk=pk)
         serializer = GrupoSerializer(grupo)
         return Response(serializer.data)
+    
+@permission_classes([IsAuthenticated])
 class NotAssociatedCentersListView(generics.ListAPIView):
     serializer_class = CentroSaludSerializer
     pagination_class = DynamicPagination
@@ -783,13 +785,15 @@ class NotAssociatedCentersListView(generics.ListAPIView):
         related_centers = get_related_centers(self)
         # Filtra los centros de salud donde el profesional no esté relacionado
         return Centrodesalud.objects.exclude(id__in=related_centers)
-    
+
+@permission_classes([IsAuthenticated])
 class AssociatedCentersListView(generics.ListAPIView):
     serializer_class = CentroSaludSerializer
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
-
+    #permission_classes = [AllowAny]
+    
     def get_queryset(self):
         related_centers = get_related_centers(self)
         # Filtra los centros de salud donde el profesional no esté relacionado

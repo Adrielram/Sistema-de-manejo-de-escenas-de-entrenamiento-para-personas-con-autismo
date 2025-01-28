@@ -27,9 +27,13 @@ const GroupsPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(
-        `http://localhost:8000/api/get_groups_per_user/?username=${encodeURIComponent(username)}&page=${page}`
-      );
+      const response = await fetch(`http://localhost:8000/api/get_groups_per_user/?username=${encodeURIComponent(username)}&page=${page}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+      });
 
       if (!response.ok) {
         throw new Error("Error al obtener los grupos.");

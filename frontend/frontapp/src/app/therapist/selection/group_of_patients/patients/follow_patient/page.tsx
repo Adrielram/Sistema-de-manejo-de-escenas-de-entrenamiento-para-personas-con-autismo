@@ -20,18 +20,28 @@ const GoalsPage = () => {
       setError(null);
       try {
         // Fetch de los objetivos alcanzados
-        const reachedResponse = await fetch(
-          `http://localhost:8000/api/get_reached_goals/?user_dni=${encodeURIComponent(patient_dni)}`
-        );
+        const reachedResponse = await fetch(`http://localhost:8000/api/get_reached_goals/?user_dni=${encodeURIComponent(patient_dni)}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+        });
+
         if (!reachedResponse.ok) {
           throw new Error("Error al obtener los objetivos alcanzados.");
         }
         const reachedData = await reachedResponse.json();
 
         // Fetch de los objetivos no alcanzados
-        const unreachedResponse = await fetch(
-          `http://localhost:8000/api/get_unreached_goals/?user_dni=${encodeURIComponent(patient_dni)}`
-        );
+
+        const unreachedResponse = await fetch(`http://localhost:8000/api/get_unreached_goals/?user_dni=${encodeURIComponent(patient_dni)}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+        });
         if (!unreachedResponse.ok) {
           throw new Error("Error al obtener los objetivos no alcanzados.");
         }

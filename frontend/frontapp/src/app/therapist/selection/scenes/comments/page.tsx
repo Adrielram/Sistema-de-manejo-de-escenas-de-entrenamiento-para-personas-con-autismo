@@ -39,9 +39,13 @@ const ComentariosEscena = () => {
 
       try {
         setLoadingComentarios(true);
-        const response = await fetch(
-          `http://localhost:8000/api/comentarios/lista/?id_escena=${escenaId}`
-        );
+        const response = await fetch(`http://localhost:8000/api/comentarios/lista/?id_escena=${escenaId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+        });
         const data = await response.json();
 
         if (response.ok) {

@@ -44,7 +44,13 @@ const SearchSelectBox = ({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${apiUrl}?nombre=${encodeURIComponent(searchValue)}`);
+        const response = await fetch(`${apiUrl}?nombre=${encodeURIComponent(searchValue)}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+        });
         if (!response.ok) {
           throw new Error("Error al cargar las escenas.");
         }

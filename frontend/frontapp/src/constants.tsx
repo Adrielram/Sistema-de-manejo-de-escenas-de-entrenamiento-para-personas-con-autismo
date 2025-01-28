@@ -1,7 +1,5 @@
 import { BsPeopleFill } from "react-icons/bs"; // <BsPeopleFill /> icono de personas
-import { BiSolidSpreadsheet } from "react-icons/bi"; // <BiSolidSpreadsheet /> icono de evaluacion
-
-import { GiHealthNormal } from "react-icons/gi";
+import { BiSolidSpreadsheet } from "react-icons/bi"; // <BiSolidSpreadsheet /> icono de evaluacio
 
 import { MdContentCopy } from "react-icons/md"; // <MdContentCopy /> icono de contenido
 import { ImVideoCamera } from "react-icons/im"; // <ImVideoCamera /> icono de escena

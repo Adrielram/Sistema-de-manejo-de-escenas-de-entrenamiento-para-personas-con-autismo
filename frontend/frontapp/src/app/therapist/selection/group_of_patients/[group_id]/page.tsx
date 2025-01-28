@@ -33,7 +33,13 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
         console.log("Iniciando fetch para grupoId:", grupoId); // <-- Log antes de la solicitud
 
         try {
-          const response = await fetch(`${baseUrl}grupoById/${grupoId}/`);
+          const response = await fetch(`${baseUrl}grupoById/${grupoId}/`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: 'include' // Include cookies (to handle JWT cookie
+            });
           console.log("response" , response);
 
           if (!response.ok) {

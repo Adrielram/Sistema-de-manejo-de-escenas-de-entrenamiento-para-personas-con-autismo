@@ -17,6 +17,11 @@ class CentrodesaludSerializer(serializers.ModelSerializer):
             return None
         return super().to_representation(instance)
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['dni', 'nombre']
+
 class PacienteSerializer(UserSerializer):
     class Meta:
         model = User
