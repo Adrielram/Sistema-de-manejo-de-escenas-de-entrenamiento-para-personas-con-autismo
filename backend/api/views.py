@@ -11,6 +11,7 @@ from rest_framework import status
 from rest_framework import viewsets, status
 from datetime import datetime
 from django.db import IntegrityError
+from django.db.models import Q
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
@@ -184,6 +185,34 @@ class EscenaUpdateView(UpdateAPIView):
 class GrupoUpdateView(UpdateAPIView):
     queryset = Grupo.objects.all()
     serializer_class = GrupoSerializer
+
+    def update(self, request, *args, **kwargs):
+        # Get the Grupo instance to update
+        instance = self.get_object()
+
+        # Update the Grupo fields (e.g., nombre)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        # Handle the pacientes (patients) data
+        pacientes = request.data.get('pacientes', [])  # List of patient IDs (DNIs)
+        grupo_id = instance.id  # ID of the updated Grupo
+
+ 
+
+        # Add new Personagrupo entries for the selected patients
+        for paciente_id in pacientes:
+            try:
+                user = User.objects.get(dni=paciente_id)  # Get the User by DNI
+                Personagrupo.objects.create(user_id=user, grupo_id=instance)
+            except User.DoesNotExist:
+                return Response(
+                    {"error": f"User with DNI {paciente_id} does not exist."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def get_goal_data(request, objetivo_id):
@@ -751,6 +780,33 @@ class GetPatientsPerGroupView(generics.ListAPIView):
         users_dni = persona_grupo_qs.values_list('user_id__dni', flat=True)
 
         return User.objects.filter(dni__in=users_dni, role='paciente')
+    
+
+class GetPatientsNotInGroupView(generics.ListAPIView):
+    serializer_class = PacienteSerializer
+
+    def get_queryset(self):
+        # Retrieve group_id from query parameters
+        group_id = self.request.query_params.get('group_id')
+
+        if not group_id:
+            raise ValidationError("El parámetro 'group_id' es obligatorio.")
+
+        try:
+            group = Grupo.objects.get(id=group_id)
+        except Grupo.DoesNotExist:
+            raise NotFound("El grupo especificado no existe.")
+
+        # Obtener los IDs de los usuarios que están en el grupo especificado
+        users_in_group = Personagrupo.objects.filter(grupo_id=group).values_list('user_id', flat=True)
+
+        # Filtrar usuarios con rol de 'paciente' que no están en el grupo específico o en ningún grupo
+        return User.objects.filter(
+            Q(role='paciente'),
+            Q(personagrupos__isnull=True) | ~Q(dni__in=users_in_group)
+        )
+
+
 
 class GetFormsPerUserView(generics.ListAPIView):
     serializer_class = FormularioSerializer
