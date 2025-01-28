@@ -368,8 +368,8 @@ class PersonaPatologia(models.Model):
             )
         ]
 
-
 class Formulario(models.Model):
+    id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=255) # * creo que voy a necesitar cambiarlo a 'nombre'
     descripcion = models.TextField(blank=True, null=True)
     es_verificacion_automatica = models.BooleanField(default=False)
@@ -396,6 +396,9 @@ class Pregunta(models.Model):
 
     def __str__(self):
         return self.texto
+    
+    class Meta:
+        db_table = 'pregunta'   
 
 
 class Opcion(models.Model):
@@ -404,6 +407,8 @@ class Opcion(models.Model):
 
     def __str__(self):
         return self.texto
+    class Meta:
+        db_table = 'opcion'   
 
 import uuid
 class Respuesta(models.Model):
@@ -417,6 +422,8 @@ class Respuesta(models.Model):
 
     def __str__(self):
         return f"Respuesta de {self.paciente.username} a {self.pregunta.texto}"
+    class Meta:
+        db_table = 'respuesta'   
     
 class ComentarioProfesional(models.Model):
     respuesta = models.ForeignKey(Respuesta, related_name="comentarios", on_delete=models.CASCADE)
@@ -426,6 +433,8 @@ class ComentarioProfesional(models.Model):
 
     def __str__(self):
         return f"Comentario de {self.terapeuta.username} en {self.respuesta}"
+    class Meta:
+        db_table = 'comentarioProfesional'   
     
 class FormularioPacienteRevision(models.Model):
     formulario = models.ForeignKey('Formulario', on_delete=models.CASCADE)
@@ -434,3 +443,6 @@ class FormularioPacienteRevision(models.Model):
     verificado_automatico = models.BooleanField(default=False)  # Si se corrigió automáticamente
     fecha_respuesta = models.DateTimeField(auto_now_add=True)
     volver_a_realizar = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'formularioPacienteRevision'   

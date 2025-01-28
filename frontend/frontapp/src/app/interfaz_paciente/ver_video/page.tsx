@@ -24,10 +24,9 @@ const VerVideo = () => {
   const [quizzes, setQuizzes] = useState({ formularios: [] });
   const [escenas, setEscenas] = useState<Escena[]>([]);
   const [escena, setEscena] = useState<Escena>();
-  //const [poe, setPoe] = useState<number>();
   const [like, setLike] = useState<boolean | null>(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [completedQuizzes, setCompletedQuizzes] = useState<number[]>([]);
+  const [completedQuizzes] = useState<number[]>([]);
   const { username } = useSelector((state: RootState) => state.user);
   const [comentariosHashSet, setComentariosHashSet] = useState<{
     [key: number]: number[];
@@ -131,24 +130,22 @@ const VerVideo = () => {
         setVideos(data.map((escena: Escena) => escena.link));
   
         // Fetch para obtener las evaluaciones asociadas al objetivo y usuario
-        /*const evaluacionesResponse = await fetch(`http://localhost:8000/api/get-evaluaciones/?username=${username}&objetivo_id=${objetivoId}`);
+        const evaluacionesResponse = await fetch(`http://localhost:8000/api/get-evaluaciones/?username=${username}&objetivo_id=${objetivoId}`);
         
         if (!evaluacionesResponse.ok) {
-          setQuizzes(null);
+          setQuizzes({ formularios: [] });
           throw new Error('Error al obtener las evaluaciones');
         }
   
         const evaluacionesData = await evaluacionesResponse.json();
-        setQuizzes(evaluacionesData.links);
-        */
-        setQuizzes(null);
+        setQuizzes({ formularios: evaluacionesData.formularios }); 
       } catch (error) {
         console.error('Error en LoadData:', error);
       }
     };
   
     LoadData();
-  }, [username, objetivoId]); // Elimina `escena` de las dependencias
+  }, [username, objetivoId, idEscena]); 
 
   const handleVerSiguienteVideo = async () => {
     if (isLoading) return;
@@ -162,7 +159,7 @@ const VerVideo = () => {
         return;
       }
       //marcar video como visto
-      marcarVideoComoVisto(escena.id);
+      marcarVideoComoVisto();
       // Actualiza el índice y la escena actual
       setCurrentVideoIndex(nextIndex);
       const siguienteEscena = escenas[nextIndex]; // Obtiene la siguiente escena
@@ -209,14 +206,14 @@ const VerVideo = () => {
   };
 
 
-  const marcarVideoComoVisto = async (escenaId: number) => {
+  const marcarVideoComoVisto = async () => {
     try {
       const response = await fetch('http://localhost:8000/api/video-visto/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username: username, escenaId: escenaId, like: like }),
+        body: JSON.stringify({ paciente_id: username, escena_id: escena.id, like: like ?? null }),
       });
   
       if (!response.ok) {
@@ -250,11 +247,11 @@ const VerVideo = () => {
 
   const handleQuizClick = (index: number) => {      
     router.push(`/interfaz_paciente/evaluacion/${index}`);      
-    //setCompletedQuizzes((prev) => [...new Set([...prev, index])]);
+    
   };
 
   const handleCompletarObjetivo = () => {
-    marcarVideoComoVisto(poe);
+    marcarVideoComoVisto();
     router.push('./principal');
   };
 
@@ -304,17 +301,25 @@ const VerVideo = () => {
                 {isLoading ? 'Cargando...' : 'Ver video anterior'}
               </button>
             )}
-          </div>
+        </div>
           <div className="flex space-x-4 items-center justify-center mt-4">
             <button
               onClick={handleLike}
-              className={`rounded-lg px-4 py-2 shadow hover:bg-blue-600 ${like === true ? 'bg-blue-700 text-white' : 'bg-blue-500 text-white'}`}
+              className={`rounded-lg px-4 py-2 shadow transition duration-300 ${
+                like === true
+                  ? 'bg-blue-700 text-white border-4 border-blue-900 scale-105'
+                  : 'bg-blue-500 text-white hover:bg-blue-600'
+              }`}
             >
               👍 {like === true ? 'Me gusta' : 'Me gusta'}
             </button>
             <button
               onClick={handleDislike}
-              className={`rounded-lg px-4 py-2 shadow hover:bg-red-600 ${like === false ? 'bg-red-700 text-white' : 'bg-red-500 text-white'}`}
+              className={`rounded-lg px-4 py-2 shadow transition duration-300 ${
+                like === false
+                  ? 'bg-red-700 text-white border-4 border-red-900 scale-105'
+                  : 'bg-red-500 text-white hover:bg-red-600'
+              }`}
             >
               👎 {like === false ? 'No me gusta' : 'No me gusta'}
             </button>
@@ -326,15 +331,14 @@ const VerVideo = () => {
                   Quizzes Disponibles
                 </h3>
                 <div className="flex flex-col space-y-2 w-full">
-                  {quizzes?.formularios && quizzes.formularios.map((quiz) => (
+                {quizzes?.formularios?.length > 0 && quizzes.formularios.map((quiz) => (
                     <div key={quiz.id} className="flex items-center w-full">
                       <button
                         onClick={() => handleQuizClick(quiz.id)}
-                        disabled={completedQuizzes.includes(quiz.id)}
                         className={`bg-blue-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all flex-grow 
                           ${completedQuizzes.includes(quiz.id) ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-blue-600'}`}
                       >
-                        {quiz.titulo}
+                        {quiz.nombre}
                       </button>
                       {completedQuizzes.includes(quiz.id) && (
                         <span className="ml-2 text-green-500 font-semibold">

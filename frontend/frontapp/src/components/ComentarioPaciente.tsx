@@ -47,7 +47,7 @@ const ComentarioPaciente: React.FC<ComentarioPacienteProps> = ({ idComentario, r
 
   return (
     <div className={`border border-gray-200 p-4 mb-3 rounded-lg ${
-      esComentarioPrincipal ? 'bg-white text-black text-left text-base' : 'bg-gray-50 text-gray-600 text-right text-sm'
+      esComentarioPrincipal ? 'bg-white text-black text-left text-base' : 'bg-gray-50 text-gray-600 text-left text-sm'
     }`}>
       {!esComentarioPrincipal && (
         <p className="italic mb-2">

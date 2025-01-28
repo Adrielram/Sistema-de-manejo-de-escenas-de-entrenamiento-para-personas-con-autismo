@@ -1376,28 +1376,18 @@ class ObtenerEvaluaciones(APIView):
                 objetivo_id=objetivo_id
             ).exclude(
                 evaluacion__isnull=True  # Asegurarse de que haya evaluación asociada
-            ).values(
-                'evaluacion__id', 
-                'evaluacion__titulo', 
-                'evaluacion__descripcion', 
-                'evaluacion__es_verificacion_automatica', 
-                'evaluacion__fecha_creacion'
+            ).select_related('evaluacion').prefetch_related(
+                'evaluacion__preguntas__opciones'
             )
 
-            # Transformar los datos en una lista de diccionarios
-            formularios_list = [
-                {
-                    'id': formulario['evaluacion__id'],
-                    'titulo': formulario['evaluacion__titulo'],
-                    'descripcion': formulario['evaluacion__descripcion'],
-                    'es_verificacion_automatica': formulario['evaluacion__es_verificacion_automatica'],
-                    'fecha_creacion': formulario['evaluacion__fecha_creacion']
-                }
-                for formulario in formularios
-            ]
+            # Serializar los formularios utilizando el FormularioSerializer
+            formularios_serializados = FormularioSerializer(
+                [f.evaluacion for f in formularios], 
+                many=True
+            )
 
             # Devolver los resultados en formato JSON
-            return Response({'formularios': formularios_list}, status=status.HTTP_200_OK)
+            return Response({'formularios': formularios_serializados.data}, status=status.HTTP_200_OK)
         
         except Exception as e:
             # Manejo de errores genéricos
@@ -1455,34 +1445,50 @@ class ObtenerPersonaObjetivoID(APIView):
         # Retornar el id en la respuesta
         return Response({'id': persona_objetivo.id}, status=status.HTTP_200_OK)
     
-class MarcarVideoVistoAPIView(APIView):
+class MarcarVideoVistoView(APIView):
     def post(self, request):
         try:
-            persona_objetivo_escena_id = request.data.get('persona_objetivo_escena_id')
+            try:
+                user_id = obtener_dni(request.data['paciente_id'])
+                request.data['paciente_id'] = user_id
+            except ValueError as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            except User.DoesNotExist as e:
+                return Response({'error': str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+            # Serializar los datos enviados
+            serializer = VideosvistosSerializer(data=request.data)
             
-            # Intentamos obtener el registro existente
-            video_visto, created = Videosvistos.objects.get_or_create(
-                persona_objetivo_escena_id=persona_objetivo_escena_id,
-                defaults={'visto': True}
+            # Validar los datos
+            if serializer.is_valid():
+                # Crear una nueva instancia del modelo usando el método `create`
+                video_visto = serializer.save()
+                
+                return Response(
+                    {
+                        "message": "Video registrado como visto.",
+                        "video_visto_id": video_visto.id,
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+            else:
+                print(serializer.errors)  # <-- Agrega esto para ver el error exacto
+                return Response(
+                    {"errors": serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            # Si la validación falla
+            return Response(
+                {"errors": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-            
-            # Si el registro ya existía, actualizamos visto a True
-            if not created:
-                video_visto.visto = True
-                video_visto.save()
-            
-            serializer = VideosVistosSerializer(video_visto)
-            
-            return Response({
-                'message': 'Video marcado como visto exitosamente',
-                'data': serializer.data
-            }, status=status.HTTP_200_OK)
-            
         except Exception as e:
             return Response(
-                {'error': f'Error interno del servidor: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": f"Error al registrar el video como visto: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+        
 
 def check_cookie(request):
     # Verificar si la cookie 'jwt' está presente

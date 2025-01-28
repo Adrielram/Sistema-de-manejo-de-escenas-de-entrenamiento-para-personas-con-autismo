@@ -48,7 +48,6 @@ class ObjetivoSerializerList(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'descripcion']
 
 
-
 class ResidenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Residencia
@@ -114,7 +113,7 @@ class FormularioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Formulario
-        fields = ['titulo', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'preguntas']
+        fields = ['id','nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'preguntas']
 
     def create(self, validated_data):
         preguntas_data = validated_data.pop('preguntas')
@@ -176,11 +175,16 @@ class ComentarioSerializer(serializers.ModelSerializer):
             'texto',
             'visibilidad',
         ]
-
-class VideosVistosSerializer(serializers.ModelSerializer):
+    
+class VideosvistosSerializer(serializers.ModelSerializer):
     class Meta:
         model = Videosvistos
-        fields = ['persona_objetivo_escena', 'visto']
+        fields = ['id', 'paciente_id', 'escena_id', 'fecha', 'like']
+        extra_kwargs = {
+            'id': {'read_only': True},
+            'fecha': {'read_only': True},
+        }
 
     def create(self, validated_data):
-        return super().create(validated_data)
+        # Personalizar la creación de la instancia del modelo
+        return Videosvistos.objects.create(**validated_data)
