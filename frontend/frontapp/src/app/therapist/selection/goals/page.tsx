@@ -20,7 +20,7 @@ const GoalsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalItems, setTotalItems] = useState<number>(0);
-  const mostrarImagen = true;
+  const showImage = true;
   const { username, center } = useSelector((state: RootState) => state.user);
 
   const fetchGoals = useCallback(async (page: number) => {
@@ -83,7 +83,7 @@ const GoalsPage: React.FC = () => {
 
   const opProps = {
     trashBin: true, 
-    buttonEdit: true,
+    editButton: true,
   }
 
   return (
@@ -97,12 +97,12 @@ const GoalsPage: React.FC = () => {
             options={opProps}
             img='/icon/diana.png' 
             edit_path="/therapist/selection/goals/"
-            showImage={mostrarImagen}
+            item_type="goal"
+            showImage={showImage}
             currentPage={currentPage}
-
             totalItems={totalItems}
             onPageChange={handlePageChange}
-            itemsPerPage={4}
+            itemsPerPage={8}
             onItemDeleted={handleItemDeleted}
           />
         </div>
