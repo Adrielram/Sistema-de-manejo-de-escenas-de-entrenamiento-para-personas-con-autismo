@@ -57,6 +57,7 @@ urlpatterns = [
     path('registrar-respuesta/', registrar_respuesta, name='registrar-respuesta'),
     path('obtener_estado_revision/', obtener_estado_revision, name='obtener_estado_revision'),
     path('listar_formularios_completados/<str:username>/', views.listar_formularios_completados, name='listar_formularios_completados'),
+    
 ]
 
 

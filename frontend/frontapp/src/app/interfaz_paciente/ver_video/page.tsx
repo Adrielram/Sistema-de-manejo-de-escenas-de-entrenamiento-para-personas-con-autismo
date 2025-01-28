@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { NuevoComentario } from "../../../components/NuevoComentario";
 import ComentarioPaciente from "../../../components/ComentarioPaciente";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector } from 'react-redux';
 import { RootState } from "../../../../store/store";
 import { useDispatch } from "react-redux";
@@ -26,7 +26,7 @@ const VerVideo = () => {
   const [escena, setEscena] = useState<Escena>();
   const [like, setLike] = useState<boolean | null>(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [completedQuizzes] = useState<number[]>([]);
+  const [completedQuizzes, setCompletedQuizzes] = useState<number[]>([]);
   const { username } = useSelector((state: RootState) => state.user);
   const [comentariosHashSet, setComentariosHashSet] = useState<{
     [key: number]: number[];
@@ -35,6 +35,8 @@ const VerVideo = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const { idEscena, objetivoId } = useSelector((state: RootState) => state.user);
+  const searchParams = useSearchParams();
+  const completedFormId = searchParams.get('completedFormId');
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     user: username, 
@@ -72,6 +74,38 @@ const VerVideo = () => {
       console.error("Error al obtener el usuario del comentario:", error);
     }
   };
+
+  useEffect(() => {
+    const verificarFormulario = async (formId: string) => {
+      const response = await fetch(`http://localhost:8000/api/verificar_form_completado/${formId}/${username}/`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'completado') {
+          setCompletedQuizzes((prev) => [...new Set([...prev, parseInt(formId, 10)])]);
+        }
+      }
+    };
+
+    if (completedFormId) {
+      verificarFormulario(completedFormId);
+    }
+  }, [completedFormId, username]);
+
+  useEffect(() => {
+    const cargarFormulariosCompletados = async () => {
+      const response = await fetch(`http://localhost:8000/api/listar_formularios_completados/${username}/`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Data: ", JSON.stringify(data));
+        const completedIds = data.map((form: { formulario_id: number }) => form.formulario_id);
+        setCompletedQuizzes(completedIds);
+      }
+    };
+
+    cargarFormulariosCompletados();
+  }, [username]); // Solo se ejecuta al renderizar el componente por primera vez
+
+
 
   useEffect(() => {
     // Fetch para obtener el HashSet de comentarios
@@ -335,8 +369,7 @@ const VerVideo = () => {
                     <div key={quiz.id} className="flex items-center w-full">
                       <button
                         onClick={() => handleQuizClick(quiz.id)}
-                        className={`bg-blue-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all flex-grow 
-                          ${completedQuizzes.includes(quiz.id) ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-blue-600'}`}
+                        className={`bg-blue-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all flex-grow `}
                       >
                         {quiz.nombre}
                       </button>
