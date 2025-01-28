@@ -161,12 +161,17 @@ class Command(BaseCommand):
             profesional=terapeuta
         )
 
+        # Create condiciones
+        condicion1 = Condicion.objects.create(
+            edad= 10
+        )
+
+
         # Create scenes
         escena_1 = Escena.objects.create(
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            condiciones="Normal",
             link="https://ejemplo.com/video1",
             nombre="Escena 1",
             descripcion = "Esta escena reflexiona sobre la importancia de la amistad"
@@ -175,7 +180,6 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            condiciones="Normal",
             link="https://ejemplo.com/video2",
             nombre="Escena 2",
             descripcion = "Esta escena refleja la importancia de la familia"
@@ -185,7 +189,6 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=2,
-            condiciones="Normal",
             link="https://ejemplo.com/video3",
             nombre="Escena 3",
             descripcion = "Esta escena demuestra la importancia de la educación"
@@ -195,7 +198,6 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=4,
-            condiciones="Normal",
             link="https://ejemplo.com/video4",
             nombre="Escena 4",
             descripcion = "Esta escena refuerza la importancia de la juventud"
@@ -204,27 +206,25 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=3,
-            condiciones="Normal",
             link="https://ejemplo.com/video5",
             nombre="Escena 5",
             descripcion = "Esta escena refleja la importancia del viaje antes que el destino"
 
-            
         )
         escena_6 = Escena.objects.create(
             idioma="Español",
             acento="neutro",
             complejidad=5,
-            condiciones="Normal",
             link="https://ejemplo.com/video6",
             nombre="Escena 6",
             descripcion = "Esta escena refuerza la importancia de la juventud"
         )
+        ##estos tienen video que funciona
         escena_7 = Escena.objects.create(
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            condiciones="Normal",
+            condicion= condicion1,
             link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
             nombre="Escena 1",
             descripcion = "Esta escena aclara la importancia de los abuelos"
@@ -233,7 +233,6 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            condiciones="Normal",
             link="https://drive.google.com/file/d/1qzY31odKmd2FlrjU0VK4dkfezlzEcoaJ/preview",
             nombre="Escena 2",
             descripcion = "Esta escena muestra la vida en la fabella"
@@ -242,7 +241,6 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            condiciones="Normal",
             link="https://drive.google.com/file/d/1yPgHYRagTJXTqlrGhNkZDEy5zNY4-f77/preview",
             nombre="Escena 3",
             descripcion = "Esta escena recomienda comportamientos bajo"
@@ -302,15 +300,18 @@ class Command(BaseCommand):
         )
         escena_obj_3 = EscenaObjetivo.objects.create(
             escena=escena_7,
-            objetivo=objetivo_3
+            objetivo=objetivo_3,
+            orden= 1
         )
         escena_obj_4 = EscenaObjetivo.objects.create(
             escena=escena_8,
-            objetivo=objetivo_3
+            objetivo=objetivo_3,
+            orden= 2
+            
         )
         escena_obj_5 = EscenaObjetivo.objects.create(
             escena=escena_9,
-            objetivo=objetivo_3
+            objetivo=objetivo_3,
         )
         escena_obj_6 = EscenaObjetivo.objects.create(
             escena=escena_7,
@@ -329,30 +330,23 @@ class Command(BaseCommand):
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_3,
-            orden=1,
-            es_alternativo=False
+
         )
         persona_obj_esc_2 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_4,
-            orden=2,
-            es_alternativo=False
         )
         persona_obj_esc_3 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_5,
-            orden=3,
-            es_alternativo=False
         )
         persona_obj_esc_4 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_1,
-            es_alternativo=True
         )
         persona_obj_esc_5 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_2,
-            es_alternativo=True
         )
 
         formulario_1 = Formulario.objects.create(
@@ -431,7 +425,8 @@ class Command(BaseCommand):
         )
 
         Videosvistos.objects.create(
-            persona_objetivo_escena=persona_obj_esc_1,
+            paciente_id=paciente,
+            escena_id=escena_1
         )
 
         CentroProfesionalEscena.objects.create(

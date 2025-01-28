@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Patologia, User, Objetivo, Escena, CentroProfesional, Centrodesalud, Comentario, Videosvistos, EscenaObjetivo, Objetivoscumplir, Centrodesalud, Grupo, Formulario, PersonaObjetivoEvaluacion, PersonaObjetivoEscena
+from .models import Condicion, Patologia, User, Objetivo, Escena, CentroProfesional, Centrodesalud, Comentario, Videosvistos, EscenaObjetivo, Objetivoscumplir, Centrodesalud, Grupo, Formulario, PersonaObjetivoEvaluacion, PersonaObjetivoEscena
 
 class PacienteSerializer(serializers.ModelSerializer):
     padreACargo = serializers.SerializerMethodField()
@@ -78,26 +78,50 @@ class ObjetivoSerializerList(serializers.ModelSerializer):
         model = Objetivo
         fields = ['id', 'nombre', 'descripcion']
 
+class CondicionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Condicion
+        fields = ['id', 'edad', 'objetivo', 'fecha']
+
 class EscenaSerializer(serializers.ModelSerializer):
+    # Relación anidada con `Condicion`
+    condiciones = CondicionSerializer(required=False, allow_null=True)
+
     class Meta:
         model = Escena
         fields = ['id', 'idioma', 'acento', 'condiciones', 'complejidad', 'link', 'nombre', 'descripcion']
 
     def update(self, instance, validated_data):
         """
-        Custom update method to handle null conditions
+        Custom update method to handle nested conditions
         """
-        # Update each field from validated data
+        # Extraer datos de `condiciones` si existen
+        condicion_data = validated_data.pop('condiciones', None)
+
+        # Actualizar los campos de la instancia de Escena
         instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.idioma = validated_data.get('idioma', instance.idioma)
         instance.acento = validated_data.get('acento', instance.acento)
-        instance.condiciones = validated_data.get('condiciones', instance.condiciones)
         instance.complejidad = validated_data.get('complejidad', instance.complejidad)
         instance.link = validated_data.get('link', instance.link)
-        
-        # Save the updated instance
+        instance.descripcion = validated_data.get('descripcion', instance.descripcion)
         instance.save()
+
+        # Si hay datos de `condiciones`, actualizarlos o crearlos
+        if condicion_data:
+            if instance.condicion:
+                # Si ya existe una condición, actualizarla
+                for attr, value in condicion_data.items():
+                    setattr(instance.condicion, attr, value)
+                instance.condicion.save()
+            else:
+                # Si no existe, crear una nueva condición y asignarla
+                condicion = Condicion.objects.create(**condicion_data, escena=instance)
+                instance.condicion = condicion
+                instance.save()
+
         return instance
+
 
 
 class CentroSaludSerializer(serializers.ModelSerializer):  

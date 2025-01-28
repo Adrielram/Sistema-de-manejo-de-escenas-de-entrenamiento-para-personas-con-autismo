@@ -12,6 +12,7 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
   const [grupoId, setGrupoId] = useState<string | null>(null);
   const [nombre_grupo, setNombreGrupo] = useState("");
   const [pacientesDisponibles, setPacientesDisponibles] = useState<Paciente[]>([]);
+  const [pacientesEnGrupo, setPacientesEnGrupo] = useState<Paciente[]>([]);
   const [pacientesSeleccionados, setPacientesSeleccionados] = useState<Set<number>>(new Set());
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -48,13 +49,11 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
 
     const fetchPacientesDisponibles = async () => {
       try {
-        // Include the group_id as a query parameter in the URL
         const response = await fetch(`${baseUrl}get_patients_not_in_group/?group_id=${grupoId}`);
         if (!response.ok) {
           throw new Error("Error al obtener los pacientes disponibles");
         }
         const data = await response.json();
-        console.log("data: ", data);
         setPacientesDisponibles(data);
       } catch (error) {
         console.error(error);
@@ -62,8 +61,25 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
       }
     };
 
+    const fetchPacientesEnGrupo = async () => {
+      try {
+        const response = await fetch(`${baseUrl}get_patients_per_group/?group_id=${grupoId}`);
+        if (!response.ok) {
+          throw new Error("Error al obtener los pacientes en el grupo");
+        }
+        const data = await response.json();
+        setPacientesEnGrupo(data);
+        // Initialize selected patients with those already in the group
+        setPacientesSeleccionados(new Set(data.map((paciente: Paciente) => paciente.dni)));
+      } catch (error) {
+        console.error(error);
+        alert("No se pudieron cargar los pacientes en el grupo");
+      }
+    };
+
     fetchGroupDetails();
     fetchPacientesDisponibles();
+    fetchPacientesEnGrupo();
   }, [grupoId]);
 
   const handlePacienteSelection = (pacienteId: number) => {
@@ -135,7 +151,27 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
             </div>
 
             <div>
-              <label className="block font-semibold text-gray-700 mb-2">Seleccionar Pacientes</label>
+              <label className="block font-semibold text-gray-700 mb-2">Pacientes en el Grupo</label>
+              <div className="space-y-2">
+                {pacientesEnGrupo.map((paciente) => (
+                  <div key={paciente.dni} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`paciente-${paciente.dni}`}
+                      checked={pacientesSeleccionados.has(paciente.dni)}
+                      onChange={() => handlePacienteSelection(paciente.dni)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-[#3EA5FF]"
+                    />
+                    <label htmlFor={`paciente-${paciente.dni}`} className="ml-2 text-gray-800">
+                      {paciente.nombre}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-gray-700 mb-2">Pacientes Disponibles</label>
               <div className="space-y-2">
                 {pacientesDisponibles.map((paciente) => (
                   <div key={paciente.dni} className="flex items-center">
