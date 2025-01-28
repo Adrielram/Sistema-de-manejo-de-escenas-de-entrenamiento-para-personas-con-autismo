@@ -217,7 +217,6 @@ def get_goal_data(request, objetivo_id):
         return Response({"error": "Objetivo no encontrado"}, status=404)
         
 from django.db import transaction
-
 @api_view(['POST'])
 def signIn(request):
     try:
@@ -246,8 +245,8 @@ def signIn(request):
         numero = request.data.get('numero')
         id_padre = request.data.get('id_padre', None)  # Puede ser opcional
         centros_de_salud = request.data.get('centros_de_salud', None)  # Puede ser opcional
-        sintomas = request.data.get('sintomas')  # Puede ser opcional
-        texto = request.data.get('texto')  # Puede ser opcional
+        sintomas = request.data.get('sintomas',[])  # Puede ser opcional
+        texto = request.data.get('texto','')  # Puede ser opcional
         print("Centros de salud "+str(centros_de_salud))
         print(f"Datos recibidos: DNI={dni}, Nombre={nombre}, Fecha={fecha_nac}, Genero={genero}, Role={role}")
 
@@ -311,7 +310,7 @@ def signIn(request):
                 role=role,
                 direccion_id_dir=residencia,  # Se pasa el objeto residencia
                 email='adri@example.com',
-
+                patologia=texto
             )
 
             # Asociar padre si el rol es paciente y se proporciona un ID de padre
@@ -331,9 +330,8 @@ def signIn(request):
             print(user.check_password(user.password))
             if role == 'terapeuta':
                 user.is_active = False
-            elif role == 'paciente':
-                user.patologia = texto
-                user.is_active = True
+            
+                
             user.save()       
             print(f"Usuario creado: {user}")
             if role == 'terapeuta' and centros_de_salud is not None:
@@ -352,39 +350,30 @@ def signIn(request):
                         status=status.HTTP_400_BAD_REQUEST
                     )         
 
-            elif role == 'paciente':
-                if sintomas is not None:
-                    for sintoma in sintomas:
-                        # Obtener nombre y certeza del síntoma desde el front
-                        nombre_patologia = sintoma.get('nombre')  # Nombre de la patología
-                        certeza = sintoma.get('similitud')  # Certeza asociada
+             # Asociar síntomas (solo para pacientes)
+            if role == 'paciente' and sintomas:
+                for sintoma in sintomas:
+                    nombre_patologia = sintoma.get('nombre')
+                    certeza = sintoma.get('similitud')
 
-                        if not nombre_patologia or certeza is None:
-                            return Response(
-                                {"error": f"Faltan datos en el síntoma: {sintoma}"},
-                                status=status.HTTP_400_BAD_REQUEST
-                            )
+                    if not nombre_patologia or certeza is None:
+                        return Response(
+                            {"error": f"Faltan datos en el síntoma: {sintoma}"},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
 
-                        try:
-                            # Buscar la patología por nombre
-                            patologia = Patologia.objects.get(nombre=nombre_patologia)
-
-                            # Crear el registro en PersonaPatologia
-                            PersonaPatologia.objects.create(
-                                user_id=user,  # Ya tenemos el objeto del usuario creado
-                                patologia_id=patologia,
-                                certeza=certeza
-                            )
-                        except Patologia.DoesNotExist:
-                            return Response(
-                                {"error": f"No se encontró la patología con nombre '{nombre_patologia}'"},
-                                status=status.HTTP_400_BAD_REQUEST
-                            )
-                        except Exception as e:
-                            return Response(
-                                {"error": f"Error al asociar la patología '{nombre_patologia}': {str(e)}"},
-                                status=status.HTTP_400_BAD_REQUEST
-                            )
+                    try:
+                        patologia = Patologia.objects.get(nombre=nombre_patologia)
+                        PersonaPatologia.objects.create(
+                            user_id=user,
+                            patologia_id=patologia,
+                            certeza=certeza
+                        )
+                    except Patologia.DoesNotExist:
+                        return Response(
+                            {"error": f"No se encontró la patología con nombre '{nombre_patologia}'"},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
         return Response(
             {"message": "Usuario registrado exitosamente"},
             status=status.HTTP_201_CREATED
