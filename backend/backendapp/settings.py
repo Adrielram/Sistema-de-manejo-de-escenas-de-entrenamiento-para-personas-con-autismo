@@ -20,6 +20,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     'backend',  # Nombre del servicio en Docker Compose
+    '*',
 ]
 
 

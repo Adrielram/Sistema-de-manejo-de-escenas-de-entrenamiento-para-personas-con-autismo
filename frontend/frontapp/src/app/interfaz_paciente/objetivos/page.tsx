@@ -24,6 +24,7 @@ interface Escena {
   acento: string;
   complejidad: number;
   condiciones: string;
+  bloqueada: boolean; // Añadir nuevo campo
 }
 
 export default function Page() {
@@ -69,31 +70,30 @@ export default function Page() {
     const fetchEscenas = async (page: number = 1) => {
       try {
         const response = await fetch(`${baseURL}get-escenas-list/?page=${page}&limit=6`);
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
         const data: PaginatedResponse = await response.json();
     
         const mappedResults = data.results.map((esc) => ({
           id: esc.id,
-          nombre: esc.nombre, // Asegúrate de que el campo sea 'nombre'
+          nombre: esc.nombre,
           descripcion: esc.descripcion,
           idioma: esc.idioma,
           acento: esc.acento,
           complejidad: esc.complejidad,
           condiciones: esc.condiciones,
+          bloqueada: esc.bloqueada // Añadir campo bloqueada
         }));
     
         setEscenas(mappedResults);
         setTotalPages(Math.ceil(data.count / 6));
-    
-        if (mappedResults.length > 0) {
-          const primerEscena = mappedResults[0];
-          setEscenaSeleccionada(primerEscena); 
-          dispatch(setIdEscena({ idEscena: primerEscena.id })); 
+
+        // Seleccionar primera escena NO bloqueada
+        const primeraEscenaNoBloqueada = mappedResults.find(esc => !esc.bloqueada);
+        if (primeraEscenaNoBloqueada) {
+          setEscenaSeleccionada(primeraEscenaNoBloqueada); 
+          dispatch(setIdEscena({ idEscena: primeraEscenaNoBloqueada.id }));
         } else {
           setEscenaSeleccionada(null);
-          setEscenas([]);
         }
       } catch (err) {
         console.error(err);
@@ -120,22 +120,21 @@ export default function Page() {
   };
 
 
-  const handleEscenaClick = () => {
-    if (!escenaSeleccionada) {
-      alert('Por favor, selecciona una escena antes de continuar.');
-      return;
-    }
-    //window.alert(`Escena ${escenaID}`)
-    router.push('./ver_video');
-  };
-
   const handleMostrarDescripcion = (escenaP: number) => { 
     const escenaSeleccionada = escenas.find((escena) => escena.id === escenaP);
-    if (escenaSeleccionada) {
+    if (escenaSeleccionada && !escenaSeleccionada.bloqueada) {
       dispatch(setIdEscena({idEscena: escenaP}));
       setEscenaSeleccionada(escenaSeleccionada);
     }
   }
+
+  const handleEscenaClick = () => {
+    if (!escenaSeleccionada || escenaSeleccionada.bloqueada) {
+      alert('Esta escena está bloqueada. Completa las escenas anteriores para desbloquear.');
+      return;
+    }
+    router.push('./ver_video');
+  };
 
   return (
     <div className="min-h-screen p-4 flex flex-col md:flex-row md:h-screen gap-6">
@@ -149,6 +148,10 @@ export default function Page() {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={handlePageChange}
+                bloqueadaMap={escenas.reduce((acc, esc) => {
+                  acc[esc.id] = esc.bloqueada;
+                  return acc;
+                }, {} as Record<number, boolean>)}
               />
             ) : (
               <div className="text-center py-4 text-gray-500">
@@ -185,11 +188,16 @@ export default function Page() {
                   </li>
                 </ul>
                 <button
-                  onClick={() => handleEscenaClick()}
-                  className="mt-6 w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                >
-                  Ver video
-                </button>
+                onClick={handleEscenaClick}
+                disabled={!escenaSeleccionada || escenaSeleccionada.bloqueada}
+                className={`mt-6 w-full font-medium py-2 px-4 rounded-lg transition-colors duration-200 ${
+                  escenaSeleccionada?.bloqueada 
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                {escenaSeleccionada?.bloqueada ? 'Escena bloqueada' : 'Ver video'}
+              </button>
               </div>
             </>
           ) : (
