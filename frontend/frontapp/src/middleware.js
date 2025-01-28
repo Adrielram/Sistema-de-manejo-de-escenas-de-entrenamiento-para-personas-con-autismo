@@ -13,7 +13,7 @@ export async function middleware(request) {
 
   try {
     // Llamar al endpoint de verificación de sesión
-    const response = await fetch('http://backend:8000/api/verify-session/', {
+    const response = await fetch('http://localhost:8000/api/verify-session/', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

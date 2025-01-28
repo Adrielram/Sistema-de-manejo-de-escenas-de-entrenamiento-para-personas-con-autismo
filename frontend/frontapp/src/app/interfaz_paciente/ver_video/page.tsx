@@ -26,7 +26,7 @@ const VerVideo = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [completedQuizzes, setCompletedQuizzes] = useState<number[]>([]);
   const { username } = useSelector((state: RootState) => state.user);
-  const objetivoId = 1;
+  const objetivoId = 3;
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [reloadComentarios, setReloadComentarios] = useState(false);

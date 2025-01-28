@@ -2,18 +2,15 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.hashers import make_password
 from datetime import datetime
 from api.models import *
-<<<<<<< HEAD
-=======
-import mysql.connector
->>>>>>> dffd2b0a47957ae6540b74a543006b082a6da1b3
+#import mysql.connector
 from django.conf import settings
 
 class Command(BaseCommand):
     help = 'Loads sample data into database'
 
     def handle(self, *args, **options):
-        # Conectar a MySQL y reiniciar la base de datos
-        '''self.stdout.write("Resetting database...")
+        '''# Conectar a MySQL y reiniciar la base de datos
+        self.stdout.write("Resetting database...")
         try:
             db_config = {
                 'host': settings.DATABASES['default']['HOST'],
@@ -333,12 +330,7 @@ class Command(BaseCommand):
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_3,
-<<<<<<< HEAD
-            orden=1,
-            es_alternativo=False
-=======
 
->>>>>>> dffd2b0a47957ae6540b74a543006b082a6da1b3
         )
         persona_obj_esc_2 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
@@ -357,21 +349,6 @@ class Command(BaseCommand):
             escena_objetivo=escena_obj_2,
         )
 
-<<<<<<< HEAD
-        # Create evaluation
-        # evaluacion = Evaluacion.objects.create(
-        #     nombre="Evaluación 1",
-        #     link="https://ejemplo.com/eval1",
-        #     centro_salud_id=centro_prof,
-        #     profesional_id=centro_prof
-        # )
-        evaluacion = Evaluacion.objects.create(
-            nombre="La matadora",
-            link="https://docs.google.com/forms/d/e/1FAIpQLSfx8STfx-3if-hoIpA2f4mB-_ewwMSLRpbgXVaS_23TLYsJyw/viewform?usp=header",
-            centro_salud_id=centro_prof,
-            profesional_id=centro_prof
-        )       
-=======
         formulario_1 = Formulario.objects.create(
             nombre="Formulario 1",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
@@ -423,7 +400,6 @@ class Command(BaseCommand):
             progreso=75,
             evaluacion=formulario_1
         )
->>>>>>> dffd2b0a47957ae6540b74a543006b082a6da1b3
 
         # Create group memberships
         Personagrupo.objects.create(
@@ -464,8 +440,6 @@ class Command(BaseCommand):
             descripcion="Miedo a interacciones; Interpretación errónea de señales sociales; Vergüenza/temor al rechazo; Fobia social, evaluación negativa, interpretación distorsionada, evitación social, timidez extrema, miedo al juicio, Miedo a hablar en grupo, me muero si me miran, no puedo mirar a los ojos, temblores cuando hablo"
         )
 
-<<<<<<< HEAD
-=======
         # Ansiedad Sensorial
         Patologia.objects.create(
             nombre="Ansiedad Sensorial",
@@ -593,5 +567,4 @@ class Command(BaseCommand):
             patologia_id=Patologia.objects.get(nombre="Trastorno de Procesamiento Sensorial")
         )
 
->>>>>>> dffd2b0a47957ae6540b74a543006b082a6da1b3
         self.stdout.write(self.style.SUCCESS('Successfully loaded sample data'))

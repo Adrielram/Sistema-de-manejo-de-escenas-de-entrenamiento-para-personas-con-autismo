@@ -289,6 +289,8 @@ class Comentario(models.Model):
         blank=True,
         null=True
     )
+    texto = models.TextField(blank=True, null=True)
+    visibilidad = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'comentario'

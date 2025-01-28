@@ -53,7 +53,6 @@ const userSlice = createSlice({
     },
   },
   
-}
 });
 
 export const { setUser, clearUser , setCenter, setUserId, setObjetivoId, setIdEscena,setHijoNombre} = userSlice.actions;

@@ -1848,7 +1848,7 @@ class ObtenerEvaluaciones(APIView):
                 evaluacion__isnull=True  # Asegurarse de que haya evaluación asociada
             ).values(
                 'evaluacion__id', 
-                'evaluacion__titulo', 
+                'evaluacion__nombre', 
                 'evaluacion__descripcion', 
                 'evaluacion__es_verificacion_automatica', 
                 'evaluacion__fecha_creacion'
@@ -1858,7 +1858,7 @@ class ObtenerEvaluaciones(APIView):
             formularios_list = [
                 {
                     'id': formulario['evaluacion__id'],
-                    'titulo': formulario['evaluacion__titulo'],
+                    'nombre': formulario['evaluacion__nombre'],
                     'descripcion': formulario['evaluacion__descripcion'],
                     'es_verificacion_automatica': formulario['evaluacion__es_verificacion_automatica'],
                     'fecha_creacion': formulario['evaluacion__fecha_creacion']
