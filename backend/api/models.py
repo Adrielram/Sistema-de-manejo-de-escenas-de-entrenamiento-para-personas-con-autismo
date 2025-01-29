@@ -447,4 +447,4 @@ class FormularioPacienteRevision(models.Model):
     volver_a_realizar = models.BooleanField(default=False)
 
     class Meta:
-        db_table = 'formularioPacienteRevision'
+        db_table = 'formularioPacienteRevision'  

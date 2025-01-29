@@ -1,9 +1,7 @@
 "use client";
-import {useSelector} from 'react-redux';
 import React, { useState } from "react";
-import SingleSearchSelectBox from "../../../../components/SingleSearchSelectBox";
-import SearchSelectBox from "../../../../components/SearchSelectBox";
-import { RootState } from '../../../../../store/store';
+import SingleSearchSelectBox from "../../../../../components/SingleSearchSelectBox";
+import SearchSelectBox from "../../../../../components/SearchSelectBox";
 
 const CreateObjetivo: React.FC = () => {
   const [titulo, setTitulo] = useState("");
@@ -12,7 +10,6 @@ const CreateObjetivo: React.FC = () => {
   const [selectedScenes, setSelectedScenes] = useState([]);
   const [selectedObjectives, setSelectedObjectives] = useState([]);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  const {username} = useSelector((state: RootState) => state.user);
 
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -144,9 +141,7 @@ const CreateObjetivo: React.FC = () => {
               Crear Objetivo
             </button>
           </div>
-          <div className="lg:col-span-2 mt-6">
-            {username}
-          </div>
+
         </form>
       </div>
     </div>

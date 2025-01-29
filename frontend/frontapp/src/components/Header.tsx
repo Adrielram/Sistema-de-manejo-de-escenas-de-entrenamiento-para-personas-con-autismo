@@ -11,6 +11,7 @@ import {useRouter} from 'next/navigation';
 export default function Header() {
   const dispatch = useDispatch();
   const router = useRouter();
+  const { center } = useSelector((state: RootState) => state.user)
   
   const { username, isLoggedIn } = useSelector((state: RootState) => state.user);
   const handleLogout = async () => {
@@ -56,8 +57,11 @@ export default function Header() {
       </div>
 
       {/* Action Buttons or Greeting (Right-aligned) */}
-      <div className="flex items-center space-x-2 sm:space-x-4">
-        {isLoggedIn ? (
+      <div
+    className={`flex items-center space-x-2 sm:space-x-4 ${
+          isLoggedIn && center ? 'mr-[30px] md:mr-0' : ''
+        }`}> 
+           {isLoggedIn ? (
           <>
             <p className="text-white font-semibold">Hola, {username}!</p>
             <button

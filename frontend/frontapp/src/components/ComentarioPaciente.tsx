@@ -47,7 +47,7 @@ const ComentarioPaciente: React.FC<ComentarioPacienteProps> = ({ idComentario, r
 
   return (
     <div className={`border border-gray-200 p-4 mb-3 rounded-lg ${
-      esComentarioPrincipal ? 'bg-white text-black text-left text-base' : 'bg-gray-50 text-gray-600 text-right text-sm'
+      esComentarioPrincipal ? 'bg-white text-black text-left text-base' : 'bg-gray-50 text-gray-600 text-left text-sm'
     }`}>
       {!esComentarioPrincipal && (
         <p className="italic mb-2">
@@ -61,12 +61,15 @@ const ComentarioPaciente: React.FC<ComentarioPacienteProps> = ({ idComentario, r
         : "Este comentario está oculto"}
       </p>
       
-      <button 
-        onClick={() => onResponder(idComentario)} // Llama a la función pasada desde el padre
-        className="mt-3 text-xs bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 transition-colors"
-      >
-        Responder
-      </button>
+      {/* Verificar si el rol no es 'padre' antes de mostrar el botón respopnder */}
+      {role !== 'padre' && (
+        <button 
+          onClick={() => onResponder(idComentario)} // Llama a la función pasada desde el padre
+          className="mt-3 text-xs bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 transition-colors"
+        >
+          Responder
+        </button>
+      )}
 
       {respuestas.length > 0 && (
         <div className="mt-3">
