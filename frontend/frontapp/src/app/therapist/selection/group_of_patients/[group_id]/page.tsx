@@ -68,9 +68,12 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
           throw new Error("Error al obtener los pacientes en el grupo");
         }
         const data = await response.json();
-        setPacientesEnGrupo(data);
-        // Initialize selected patients with those already in the group
-        setPacientesSeleccionados(new Set(data.map((paciente: Paciente) => paciente.dni)));
+        console.log("Pacientes en el grupo:", data);
+    
+        // Extract the `results` array from the response
+        const pacientesArray = data.results || [];
+        setPacientesEnGrupo(pacientesArray);
+        setPacientesSeleccionados(new Set(pacientesArray.map((paciente: Paciente) => paciente.dni)));
       } catch (error) {
         console.error(error);
         alert("No se pudieron cargar los pacientes en el grupo");
@@ -109,12 +112,15 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
 
     try {
       const response = await fetch(`${baseUrl}groups/${grupoId}`, {
-        method: "PATCH",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(grupoActualizado),
+        
       });
+
+      console.log("Response:", response.json());
 
       if (response.ok) {
         alert("Grupo actualizado exitosamente");

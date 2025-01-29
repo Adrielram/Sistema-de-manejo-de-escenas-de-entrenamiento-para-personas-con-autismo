@@ -72,7 +72,7 @@ urlpatterns = [
     path('update_group/<int:group_id>/', views.update_group, name='update_group'),
     path('personagrupo/<int:grupo_id>/<int:user_id>/', views.delete_person_group, name='delete_person_group'),
     path('get_patients_not_in_group/', GetPatientsNotInGroupView.as_view(), name='get_patients_not_in_group'),
-
+    path('get_patients/', GetPatientsView.as_view(), name='get_patients'),
 ]
 
 urlpatterns += [path('', include(router.urls))]
