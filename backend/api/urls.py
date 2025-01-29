@@ -47,7 +47,6 @@ urlpatterns = [
     path('disassociate_center/', DisassociateCenterView.as_view(), name='desassociate_center'),
     path('check-cookie/', check_cookie, name='check_cookie'),
     path('get-escenas-list/', EscenaView.as_view(), name='get-escenas-list'),
-    path('get-escenas-filtr-list/', EscenasFiltradasView.as_view(), name='get-escenas-filtr-list'),
     path('getCenterProfesional/', GetCentroProfesionalView.as_view(), name='getCenterProfesional'),
     path('get_goals_centroprofesional/', GetCentroProfesionalObjetivosView.as_view(), name='get_goals_centroprofesional'),
     path('goal/<int:pk>/delete/', DeleteGoalView.as_view(), name='delete_goal'),
@@ -58,6 +57,8 @@ urlpatterns = [
     path('registrar-respuesta/', registrar_respuesta, name='registrar-respuesta'),
     path('obtener_estado_revision/', obtener_estado_revision, name='obtener_estado_revision'),
     path('listar_formularios_completados/<str:username>/', views.listar_formularios_completados, name='listar_formularios_completados'),
+    path('get-escena/', GetEscenaView.as_view(), name='get-escena'),
+    path('verificar-escena/', VerificarEscenaAsignadaView.as_view(), name='verificar-escena'),
     
 ]
 

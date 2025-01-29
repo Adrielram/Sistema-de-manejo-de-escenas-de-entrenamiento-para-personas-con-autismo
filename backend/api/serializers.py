@@ -152,7 +152,6 @@ class PreguntaSerializer(serializers.ModelSerializer):
             Opcion.objects.create(pregunta=pregunta, **opcion_data)
         return pregunta
 
-
 class FormularioSerializer(serializers.ModelSerializer):
     preguntas = PreguntaSerializer(many=True)
 
@@ -192,7 +191,6 @@ class PatientGroupSerializer(serializers.ModelSerializer):
         model = Grupo
         fields = ['id', 'nombre', 'centrodesalud_id']
 
-from .models import ComentarioProfesional
 class ComentarioProfesionalSerializer(serializers.ModelSerializer):
     class Meta:
         model = ComentarioProfesional
@@ -218,6 +216,7 @@ class PatientGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grupo
         fields = ['id', 'nombre', 'centrodesalud_id']
+
 class ComentarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comentario
@@ -248,12 +247,6 @@ class GrupoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grupo
         fields = ['id', 'nombre', 'centrodesalud_id']
-
-class FormularioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Formulario
-        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'fecha_creacion']
-
 
 class PatologiaSerializer(serializers.ModelSerializer):
     class Meta:

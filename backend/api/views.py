@@ -272,7 +272,7 @@ class EscenaView(generics.ListAPIView):
             queryset=EscenaObjetivo.objects.select_related('objetivo').prefetch_related(
                 Prefetch(
                     'objetivo__escenaobjetivo_set',
-                    queryset=EscenaObjetivo.objects.order_by('orden')
+                    queryset=EscenaObjetivo.objects.all()
                 )
             )
         )
@@ -283,76 +283,13 @@ class EscenaView(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        user = request.user
-        
-        # Obtener escenas vistas por el usuario
-        user_vistos_ids = set()
-        if user.is_authenticated:
-            user_vistos_ids = set(
-                Videosvistos.objects.filter(paciente_id=user)
-                .values_list('escena_id', flat=True)
-            )
-
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            serialized_data = serializer.data
-            
-            # Calcular estado de bloqueo para cada escena
-            for escena, data_item in zip(page, serialized_data):
-                bloqueada = False
-                for eo in escena.escenaobjetivo_set.all():
-                    current_order = eo.orden
-                    if current_order is None or current_order == 1:
-                        continue  # No hay requisitos previos
-                    
-                    # Obtener requisitos previos de este objetivo
-                    prereqs = [
-                        eo_obj.escena_id
-                        for eo_obj in eo.objetivo.escenaobjetivo_set.all()
-                        if eo_obj.orden is not None and eo_obj.orden < current_order
-                    ]
-                    
-                    # Verificar si faltan requisitos
-                    for prereq_id in prereqs:
-                        if prereq_id not in user_vistos_ids:
-                            bloqueada = True
-                            break
-                    if bloqueada:
-                        break
-                
-                data_item['bloqueada'] = bloqueada
-            
-            return self.get_paginated_response(serialized_data)
+            return self.get_paginated_response(serializer.data)
 
-        # Caso sin paginación
         serializer = self.get_serializer(queryset, many=True)
-        serialized_data = serializer.data
-        
-        for escena, data_item in zip(queryset, serialized_data):
-            bloqueada = False
-            for eo in escena.escenaobjetivo_set.all():
-                current_order = eo.orden
-                if current_order is None or current_order == 1:
-                    continue
-                
-                prereqs = [
-                    eo_obj.escena_id
-                    for eo_obj in eo.objetivo.escenaobjetivo_set.all()
-                    if eo_obj.orden is not None and eo_obj.orden < current_order
-                ]
-                
-                for prereq_id in prereqs:
-                    if prereq_id not in user_vistos_ids:
-                        bloqueada = True
-                        break
-                if bloqueada:
-                    break
-            
-            data_item['bloqueada'] = bloqueada
-        
-        return Response(serialized_data)
-
+        return Response(serializer.data)
 
 
 class ObjetivoFilter(filters.FilterSet):
@@ -403,27 +340,6 @@ class ObjetivoBusquedaView(generics.ListAPIView):
         data = [{'id': item['id'], 'titulo': item['nombre'], 'descripcion': item['descripcion']} for item in serializer.data]
         return Response(data)
 
-    
-
-'''
-class EscenasPorObjetivoListView(generics.ListAPIView):
-    #queryset = Escena.objects.all()
-    serializer_class = EscenaSerializer
-    #pagination_class = DynamicPagination
-    filter_backends = [DjangoFilterBackend]
-
-    def get_queryset(self):
-        # Obtén el ID del objetivo del request
-        objetivo_id = self.request.GET.get('objetivo_id', None)
-        if not objetivo_id:
-            return Escena.objects.none()  # Devuelve un queryset vacío si no hay objetivo_id
-
-        # Filtra las relaciones por el ID del objetivo
-        relaciones = EscenaObjetivo.objects.filter(objetivo=objetivo_id)
-        return Escena.objects.filter(
-            id__in=relaciones.values_list('escena', flat=True)
-        )
-'''
 
 class EscenasPorObjetivoListView(generics.ListAPIView):
     serializer_class = EscenaSerializer
@@ -445,14 +361,27 @@ class EscenasPorObjetivoListView(generics.ListAPIView):
             id__in=relaciones.values_list('escena', flat=True)
         )
 
-        # Filtra las escenas que el usuario no ha visto
-        #escenas_vistas = Videosvistos.objects.filter(
-        #    persona_objetivo_escena__persona=username,
-        #    persona_objetivo_escena__objetivo_id=objetivo_id,
-        #    visto=True
-        #).values_list('persona_objetivo_escena__escena_id', flat=True)
-
         return escenas_objetivo
+    
+class GetEscenaView(APIView):
+    serializer_class = EscenaSerializer
+
+    def get(self, request):
+        # Obtén el ID de la escena del request
+        escena_id = request.GET.get('escena_id', None)
+
+        if not escena_id:
+            return JsonResponse({"error": "El parámetro 'escena_id' es requerido."}, status=400)
+
+        try:
+            # Busca la escena por su ID
+            escena = Escena.objects.get(id=escena_id)
+        except Escena.DoesNotExist:
+            return JsonResponse({"error": "Escena no encontrada."}, status=404)
+
+        # Serializa la escena y retorna la respuesta
+        serializer = self.serializer_class(escena)
+        return JsonResponse(serializer.data, safe=False)
 
 
 class PacienteListView(APIView):
@@ -1786,3 +1715,32 @@ def listar_formularios_completados(request, username):
 
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+
+class VerificarEscenaAsignadaView(APIView):
+    """
+    Verifica si un usuario tiene asignada una escena por algún objetivo.
+    """
+    
+    def get(self, request):
+        
+        user_id = request.GET.get('user_id')
+        user_id = obtener_dni(user_id)
+        escena_id = request.GET.get('escena_id')
+
+        # Validar que los parámetros sean proporcionados
+        if not user_id or not escena_id:
+            return Response(
+                {"asignada": False, "objetivo_id": None, "error": "Se requieren 'user_id' y 'escena_id'."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Buscar si la escena está asignada a un usuario por algún objetivo
+        persona_escena = PersonaObjetivoEscena.objects.filter(
+            user_id=user_id,
+            escena_objetivo__escena_id=escena_id
+        ).select_related('escena_objetivo').first()
+
+        return Response({
+            "asignada": bool(persona_escena),
+            "objetivo_id": persona_escena.escena_objetivo.objetivo.id if persona_escena else None
+        }, status=status.HTTP_200_OK)
