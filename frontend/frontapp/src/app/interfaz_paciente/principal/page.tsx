@@ -10,7 +10,7 @@ const PacientePrincipal = () => {
     router.push('/paciente/ver_video');
   };
   const HandleOnClickObj = () => {
-    router.push('./objetivos');
+    router.push('./escenas');
   };
   return ( 
     <div className=" md:min-h-screen w-full flex items-start md:items-center justify-center md:justify-start p-0 pt-4 md:p-8  bg-[#f5af76]">

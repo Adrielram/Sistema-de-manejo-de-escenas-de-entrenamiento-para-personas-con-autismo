@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setIdEscena, setObjetivoId } from "../../../../slices/userSlice";
 import { RootState } from "../../../../store/store";
 import { useRouter } from 'next/navigation';
+import { handleClientScriptLoad } from "next/script";
 
 
 interface PaginatedResponse {
@@ -24,7 +25,8 @@ interface Escena {
   acento: string;
   complejidad: number;
   condiciones: string;
-  bloqueada: boolean; // Añadir nuevo campo
+  bloqueada: boolean;
+  mensaje_bloqueo?: string; // Nuevo campo
 }
 
 export default function Page() {
@@ -38,6 +40,7 @@ export default function Page() {
   //const [escenasFiltradas, setEscenasFiltradas] = useState<Escena[]>([]);
   const dispatch = useDispatch();
   const router = useRouter();
+
 
 
   /*const fetchEscenaPorBusqueda = async (searchQuery: string) => {
@@ -102,10 +105,21 @@ export default function Page() {
   useEffect(() => {
     const fetchEscenas = async (page: number = 1) => {
       try {
-        const response = await fetch(`${baseURL}get-escenas-list/?page=${page}&limit=6`);
+        // Obtener el username del estado de Redux
+        
+        if (!username) {
+          console.error("Username no encontrado en el estado de Redux.");
+          return;
+        }
+  
+        // Pasar el username como query parameter
+        const response = await fetch(
+          `${baseURL}get-escenas-list/?page=${page}&limit=6&username=${encodeURIComponent(username)}`
+        );
+        
         if (!response.ok) throw new Error(`Error: ${response.status}`);
         const data: PaginatedResponse = await response.json();
-    
+      
         const mappedResults = data.results.map((esc) => ({
           id: esc.id,
           nombre: esc.nombre,
@@ -114,12 +128,13 @@ export default function Page() {
           acento: esc.acento,
           complejidad: esc.complejidad,
           condiciones: esc.condiciones,
-          bloqueada: esc.bloqueada // Añadir campo bloqueada
+          bloqueada: esc.bloqueada,
+          mensaje_bloqueo: esc.mensaje_bloqueo
         }));
-    
+      
         setEscenas(mappedResults);
         setTotalPages(Math.ceil(data.count / 6));
-
+  
         // Seleccionar primera escena NO bloqueada
         const primeraEscenaNoBloqueada = mappedResults.find(esc => !esc.bloqueada);
         if (primeraEscenaNoBloqueada) {
@@ -153,7 +168,7 @@ export default function Page() {
   };
 
 
-const handleMostrarDescripcion = async (escenaP: number) => { 
+  const handleMostrarDescripcion = async (escenaP: number) => { 
     const escenaSeleccionada = escenas.find((escena) => escena.id === escenaP);
     
     if (escenaSeleccionada && !escenaSeleccionada.bloqueada) {
@@ -186,6 +201,7 @@ const handleMostrarDescripcion = async (escenaP: number) => {
     }
     router.push('./ver_video');
   };
+
 
   return (
     <div className="min-h-screen p-4 flex flex-col md:flex-row md:h-screen gap-6">

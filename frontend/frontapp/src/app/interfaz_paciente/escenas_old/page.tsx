@@ -7,7 +7,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setIdEscena, setObjetivoId } from "../../../../slices/userSlice";
 import { RootState } from "../../../../store/store";
 import { useRouter } from 'next/navigation';
-import { handleClientScriptLoad } from "next/script";
 
 
 interface PaginatedResponse {
@@ -25,7 +24,8 @@ interface Escena {
   acento: string;
   complejidad: number;
   condiciones: string;
-  bloqueada: boolean; // Añadir nuevo campo
+  bloqueada: boolean;
+  mensaje_bloqueo?: string; // Nuevo campo
 }
 
 export default function Page() {
@@ -129,7 +129,6 @@ export default function Page() {
         } else {
           setEscenaSeleccionada(null);
         }
-        
       } catch (err) {
         console.error(err);
       }
@@ -155,7 +154,7 @@ export default function Page() {
   };
 
 
-  const handleMostrarDescripcion = async (escenaP: number) => { 
+const handleMostrarDescripcion = async (escenaP: number) => { 
     const escenaSeleccionada = escenas.find((escena) => escena.id === escenaP);
     
     if (escenaSeleccionada && !escenaSeleccionada.bloqueada) {
@@ -189,10 +188,6 @@ export default function Page() {
     router.push('./ver_video');
   };
 
-  const handleSetObjetivo = () => {
-    dispatch(setObjetivoId({objetivoId: 3}));
-  };
-
   return (
     <div className="min-h-screen p-4 flex flex-col md:flex-row md:h-screen gap-6">
       <div className="w-full">
@@ -215,10 +210,6 @@ export default function Page() {
                 No se encontraron objetivos para mostrar.
               </div>
             )}
-            <button
-                onClick={handleSetObjetivo}
-                >Set Objetivo
-              </button>
       </div>
       <div className="hidden md:block w-0.5 bg-gray-200"></div>
         <div className="w-full md:w-[45%]">

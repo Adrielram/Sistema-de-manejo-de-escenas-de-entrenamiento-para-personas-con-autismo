@@ -14,7 +14,6 @@ urlpatterns = [
     path('verify-session/', verify_session, name='verify-session'),
     path('objetivos/', objetivos_list, name='listar_objetivos'),
     path('obtener_escenas_por_objetivo/', EscenasPorObjetivoListView.as_view(), name='listar_escenas_por_objetivo'),
-    path('buscar_objetivos/', ObjetivoBusquedaView.as_view(), name='objetivo-search'),
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
     path('objetivo/<int:objetivo_id>/', get_goal_data, name='get_goal_data'),
     path('get-user/', retrieve_user.as_view(), name='retrieve_user'),

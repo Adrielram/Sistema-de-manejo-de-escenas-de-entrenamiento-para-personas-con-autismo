@@ -11,7 +11,8 @@ interface Props {
     acento:string; 
     complejidad:number;
     condiciones:string;
-    bloqueada: boolean; // Nueva propiedad
+    bloqueada: boolean; // Nueva propiedad}
+    mensaje_bloqueo?: string;
   }>;
   onElementoClick: (id: number) => void;
   selectedElementoId: number | null;
@@ -112,6 +113,11 @@ function ScrollVerticalYHorizontalComponent({
                     </svg>
                   )}
                 </div>
+                {elemento.bloqueada && elemento.mensaje_bloqueo && (
+                    <span className="text-lg text-gray-500 mt-1">
+                      {elemento.mensaje_bloqueo}
+                    </span>
+                  )}
               </div>
             </li>
           ))}
