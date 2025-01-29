@@ -943,7 +943,7 @@ class GetPatientsNotInGroupView(generics.ListAPIView):
         return User.objects.filter(
             Q(role='paciente'),
             Q(personagrupos__isnull=True) | ~Q(dni__in=users_in_group)
-        )
+        ).distinct()
 
 
 
