@@ -242,67 +242,79 @@ const ManageGroupPage = () => {
   };
 
   return (
-    <div className="p-5 text-black min-h-screen flex justify-center">
-      <div className="max-w-3xl w-full">
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
+    <main className="flex-1 bg-gray-50 pt-16"> {/* Añadido pt-16 en lugar del div espaciador */}
+      <div className="container mx-auto px-4 lg:pl-64">
+        <div className="w-full max-w-7xl mx-auto">
+          <div className="bg-white rounded-lg shadow-sm p-6 max-w-3xl relative" style={{ zIndex: 0 }}> {/* Forzamos un z-index bajo */}
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                {error}
+              </div>
+            )}
+
+            <div className="mb-8">
+              <label htmlFor="groupSelect" className="block text-center text-sm mb-2">
+                Seleccionar grupo:
+              </label>
+              <div className="relative" style={{ zIndex: 1 }}> {/* z-index más bajo que el header */}
+                <GenericDropdown
+                  title={selectedGroup ? selectedGroup.name : "Seleccionar Grupo"}
+                  items={groups}
+                  onSelect={handleGroupSelect}
+                />
+              </div>
+            </div>
+
+            {selectedGroup && (
+              <div>
+                <div className="flex flex-wrap gap-5 justify-center mt-5">
+                  <div className="flex-1 min-w-[300px] sm:w-[48%] lg:w-[30%]">
+                    <div className="relative" style={{ zIndex: 1 }}> {/* z-index más bajo que el header */}
+                      <GenericDropdown
+                        title="Agregar Terapeuta"
+                        items={therapists}
+                        onSelect={handleAddTherapist}
+                      />
+                    </div>
+                    <AssociatedList
+                      title="Terapeutas Asociados"
+                      items={associatedTherapists}
+                      onRemove={handleRemoveTherapist}
+                    />
+                  </div>
+
+                  <div className="flex-1 min-w-[300px] sm:w-[48%] lg:w-[30%]">
+                    <div className="relative" style={{ zIndex: 1 }}> {/* z-index más bajo que el header */}
+                      <GenericDropdown
+                        title="Agregar Paciente"
+                        items={patients}
+                        onSelect={handleAddPatient}
+                      />
+                    </div>
+                    <AssociatedList
+                      title="Pacientes Asociados"
+                      items={associatedPatients}
+                      onRemove={handleRemovePatient}
+                    />
+                  </div>
+                </div>
+
+                <div className="save-button-container mt-5 text-center">
+                  <button
+                    className="px-4 py-2 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-colors"
+                    onClick={handleSaveChanges}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Guardando..." : "Guardar cambios"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-
-        <label htmlFor="groupSelect" className="block text-center text-sm mb-2">
-          Seleccionar grupo:
-        </label>
-        <GenericDropdown
-          title={selectedGroup ? selectedGroup.name : "Seleccionar Grupo"}
-          items={groups}
-          onSelect={handleGroupSelect}
-        />
-
-        {selectedGroup && (
-          <>
-            <div className="flex flex-wrap gap-5 justify-center mt-5">
-              <div className="flex-1 min-w-[300px] sm:w-[48%] lg:w-[30%]">
-                <GenericDropdown
-                  title="Agregar Terapeuta"
-                  items={therapists}
-                  onSelect={handleAddTherapist}
-                />
-                <AssociatedList
-                  title="Terapeutas Asociados"
-                  items={associatedTherapists}
-                  onRemove={handleRemoveTherapist}
-                />
-              </div>
-
-              <div className="flex-1 min-w-[300px] sm:w-[48%] lg:w-[30%]">
-                <GenericDropdown
-                  title="Agregar Paciente"
-                  items={patients}
-                  onSelect={handleAddPatient}
-                />
-                <AssociatedList
-                  title="Pacientes Asociados"
-                  items={associatedPatients}
-                  onRemove={handleRemovePatient}
-                />
-              </div>
-            </div>
-
-            <div className="save-button-container mt-5 text-center">
-              <button
-                className="px-4 py-2 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-colors"
-                onClick={handleSaveChanges}
-                disabled={isLoading}
-              >
-                {isLoading ? "Guardando..." : "Guardar cambios"}
-              </button>
-            </div>
-          </>
-        )}
+        </div>
       </div>
-    </div>
-  );
+    </main>
+);
 };
 
 export default ManageGroupPage;
