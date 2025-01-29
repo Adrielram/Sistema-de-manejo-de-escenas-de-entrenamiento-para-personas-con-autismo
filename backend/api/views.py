@@ -844,6 +844,36 @@ class GetGroupsPerUserView(generics.ListAPIView):
         grupos_ids = persona_grupo_qs.values_list('grupo_id', flat=True)
 
         return Grupo.objects.filter(id__in=grupos_ids)
+    
+
+class GetGroupsPerUserNotInView(generics.ListAPIView):
+    serializer_class = GrupoSerializer
+    pagination_class = DynamicPagination
+
+    def get_queryset(self):
+        username = self.request.query_params.get('username')
+
+        if not username:
+            raise NotFound("El parámetro 'username' es requerido.")
+        
+        # Obtener el usuario
+        user = User.objects.get(username=username)
+        
+        # Grupos en los que el usuario está asociado
+        grupos_con_usuario = Personagrupo.objects.filter(user_id=user).values_list('grupo_id', flat=True)
+        
+        # Grupos sin ninguna persona asociada
+        grupos_sin_personas = Grupo.objects.exclude(id__in=Personagrupo.objects.values_list('grupo_id', flat=True))
+        
+        # Grupos en los que el usuario no está asociado
+        grupos_sin_usuario = Grupo.objects.exclude(id__in=grupos_con_usuario)
+        
+        # Combinar ambos conjuntos: grupos sin usuario y grupos sin personas
+        queryset = Grupo.objects.filter(
+            Q(id__in=grupos_sin_usuario) | Q(id__in=grupos_sin_personas)
+        ).distinct()
+
+        return queryset
 
 class PatientsPerGroupView(generics.ListAPIView):
     serializer_class = PacienteSerializer
