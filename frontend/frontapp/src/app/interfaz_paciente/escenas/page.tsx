@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import ScrollVerticalYHorizontal from "../../../components/ScrollVerticalYHorizontal";
 import SearchBar from "../../../components/Buscador";
 import { useDispatch, useSelector } from 'react-redux';
-import { setIdEscena } from "../../../../slices/userSlice";
+import { setIdEscena, setObjetivoId } from "../../../../slices/userSlice";
 import { RootState } from "../../../../store/store";
 import { useRouter } from 'next/navigation';
 
@@ -32,7 +32,7 @@ export default function Page() {
   const [escenaSeleccionada, setEscenaSeleccionada] = useState<Escena | null>(null);
   //const [query, setQuery] = useState("");
   const baseURL = process.env.NEXT_PUBLIC_API_URL;
-  //const { username } = useSelector((state: RootState) => state.user);
+  const { username, escenaId } = useSelector((state: RootState) => state.user);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   //const [escenasFiltradas, setEscenasFiltradas] = useState<Escena[]>([]);
@@ -65,6 +65,39 @@ export default function Page() {
       console.error(err);
   };
   */
+
+  const verificarEscenaAsignada = async (escenaId: number) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/verificar-escena/?user_id=${username}&escena_id=${escenaId}`
+      );
+  
+      if (!response.ok) {
+        throw new Error(`Error en la respuesta del servidor: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      return {
+        asignada: data.asignada,
+        objetivo_id: data.objetivo_id,
+        error: null
+      };
+    } catch (error) {
+      console.error("Error al verificar la escena:", error);
+      return {
+        asignada: false,
+        objetivo_id: null,
+        error: error.message
+      };
+    }
+  };
+  
+
+  useEffect(() => {
+    if (escenaId) {
+      verificarEscenaAsignada(escenaId);
+    }
+  }, [escenaId]);
 
   useEffect(() => {
     const fetchEscenas = async (page: number = 1) => {
@@ -120,11 +153,29 @@ export default function Page() {
   };
 
 
-  const handleMostrarDescripcion = (escenaP: number) => { 
+const handleMostrarDescripcion = async (escenaP: number) => { 
     const escenaSeleccionada = escenas.find((escena) => escena.id === escenaP);
+    
     if (escenaSeleccionada && !escenaSeleccionada.bloqueada) {
       dispatch(setIdEscena({idEscena: escenaP}));
       setEscenaSeleccionada(escenaSeleccionada);
+      
+      try {
+        const result = await verificarEscenaAsignada(escenaSeleccionada.id);
+        
+        if (result.error) {
+          console.error("Error verificando la escena:", result.error);
+          return;
+        }
+  
+        if (result.asignada) {
+          dispatch(setObjetivoId({ objetivoId: result.objetivo_id }));
+        } else {
+          dispatch(setObjetivoId({ objetivoId: "" }));
+        }
+      } catch (error) {
+        console.error("Error al verificar la escena:", error);
+      }
     }
   }
 

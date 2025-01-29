@@ -35,7 +35,7 @@ urlpatterns = [
     path('comentarios/lista/', ComentariosListaAPIView.as_view(), name='comentarios-lista'),
     path('check-cookie/', check_cookie, name='check_cookie'),
     path('get-escenas-list/', EscenaView.as_view(), name='get-escenas-list'),
-    path('get-escenas-filtr-list/', EscenasFiltradasView.as_view(), name='get-escenas-filtr-list'),
+    path('verificar-escena/', VerificarEscenaAsignadaView.as_view(), name='verificar-escena'),
     ]
 
 urlpatterns += [path('', include(router.urls))]

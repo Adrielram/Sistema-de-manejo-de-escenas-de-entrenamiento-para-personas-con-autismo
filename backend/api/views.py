@@ -209,57 +209,62 @@ def obtener_objetivos_usuario(request):
 #         data = [{'id': item['id'], 'titulo': item['nombre'], 'descripcion': item['descripcion']} for item in serializer.data]
 #         return Response(data)
 
+class VerificarEscenaAsignadaView(APIView):
+    """
+    Verifica si un usuario tiene asignada una escena por algún objetivo.
+    """
+    
+    def get(self, request):
+        
+        user_id = request.GET.get('user_id')
+        user_id = obtener_dni(user_id)
+        escena_id = request.GET.get('escena_id')
+
+        # Validar que los parámetros sean proporcionados
+        if not user_id or not escena_id:
+            return Response(
+                {"asignada": False, "objetivo_id": None, "error": "Se requieren 'user_id' y 'escena_id'."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Buscar si la escena está asignada a un usuario por algún objetivo
+        persona_escena = PersonaObjetivoEscena.objects.filter(
+            user_id=user_id,
+            escena_objetivo__escena_id=escena_id
+        ).select_related('escena_objetivo').first()
+
+        return Response({
+            "asignada": bool(persona_escena),
+            "objetivo_id": persona_escena.escena_objetivo.objetivo.id if persona_escena else None
+        }, status=status.HTTP_200_OK)
+
 '''class EscenaView(generics.ListAPIView):
-    """
-    Vista para listar todas las escenas con todos sus datos.
-    Permite la búsqueda y el ordenamiento si es necesario.
-    """
-    queryset = Escena.objects.all()     #tal vez deberia traer desde PersonaObjetivoEscena
+    queryset = Escena.objects.all().prefetch_related(
+        Prefetch(
+            'escenaobjetivo_set',
+            queryset=EscenaObjetivo.objects.select_related('objetivo').prefetch_related(
+                Prefetch(
+                    'objetivo__escenaobjetivo_set',
+                    queryset=EscenaObjetivo.objects.all()
+                )
+            )
+        )
+    )
     serializer_class = EscenaSerializer
-    pagination_class = DynamicPagination 
+    pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
 
     def list(self, request, *args, **kwargs):
-        """
-        Personaliza la respuesta para devolver los datos en el formato deseado.
-        """
-        queryset = self.filter_queryset(self.get_queryset())  # Aplica filtros, búsqueda y ordenamiento
+        queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            # Personalización de los datos
-            data = [
-                {
-                    'id': item['id'],
-                    'descripcion': item['descripcion'],
-                    'idioma': item['idioma'],
-                    'acento': item['acento'],
-                    'complejidad': item['complejidad'],
-                    'condiciones': item['condiciones'],
-                    'link': item['link'],
-                    'nombre': item['nombre']
-                }
-                for item in serializer.data
-            ]
-            return self.get_paginated_response(data)
+            return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
-        data = [
-            {
-                'id': item['id'],
-                'descripcion': item['descripcion'],
-                'idioma': item['idioma'],
-                'acento': item['acento'],
-                'complejidad': item['complejidad'],
-                'condiciones': item['condiciones'],
-                'link': item['link'],
-                'nombre': item['nombre']
-            }
-            for item in serializer.data
-        ]
-        return Response(data)
-'''
+        return Response(serializer.data)
 
+'''
 class EscenaView(generics.ListAPIView):
     queryset = Escena.objects.all().prefetch_related(
         Prefetch(
@@ -347,7 +352,6 @@ class EscenaView(generics.ListAPIView):
             data_item['bloqueada'] = bloqueada
         
         return Response(serialized_data)
-
 
 
 class ObjetivoFilter(filters.FilterSet):
