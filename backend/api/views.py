@@ -430,6 +430,37 @@ class ObjetivoBusquedaView(generics.ListAPIView):
         data = [{'id': item['id'], 'titulo': item['nombre'], 'descripcion': item['descripcion']} for item in serializer.data]
         return Response(data)
 
+class EscenaFilter(filters.FilterSet):
+    query = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
+    
+    class Meta:
+        model = Escena
+        fields = ['query']
+
+class EscenaBusquedaView(generics.ListAPIView):
+    serializer_class = EscenaSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = EscenaFilter  
+    pagination_class = None
+
+    def get_queryset(self):
+        queryset = Escena.objects.all()
+        query = self.request.query_params.get('query', None)
+
+        # Filtrar por nombre o descripción si hay un query
+        if query:
+            queryset = queryset.filter(
+                nombre__icontains=query  # Filtra por nombre
+            ) | queryset.filter(
+                descripcion__icontains=query  # Filtra por descripción
+            )
+        
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)  # Serializa toda la información de las escenas
+        return Response(serializer.data)  # Retorna los datos serializados
 
 class EscenasPorObjetivoListView(generics.ListAPIView):
     serializer_class = EscenaSerializer
