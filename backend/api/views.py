@@ -1706,6 +1706,7 @@ class ActualizarNotaRespuestaView(APIView):
         except ValueError:
             return Response({"error": "El valor de 'nota' debe ser un número válido."}, status=status.HTTP_400_BAD_REQUEST)
         
+      
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -1759,6 +1760,23 @@ def habilitar_volver_a_realizar(request, revision_id, paciente_dni):
     revision_entry.volver_a_realizar = True
     revision_entry.save()
     return Response({"status": "ok", "volver_a_realizar": revision_entry.volver_a_realizar})
+
+
+@api_view(['PATCH'])
+def marcar_correcta(request, respuesta_id):
+    """Marca una respuesta como correcta (1)."""
+    respuesta = get_object_or_404(Respuesta, id=respuesta_id)
+    respuesta.correcta = True
+    respuesta.save()
+    return Response({"status": "ok", "mensaje": "Respuesta marcada como correcta", "correcta": respuesta.correcta})
+
+@api_view(['PATCH'])
+def marcar_incorrecta(request, respuesta_id):
+    """Marca una respuesta como incorrecta (0)."""
+    respuesta = get_object_or_404(Respuesta, id=respuesta_id)
+    respuesta.correcta = False
+    respuesta.save()
+    return Response({"status": "ok", "mensaje": "Respuesta marcada como incorrecta", "correcta": respuesta.correcta})
 
 
 

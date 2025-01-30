@@ -45,6 +45,7 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [comentarios, setComentarios] = useState<{ [key: number]: string }>({});
   const [nuevasNotas, setNuevasNotas] = useState<{ [key: number]: string }>({});
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -159,6 +160,32 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
     }
   };  
 
+  
+  const actualizarRespuesta = async (idRespuesta:number , esCorrecta: boolean) => {
+    try {
+      const url = `${baseUrl}respuesta/${idRespuesta}/${esCorrecta ? "correcta" : "incorrecta"}/`;
+      const response = await fetch(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al actualizar la respuesta");
+      }
+
+      setRespuestas((prevRespuestas) =>
+        prevRespuestas.map((respuesta) =>
+          respuesta.id === idRespuesta ? { ...respuesta, correcta: esCorrecta } : respuesta
+        )
+      );
+
+      alert(`Respuesta marcada como ${esCorrecta ? "Correcta" : "Incorrecta"}`);
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Hubo un problema al actualizar la respuesta");
+    }
+  };
+
   if (loading) return <p className="text-center text-gray-600">Cargando datos...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
 
@@ -192,6 +219,27 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
               <strong>Correcta:</strong> {" "}
               {respuesta.correcta !== null ? (respuesta.correcta ? "Sí" : "No") : "Pendiente"}              
             </p>
+            {/* Botones de Corrección */}
+            {rolUsuario === "terapeuta" && (
+              <>
+                {respuesta.correcta === null && (
+                  <div className="flex space-x-2 mt-2">
+                    <button
+                      onClick={() => actualizarRespuesta(respuesta.id, true)}
+                      className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                    >
+                      ✔️
+                    </button>
+                    <button
+                      onClick={() => actualizarRespuesta(respuesta.id, false)}
+                      className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    >
+                      ❌
+                    </button>
+                  </div>              
+                )}              
+              </>
+            )}
 
             <div className="mt-4">
               <h4 className="font-semibold text-gray-800">Comentarios:</h4>
