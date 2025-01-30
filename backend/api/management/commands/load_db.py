@@ -101,6 +101,17 @@ class Command(BaseCommand):
             direccion_id_dir=residencias[0]
         )
 
+        terapeuta2 = User.objects.create(
+            username="terapeuta2",
+            password=make_password("tera123"),
+            dni=31222334,
+            nombre="Terapeuta Dos",
+            fecha_nac=datetime(1985, 2, 15),
+            genero="F",
+            role="terapeuta",
+            direccion_id_dir=residencias[0]
+        )
+
         paciente = User.objects.create(
             username="paciente1",
             password=make_password("pac123"),

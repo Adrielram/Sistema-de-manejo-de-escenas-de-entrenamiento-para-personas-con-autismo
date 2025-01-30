@@ -87,9 +87,6 @@ export default function Therapist() {
       centers: selectedCentersToDisassociate.map(center => center.id),
     };
   
-    console.log('Datos a enviar:', therapistCenterData); // Para depuración
-    console.log('Datos a enviar 2:', JSON.stringify(therapistCenterData)); // Para depuración
-  
     try {
       const response = await fetch(`http://localhost:8000/api/disassociate_center/`, {
         method: "POST",

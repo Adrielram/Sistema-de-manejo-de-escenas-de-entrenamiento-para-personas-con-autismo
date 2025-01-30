@@ -12,7 +12,7 @@ interface Grupo {
   terapeuta: string;
 }
 
-interface Paciente {
+interface Persona {
   dni: string;
   nombre: string;
 }
@@ -20,10 +20,12 @@ interface Paciente {
 const CreateGroup: React.FC = () => {
   const { center, username } = useSelector((state: RootState) => state.user);
   const [nombre_grupo, setNombreGrupo] = useState("");
-  const [pacientesEnGrupo, setPacientesEnGrupo] = useState<Paciente[]>([]);
+  const [pacientesEnGrupo, setPacientesEnGrupo] = useState<Persona[]>([]);
   const [pacientesSeleccionados, setPacientesSeleccionados] = useState<Set<string>>(new Set());
   const router = useRouter();
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const [terapeutasEnGrupo, setTerapeutasEnGrupo] = useState<Persona[]>([]);
+  const [terapeutasSeleccionados, setTerapeutasSeleccionados] = useState<Set<string>>(new Set());
 
   // Lógica para traer los pacientes desde la URL
   useEffect(() => {
@@ -33,7 +35,7 @@ const CreateGroup: React.FC = () => {
         if (!response.ok) {
           throw new Error("Error al cargar los pacientes");
         }
-        const data: Paciente[] = await response.json();
+        const data: Persona[] = await response.json();
         setPacientesEnGrupo(data);
       } catch (error) {
         console.error("Error al traer los pacientes:", error);
@@ -44,9 +46,39 @@ const CreateGroup: React.FC = () => {
     fetchPacientes();
   }, []);
 
+
+  useEffect(() => {
+    const fetchTerapeutas = async () => {
+      try {
+        const response = await fetch(`${baseUrl}getTherapistsExcluding/${username}/`); // Cambia "/api/pacientes" por la URL correcta
+        if (!response.ok) {
+          throw new Error("Error al cargar los terapeutas");
+        }
+        const data: Persona[] = await response.json();
+        setTerapeutasEnGrupo(data);
+      } catch (error) {
+        console.error("Error al traer los pacientes:", error);
+        alert("Hubo un error al cargar los pacientes");
+      }
+    };
+    fetchTerapeutas();
+  }, [username]);
+
   // Manejar la selección de pacientes
   const handlePacienteSelection = (dni: string) => {
     setPacientesSeleccionados((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(dni)) {
+        newSet.delete(dni); // Quita el paciente si ya estaba seleccionado
+      } else {
+        newSet.add(dni); // Agrega el paciente si no estaba seleccionado
+      }
+      return newSet;
+    });
+  };
+
+  const handleTherapistSelection = (dni: string) => {
+    setTerapeutasSeleccionados((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(dni)) {
         newSet.delete(dni); // Quita el paciente si ya estaba seleccionado
@@ -77,6 +109,7 @@ const CreateGroup: React.FC = () => {
       const result = await create_group({
         ...grupoData,
         pacientes: Array.from(pacientesSeleccionados), // Pasar los DNIs seleccionados
+        terapeutas: Array.from(terapeutasSeleccionados),
       });
 
       if (result.success) {
@@ -120,7 +153,7 @@ const CreateGroup: React.FC = () => {
 
             <div>
               <label className="block font-semibold text-gray-700 mb-2">
-                Pacientes en el Grupo
+                Pacientes a Agregar
               </label>
               <div className="space-y-2">
                 {pacientesEnGrupo.map((paciente) => (
@@ -141,6 +174,29 @@ const CreateGroup: React.FC = () => {
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div> { terapeutasEnGrupo.length > 0 && (<><label className="block font-semibold text-gray-700 mb-2">
+              Terapeutas a Agregar
+            </label><div className="space-y-2">
+                {terapeutasEnGrupo.map((terapeuta) => (
+                  <div key={terapeuta.dni} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`paciente-${terapeuta.dni}`}
+                      checked={terapeutasSeleccionados.has(terapeuta.dni)}
+                      onChange={() => handleTherapistSelection(terapeuta.dni)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-[#3EA5FF]" />
+                    <label
+                      htmlFor={`paciente-${terapeuta.dni}`}
+                      className="ml-2 text-gray-800"
+                    >
+                      {terapeuta.nombre}
+                    </label>
+                  </div>
+                ))}
+              </div></>)}
+              
             </div>
           </div>
 

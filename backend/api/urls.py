@@ -54,6 +54,8 @@ urlpatterns = [
     path('get_groups_per_user/', GetGroupsPerUserView.as_view(), name='get_groups_per_user'),
     path('group/<int:group_id>/patients/', PatientsPerGroupView.as_view(), name='patients_per_group'),
     path('get_patients_per_group/', GetPatientsPerGroupView.as_view(), name='get_patients_per_group'),
+    path('get_therapists_per_group/', GetTherapistsPerGroupView.as_view(), name='get_therapists_per_group'),
+
     path('forms_per_user/', GetFormsPerUserView.as_view(), name='forms_per_user'),
     path('assesment/<int:pk>/delete/', DeleteAssesmentView.as_view(), name='delete_assesment'),
     path('comentarios/lista/', ComentariosListaAPIView.as_view(), name='comentarios-lista'),
@@ -72,10 +74,12 @@ urlpatterns = [
     path('update_group/<int:group_id>/', views.update_group, name='update_group'),
     path('personagrupo/<int:grupo_id>/<int:user_id>/', views.delete_person_group, name='delete_person_group'),
     path('get_patients_not_in_group/', GetPatientsNotInGroupView.as_view(), name='get_patients_not_in_group'),
+    path('get_therapists_not_in_group/', GetTherapistsNotInGroupView.as_view(), name='get_therapists_not_in_group'),
+
     path('get_patients/', GetPatientsView.as_view(), name='get_patients'),
 
     path('get_groups_per_user_not_in/', GetGroupsPerUserNotInView.as_view(), name='get_groups_per_user_not_in'),
-
+    path('getTherapistsExcluding/<str:username>/', GetTherapistsExcludingView.as_view(), name='getTherapistsExcluding'),
     ]
 
 urlpatterns += [path('', include(router.urls))]

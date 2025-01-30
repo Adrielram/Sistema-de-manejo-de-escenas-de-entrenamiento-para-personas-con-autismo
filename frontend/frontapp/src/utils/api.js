@@ -81,6 +81,7 @@ export const create_scene = async (nuevaEscena) => {
                 nombre_centro: nuevoGrupo.nombre_centro,
                 terapeuta: nuevoGrupo.terapeuta, // Agregamos el terapeuta al grupo
                 pacientes: nuevoGrupo.pacientes || [], // Incluimos pacientes si los hay
+                terapeutas: nuevoGrupo.terapeutas || [] // Incluimos terapeutas si los hay
             }),
         });
   

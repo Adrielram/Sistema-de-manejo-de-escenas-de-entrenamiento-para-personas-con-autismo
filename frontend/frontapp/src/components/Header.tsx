@@ -7,8 +7,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { clearUser } from '../../slices/userSlice';
 import { RootState } from "../../store/store"; // Asegúrate de importar el tipo correcto
 import {useRouter} from 'next/navigation';
+import React from 'react';
 
-export default function Header() {
+export default React.memo(function Header() {
   const dispatch = useDispatch();
   const router = useRouter();
   const { center } = useSelector((state: RootState) => state.user)
@@ -93,4 +94,4 @@ export default function Header() {
       </div>
     </nav>
   );
-}
+})

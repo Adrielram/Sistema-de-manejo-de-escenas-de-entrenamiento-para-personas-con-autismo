@@ -197,14 +197,9 @@ class GrupoUpdateView(UpdateAPIView):
         instance = self.get_object()
         grupo_id = instance.id
 
-        # Get all current therapists in the group
-        terapeutas = User.objects.filter(
-            personagrupos__grupo_id=grupo_id,
-            role='terapeuta'
-        )
 
         # Delete only the patients from the group, not the therapists
-        Personagrupo.objects.filter(grupo_id=grupo_id, user_id__role='paciente').delete()
+        Personagrupo.objects.filter(grupo_id=grupo_id).delete()
 
         # Handle the new patients
         pacientes = request.data.get('pacientes', [])
@@ -619,8 +614,23 @@ class CreateGroup(generics.CreateAPIView):
                         {"error": f"Paciente con DNI {paciente_dni} no existe."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
+                        # Agregar pacientes al grupo
 
-            # Agregar terapeutas al grupo
+            terapeutas = request.data.get('terapeutas', [])
+            for terapeuta_dni in terapeutas:
+                try:
+                    user = User.objects.get(dni=terapeuta_dni)
+                    Personagrupo.objects.create(
+                        user_id=user,
+                        grupo_id=grupo
+                    )
+                except User.DoesNotExist:
+                    return Response(
+                        {"error": f"Terapeuta con DNI {terapeuta_dni} no existe."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # Agregar terapeuta al grupo
             terapeuta = request.data.get('terapeuta')
             try:
                 user = User.objects.get(username=terapeuta)
@@ -921,6 +931,27 @@ class GetPatientsPerGroupView(generics.ListAPIView):
         return User.objects.filter(dni__in=users_dni, role='paciente')
     
 
+class GetTherapistsPerGroupView(generics.ListAPIView):
+    serializer_class = PacienteSerializer
+    pagination_class = DynamicPagination
+
+    def get_queryset(self):
+        group_id = self.request.query_params.get('group_id')
+        username = self.request.query_params.get('username')
+        try:
+            group = Grupo.objects.get(id=group_id)
+
+        except Grupo.DoesNotExist:
+            raise NotFound("El grupo especificado no existe.")
+
+        persona_grupo_qs = Personagrupo.objects.filter(grupo_id=group)            
+
+        users_dni = persona_grupo_qs.values_list('user_id__dni', flat=True)
+
+        return User.objects.filter(dni__in=users_dni, role='terapeuta').exclude(username=username)
+    
+
+
 class GetPatientsNotInGroupView(generics.ListAPIView):
     serializer_class = PacienteSerializer
 
@@ -945,8 +976,54 @@ class GetPatientsNotInGroupView(generics.ListAPIView):
             Q(personagrupos__isnull=True) | ~Q(dni__in=users_in_group)
         ).distinct()
 
+class GetTherapistsNotInGroupView(generics.ListAPIView):
+    serializer_class = PacienteSerializer
+
+    def get_queryset(self):
+        # Retrieve group_id from query parameters
+        group_id = self.request.query_params.get('group_id')
+
+        if not group_id:
+            raise ValidationError("El parámetro 'group_id' es obligatorio.")
+
+        try:
+            group = Grupo.objects.get(id=group_id)
+        except Grupo.DoesNotExist:
+            raise NotFound("El grupo especificado no existe.")
+
+        # Obtener los IDs de los usuarios que están en el grupo especificado
+        users_in_group = Personagrupo.objects.filter(grupo_id=group).values_list('user_id', flat=True)
+
+        # Filtrar usuarios con rol de 'paciente' que no están en el grupo específico o en ningún grupo
+        return User.objects.filter(
+            Q(role='terapeuta'),
+            Q(personagrupos__isnull=True) | ~Q(dni__in=users_in_group)
+        ).distinct()
 
 
+
+class GetTherapistsExcludingView(generics.ListAPIView):
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        User = get_user_model()
+        
+        return User.objects.filter(
+            role='terapeuta'
+        ).exclude(
+            username=username
+        )
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        data = [{
+            'dni': user.dni,
+            'nombre': user.nombre,
+            'fecha_nac': user.fecha_nac,
+            'genero': user.genero,
+            'patologia': user.patologia
+        } for user in queryset]
+        
+        return Response(data, status=status.HTTP_200_OK)
 class GetFormsPerUserView(generics.ListAPIView):
     serializer_class = FormularioSerializer
     pagination_class = DynamicPagination

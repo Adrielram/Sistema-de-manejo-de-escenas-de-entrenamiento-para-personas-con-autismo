@@ -83,9 +83,9 @@ const GroupsPage: React.FC = () => {
   }, [currentPage, data, fetchGroups]);
 
   const opProps = {
-    trashBin: true, 
-    editButton: true,
-    seePatientsButton: true,
+    editButton: false,
+    seePatientsButton: false,
+    trashBin: false
   }
 
   return (
@@ -102,7 +102,6 @@ const GroupsPage: React.FC = () => {
               options={opProps}
               img='/icon/silueta_de_multiples_usuarios.png'
               edit_path="/therapist/selection/group_of_patients/"
-              patients_list_path="/therapist/selection/group_of_patients/patients/"
               item_type="group"
               showImage={showImage}
               currentPage={currentPage}

@@ -76,7 +76,7 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
                 icon: <IoIosAdd />, 
               },
               { 
-                title: 'Grupos Disponibles', 
+                title: 'Otros Grupos', 
                 path: '/therapist/selection/group_of_patients/groups_available',
                 icon: <FaLayerGroup />,
                 
