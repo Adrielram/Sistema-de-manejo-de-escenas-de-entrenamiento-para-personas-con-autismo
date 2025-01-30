@@ -24,6 +24,7 @@ urlpatterns = [
     path('escenas/', EscenaListView.as_view(), name='escena-list'),
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
     #path('obtener-escenas/', obtener_escenas, name='obtener_escenas')
+    path('objetivos-ev-paciente/', views.objetivos_evaluacion_usuario, name='objetivos-ev-paciente'),
     path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
     path('get_not_associated_centers/<str:username>/', NotAssociatedCentersListView.as_view(), name='get_not_associated_centers'),
     path('get_associated_centers/<str:username>/', AssociatedCentersListView.as_view(), name='get_associated_centers'),

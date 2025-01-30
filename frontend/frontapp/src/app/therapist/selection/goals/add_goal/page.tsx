@@ -2,16 +2,16 @@
 import React, { useState } from "react";
 import SingleSearchSelectBox from "../../../../../components/SingleSearchSelectBox";
 import SearchSelectBox from "../../../../../components/SearchSelectBox";
-import SortableSearchSelectBox from "../../../../../components/SortableSearchSelectBox";
 import { useSelector } from 'react-redux';
 import { RootState } from "../../../../../../store/store";
-import { SceneWithOrder } from "../../../../../types"
+//import { SceneWithOrder } from "../../../../../types"
 
 const CreateObjetivo: React.FC = () => {
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [selectedSceneId, setSelectedSceneId] = useState<number | null>(null);
-  const [selectedScenes, setSelectedScenes] = useState<SceneWithOrder[]>([]);
+  //const [selectedScenes, setSelectedScenes] = useState<SceneWithOrder[]>([]);
+  const [selectedScenes, setSelectedScenes] = useState([]);
   const [selectedObjectives, setSelectedObjectives] = useState([]);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const { center, username } = useSelector((state: RootState) => state.user)
@@ -41,14 +41,23 @@ const CreateObjetivo: React.FC = () => {
     const responseData = await nameResponse.json();
     console.log("Response Data:", responseData); // For debugging
   
+    // const objetivoData = {
+    //   nombre: titulo,
+    //   descripcion: descripcion,
+    //   video_explicativo_id: selectedSceneId,
+    //   escenas: selectedScenes.map((item) => ({
+    //     id: item.id,
+    //     order: item.order !== null ? item.order : null // Usa el orden real o null si no es ordenable
+    //   })),
+    //   objetivos: selectedObjectives.map((item) => item.id),
+    //   centro_profesional: responseData.center_professional,
+    // };
+    
     const objetivoData = {
       nombre: titulo,
       descripcion: descripcion,
-      video_explicativo_id: selectedSceneId, // ID del video explicativo
-      escenas: selectedScenes.map((item, index) => ({ // IDs de las escenas seleccionadas con orden
-        id: item.id,
-        order: index
-      })),
+      video_explicativo_id: selectedSceneId,
+      escenas: selectedScenes.map((item) => item.id),
       objetivos: selectedObjectives.map((item) => item.id),
       centro_profesional: responseData.center_professional,
     };
@@ -130,7 +139,16 @@ const CreateObjetivo: React.FC = () => {
 
           </div>          
           <div>
-            <SortableSearchSelectBox
+            {/* <SortableSearchSelectBox
+              title="Buscar Escenas"
+              searchPlaceholder="Escribe el nombre de la escena..."
+              getItemLabel={(item) => item.nombre as string}
+              selectedItems={selectedScenes}
+              onSelectItems={setSelectedScenes}
+              apiUrl={`${baseUrl}escenas/`}
+            /> */}
+
+            <SearchSelectBox
               title="Buscar Escenas"
               searchPlaceholder="Escribe el nombre de la escena..."
               getItemLabel={(item) => item.nombre as string}

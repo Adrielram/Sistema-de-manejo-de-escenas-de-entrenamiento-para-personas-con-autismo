@@ -237,24 +237,24 @@ class Command(BaseCommand):
             complejidad=1,
             condicion= condicion1,
             link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
-            nombre="Escena 1",
-            descripcion = "Esta escena aclara la importancia de los abuelos"
+            nombre="Escena 7",
+            descripcion = "Esta escena es la de openai"
         )
         escena_8 = Escena.objects.create(
             idioma="Español",
             acento="neutro",
             complejidad=1,
             link="https://drive.google.com/file/d/1qzY31odKmd2FlrjU0VK4dkfezlzEcoaJ/preview",
-            nombre="Escena 2",
-            descripcion = "Esta escena muestra la vida en la fabella"
+            nombre="Escena 8",
+            descripcion = "Esta escena es la de futgame"
         )
         escena_9 = Escena.objects.create(
             idioma="Español",
             acento="neutro",
             complejidad=1,
             link="https://drive.google.com/file/d/1yPgHYRagTJXTqlrGhNkZDEy5zNY4-f77/preview",
-            nombre="Escena 3",
-            descripcion = "Esta escena recomienda comportamientos bajo"
+            nombre="Escena 9",
+            descripcion = "Esta escena es la del cartpole"
         )
 
         # Create objectives
@@ -271,7 +271,7 @@ class Command(BaseCommand):
             centro_profesional=centro_prof
         )
         objetivo_3 = Objetivo.objects.create(
-            nombre="Messi",
+            nombre="Este es el que funca (messi)",
             descripcion="Tenes que vencer a goku",
             escena=escena_5,
             centro_profesional=centro_prof
@@ -311,18 +311,15 @@ class Command(BaseCommand):
         )
         escena_obj_3 = EscenaObjetivo.objects.create(
             escena=escena_7,
-            objetivo=objetivo_3,
-            orden= 1
+            objetivo=objetivo_3
         )
         escena_obj_4 = EscenaObjetivo.objects.create(
             escena=escena_8,
-            objetivo=objetivo_3,
-            orden= 2
-            
+            objetivo=objetivo_3   
         )
         escena_obj_5 = EscenaObjetivo.objects.create(
             escena=escena_9,
-            objetivo=objetivo_3,
+            objetivo=objetivo_3
         )
         escena_obj_6 = EscenaObjetivo.objects.create(
             escena=escena_7,
@@ -341,11 +338,12 @@ class Command(BaseCommand):
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_3,
-
+            orden= 1,
         )
         persona_obj_esc_2 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_4,
+            orden= 2,
         )
         persona_obj_esc_3 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
@@ -367,7 +365,7 @@ class Command(BaseCommand):
             creado_por=terapeuta,
             fecha_creacion=datetime.now()
         )
-        Formulario.objects.create(
+        formulario_2= Formulario.objects.create(
             nombre="Formulario 2",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
@@ -403,6 +401,51 @@ class Command(BaseCommand):
             fecha_creacion=datetime.now()
         )
 
+        # Añadir preguntas al Formulario 1
+        pregunta_1 = Pregunta.objects.create(
+            formulario=formulario_1,
+            texto="¿Cuál es la capital de Francia?",
+            tipo="multiple-choice",
+            correcta="París"
+        )
+
+        Opcion.objects.create(pregunta=pregunta_1, texto="Madrid")
+        Opcion.objects.create(pregunta=pregunta_1, texto="Roma")
+        Opcion.objects.create(pregunta=pregunta_1, texto="París")
+        Opcion.objects.create(pregunta=pregunta_1, texto="Berlín")
+
+        pregunta_2 = Pregunta.objects.create(
+            formulario=formulario_1,
+            texto="Escribe una breve descripción sobre tu día.",
+            tipo="respuesta-corta"
+        )
+
+        pregunta_3 = Pregunta.objects.create(
+            formulario=formulario_1,
+            texto="Describe tus objetivos para la semana.",
+            tipo="respuesta-larga"
+        )
+
+        # Añadir preguntas al Formulario 2
+        pregunta_4 = Pregunta.objects.create(
+            formulario=formulario_2,
+            texto="¿Qué color es el cielo durante un día despejado?",
+            tipo="multiple-choice",
+            correcta="Azul"
+        )
+
+        Opcion.objects.create(pregunta=pregunta_4, texto="Rojo")
+        Opcion.objects.create(pregunta=pregunta_4, texto="Amarillo")
+        Opcion.objects.create(pregunta=pregunta_4, texto="Azul")
+        Opcion.objects.create(pregunta=pregunta_4, texto="Verde")
+
+        pregunta_5 = Pregunta.objects.create(
+            formulario=formulario_2,
+            texto="¿Cuál es tu plato favorito?",
+            tipo="respuesta-corta"
+        )
+
+
         # Create person-objective-evaluation
         PersonaObjetivoEvaluacion.objects.create(
             user_id=paciente,
@@ -410,6 +453,13 @@ class Command(BaseCommand):
             resultado="Progresando bien",
             progreso=75,
             evaluacion=formulario_1
+        )
+        PersonaObjetivoEvaluacion.objects.create(
+            user_id=paciente,
+            objetivo_id=objetivo_3,
+            resultado="Re mal",
+            progreso=0,
+            evaluacion=formulario_2
         )
 
         # Create group memberships

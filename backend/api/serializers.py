@@ -19,7 +19,8 @@ class ObjetivoSerializer(serializers.ModelSerializer):
         queryset=CentroProfesional.objects.all()
     )
     escenas = serializers.ListField(
-        child=serializers.DictField(),
+        #child=serializers.DictField(),
+        child=serializers.IntegerField(),
         required=False
     )
     objetivos = serializers.PrimaryKeyRelatedField(
@@ -38,11 +39,10 @@ class ObjetivoSerializer(serializers.ModelSerializer):
         
         objetivo = Objetivo.objects.create(**validated_data)
         
-        for escena in escenas_data:
+        for escena_id in escenas_data:
             EscenaObjetivo.objects.create(
                 objetivo=objetivo, 
-                escena_id=escena['id'],  # Extraer ID
-                orden=escena['order']    # Extraer orden
+                escena_id=escena_id,
             )
         
         for objetivo_previo in objetivos_data:
@@ -65,11 +65,10 @@ class ObjetivoSerializer(serializers.ModelSerializer):
             # Eliminar las relaciones existentes
             EscenaObjetivo.objects.filter(objetivo=instance).delete()
             # Crear las nuevas relaciones
-            for escena in escenas_data:
+            for escena_id in escenas_data:
                 EscenaObjetivo.objects.create(
                     objetivo=instance,
-                    escena_id=escena['id'],  # Extraer ID
-                    orden=escena['order']    # Extraer orden
+                    escena_id=escena_id,
                 )
 
         # Manejar las relaciones con 'objetivos'
