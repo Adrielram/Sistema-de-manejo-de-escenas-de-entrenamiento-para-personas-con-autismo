@@ -1648,6 +1648,11 @@ class RespuestaListCreateView(generics.CreateAPIView):
             # Verificación automática si aplica
             if pregunta.tipo == 'multiple-choice' and pregunta.correcta:
                 respuesta_data['correcta'] = (respuesta == pregunta.correcta)
+            
+            if respuesta_data['correcta']:
+                respuesta_data['nota'] = 10
+            else:
+                respuesta_data['nota'] = 2
 
         serializer.save()
 
@@ -1670,6 +1675,7 @@ class RespuestasFormularioView(APIView):
             "id": formulario.id,
             "titulo": formulario.nombre,
             "descripcion": formulario.descripcion,
+            "es_verificacion_automatica": formulario.es_verificacion_automatica,
         }
 
         # Serializar las respuestas

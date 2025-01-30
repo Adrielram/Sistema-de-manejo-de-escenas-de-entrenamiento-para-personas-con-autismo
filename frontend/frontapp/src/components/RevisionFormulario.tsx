@@ -24,6 +24,7 @@ interface Formulario {
   id: number;
   titulo: string;
   descripcion: string;
+  es_verificacion_automatica: boolean;
 }
 
 interface RespuestasFormularioProps {
@@ -56,11 +57,9 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
         if (!response.ok) {
           throw new Error("Error al cargar los datos del formulario.");
         }
-        const data = await response.json();
-        console.log("Data revision: ", JSON.stringify(data));
+        const data = await response.json();       
   
-        setFormulario(data.formulario);
-  
+        setFormulario(data.formulario);        
         // Obtener el último intento por fecha
         const ultimoIntentoId = data.respuestas.reduce((max, current) =>
           new Date(current.fecha_intento) > new Date(max.fecha_intento) ? current : max
@@ -71,7 +70,7 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
           (respuesta) => respuesta.intento_id === ultimoIntentoId
         );
   
-        setRespuestas(respuestasUltimoIntento);
+        setRespuestas(respuestasUltimoIntento);        
       } catch (err) {
         setError("Error al cargar los datos del formulario.");
       } finally {
@@ -188,9 +187,9 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
 
   if (loading) return <p className="text-center text-gray-600">Cargando datos...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
-
+  
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6 bg-white shadow rounded-lg">
       {formulario && (
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800">{formulario.titulo}</h1>
@@ -199,7 +198,7 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
       )}
 
       <ul className="space-y-4">
-        {respuestas.map((respuesta) => (          
+        {respuestas.map((respuesta) => (    
           <li
             key={respuesta.id}
             className="p-4 border border-gray-300 rounded-lg shadow-sm"
@@ -241,16 +240,19 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
               </>
             )}
 
-            <div className="mt-4">
-              <h4 className="font-semibold text-gray-800">Comentarios:</h4>
-              <ul className="list-disc list-inside">
-                {respuesta.comentarios.map((comentario) => (
-                  <li key={comentario.id} className="text-gray-600">
-                    {comentario.texto} (Fecha: {new Date(comentario.fecha).toLocaleString()})
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {(respuesta.comentarios.length > 0) && (
+              <div className="mt-4">                
+                  <h4 className="font-semibold text-gray-800">Comentarios:</h4>
+                  <ul className="list-disc list-inside">
+                    {respuesta.comentarios.map((comentario) => (
+                      <li key={comentario.id} className="text-gray-600">
+                        {comentario.texto} (Fecha: {new Date(comentario.fecha).toLocaleString()})
+                      </li>
+                    ))}
+                  </ul>             
+              </div>              
+            )}
+           
             {rolUsuario === "terapeuta" && (
               <>
                 <div className="mt-4">
