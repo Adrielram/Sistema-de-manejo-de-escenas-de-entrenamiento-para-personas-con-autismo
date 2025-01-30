@@ -169,40 +169,44 @@ export default function Page() {
         </div>
   
         <button
-          onClick={handleSubmit}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#f6512b",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px",
-            position: "fixed",
-            bottom: "20px",
-            right: "20px",
-          }}
-        >
-          Guardar Centro de Salud
-        </button>
+        onClick={handleSubmit}
+        style={{
+          padding: "10px 20px",
+          backgroundColor: "#f6512b",
+          color: "#fff",
+          border: "none",
+          borderRadius: "5px",
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
+          maxWidth: "200px", // Define un ancho máximo para el botón
+          width: "auto", // Permite que el tamaño del botón se ajuste automáticamente
+        }}
+      >
+        Guardar Centro de Salud
+      </button>
       </div>
   
       <style jsx>{`
-        @media (max-width: 600px) {
-          div > div {
-            width: 100% !important;
-          }
-          input {
-            width: 100%;
-          }
-          .form-container {
-            padding: 10px;
-          }
-          button {
-            width: 90%;
-            bottom: 10px;
-            right: 10px;
-          }
+      @media (max-width: 600px) {
+        div > div {
+          width: 100% !important;
         }
-      `}</style>
+        input {
+          width: 100%;
+        }
+        .form-container {
+          padding: 10px;
+        }
+        button {
+          width: auto; /* Ajusta el ancho automáticamente */
+          max-width: 90%; /* Define el máximo ancho del botón como porcentaje */
+          bottom: 10px;
+          right: 10px;
+          text-align: center; /* Centra el texto dentro del botón */
+        }
+      }
+    `}</style>
     </div>
   );
 }
