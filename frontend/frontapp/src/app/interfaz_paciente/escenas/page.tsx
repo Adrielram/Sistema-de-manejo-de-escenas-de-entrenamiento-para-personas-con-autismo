@@ -7,7 +7,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setIdEscena, setObjetivoId } from "../../../../slices/userSlice";
 import { RootState } from "../../../../store/store";
 import { useRouter } from 'next/navigation';
-import { handleClientScriptLoad } from "next/script";
 
 
 interface PaginatedResponse {
@@ -25,7 +24,7 @@ interface Escena {
   acento: string;
   complejidad: number;
   condiciones: string;
-  bloqueada: boolean; // Añadir nuevo campo
+  bloqueada: boolean;
 }
 
 export default function Page() {
@@ -177,16 +176,16 @@ export default function Page() {
 
 
   const handleMostrarDescripcion = (escenaP: number) => { 
-    // Buscar en escenasFiltradas si hay una búsqueda activa, sino en escenas
-    const escenaSeleccionada = query 
-      ? escenasFiltradas.find((escena) => escena.id === escenaP)
-      : escenas.find((escena) => escena.id === escenaP);
-    
-    if (escenaSeleccionada && !escenaSeleccionada.bloqueada) {
-      setEscenaSeleccionada(escenaSeleccionada);
-      dispatch(setIdEscena({idEscena: escenaP}));
-    }
-  };
+  // Buscar en escenasFiltradas si hay una búsqueda activa, sino en escenas
+  const escenaSeleccionada = query 
+    ? escenasFiltradas.find((escena) => escena.id === escenaP)
+    : escenas.find((escena) => escena.id === escenaP);
+  
+  if (escenaSeleccionada && !escenaSeleccionada.bloqueada) {
+    setEscenaSeleccionada(escenaSeleccionada);
+    dispatch(setIdEscena({idEscena: escenaP}));
+  }
+};
 
   const handleEscenaClick = () => {
     if (!escenaSeleccionada || escenaSeleccionada.bloqueada) {
@@ -198,16 +197,19 @@ export default function Page() {
 
 
   return (
-        <div className="min-h-screen p-4 flex flex-col gap-6">
+        <div className="flex flex-col min-h-screen p-4 gap-6">
           <div className="flex flex-col md:flex-row md:h-screen gap-4">
             <div className="w-full">
             <SearchBar onSearch={handleSearch} placeholder="Busca una escena..." />
             {query ? (
               <div className="mt-4">
                 <h2 className="text-lg font-bold mb-2">Resultados de la Búsqueda</h2>
-                <div className="max-h-full overflow-y-scroll bg-gray-50 rounded-lg shadow p-4">
+                <div className="max-h-[80vh] overflow-auto bg-gray-50 rounded-lg shadow p-4">
                   <ul className="space-y-2">
-                    {escenasFiltradas.map((escena) => (
+                  {!escenasFiltradas || escenasFiltradas.length === 0 ? (
+                      <p className="text-gray-500 text-center">No se encontraron resultados.</p>
+                    ) : (
+                    escenasFiltradas.map((escena) => (
                       <li
                         key={escena.id}
                         onClick={() => handleMostrarDescripcion(escena.id)}
@@ -233,7 +235,7 @@ export default function Page() {
                           </svg>
                         )}
                       </li>
-                    ))}
+                    )))}
                   </ul>
                 </div>
               </div>
