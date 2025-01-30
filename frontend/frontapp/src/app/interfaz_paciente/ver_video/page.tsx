@@ -20,6 +20,7 @@ interface Escena {
 const VerVideo = () => {
   const [videos, setVideos] = useState<string[]>([]);
   const [quizzes, setQuizzes] = useState({ formularios: [] });
+  const [quizStates, setQuizStates] = useState<Record<number, { revision: boolean; volver_a_realizar: boolean }>>({});
   const [escenas, setEscenas] = useState<Escena[]>([]);
   const [escena, setEscena] = useState<Escena>();
   const [poe, setPoe] = useState<number>();
@@ -56,6 +57,28 @@ const VerVideo = () => {
       verificarFormulario(completedFormId);
     }
   }, [completedFormId]);
+
+  useEffect(() => {
+    const fetchQuizStates = async () => {
+      const newQuizStates: Record<number, { revision: boolean; volver_a_realizar: boolean }> = {};
+      for (const quiz of quizzes.formularios) {
+        try {
+          const response = await fetch(`${baseUrl}obtener_estado_revision/?formulario_id=${quiz.id}&username=${username}`);
+          if (response.ok) {
+            const data = await response.json();
+            newQuizStates[quiz.id] = data;
+          }
+        } catch (error) {
+          console.error("Error obteniendo estado de revisión:", error);
+        }
+      }
+      setQuizStates(newQuizStates);
+    };
+
+    if (quizzes.formularios.length > 0) {
+      fetchQuizStates();
+    }
+  }, [quizzes, username]);
 
   useEffect(() => {
     const cargarFormulariosCompletados = async () => {
@@ -223,6 +246,10 @@ const VerVideo = () => {
     //setCompletedQuizzes((prev) => [...new Set([...prev, index])]);
   };
 
+  const handleQuizClickRevisar = (index: number) => {
+    router.push(`/interfaz_paciente/evaluacion/${index}?ver_revision=true`);
+  };
+
   const handleCompletarObjetivo = () => {
     marcarVideoComoVisto(poe);
     router.push('./principal');
@@ -278,38 +305,42 @@ const VerVideo = () => {
             {/* Quizzes */}
             {currentVideoIndex === videos.length - 1 && (
               <div className="flex flex-col items-center w-full max-w-sm bg-white border border-gray-300 rounded-lg shadow-md p-4 mt-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Quizzes Disponibles
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Quizzes Disponibles</h3>
                 <div className="flex flex-col space-y-2 w-full">
                   {quizzes?.formularios && quizzes.formularios.map((quiz) => (
                     <div key={quiz.id} className="flex items-center w-full">
                       <button
                         onClick={() => handleQuizClick(quiz.id)}
-                        disabled={completedQuizzes.includes(quiz.id)}
+                        disabled={!quizStates[quiz.id]?.volver_a_realizar && completedQuizzes.includes(quiz.id)}
                         className={`bg-blue-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all flex-grow 
-                          ${completedQuizzes.includes(quiz.id) ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-blue-600'}`}
+                          ${!quizStates[quiz.id]?.volver_a_realizar && completedQuizzes.includes(quiz.id) ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-blue-600'}`}
                       >
                         {quiz.nombre}
                       </button>
                       {completedQuizzes.includes(quiz.id) && (
-                        <span className="ml-2 text-green-500 font-semibold">
-                          ✔
-                        </span>
+                        <span className="ml-2 text-green-500 font-semibold">✔</span>
                       )}
+                      <button
+                        disabled={quizStates[quiz.id]?.revision}
+                        className={`ml-2 bg-yellow-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all 
+                          ${quizStates[quiz.id]?.revision ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-yellow-600'}`}
+                        onClick={() => handleQuizClickRevisar(quiz.id)}
+                      >
+                        Ver Revisión
+                      </button>
                     </div>
                   ))}
                 </div>
-                {allQuizzesCompleted && (
+                {completedQuizzes.length === quizzes.formularios.length && (
                   <button
-                    onClick={handleCompletarObjetivo}
+                    onClick={() => handleCompletarObjetivo()}
                     className="bg-green-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full mt-4"
                   >
                     Completar objetivo
                   </button>
                 )}
               </div>
-          )}
+            )}
         </div>
       </div>
       {/* Comentarios */}

@@ -29,7 +29,7 @@ const Revision = () => {
         }
 
         const data = await response.json()
-        setTerapeutaDni(Number(data.dni)) // Conversión de string a number
+        setTerapeutaDni(Number(data.dni))
       } catch (error) {
         console.error('Error al obtener el DNI del terapeuta:', error)
         setTerapeutaDni(null)
@@ -41,27 +41,83 @@ const Revision = () => {
     fetchDni()
   }, [username])
 
-  const formIdNumber = form_id ? Number(form_id) : null // Conversión de form_id a number
+  const formIdNumber = form_id ? Number(form_id) : null
 
   if (!formIdNumber || !patient_dni) {
-    return <div>Error: Faltan parámetros obligatorios</div>
+    return <div className="text-red-500 font-bold">Error: Faltan parámetros obligatorios</div>
   }
 
   if (loading) {
-    return <div>Cargando...</div>
+    return <div className="text-gray-500">Cargando...</div>
   }
 
   if (!terapeutaDni) {
-    return <div>Error: No se pudo obtener el DNI del terapeuta</div>
+    return <div className="text-red-500">Error: No se pudo obtener el DNI del terapeuta</div>
+  }
+
+  // 🔹 Función para habilitar la revisión
+  const habilitarRevision = async () => {
+    try {
+      const response = await fetch(`${baseUrl}habilitar-revision/${formIdNumber}/${patient_dni}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al habilitar la revisión')
+      }
+
+      alert('Revisión habilitada con éxito')
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Hubo un problema al habilitar la revisión')
+    }
+  }
+
+  // 🔹 Función para habilitar volver a realizar
+  const habilitarVolverARealizar = async () => {
+    try {
+      const response = await fetch(`${baseUrl}habilitar-volver-a-realizar/${formIdNumber}/${patient_dni}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al habilitar volver a realizar')
+      }
+
+      alert('Volver a realizar habilitado con éxito')
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Hubo un problema al habilitar volver a realizar')
+    }
   }
 
   return (
-    <RevisionFormulario
-      formularioId={formIdNumber}
-      pacienteDni={patient_dni}
-      terapeutaDni={terapeutaDni}
-      rolUsuario="terapeuta"
-    />
+    <div className="p-4">
+      <RevisionFormulario
+        formularioId={formIdNumber}
+        pacienteDni={patient_dni}
+        terapeutaDni={terapeutaDni}
+        rolUsuario="terapeuta"
+      />
+
+      {/* Botones con Tailwind */}
+      <div className="mt-6 flex justify-center space-x-4">
+        <button 
+          onClick={habilitarRevision} 
+          className="px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition duration-300"
+        >
+          Habilitar Revisión
+        </button>
+        <button 
+          onClick={habilitarVolverARealizar} 
+          className="px-4 py-2 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 transition duration-300"
+        >
+          Volver a Realizar
+        </button>
+      </div>
+    </div>
   )
 }
 

@@ -1734,24 +1734,47 @@ def registrar_respuesta(request):
 
 
 @api_view(['PATCH'])
-def habilitar_revision(request, revision_id):
-    revision_entry = FormularioPacienteRevision.objects.get(id=revision_id)
-    revision_entry.revision = True
+def habilitar_revision(request, revision_id, paciente_dni):
+    revision_entry = FormularioPacienteRevision.objects.filter(
+        formulario_id=revision_id, paciente_dni=paciente_dni
+    ).order_by('-fecha_respuesta').first()
+
+    if not revision_entry:
+        return Response({"error": "Revisión no encontrada"}, status=404)
+
+    revision_entry.revision = False
     revision_entry.save()
     return Response({"status": "ok", "revision": revision_entry.revision})
+
+
+@api_view(['PATCH'])
+def habilitar_volver_a_realizar(request, revision_id, paciente_dni):
+    revision_entry = FormularioPacienteRevision.objects.filter(
+        formulario_id=revision_id, paciente_dni=paciente_dni
+    ).order_by('-fecha_respuesta').first()
+
+    if not revision_entry:
+        return Response({"error": "Revisión no encontrada"}, status=404)
+
+    revision_entry.volver_a_realizar = True
+    revision_entry.save()
+    return Response({"status": "ok", "volver_a_realizar": revision_entry.volver_a_realizar})
+
+
 
 @api_view(['GET'])
 def obtener_estado_revision(request):
     formulario_id = request.query_params.get('formulario_id')
-    paciente_dni = request.query_params.get('paciente_dni')
+    username = request.query_params.get('username')
     
-    if not formulario_id or not paciente_dni:
+    if not formulario_id or not username:
         return Response({"error": "Los parámetros formulario_id y paciente_dni son requeridos."}, status=400)
 
     try:
-        revision_entry = FormularioPacienteRevision.objects.get(
+        paciente_dni = obtener_dni(username)
+        revision_entry = FormularioPacienteRevision.objects.filter(
             formulario_id=formulario_id, paciente_dni=paciente_dni
-        )
+        ).latest('fecha_respuesta')
         return Response({
             "revision": revision_entry.revision,
             "volver_a_realizar": revision_entry.volver_a_realizar
