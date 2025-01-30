@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -25,7 +26,7 @@ const ManageGroupPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        throw new Error('Error: ${response.status}');
       }
 
       const data = await response.json();
@@ -62,7 +63,7 @@ const ManageGroupPage = () => {
         });
 
         if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
+          throw new Error('Error: ${response.status}');
         }
 
         const data = await response.json();
@@ -140,7 +141,7 @@ const ManageGroupPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/personagrupo/${selectedGroup.id}/${therapistId}/`,
+        'http://localhost:8000/api/personagrupo/${selectedGroup.id}/${therapistId}/',
         {
           method: "DELETE",
           credentials: "include",
@@ -148,7 +149,7 @@ const ManageGroupPage = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        throw new Error('Error: ${response.status}');
       }
 
       // Actualizar el estado local inmediatamente
@@ -174,7 +175,7 @@ const ManageGroupPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/personagrupo/${selectedGroup.id}/${patientId}/`,
+        'http://localhost:8000/api/personagrupo/${selectedGroup.id}/${patientId}/',
         {
           method: "DELETE",
           credentials: "include",
@@ -182,7 +183,7 @@ const ManageGroupPage = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        throw new Error('Error: ${response.status}');
       }
 
       // Actualizar el estado local inmediatamente
@@ -211,7 +212,7 @@ const ManageGroupPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/update_group_associations/${selectedGroup.id}/`,
+        'http://localhost:8000/api/update_group_associations/${selectedGroup.id}/',
         {
           method: "PUT",
           credentials: "include",
@@ -226,7 +227,7 @@ const ManageGroupPage = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        throw new Error('Error: ${response.status}');
       }
 
       // Recargar los datos del grupo después de guardar

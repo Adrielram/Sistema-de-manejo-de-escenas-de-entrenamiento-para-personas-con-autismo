@@ -25,7 +25,7 @@ export default function HealthCenterPage() {
 
     const fetchHealthCenters = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/health_centers/`, {
+        const response = await fetch('http://localhost:8000/api/health_centers/', {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -56,7 +56,7 @@ export default function HealthCenterPage() {
   }, []);
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/health_centers/${id}/delete/`, {
+      const response = await fetch('http://localhost:8000/api/health_centers/${id}/delete/', {
         method: "DELETE",
         credentials: "include", // Uso del token solo para eliminación
       });
@@ -78,7 +78,7 @@ export default function HealthCenterPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
         {healthCenters.map((center) => (
           <div key={center.id} className="flex flex-col items-center">
-            <div className={`w-48 h-48 rounded-lg shadow-md ${center.color} flex items-center justify-center`}>
+            <div className={"w-48 h-48 rounded-lg shadow-md ${center.color} flex items-center justify-center"}>
               <Image
                 src="/icon/hospital.png"
                 alt="Centro de Salud"
