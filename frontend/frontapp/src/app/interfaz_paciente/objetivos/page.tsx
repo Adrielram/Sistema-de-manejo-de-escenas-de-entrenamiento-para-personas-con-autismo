@@ -31,46 +31,42 @@ interface Escena {
 export default function Page() {
   const [escenas, setEscenas] = useState<Escena[]>([]);
   const [escenaSeleccionada, setEscenaSeleccionada] = useState<Escena | null>(null);
-  //const [query, setQuery] = useState("");
+  const [query, setQuery] = useState("");
   const baseURL = process.env.NEXT_PUBLIC_API_URL;
-  const { username, escenaId } = useSelector((state: RootState) => state.user);
+  const { username, idEscena, objetivoId } = useSelector((state: RootState) => state.user);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  //const [escenasFiltradas, setEscenasFiltradas] = useState<Escena[]>([]);
+  const [escenasFiltradas, setEscenasFiltradas] = useState<Escena[]>([]);
   const dispatch = useDispatch();
   const router = useRouter();
 
 
-  /*const fetchEscenaPorBusqueda = async (searchQuery: string) => {
+  const fetchEscenaPorBusqueda = async (searchQuery: string) => {
     try {
       const response = await fetch(
-        `${baseURL}buscar_objetivos/?username=${username}&query=${encodeURIComponent(searchQuery)}`
+        `${baseURL}buscar_objetivos/?username=${username}&query=${searchQuery}`
       );
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
       const data: Escena[] = await response.json();
       setEscenasFiltradas(data);
-  
-      // Seleccionar automáticamente el primer objetivo encontrado
-      if (data.length > 0) {
-        const esc = data[0]
-        setEscenaSeleccionada(esc);
-        dispatch(setIdEscena({ idEscena: esc.id})); 
-      } else {
-        // Si no hay resultados en la página, limpiar selección
+
+      if (data.length = 0) {
         setEscenaSeleccionada(null);
         setEscenas([])
       }
+
     } catch (err) {
       console.error(err);
+    };
   };
-  */
+  
 
-  const verificarEscenaAsignada = async (escenaId: number) => {
+  const verificarEscenaAsignada = async (idEscena: number) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/verificar-escena/?user_id=${username}&escena_id=${escenaId}`
+        `http://localhost:8000/api/verificar-escena/?user_id=${username}&escena_id=${idEscena}`
       );
   
       if (!response.ok) {
@@ -95,18 +91,17 @@ export default function Page() {
   
 
   useEffect(() => {
-    if (escenaId) {
-      verificarEscenaAsignada(escenaId);
-    }
-  }, [escenaId]);
-
-  useEffect(() => {
     const fetchEscenas = async (page: number = 1) => {
       try {
-        const response = await fetch(`${baseURL}get-escenas-list/?page=${page}&limit=6`);
+        if (!username) {
+          console.error("Username no encontrado en el estado de Redux.");
+          return;
+        }
+  
+        const response = await fetch(`${baseURL}get-escenas-list/?page=${page}&limit=6&username=${username}`);
         if (!response.ok) throw new Error(`Error: ${response.status}`);
         const data: PaginatedResponse = await response.json();
-    
+  
         const mappedResults = data.results.map((esc) => ({
           id: esc.id,
           nombre: esc.nombre,
@@ -115,29 +110,55 @@ export default function Page() {
           acento: esc.acento,
           complejidad: esc.complejidad,
           condiciones: esc.condiciones,
-          bloqueada: esc.bloqueada // Añadir campo bloqueada
+          bloqueada: esc.bloqueada,
+          mensaje_bloqueo: esc.mensaje_bloqueo
         }));
-    
+  
         setEscenas(mappedResults);
         setTotalPages(Math.ceil(data.count / 6));
+        setEscenaSeleccionada(null);
 
-        // Seleccionar primera escena NO bloqueada
-        const primeraEscenaNoBloqueada = mappedResults.find(esc => !esc.bloqueada);
-        if (primeraEscenaNoBloqueada) {
-          setEscenaSeleccionada(primeraEscenaNoBloqueada); 
-          dispatch(setIdEscena({ idEscena: primeraEscenaNoBloqueada.id }));
-        } else {
-          setEscenaSeleccionada(null);
-        }
-        
       } catch (err) {
         console.error(err);
       }
     };
     fetchEscenas(currentPage);
-  }, [currentPage, baseURL, dispatch]);
+  }, [currentPage, baseURL, dispatch, username]);
+  
+  useEffect(() => {
+    let isMounted = true;
+  
+    const checkEscena = async () => {
+      if (!idEscena) {
+        dispatch(setObjetivoId({ objetivoId: "" }));
+        return;
+      }
+  
+      try {
+        const result = await verificarEscenaAsignada(idEscena);
+        if (!isMounted) return;
+  
+        if (result.asignada) {
+          dispatch(setObjetivoId({ objetivoId: result.objetivo_id }));
+        } else {
+          dispatch(setObjetivoId({ objetivoId: "" }));
+        }
+      } catch (error) {
+        console.error("Error verificando escena:", error);
+        if (isMounted) {
+          dispatch(setObjetivoId({ objetivoId: "" }));
+        }
+      }
+    };
+  
+    checkEscena();
+  
+    return () => {
+      isMounted = false;
+    };
+  }, [idEscena, dispatch]);
 
-  /*const handleSearch = (searchQuery: string) => {
+  const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
   
     if (searchQuery.trim() === "") {
@@ -148,38 +169,21 @@ export default function Page() {
   
     fetchEscenaPorBusqueda(searchQuery);
   };
-  */
+  
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
 
 
-  const handleMostrarDescripcion = async (escenaP: number) => { 
+  const handleMostrarDescripcion = (escenaP: number) => { 
     const escenaSeleccionada = escenas.find((escena) => escena.id === escenaP);
     
     if (escenaSeleccionada && !escenaSeleccionada.bloqueada) {
-      dispatch(setIdEscena({idEscena: escenaP}));
       setEscenaSeleccionada(escenaSeleccionada);
-      
-      try {
-        const result = await verificarEscenaAsignada(escenaSeleccionada.id);
-        
-        if (result.error) {
-          console.error("Error verificando la escena:", result.error);
-          return;
-        }
-  
-        if (result.asignada) {
-          dispatch(setObjetivoId({ objetivoId: result.objetivo_id }));
-        } else {
-          dispatch(setObjetivoId({ objetivoId: "" }));
-        }
-      } catch (error) {
-        console.error("Error al verificar la escena:", error);
-      }
+      dispatch(setIdEscena({idEscena: escenaP}));
     }
-  }
+  };
 
   const handleEscenaClick = () => {
     if (!escenaSeleccionada || escenaSeleccionada.bloqueada) {
@@ -189,38 +193,33 @@ export default function Page() {
     router.push('./ver_video');
   };
 
-  const handleSetObjetivo = () => {
-    dispatch(setObjetivoId({objetivoId: 3}));
-  };
 
   return (
-    <div className="min-h-screen p-4 flex flex-col md:flex-row md:h-screen gap-6">
-      <div className="w-full">
-            <h2 className="text-xl font-bold mb-2 mt-6">Escenas</h2>
-            {escenas.length > 0 ? (
-              <ScrollVerticalYHorizontal
-                elementos={escenas}
-                onElementoClick={handleMostrarDescripcion}
-                selectedElementoId={escenaSeleccionada ? escenaSeleccionada.id : null}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                bloqueadaMap={escenas.reduce((acc, esc) => {
-                  acc[esc.id] = esc.bloqueada;
-                  return acc;
-                }, {} as Record<number, boolean>)}
-              />
-            ) : (
-              <div className="text-center py-4 text-gray-500">
-                No se encontraron objetivos para mostrar.
-              </div>
-            )}
-            <button
-                onClick={handleSetObjetivo}
-                >Set Objetivo
-              </button>
-      </div>
-      <div className="hidden md:block w-0.5 bg-gray-200"></div>
+    <div className="min-h-screen p-4 flex flex-col gap-6">
+      <SearchBar onSearch={handleSearch} placeholder="Busca una escena..." />
+      <div className="flex flex-col md:flex-row md:h-screen gap-4">
+        <div className="w-full">
+          <h2 className="text-xl font-bold mb-2 mt-6">Escenas</h2>
+          {escenas.length > 0 ? (
+            <ScrollVerticalYHorizontal
+              elementos={escenas}
+              onElementoClick={handleMostrarDescripcion}
+              selectedElementoId={escenaSeleccionada ? escenaSeleccionada.id : null}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              bloqueadaMap={escenas.reduce((acc, esc) => {
+                acc[esc.id] = esc.bloqueada;
+                return acc;
+              }, {} as Record<number, boolean>)}
+            />
+          ) : (
+            <div className="text-center py-4 text-gray-500">
+              No se encontraron objetivos para mostrar.
+            </div>
+          )}
+        </div>
+        <div className="hidden md:block w-0.5 bg-gray-200"></div>
         <div className="w-full md:w-[45%]">
           {escenaSeleccionada ? (
             <>
@@ -247,18 +246,22 @@ export default function Page() {
                   <li className="text-gray-700">
                     <span className="font-semibold text-gray-900">Condiciones:</span> {escenaSeleccionada.condiciones}
                   </li>
+                  <li className="text-gray-700">
+                    <span className="font-semibold text-gray-900">idEscena:</span> {idEscena}
+                    <span className="font-semibold text-gray-900"> Objetivoid:</span> {objetivoId}
+                  </li>
                 </ul>
                 <button
-                onClick={handleEscenaClick}
-                disabled={!escenaSeleccionada || escenaSeleccionada.bloqueada}
-                className={`mt-6 w-full font-medium py-2 px-4 rounded-lg transition-colors duration-200 ${
-                  escenaSeleccionada?.bloqueada 
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
-              >
-                {escenaSeleccionada?.bloqueada ? 'Escena bloqueada' : 'Ver video'}
-              </button>
+                  onClick={handleEscenaClick}
+                  disabled={!escenaSeleccionada || escenaSeleccionada.bloqueada}
+                  className={`mt-6 w-full font-medium py-2 px-4 rounded-lg transition-colors duration-200 ${
+                    escenaSeleccionada?.bloqueada 
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {escenaSeleccionada?.bloqueada ? 'Escena bloqueada' : 'Ver video'}
+                </button>
               </div>
             </>
           ) : (
@@ -267,7 +270,7 @@ export default function Page() {
             </div>
           )}
         </div>
-
+      </div>
     </div>
   );
 }
