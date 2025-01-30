@@ -22,8 +22,8 @@ const PacientePrincipal = () => {
         <div className="flex flex-col items-center text-center">
           <button onClick={HandleOnClick} className="focus:outline-none">
             <svg className="w-40 h-40 md:w-64 md:h-64 lg:w-80 lg:h-80" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-              <circle cx="50" cy="50" r="48" fill="#2563eb" />
-              <path d="M35 25L35 75L75 50L35 25Z" fill="currentColor" className="text-black" />
+              <circle cx="50" cy="50" r="48" fill="#2563eb" stroke="black" strokeWidth="2" />
+              <path d="M35 25L35 75L75 50L35 25Z" fill="currentColor" className="text-zinc-200" />
             </svg>
           </button>
           <p className="text-black text-lg md:text-2xl lg:text-3xl font-bold mt-4">Ver video recomendado</p>
