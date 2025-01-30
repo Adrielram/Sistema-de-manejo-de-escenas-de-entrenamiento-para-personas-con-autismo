@@ -479,6 +479,47 @@ def crear_escena(request):
             {"error": f"Error inesperado: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+    
+from django.db.models import Avg
+
+@api_view(['GET'])
+def objetivos_evaluacion_usuario(request):
+    user_id = request.query_params.get('user_id')
+    if not user_id:
+        return Response({"error": "Falta el parámetro 'user_id'."}, status=400)
+
+    # Agrupar por objetivo_id y calcular el progreso promedio
+    objetivos_agrupados = (
+        PersonaObjetivoEvaluacion.objects
+        .filter(user_id=user_id)
+        .values('objetivo_id')  # Solo obtenemos los IDs para la agrupación
+        .annotate(
+            progreso_promedio=Avg('progreso')
+        )
+    )
+
+    if not objetivos_agrupados:
+        return Response({"error": "No se encontraron objetivos para este usuario."}, status=404)
+
+
+    # Serializar los datos agrupados manualmente
+    data = []
+    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=[o['objetivo_id'] for o in objetivos_agrupados])}
+    for obj in objetivos_agrupados:
+        # Luego, en el bucle:
+        objetivo = objetivos_map[obj['objetivo_id']]
+        data.append({
+            "id": obj['objetivo_id'],  # ID del objetivo
+            "progreso": obj['progreso_promedio'],  # Progreso promedio
+            "objetivo_id": {  # Datos relacionados del objetivo
+                "id": objetivo.id,
+                "nombre": objetivo.nombre,
+                "descripcion": objetivo.descripcion
+            },
+            "resultado": None  # Puedes ajustar esto según tus necesidades
+        })
+
+    return Response(data)
 
 class NameFilter(filters.FilterSet):
     nombre = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
