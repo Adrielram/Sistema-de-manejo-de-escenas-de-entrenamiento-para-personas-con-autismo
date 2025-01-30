@@ -10,6 +10,7 @@ import { GoGoal } from "react-icons/go"; // <GoGoal /> icono de objetivo
 import { IoIosAdd } from "react-icons/io"; // <IoIosAdd /> icono de agregar
 
 import { SideNavItem } from './types';
+import { FaLayerGroup } from "react-icons/fa";
 
 export const SIDENAV_ITEMS: SideNavItem[] = [
     {
@@ -73,6 +74,12 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
                 title: 'Agregar Grupo', 
                 path: '/therapist/selection/group_of_patients/add_group',
                 icon: <IoIosAdd />, 
+              },
+              { 
+                title: 'Grupos Disponibles', 
+                path: '/therapist/selection/group_of_patients/groups_available',
+                icon: <FaLayerGroup />,
+                
               },
             ],
         },

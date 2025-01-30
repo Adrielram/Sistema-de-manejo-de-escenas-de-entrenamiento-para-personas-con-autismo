@@ -67,7 +67,6 @@ export const create_scene = async (nuevaEscena) => {
     }
   };
 
-
   export const create_group = async (nuevoGrupo) => {
     try {
         const addGroupUrl = `${baseUrl}create_patient_group/`;    
@@ -80,6 +79,8 @@ export const create_scene = async (nuevaEscena) => {
             body: JSON.stringify({
                 nombre_grupo: nuevoGrupo.nombre_grupo,
                 nombre_centro: nuevoGrupo.nombre_centro,
+                terapeuta: nuevoGrupo.terapeuta, // Agregamos el terapeuta al grupo
+                pacientes: nuevoGrupo.pacientes || [], // Incluimos pacientes si los hay
             }),
         });
   
@@ -97,5 +98,4 @@ export const create_scene = async (nuevaEscena) => {
             error: error.message || 'Error desconocido'
         };
     }
-  };
- 
+};

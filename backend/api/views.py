@@ -182,6 +182,12 @@ class EscenaUpdateView(UpdateAPIView):
     queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
 
+    
+class GetPatientsView(generics.ListAPIView):
+    queryset = User.objects.filter(role='paciente')
+    serializer_class = PacienteSerializer
+
+
 class GrupoUpdateView(UpdateAPIView):
     queryset = Grupo.objects.all()
     serializer_class = GrupoSerializer
@@ -189,30 +195,80 @@ class GrupoUpdateView(UpdateAPIView):
     def update(self, request, *args, **kwargs):
         # Get the Grupo instance to update
         instance = self.get_object()
+        grupo_id = instance.id
 
-        # Update the Grupo fields (e.g., nombre)
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+        # Get all current therapists in the group
+        terapeutas = User.objects.filter(
+            personagrupos__grupo_id=grupo_id,
+            role='terapeuta'
+        )
 
-        # Handle the pacientes (patients) data
-        pacientes = request.data.get('pacientes', [])  # List of patient IDs (DNIs)
-        grupo_id = instance.id  # ID of the updated Grupo
+        # Delete only the patients from the group, not the therapists
+        Personagrupo.objects.filter(grupo_id=grupo_id, user_id__role='paciente').delete()
 
- 
-
-        # Add new Personagrupo entries for the selected patients
+        # Handle the new patients
+        pacientes = request.data.get('pacientes', [])
         for paciente_id in pacientes:
             try:
-                user = User.objects.get(dni=paciente_id)  # Get the User by DNI
-                Personagrupo.objects.create(user_id=user, grupo_id=instance)
+                user = User.objects.get(dni=paciente_id)
+                # Only add if they're actually a patient
+                if user.role == 'paciente':
+                    Personagrupo.objects.create(
+                        user_id=user,
+                        grupo_id=instance
+                    )
             except User.DoesNotExist:
                 return Response(
                     {"error": f"User with DNI {paciente_id} does not exist."},
-                    status=status.HTTP_400_BAD_REQUEST,
+                    status=status.HTTP_400_BAD_REQUEST
                 )
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # Add any new therapists from the request
+        new_terapeutas = request.data.get('terapeutas', [])
+        for terapeuta_id in new_terapeutas:
+            try:
+                user = User.objects.get(dni=terapeuta_id)
+                # Only add if they're actually a therapist
+                if user.role == 'terapeuta':
+                    Personagrupo.objects.create(
+                        user_id=user,
+                        grupo_id=instance
+                    )
+            except User.DoesNotExist:
+                return Response(
+                    {"error": f"Therapist with DNI {terapeuta_id} does not exist."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Prepare response data
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        response_data = dict(serializer.data)
+
+        response_data["terapeutas"] = [
+            {
+                "id": terapeuta.dni,
+                "nombre": terapeuta.nombre,
+                "dni": terapeuta.dni
+            }
+            for terapeuta in User.objects.filter(
+                personagrupos__grupo_id=instance,
+                role='terapeuta'
+            )
+        ]
+        response_data["pacientes"] = [
+            {
+                "id": paciente.dni,
+                "nombre": paciente.nombre,
+                "dni": paciente.dni
+            }
+            for paciente in User.objects.filter(
+                personagrupos__grupo_id=instance,
+                role='paciente'
+            )
+        ]
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def get_goal_data(request, objetivo_id):
@@ -532,27 +588,79 @@ class AssociateCenterView(generics.CreateAPIView):
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
 
-
-
 class CreateGroup(generics.CreateAPIView):
     serializer_class = PatientGroupSerializer
 
     def create(self, request, *args, **kwargs):
         try:
-            # Obtener la instancia del centro de salud
+            # Obtener el centro de salud por su nombre
             center_name = request.data.get('nombre_centro')
             center = Centrodesalud.objects.get(nombre=center_name)
 
             # Crear el grupo
             nombre_grupo = request.data.get('nombre_grupo')
-            print("Nombre grupo ",nombre_grupo)
             grupo = Grupo.objects.create(
                 nombre=nombre_grupo,
-                centrodesalud_id=center  # Usar la instancia directamente
+                centrodesalud_id=center
             )
 
-            # Serializar el grupo para la respuesta
+            # Agregar pacientes al grupo
+            pacientes = request.data.get('pacientes', [])
+            for paciente_dni in pacientes:
+                try:
+                    user = User.objects.get(dni=paciente_dni)
+                    if user.role == 'paciente':  # Solo agregar si el usuario es un paciente
+                        Personagrupo.objects.create(
+                            user_id=user,
+                            grupo_id=grupo
+                        )
+                except User.DoesNotExist:
+                    return Response(
+                        {"error": f"Paciente con DNI {paciente_dni} no existe."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # Agregar terapeutas al grupo
+            terapeuta = request.data.get('terapeuta')
+            try:
+                user = User.objects.get(username=terapeuta)
+                if user.role == 'terapeuta':  # Solo agregar si el usuario es un terapeuta
+                    Personagrupo.objects.create(
+                        user_id=user,
+                        grupo_id=grupo
+                    )
+            except User.DoesNotExist:
+                return Response(
+                    {"error": f"Terapeuta con DNI {terapeuta} no existe."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Serializar la respuesta
             grupo_serialized = PatientGroupSerializer(grupo).data
+
+            # Agregar información de terapeutas y pacientes al resultado
+            grupo_serialized["terapeutas"] = [
+                {
+                    "id": terapeuta.dni,
+                    "nombre": terapeuta.nombre,
+                    "dni": terapeuta.dni
+                }
+                for terapeuta in User.objects.filter(
+                    personagrupos__grupo_id=grupo,
+                    role='terapeuta'
+                )
+            ]
+            grupo_serialized["pacientes"] = [
+                {
+                    "id": paciente.dni,
+                    "nombre": paciente.nombre,
+                    "dni": paciente.dni
+                }
+                for paciente in User.objects.filter(
+                    personagrupos__grupo_id=grupo,
+                    role='paciente'
+                )
+            ]
 
             return Response({
                 'message': 'Grupo creado exitosamente',
@@ -560,19 +668,20 @@ class CreateGroup(generics.CreateAPIView):
             }, status=status.HTTP_201_CREATED)
 
         except Centrodesalud.DoesNotExist:
-            return Response({
-                'error': f'Centro de salud con nombre "{center_name}" no encontrado.'
-            }, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": f'Centro de salud con nombre "{center_name}" no encontrado.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         except IntegrityError:
-            return Response({
-                'error': f'El grupo con nombre "{request.data.get("nombre_grupo")}" ya existe.'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"error": f'El grupo con nombre "{request.data.get("nombre_grupo")}" ya existe.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         except Exception as e:
-            return Response({
-                'error': str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         
 class DisassociateCenterView(generics.CreateAPIView):
     serializer_class = ProfesionalCentroSerializer
@@ -735,6 +844,36 @@ class GetGroupsPerUserView(generics.ListAPIView):
         grupos_ids = persona_grupo_qs.values_list('grupo_id', flat=True)
 
         return Grupo.objects.filter(id__in=grupos_ids)
+    
+
+class GetGroupsPerUserNotInView(generics.ListAPIView):
+    serializer_class = GrupoSerializer
+    pagination_class = DynamicPagination
+
+    def get_queryset(self):
+        username = self.request.query_params.get('username')
+
+        if not username:
+            raise NotFound("El parámetro 'username' es requerido.")
+        
+        # Obtener el usuario
+        user = User.objects.get(username=username)
+        
+        # Grupos en los que el usuario está asociado
+        grupos_con_usuario = Personagrupo.objects.filter(user_id=user).values_list('grupo_id', flat=True)
+        
+        # Grupos sin ninguna persona asociada
+        grupos_sin_personas = Grupo.objects.exclude(id__in=Personagrupo.objects.values_list('grupo_id', flat=True))
+        
+        # Grupos en los que el usuario no está asociado
+        grupos_sin_usuario = Grupo.objects.exclude(id__in=grupos_con_usuario)
+        
+        # Combinar ambos conjuntos: grupos sin usuario y grupos sin personas
+        queryset = Grupo.objects.filter(
+            Q(id__in=grupos_sin_usuario) | Q(id__in=grupos_sin_personas)
+        ).distinct()
+
+        return queryset
 
 class PatientsPerGroupView(generics.ListAPIView):
     serializer_class = PacienteSerializer
@@ -804,7 +943,7 @@ class GetPatientsNotInGroupView(generics.ListAPIView):
         return User.objects.filter(
             Q(role='paciente'),
             Q(personagrupos__isnull=True) | ~Q(dni__in=users_in_group)
-        )
+        ).distinct()
 
 
 
@@ -874,6 +1013,8 @@ class GetUnreachedGoalsView(generics.ListAPIView):
 
         return unreached_goals
 
+
+    
 @api_view(['GET'])
 def buscar_padres(request):
     query = request.GET.get('query', '').strip()
