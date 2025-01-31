@@ -148,10 +148,12 @@ class OpcionSerializer(serializers.ModelSerializer):
 
 class PreguntaSerializer(serializers.ModelSerializer):
     opciones = OpcionSerializer(many=True, required=False)
+    nombre_escena = serializers.SerializerMethodField(read_only=True)
+
 
     class Meta:
         model = Pregunta
-        fields = ['id', 'texto', 'tipo', 'opciones', 'correcta']
+        fields = ['id', 'texto', 'tipo', 'opciones', 'correcta', 'escena', 'nombre_escena']
 
     def create(self, validated_data):
         opciones_data = validated_data.pop('opciones', [])
@@ -159,14 +161,16 @@ class PreguntaSerializer(serializers.ModelSerializer):
         for opcion_data in opciones_data:
             Opcion.objects.create(pregunta=pregunta, **opcion_data)
         return pregunta
+    def get_nombre_escena(self, obj):        
+        return obj.escena.nombre if obj.escena else None
 
 
 class FormularioSerializer(serializers.ModelSerializer):
     preguntas = PreguntaSerializer(many=True)
-
+    
     class Meta:
         model = Formulario
-        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'preguntas']
+        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'preguntas', 'objetivo']
 
     def create(self, validated_data):
         preguntas_data = validated_data.pop('preguntas')

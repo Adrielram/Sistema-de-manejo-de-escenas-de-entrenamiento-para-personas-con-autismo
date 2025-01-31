@@ -108,6 +108,18 @@ const ResponderForm = ({ idform, onSubmitted = () => {}}) => {
               {pregunta.texto}
             </label>
 
+            
+            {(pregunta.nombre_escena ? (
+              <label className="block font-medium text-gray-800 mb-2">
+                Escena relacionada: {pregunta.nombre_escena}
+              </label>
+            ) : (
+              <label className="block font-medium text-gray-800 mb-2">
+                Pregunta General
+              </label>
+            ))}          
+            
+
             {pregunta.tipo === "multiple-choice" ? (
               <div>
                 {pregunta.opciones.map((opcion, index) => (
