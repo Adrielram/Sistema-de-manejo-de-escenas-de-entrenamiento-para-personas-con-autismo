@@ -1796,15 +1796,33 @@ def obtener_estado_revision(request):
 
     try:
         paciente_dni = obtener_dni(username)
-        revision_entry = FormularioPacienteRevision.objects.filter(
-            formulario_id=formulario_id, paciente_dni=paciente_dni
-        ).latest('fecha_respuesta')
-        return Response({
-            "revision": revision_entry.revision,
-            "volver_a_realizar": revision_entry.volver_a_realizar
-        })
-    except FormularioPacienteRevision.DoesNotExist:
-        return Response({"revision": False})
+
+        # Verificar si existen respuestas para el paciente en ese formulario
+        tiene_respuestas = Respuesta.objects.filter(
+            pregunta__formulario_id=formulario_id,
+            paciente__dni=paciente_dni
+        ).exists()
+
+        # Obtener la última revisión
+        try:
+            revision_entry = FormularioPacienteRevision.objects.filter(
+                formulario_id=formulario_id, paciente_dni=paciente_dni
+            ).latest('fecha_respuesta')
+
+            return Response({
+                "revision": revision_entry.revision,
+                "volver_a_realizar": revision_entry.volver_a_realizar,
+                "tiene_respuestas": tiene_respuestas
+            })
+        except FormularioPacienteRevision.DoesNotExist:
+            return Response({
+                "revision": False,
+                "volver_a_realizar": False,
+                "tiene_respuestas": tiene_respuestas
+            })
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 @api_view(['GET'])
 def verificar_formulario_completado(request, formulario_id, username):
@@ -1988,3 +2006,73 @@ class CargarPersonaObjetivoEvaluacion(APIView):
                 {'error': 'Ocurrió un error al crear el registro.', 'details': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+from django.shortcuts import get_object_or_404
+from decimal import Decimal
+from collections import defaultdict
+from django.db.models import Max
+
+from datetime import date
+
+def calcular_edad(fecha_nac):
+    hoy = date.today()
+    return hoy.year - fecha_nac.year - ((hoy.month, hoy.day) < (fecha_nac.month, fecha_nac.day))
+
+def guardar_registro_evaluacion(username, formulario_id):
+    paciente = get_object_or_404(User, username=username)
+    formulario = get_object_or_404(Formulario, id=formulario_id)
+    objetivo = formulario.objetivo
+    #patologias = paciente.patologias.all()
+    edad_paciente = calcular_edad(paciente.fecha_nac)
+    # Obtener todas las preguntas del formulario con su escena asociada
+    preguntas_por_escena = defaultdict(list)
+    preguntas = Pregunta.objects.filter(formulario=formulario).select_related("escena")
+
+    for pregunta in preguntas:
+        preguntas_por_escena[pregunta.escena].append(pregunta)
+
+    registros = []
+    for escena, preguntas in preguntas_por_escena.items():
+        # Obtener la última respuesta de cada pregunta
+        ultimas_respuestas = []
+        for pregunta in preguntas:
+            ultima_respuesta = Respuesta.objects.filter(
+                paciente=paciente, pregunta=pregunta
+            ).order_by('-fecha_intento').first()
+            
+            if ultima_respuesta:
+                ultimas_respuestas.append(ultima_respuesta)
+
+
+        total_preguntas = len(ultimas_respuestas)
+        correctas = sum(1 for respuesta in ultimas_respuestas if respuesta.correcta)
+        resultado_escena = (correctas / total_preguntas) * 100 if total_preguntas > 0 else 0
+        
+        registro = RegistroEvaluacion.objects.create(
+            objetivo=objetivo,
+            paciente=paciente,
+            edad= edad_paciente, 
+            escena=escena,
+            complejidad=escena.complejidad,
+            resultado=Decimal(resultado_escena),
+        )
+        #registro.patologias.set(patologias)
+        registros.append(registro)
+
+    return registros
+
+
+
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+@api_view(["POST"])
+def calcular_nota_api(request):
+    username = request.data.get("username")
+    formulario_id = request.data.get("formulario_id")  # Se usa el formulario enviado
+
+    registros = guardar_registro_evaluacion(username, formulario_id)
+
+    return Response({"mensaje": "Evaluación guardada", "total_registros": len(registros)})
+

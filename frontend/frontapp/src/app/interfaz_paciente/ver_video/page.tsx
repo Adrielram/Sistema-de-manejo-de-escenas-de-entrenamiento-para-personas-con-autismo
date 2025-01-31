@@ -20,7 +20,7 @@ interface Escena {
 const VerVideo = () => {
   const [videos, setVideos] = useState<string[]>([]);
   const [quizzes, setQuizzes] = useState({ formularios: [] });
-  const [quizStates, setQuizStates] = useState<Record<number, { revision: boolean; volver_a_realizar: boolean }>>({});
+  const [quizStates, setQuizStates] = useState<Record<number, { revision: boolean; volver_a_realizar: boolean; tiene_respuestas: boolean }>>({});
   const [escenas, setEscenas] = useState<Escena[]>([]);
   const [escena, setEscena] = useState<Escena>();
   const [poe, setPoe] = useState<number>();
@@ -60,7 +60,7 @@ const VerVideo = () => {
 
   useEffect(() => {
     const fetchQuizStates = async () => {
-      const newQuizStates: Record<number, { revision: boolean; volver_a_realizar: boolean }> = {};
+      const newQuizStates: Record<number, { revision: boolean; volver_a_realizar: boolean; tiene_respuestas: boolean }> = {};
       for (const quiz of quizzes.formularios) {
         try {
           const response = await fetch(`${baseUrl}obtener_estado_revision/?formulario_id=${quiz.id}&username=${username}`);
@@ -255,8 +255,7 @@ const VerVideo = () => {
     router.push('./principal');
   };
 
-  const allQuizzesCompleted = completedQuizzes.length === (quizzes?.formularios?.length || 0);
-
+  const allQuizzesCompleted = completedQuizzes.length === (quizzes?.formularios?.length || 0);  
 
   return (
     <div className="flex flex-col px-4 py-4 min-h-screen">
@@ -321,9 +320,9 @@ const VerVideo = () => {
                         <span className="ml-2 text-green-500 font-semibold">✔</span>
                       )}
                       <button
-                        disabled={quizStates[quiz.id]?.revision}
+                        disabled={quizStates[quiz.id]?.revision || !quizStates[quiz.id]?.tiene_respuestas}
                         className={`ml-2 bg-yellow-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all 
-                          ${quizStates[quiz.id]?.revision ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-yellow-600'}`}
+                          ${quizStates[quiz.id]?.revision || !quizStates[quiz.id]?.tiene_respuestas ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-yellow-600'}`}
                         onClick={() => handleQuizClickRevisar(quiz.id)}
                       >
                         Ver Revisión

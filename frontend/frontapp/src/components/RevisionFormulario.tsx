@@ -22,7 +22,7 @@ interface Respuesta {
 
 interface Formulario {
   id: number;
-  titulo: string;
+  nombre: string;
   descripcion: string;
   es_verificacion_automatica: boolean;
 }
@@ -185,14 +185,13 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
     }
   };
 
-  if (loading) return <p className="text-center text-gray-600">Cargando datos...</p>;
-  if (error) return <p className="text-center text-red-500">{error}</p>;
-  
+  if (loading) return <p className="text-center text-gray-600">Cargando datos...</p>; 
+  console.log("Formulario: "+JSON.stringify(respuestas));
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow rounded-lg">
       {formulario && (
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">{formulario.titulo}</h1>
+          <h1 className="text-2xl font-bold text-black">{formulario.nombre}</h1>
           <p className="text-gray-600">{formulario.descripcion}</p>
         </div>
       )}

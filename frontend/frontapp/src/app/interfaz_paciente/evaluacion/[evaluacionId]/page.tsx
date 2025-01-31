@@ -49,11 +49,7 @@ export default function Evaluacion() {
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-black text-2xl font-bold mb-4">
-        Evaluación ID: {evaluacionId}
-      </h1>
-
+    <div className="p-6">    
       {verRevision ? (
         <RevisionFormulario
         formularioId={formIdNumber} 

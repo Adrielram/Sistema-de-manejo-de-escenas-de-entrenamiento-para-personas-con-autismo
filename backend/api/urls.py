@@ -103,6 +103,9 @@ urlpatterns = [
     path('personagrupo/<int:grupo_id>/<int:user_id>/', views.delete_person_group, name='delete_person_group'),
     path('get_patients_not_in_group/', GetPatientsNotInGroupView.as_view(), name='get_patients_not_in_group'),
 
+    #IA
+    path('calcular_nota_api/', calcular_nota_api, name='calcular_nota_api'),
+
 ]
 
 urlpatterns += [path('', include(router.urls))]
