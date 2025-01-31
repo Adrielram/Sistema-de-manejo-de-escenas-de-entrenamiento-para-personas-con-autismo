@@ -105,27 +105,66 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'residencia', 'padreACargo']
 
+class CondicionSerializer(serializers.ModelSerializer):
+    objetivo = serializers.CharField(source='objetivo.nombre', read_only=True) 
+    objetivo_id = serializers.PrimaryKeyRelatedField(queryset=Objetivo.objects.all(), source='objetivo')
+
+    class Meta:
+        model = Condicion
+        fields = ['id', 'edad', 'objetivo', 'objetivo_id', 'fecha']
 
 class EscenaSerializer(serializers.ModelSerializer):
+    condicion = CondicionSerializer(required=False, allow_null=True)
+
     class Meta:
         model = Escena
-        fields = ['id', 'idioma', 'acento', 'condiciones', 'complejidad', 'link', 'nombre', 'descripcion']
+        fields = ['id', 'idioma', 'acento', 'condicion', 'complejidad', 'link', 'nombre', 'descripcion']
+
+    def create(self, validated_data):
+        # Extract condicion data if present
+        condicion_data = validated_data.pop('condicion', None)
+        
+        # Create Escena instance
+        escena = Escena.objects.create(**validated_data)
+        
+        # Create associated Condicion if data is provided
+        if condicion_data:
+            Condicion.objects.create(escena=escena, **condicion_data)
+        
+        return escena
 
     def update(self, instance, validated_data):
-        """
-        Custom update method to handle null conditions
-        """
-        # Update each field from validated data
+        # Extract condicion data if present
+        condicion_data = validated_data.pop('condicion', None)
+        
+        # Update Escena fields
         instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.idioma = validated_data.get('idioma', instance.idioma)
         instance.acento = validated_data.get('acento', instance.acento)
-        instance.condiciones = validated_data.get('condiciones', instance.condiciones)
         instance.complejidad = validated_data.get('complejidad', instance.complejidad)
         instance.link = validated_data.get('link', instance.link)
         
         # Save the updated instance
         instance.save()
+        
+        # Handle Condicion update
+        if condicion_data:
+            # If a condicion already exists, update it
+            if hasattr(instance, 'condicion'):
+                condicion = instance.condicion
+                for attr, value in condicion_data.items():
+                    setattr(condicion, attr, value)
+                condicion.save()
+            # If no condicion exists, create a new one
+            else:
+                Condicion.objects.create(escena=instance, **condicion_data)
+        # If condicion_data is None and a condicion exists, delete it
+        elif hasattr(instance, 'condicion'):
+            instance.condicion.delete()
+        
         return instance
+
+
 
 class CentroSaludSerializer(serializers.ModelSerializer):  
     class Meta:

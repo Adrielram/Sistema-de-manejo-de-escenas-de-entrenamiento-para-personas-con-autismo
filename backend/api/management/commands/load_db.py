@@ -162,10 +162,9 @@ class Command(BaseCommand):
         )
 
         # Create condiciones
-        condicion1 = Condicion.objects.create(
-            edad= 10
+        condicion2 = Condicion.objects.create(
+            edad=15
         )
-
 
         # Create scenes
         escena_1 = Escena.objects.create(
@@ -224,7 +223,7 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            condicion= condicion1,
+            condicion=condicion2,
             link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
             nombre="Escena 7",
             descripcion = "Esta escena es la de openai"
@@ -658,5 +657,14 @@ class Command(BaseCommand):
             user_id=paciente3,
             patologia_id=Patologia.objects.get(nombre="Trastorno de Procesamiento Sensorial")
         )
+
+        condicion1 = Condicion.objects.create(
+            edad= 10,
+            fecha= datetime(2021, 1, 1),
+            escena_id= escena_2.id,
+            objetivo_id= objetivo_3.id,
+        )
+        escena_9.condicion = condicion1
+        escena_9.save()
 
         self.stdout.write(self.style.SUCCESS('Successfully loaded sample data'))

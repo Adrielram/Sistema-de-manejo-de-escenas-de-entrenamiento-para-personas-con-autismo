@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setIdEscena, setObjetivoId } from "../../../../slices/userSlice";
 import { RootState } from "../../../../store/store";
 import { useRouter } from 'next/navigation';
+import EscenaInfo from "../../../components/Escena_info";
 
 interface PaginatedResponse {
   count: number;
@@ -20,6 +21,13 @@ interface Objetivo {
   descripcion: string;
 }
 
+interface Condicion {
+  id: number;
+  edad?: number;
+  fecha?: string;
+  objetivo?: string;
+}
+
 interface Escena {
   id: number;
   nombre: string;
@@ -27,10 +35,11 @@ interface Escena {
   idioma: string;
   acento: string;
   complejidad: number;
-  condiciones: string;
+  condicion: Condicion;
   bloqueada: boolean;
   mensaje_bloqueo?: string;
 }
+
 
 export default function Page() {
   const [objetivos, setObjetivos] = useState<Objetivo[]>([]);
@@ -112,7 +121,7 @@ export default function Page() {
           idioma: esc.idioma,
           acento: esc.acento,
           complejidad: esc.complejidad,
-          condiciones: esc.condiciones,
+          condicion: esc.condicion,
           bloqueada: esc.bloqueada,
           mensaje_bloqueo: esc.mensaje_bloqueo
         }));
@@ -205,50 +214,7 @@ export default function Page() {
         )}
       </div>
 
-      {/* Panel derecho - Información de la escena */}
-      <div className="w-full md:w-[45%]">
-        {selectedEscena ? (
-          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 h-full">
-            <ul className="space-y-4">
-              <li className="text-gray-700">
-                <span className="font-semibold">Nombre:</span> {selectedEscena.nombre}
-              </li>
-              <li className="text-gray-700">
-                <span className="font-semibold">Descripción:</span> {selectedEscena.descripcion}
-              </li>
-              <li className="text-gray-700">
-                <span className="font-semibold">Complejidad:</span> {selectedEscena.complejidad}
-              </li>
-              <li className="text-gray-700">
-                <span className="font-semibold">Idioma:</span> {selectedEscena.idioma}
-              </li>
-              <li className="text-gray-700">
-                <span className="font-semibold">Acento:</span> {selectedEscena.acento}
-              </li>
-              <li className="text-gray-700">
-                <span className="font-semibold">Condiciones:</span> {selectedEscena.condiciones}
-              </li>
-            </ul>
-            <button
-              onClick={handleVerVideo}
-              disabled={selectedEscena.bloqueada}
-              className={`mt-4 w-full py-2 px-4 rounded-lg ${
-                selectedEscena.bloqueada 
-                  ? 'bg-gray-300 cursor-not-allowed' 
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
-            >
-              {selectedEscena.bloqueada ? 'Escena bloqueada' : 'Ver video'}
-            </button>
-          </div>
-        ) : (
-          <div className="text-center py-6 text-gray-500 h-full flex items-center justify-center">
-            {selectedObjetivo 
-              ? "Selecciona una escena para ver los detalles" 
-              : "Selecciona un objetivo para ver sus escenas"}
-          </div>
-        )}
-      </div>
+      <EscenaInfo escena={selectedEscena} escenaHandleClick={handleVerVideo} />
     </div>
   );
 }

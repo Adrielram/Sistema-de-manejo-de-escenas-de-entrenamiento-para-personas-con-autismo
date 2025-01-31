@@ -61,6 +61,7 @@ urlpatterns = [
     path('buscar-escenas/', EscenaBusquedaView.as_view(), name='buscar-escenas'),
     path('get-objetivos-list/', ObjetivoListView.as_view(), name='objetivos-list'),
     path('escenas-por-objetivo/', EscenasPorObjetivoView.as_view(), name='escenas-por-objetivo'),
+    path('verificar-condiciones/', VerificarCondicionesView.as_view(), name='verificar-condiciones'),
 ]
 
 

@@ -22,6 +22,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters
 from django.db import transaction
 from django.db.models import Prefetch
+from django.utils import timezone
+
 
 from rest_framework.exceptions import NotFound
 
@@ -670,6 +672,78 @@ class EscenaView(generics.ListAPIView):
             return self.get_paginated_response(serialized_data)
 
         # (Mismo proceso para caso sin paginación)
+
+class VerificarCondicionesView(APIView):
+    def get(self, request):
+        username = request.query_params.get('username')
+        escena_id = request.query_params.get('escena_id')
+
+        if not username or not escena_id:
+            return Response({'error': 'Username y escena_id son requeridos'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            dni = obtener_dni(username)
+            try:
+                user = User.objects.get(dni=dni)
+            except User.DoesNotExist:
+                return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+            
+            try:
+                escena = Escena.objects.get(id=escena_id)
+            except Escena.DoesNotExist:
+                return Response({'error': 'Escena no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+            
+            condicion = escena.condicion if hasattr(escena, 'condicion') else None
+
+            if not condicion:
+                return Response({
+                    'cumple_condiciones': {
+                        'edad': True,
+                        'fecha': True,
+                        'objetivo': True
+                    }
+                }, status=status.HTTP_200_OK)
+
+            # Verificación de edad
+            cumple_edad = True
+            if condicion.edad and user.fecha_nac:
+                today = timezone.now()
+                age = today.year - user.fecha_nac.year - ((today.month, today.day) < (user.fecha_nac.month, user.fecha_nac.day))
+                cumple_edad = age >= condicion.edad
+
+            # Verificación de fecha
+            cumple_fecha = condicion.fecha is None or timezone.now().date() >= condicion.fecha.date()
+
+            # Verificación de objetivo
+            cumple_objetivo = condicion.objetivo is None or PersonaObjetivoEvaluacion.objects.filter(
+                user_id=user, 
+                objetivo_id=condicion.objetivo_id, 
+                progreso=100
+            ).exists()
+
+            # Generar mensaje de bloqueo
+            mensajes = []
+            if not cumple_edad:
+                mensajes.append("No cumple el requisito de edad")
+            if not cumple_fecha:
+                mensajes.append("No cumple el requisito de fecha")
+            if not cumple_objetivo:
+                mensajes.append("No cumple el requisito de objetivo")
+            
+            mensaje_bloqueo = ". ".join(mensajes) if mensajes else None
+
+            return Response({
+                'cumple_condiciones': {
+                    'edad': cumple_edad,
+                    'fecha': cumple_fecha,
+                    'objetivo': cumple_objetivo
+                },
+                'mensaje_bloqueo': mensaje_bloqueo
+            }, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class EscenaFilter(filters.FilterSet):
     query = filters.CharFilter(field_name='nombre', lookup_expr='icontains')

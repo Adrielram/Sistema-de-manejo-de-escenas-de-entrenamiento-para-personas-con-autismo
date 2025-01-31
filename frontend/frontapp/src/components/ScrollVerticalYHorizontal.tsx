@@ -2,6 +2,17 @@
 
 import { useState, useEffect, memo } from "react";
 
+interface CondicionProp {
+  id: number;
+  edad?: number;
+  fecha?: string;
+  objetivo?: string;
+  cumple_condiciones: {
+      edad: boolean;
+      fecha: boolean;
+      objetivo: boolean;
+  };
+}
 interface Props {
   elementos: Array<{ 
     id: number; 
@@ -10,7 +21,7 @@ interface Props {
     idioma:string; 
     acento:string; 
     complejidad:number;
-    condiciones:string;
+    condicion:CondicionProp;
     bloqueada: boolean; // Nueva propiedad}
     mensaje_bloqueo?: string;
   }>;
