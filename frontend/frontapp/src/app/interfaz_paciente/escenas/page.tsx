@@ -13,7 +13,7 @@ interface PaginatedResponse {
   count: number;
   next: string | null;
   previous: string | null;
-  results: any[];
+  results: Escena[];
 }
 
 interface Escena {
@@ -25,6 +25,7 @@ interface Escena {
   complejidad: number;
   condiciones: string;
   bloqueada: boolean;
+  mensaje_bloqueo: string;
 }
 
 export default function Page() {
@@ -43,7 +44,7 @@ export default function Page() {
   const fetchEscenaPorBusqueda = async (searchQuery: string) => {
     try {
       const response = await fetch(
-        `${baseURL}buscar-escenas/?query=${searchQuery}`
+        `${baseURL}buscar-escenas/?username=${username}&query=${searchQuery}`
       );
   
       // Verifica si la respuesta es exitosa
@@ -53,6 +54,7 @@ export default function Page() {
   
       // Convierte la respuesta a JSON
       const data: Escena[] = await response.json();
+
       setEscenasFiltradas(data);
       setEscenaSeleccionada(null);
   
@@ -155,7 +157,7 @@ export default function Page() {
     return () => {
       isMounted = false;
     };
-  }, [idEscena, dispatch]);
+  }, [idEscena]);
 
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
@@ -212,28 +214,55 @@ export default function Page() {
                     escenasFiltradas.map((escena) => (
                       <li
                         key={escena.id}
-                        onClick={() => handleMostrarDescripcion(escena.id)}
-                        className={`cursor-pointer flex items-center justify-between p-4 gap-4 rounded-lg shadow-sm border hover:shadow-md transition-shadow ${
-                          escenaSeleccionada?.id === escena.id
-                            ? "bg-blue-100 border-blue-400"
-                            : "bg-white border-gray-200 hover:border-blue-300"
-                        }`}
+                        onClick={() => !escena.bloqueada && handleMostrarDescripcion(escena.id)}
+                        className={`flex items-center justify-between p-4 gap-4 rounded-lg shadow-sm border transition-shadow 
+                          ${escena.bloqueada 
+                            ? "bg-gray-100 opacity-50 cursor-not-allowed" 
+                            : "cursor-pointer hover:shadow-md bg-white border-gray-200 hover:border-blue-300"} 
+                          ${escenaSeleccionada?.id === escena.id && !escena.bloqueada 
+                            ? "bg-blue-100 border-blue-400" 
+                            : ""}`}
                       >
-                        <span className="text-base font-medium">{escena.nombre}</span>
-                        {escenaSeleccionada?.id === escena.id && (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 text-blue-600"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="text-base font-medium">{escena.nombre}</span>
+                          {escena.bloqueada && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                              className="h-5 w-5 text-gray-500"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          {escena.bloqueada && escena.mensaje_bloqueo && (
+                            <span className="text-lg text-gray-500 text-right flex-grow">
+                              {escena.mensaje_bloqueo}
+                            </span>
+                          )}
+                          
+                          {!escena.bloqueada && escenaSeleccionada?.id === escena.id && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 text-blue-600"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </div>
                       </li>
                     )))}
                   </ul>
