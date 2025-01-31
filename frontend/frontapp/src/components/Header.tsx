@@ -14,7 +14,7 @@ export default React.memo(function Header() {
   const router = useRouter();
   const { center } = useSelector((state: RootState) => state.user)
   
-  const { username, isLoggedIn } = useSelector((state: RootState) => state.user);
+  const { username, isLoggedIn, role } = useSelector((state: RootState) => state.user);
   const handleLogout = async () => {
     try {
       // Llama a la API del backend para el logout
@@ -71,7 +71,9 @@ export default React.memo(function Header() {
             >
               Cerrar sesión
             </button>
+            {role === 'terapeuta' || role === 'Admin' ? (
             <NotificationMenu />
+            ) : null}
           </>
         ) : (
           <>
