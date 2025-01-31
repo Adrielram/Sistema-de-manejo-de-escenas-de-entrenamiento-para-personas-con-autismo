@@ -58,7 +58,8 @@ urlpatterns = [
     path('listar_formularios_completados/<str:username>/', views.listar_formularios_completados, name='listar_formularios_completados'),
     path('get-escena/', GetEscenaView.as_view(), name='get-escena'),
     path('verificar-escena/', VerificarEscenaAsignadaView.as_view(), name='verificar-escena'),
-    
+    path('get-objetivos-list/', ObjetivoListView.as_view(), name='objetivos-list'),
+    path('escenas-por-objetivo/', EscenasPorObjetivoView.as_view(), name='escenas-por-objetivo'),
 ]
 
 

@@ -311,17 +311,30 @@ class Command(BaseCommand):
             objetivo=objetivo_3
         )
         escena_obj_6 = EscenaObjetivo.objects.create(
-            escena=escena_7,
-            objetivo=objetivo_4
+            escena=escena_1,
+            objetivo=objetivo_3
         )
         escena_obj_7 = EscenaObjetivo.objects.create(
-            escena=escena_8,
-            objetivo=objetivo_5
+            escena=escena_2,
+            objetivo=objetivo_3
         )
         escena_obj_8 = EscenaObjetivo.objects.create(
-            escena=escena_9,
-            objetivo=objetivo_6
+            escena=escena_3,
+            objetivo=objetivo_3
         )
+        escena_obj_9 = EscenaObjetivo.objects.create(
+            escena=escena_4,
+            objetivo=objetivo_3
+        )
+        escena_obj_10 = EscenaObjetivo.objects.create(
+            escena=escena_5,
+            objetivo=objetivo_3
+        )
+        escena_obj_11 = EscenaObjetivo.objects.create(
+            escena=escena_5,
+            objetivo=objetivo_4
+        )
+
 
         # Create person-objective-scene relationship
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
@@ -346,6 +359,35 @@ class Command(BaseCommand):
             user_id=paciente,
             escena_objetivo=escena_obj_2,
         )
+        persona_obj_esc_6 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_6,
+            orden = 3
+        )
+        persona_obj_esc_7 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_7,
+            orden = 4
+        )
+        persona_obj_esc_8 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_8,
+        )
+        persona_obj_esc_9 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_9,
+        )
+        persona_obj_esc_10 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_10,
+        )
+        persona_obj_esc_11 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_11,
+            orden = 5
+        )
+
+
 
         formulario_1 = Formulario.objects.create(
             nombre="Formulario 1",
