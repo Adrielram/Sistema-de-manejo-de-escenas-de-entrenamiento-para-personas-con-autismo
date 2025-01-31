@@ -11,6 +11,7 @@ const PacientePrincipal = () => {
 
   return (
     <div className="md:min-h-screen w-full flex flex-col items-center justify-center overflow-hidden p-4 md:p-8 bg-[#f5af76]">
+
       
       {/* Texto en la parte superior izquierda */}
       <div className="fixed top-4 left-4 md:top-8 md:left-8 text-white text-lg font-semibold">

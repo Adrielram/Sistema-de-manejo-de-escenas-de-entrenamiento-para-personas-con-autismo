@@ -25,7 +25,8 @@ interface Escena {
   complejidad: number;
   condiciones: string;
   bloqueada: boolean;
-  mensaje_bloqueo: string;
+  mensaje_bloqueo?: string; // Nuevo campo
+
 }
 
 export default function Page() {
@@ -114,11 +115,18 @@ export default function Page() {
           bloqueada: esc.bloqueada,
           mensaje_bloqueo: esc.mensaje_bloqueo
         }));
-  
+      
         setEscenas(mappedResults);
         setTotalPages(Math.ceil(data.count / 6));
-        setEscenaSeleccionada(null);
-
+  
+        // Seleccionar primera escena NO bloqueada
+        const primeraEscenaNoBloqueada = mappedResults.find(esc => !esc.bloqueada);
+        if (primeraEscenaNoBloqueada) {
+          setEscenaSeleccionada(primeraEscenaNoBloqueada); 
+          dispatch(setIdEscena({ idEscena: primeraEscenaNoBloqueada.id }));
+        } else {
+          setEscenaSeleccionada(null);
+        }
       } catch (err) {
         console.error(err);
       }
@@ -136,7 +144,7 @@ export default function Page() {
       }
   
       try {
-        const result = await verificarEscenaAsignada(idEscena);
+        const result = await verificarEscenaAsignada(Number(idEscena));
         if (!isMounted) return;
   
         if (result.asignada) {
@@ -188,6 +196,7 @@ export default function Page() {
     dispatch(setIdEscena({idEscena: escenaP}));
   }
 };
+
 
   const handleEscenaClick = () => {
     if (!escenaSeleccionada || escenaSeleccionada.bloqueada) {
@@ -339,3 +348,4 @@ export default function Page() {
         </div>
       );
     }
+

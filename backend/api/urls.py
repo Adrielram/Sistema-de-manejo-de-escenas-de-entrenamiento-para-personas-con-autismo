@@ -14,7 +14,6 @@ urlpatterns = [
     path('verify-session/', verify_session, name='verify-session'),
     path('objetivos/', objetivos_list, name='listar_objetivos'),
     path('obtener_escenas_por_objetivo/', EscenasPorObjetivoListView.as_view(), name='listar_escenas_por_objetivo'),
-    path('buscar_objetivos/', ObjetivoBusquedaView.as_view(), name='objetivo-search'),
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
     path('objetivo/<int:objetivo_id>/', get_goal_data, name='get_goal_data'),
     path('get-user/', retrieve_user.as_view(), name='retrieve_user'),
@@ -60,6 +59,8 @@ urlpatterns = [
     path('get-escena/', GetEscenaView.as_view(), name='get-escena'),
     path('verificar-escena/', VerificarEscenaAsignadaView.as_view(), name='verificar-escena'),
     path('buscar-escenas/', EscenaBusquedaView.as_view(), name='buscar-escenas'),
+    path('get-objetivos-list/', ObjetivoListView.as_view(), name='objetivos-list'),
+    path('escenas-por-objetivo/', EscenasPorObjetivoView.as_view(), name='escenas-por-objetivo'),
 ]
 
 
