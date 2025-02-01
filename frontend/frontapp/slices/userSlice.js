@@ -32,6 +32,7 @@ const userSlice = createSlice({
       state.objetivoId = "";
       state.hijoNombre = "";
     },
+
     setCenter: (state, action) => {
       state.center = action.payload.center;
     },
@@ -51,6 +52,7 @@ const userSlice = createSlice({
       state.hijoNombre = action.payload.hijoNombre;
     },
   },
+  
 });
 
 export const { setUser, clearUser , setCenter, setUserId, setObjetivoId, setIdEscena,setHijoNombre} = userSlice.actions;

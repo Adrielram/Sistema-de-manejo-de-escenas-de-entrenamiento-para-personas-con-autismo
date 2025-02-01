@@ -373,6 +373,7 @@ class Formulario(models.Model):
     es_verificacion_automatica = models.BooleanField(default=False)
     creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE, related_name="formularios_objetivo")
 
     def _str_(self):
         return self.nombre
@@ -391,6 +392,7 @@ class Pregunta(models.Model):
     texto = models.CharField(max_length=255)
     tipo = models.CharField(max_length=20, choices=TIPOS_PREGUNTA)
     correcta = models.CharField(max_length=255, blank=True, null=True)  # Solo para verificación automática
+    escena = models.ForeignKey(Escena, on_delete=models.CASCADE, related_name="preguntas", blank=True, null=True)
 
     def __str__(self):
         return self.texto
@@ -432,3 +434,19 @@ class FormularioPacienteRevision(models.Model):
     verificado_automatico = models.BooleanField(default=False)  # Si se corrigió automáticamente
     fecha_respuesta = models.DateTimeField(auto_now_add=True)
     volver_a_realizar = models.BooleanField(default=False)
+
+class RegistroEvaluacion(models.Model):
+    id = models.AutoField(primary_key=True)  # ID autoincremental
+    objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE, related_name="registros")
+    paciente = models.ForeignKey(User, on_delete=models.CASCADE, related_name="registros")
+    edad = models.PositiveIntegerField()
+    patologias = models.ManyToManyField(Patologia, related_name="registros")
+    escena = models.ForeignKey(Escena, on_delete=models.CASCADE, related_name="registros")
+    complejidad = models.PositiveIntegerField()  # Se obtiene desde Escena
+    resultado = models.DecimalField(max_digits=5, decimal_places=2)  # Evaluación en porcentaje
+
+    def __str__(self):
+        return f"Eval {self.id} - Obj {self.objetivo.id} - Escena {self.escena.id} - {self.resultado}%"    
+    class Meta:
+        db_table = 'registroEvaluacion'   
+    

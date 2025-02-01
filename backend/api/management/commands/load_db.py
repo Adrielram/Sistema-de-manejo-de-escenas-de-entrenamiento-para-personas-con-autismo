@@ -354,42 +354,48 @@ class Command(BaseCommand):
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            objetivo=objetivo_3
         )
         Formulario.objects.create(
             nombre="Formulario 2",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            objetivo=objetivo_3
         )
         Formulario.objects.create(
             nombre="Formulario 3",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            objetivo=objetivo_2
         )
         Formulario.objects.create(
             nombre="Formulario 4",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            objetivo=objetivo_2
         )
         Formulario.objects.create(
             nombre="Formulario 5",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            objetivo=objetivo_3
         )
         Formulario.objects.create(
             nombre="Formulario 6",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            objetivo=objetivo_3
         )
 
         # Create person-objective-evaluation
