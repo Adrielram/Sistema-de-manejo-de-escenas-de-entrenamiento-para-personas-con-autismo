@@ -2,14 +2,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const ResponderForm = ({ idform, onSubmitted = () => {}}) => {
+const ResponderForm = ({ idform, dni,  onSubmitted = () => {}}) => {
   const [formulario, setFormulario] = useState(null);
   const [respuestas, setRespuestas] = useState({});
   const [error, setError] = useState("");
   const [resultados, setResultados] = useState({});
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  const router = useRouter();
-
+  const router = useRouter();  
+  
   useEffect(() => {
     fetch(`${baseUrl}formularios/${idform}/`)
       .then((res) => res.json())
@@ -48,7 +48,7 @@ const ResponderForm = ({ idform, onSubmitted = () => {}}) => {
         pregunta: pregunta.id,
         respuesta,
         correcta,
-        paciente: 40333444, // Ajusta esto según el paciente actual
+        paciente: dni, // Ajusta esto según el paciente actual
       };
     });
 
@@ -64,7 +64,7 @@ const ResponderForm = ({ idform, onSubmitted = () => {}}) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           formulario_id: idform,
-          paciente_dni: 40333444, // Ajusta según el paciente actual
+          paciente_dni: dni, // Ajusta según el paciente actual
           verificado_automatico: formulario.es_verificacion_automatica,
         }),
       });

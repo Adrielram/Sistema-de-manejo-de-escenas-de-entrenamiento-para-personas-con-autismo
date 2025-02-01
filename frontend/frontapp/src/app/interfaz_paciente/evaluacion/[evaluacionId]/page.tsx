@@ -57,7 +57,7 @@ export default function Evaluacion() {
         rolUsuario="persona"
       />
       ) : (
-        <ResponderForm idform={evaluacionId} />
+        <ResponderForm idform={evaluacionId} dni={dni} />
       )}
     </div>
   )
