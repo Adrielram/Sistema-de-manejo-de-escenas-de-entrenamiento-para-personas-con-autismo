@@ -432,7 +432,23 @@ def verify_session(request):
         }, status=200)
     except Exception as e:
         return Response({"message": "Token inválido o expirado"}, status=401)
-    
+
+class PacienteListView(APIView):
+    def get(self, request):
+        query = request.query_params.get('query', '').lower()  # Parámetro de búsqueda
+        pacientes = User.objects.filter(role='paciente')
+
+        if query:
+            pacientes = pacientes.filter(
+                models.Q(nombre__icontains=query) |
+                models.Q(dni__icontains=query) |
+                models.Q(genero__icontains=query) |
+                models.Q(username__icontains=query)  # Filtrar por nombre de usuario
+            ).distinct()  # Evitar duplicados
+
+        serializer = PacienteSerializer(pacientes, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 @permission_classes([AllowAny])
 def objetivos_list(request):
     objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
