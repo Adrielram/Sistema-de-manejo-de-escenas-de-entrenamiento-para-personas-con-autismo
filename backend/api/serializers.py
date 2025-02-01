@@ -1,16 +1,33 @@
 from rest_framework import serializers
 from .models import *
 
-class PacienteSerializer(serializers.ModelSerializer):
-    padreACargo = serializers.SerializerMethodField()
 
+from .models import User, Objetivo, Escena, CentroProfesional, Centrodesalud, Grupo
+
+# Primero define los serializadores
+class CentrodesaludSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Centrodesalud
+        fields = ['id', 'nombre']
+
+
+    def to_representation(self, instance):
+        # Solo devolver usuarios con rol 'terapeuta'
+        if instance.role != 'terapeuta':
+            return None
+        return super().to_representation(instance)
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['dni', 'nombre']
+
+class PacienteSerializer(UserSerializer):
     class Meta:
         model = User
         fields = ['username', 'nombre', 'dni', 'padreACargo']
 
-    def get_padreACargo(self, obj):
-        return obj.user_id_padre.nombre if obj.user_id_padre else ''
-    
+
 class ObjetivoSerializer(serializers.ModelSerializer):
    video_explicativo_id = serializers.PrimaryKeyRelatedField(
        queryset=Escena.objects.all(), source='escena'
@@ -228,6 +245,11 @@ class GrupoSerializer(serializers.ModelSerializer):
         model = Grupo
         fields = ['id', 'nombre', 'centrodesalud_id']
 
+class FormularioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Formulario
+        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'fecha_creacion']
+
 
 class PatologiaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -250,10 +272,6 @@ class PersonaObjetivoEscenaSerializer(serializers.ModelSerializer):
         model = PersonaObjetivoEscena
         fields = ['id', 'user_id', 'escena_objetivo', 'orden', 'es_alternativo' ]
 
-class CentrodesaludSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Centrodesalud
-        fields = ['id', 'nombre']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

@@ -374,6 +374,7 @@ class Formulario(models.Model):
     creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE, related_name="formularios_objetivo")
+
     def _str_(self):
         return self.nombre
 
@@ -448,4 +449,4 @@ class RegistroEvaluacion(models.Model):
         return f"Eval {self.id} - Obj {self.objetivo.id} - Escena {self.escena.id} - {self.resultado}%"    
     class Meta:
         db_table = 'registroEvaluacion'   
-
+    

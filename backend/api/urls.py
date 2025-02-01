@@ -18,6 +18,9 @@ urlpatterns = [
     path('objetivos/', objetivos_list, name='listar_objetivos'),
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
     path('objetivo/<int:objetivo_id>/', get_goal_data, name='get_goal_data'),
+    path('health_centers/<int:center_id>/delete/', delete_health_center, name='delete_health_center'),
+    path('health_centers/', views.listar_centros_de_salud, name='listar_centros_de_salud'),
+    path('get_info/', views.get_provinces_and_cities, name='get_provinces_and_cities'),
     path('signIn/', views.signIn, name='signIn'),
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('crear-escena/', views.crear_escena, name='crear_escena'),
@@ -90,9 +93,6 @@ urlpatterns = [
     path('comentarios/', ComentarioDetalleAPIView.as_view(), name='comentario-detalle'),
     path('get_reached_goals/', GetReachedGoalsView.as_view(), name='get_reached_goals'),
     path('get_unreached_goals/', GetUnreachedGoalsView.as_view(), name='get_unreached_goals'),
-    path('health_centers/<int:center_id>/delete/', delete_health_center, name='delete_health_center'),
-    path('health_centers/', views.listar_centros_de_salud, name='listar_centros_de_salud'),
-    path('get_info/', views.get_provinces_and_cities, name='get_provinces_and_cities'),
     path('create_health_center/', views.create_health_center, name='create_health_center'),
     path('get_health_centers/', views.get_health_centers, name='get_health_centers'),
     path('get_therapists/', views.get_therapists, name='get_therapists'),
@@ -105,6 +105,8 @@ urlpatterns = [
 
     #IA
     path('calcular_nota_api/', calcular_nota_api, name='calcular_nota_api'),
+
+    path('update_group_associations/<int:group_id>/', UpdateGroupAssociationsView.as_view(), name='update_group_associations'),
 
 ]
 
