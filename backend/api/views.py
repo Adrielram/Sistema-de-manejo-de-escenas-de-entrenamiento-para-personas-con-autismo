@@ -26,7 +26,7 @@ from django_filters import rest_framework as filters
 import json
 from rest_framework.generics import UpdateAPIView
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework import status
+from .authentication import CookieJWTAuthentication
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
 class UpdateGroupAssociationsView(APIView):
@@ -372,6 +372,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 def example_view(request):
     return JsonResponse({'message': 'Hello, world!'})
 
+from rest_framework import generics
+from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
+from .serializers import UserSerializer
+from .models import User
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -427,13 +432,7 @@ def verify_session(request):
         }, status=200)
     except Exception as e:
         return Response({"message": "Token inválido o expirado"}, status=401)
-    
-@permission_classes([AllowAny])
-def objetivos_list(request):
-    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
-    return JsonResponse(list(objetivos), safe=False)
 
-@permission_classes([AllowAny])
 class PacienteListView(APIView):
     def get(self, request):
         query = request.query_params.get('query', '').lower()  # Parámetro de búsqueda
@@ -450,6 +449,12 @@ class PacienteListView(APIView):
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+@permission_classes([AllowAny])
+def objetivos_list(request):
+    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
+    return JsonResponse(list(objetivos), safe=False)
+
+@permission_classes([AllowAny])
 class ResolveNamesToIds(APIView):
     def post(self, request):
         center_name = request.data.get('center_name')
@@ -663,6 +668,13 @@ def signIn(request):
                 email='adri@example.com'
             )
 
+            if role == 'admin':
+                return Response(
+                    {"error": "No está permitido registrar usuarios con rol de administrador a través de esta API."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+
             # Asociar padre si el rol es paciente y se proporciona un ID de padre
             if role == 'paciente' and id_padre:
                 try:
@@ -674,8 +686,13 @@ def signIn(request):
                         status=status.HTTP_400_BAD_REQUEST
                     )                
             
-            print("Contrasena"+request.data.get('password'))
-            user.set_password(request.data.get('password'))
+            password = request.data.get('password')
+            if not password:
+                return Response(
+                    {"error": "La contraseña es requerida"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            user.set_password(password)
             print("Valida ")
             print(user.check_password(user.password))
             if role == 'terapeuta':
@@ -920,7 +937,7 @@ class CentrosSaludListView(generics.ListAPIView):
     serializer_class = CentroSaludSerializer
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
-    filterset_class = NameFilter
+    filterset_class = NameFilter  
 
 def get_related_centers(self):
         username = self.kwargs.get('username')
@@ -1339,6 +1356,8 @@ class GetUnreachedGoalsView(generics.ListAPIView):
         unreached_goals = Objetivo.objects.filter(id__in=assigned_goals_ids).exclude(id__in=reached_goals_ids)
 
         return unreached_goals
+
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -2408,3 +2427,216 @@ def calcular_nota_api(request):
 
     return Response({"mensaje": "Evaluación guardada", "total_registros": len(registros)})
 
+
+
+class PacienteListView(generics.ListAPIView):
+    queryset = User.objects.filter(role='paciente')
+    serializer_class = UserSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+
+class TerapeutaListView(generics.ListAPIView):
+    queryset = User.objects.filter(role='terapeuta')
+    serializer_class = UserSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+
+class GroupListView(generics.ListAPIView):
+    queryset = Grupo.objects.all()
+    serializer_class = GroupSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+
+class PacienteDetailView(generics.RetrieveDestroyAPIView):
+    queryset = User.objects.filter(role='paciente')
+    serializer_class = UserSerializer
+
+class TerapeutaDetailView(generics.RetrieveDestroyAPIView):
+    queryset = User.objects.filter(role='terapeuta')
+    serializer_class = UserSerializer
+
+class GroupDetailView(generics.RetrieveDestroyAPIView):
+    queryset = Grupo.objects.all()
+    serializer_class = GroupSerializer
+
+from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes
+from .models import Notificacion
+from rest_framework.permissions import IsAuthenticated
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def obtener_notificaciones_pendientes(request):
+    # Filtrar notificaciones pendientes para el usuario actual
+    notificaciones = Notificacion.objects.filter(
+        destinatario=request.user, estado='pendiente'
+    ).values('id', 'mensaje', 'timestamp')  # Puedes incluir más campos según lo que necesites
+
+    return JsonResponse({'notificaciones': list(notificaciones)})
+
+from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from .models import Notificacion
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def obtener_detalle_notificacion(request, pk):
+    try:
+        # Buscar la notificación por id y asegurarse de que pertenece al usuario autenticado
+        notificacion = Notificacion.objects.get(id=pk, destinatario=request.user)
+        # Devolver los detalles de la notificación
+        return JsonResponse({
+            'id': notificacion.id,
+            'mensaje': notificacion.mensaje,
+            'timestamp': notificacion.timestamp,
+            'estado': notificacion.estado,
+            'remitente': notificacion.remitente.username if notificacion.remitente else None,
+            'destinatario': notificacion.destinatario.username if notificacion.destinatario else None,
+        })
+    except Notificacion.DoesNotExist:
+        # Manejar el caso de una notificación no encontrada o no autorizada
+        return JsonResponse({'error': 'Notificación no encontrada o no autorizada'}, status=404)
+    
+from django.contrib.contenttypes.models import ContentType
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from api.models import User
+from .models import Notificacion
+from api.notificaciones.utils import actualizar_notificacion 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+
+def procesar_notificacion(request, pk, accion):
+    """
+    Procesa una notificación para aceptarla o rechazarla.
+    :param pk: ID de la notificación.
+    :param accion: "aceptar" o "rechazar".
+    """
+    notificacion = get_object_or_404(Notificacion, pk=pk)
+
+    # Verifica el tipo de objeto asociado
+    content_type = notificacion.content_type
+    objeto_asociado = notificacion.objeto_asociado  # Accede al objeto asociado
+
+    try:
+        if content_type.model == 'user':  # Si es una solicitud de activación de usuario
+            usuario = get_object_or_404(User, username=notificacion.remitente.username)
+            if accion == 'aceptar':
+                usuario.is_active = True
+                usuario.save()
+                notificacion.estado = 'leida'
+            elif accion == 'rechazar':  
+                usuario.delete()
+                actualizar_notificacion(notificacion.id, 'rechazada')                               
+                # No guardar la notificación eliminada
+                return JsonResponse({'success': True, 'message': f'Usuario {usuario} eliminado y notificación procesada'})
+        
+        elif content_type.model == 'objetivo':  # Si es una solicitud de agregar un objetivo
+            if accion == 'aceptar':
+                objeto_asociado.aprobado = True
+                objeto_asociado.save()
+                notificacion.estado = 'leida'
+            elif accion == 'rechazar':
+                objeto_asociado.delete()
+                notificacion.estado = 'eliminada'
+
+        elif content_type.model == 'comentario':  # Si es una solicitud de moderar un comentario
+            if accion == 'aceptar':
+                notificacion.estado = 'leida'
+            elif accion == 'rechazar':
+                objeto_asociado.delete()
+                notificacion.estado = 'eliminada'
+
+        else:
+            return JsonResponse({'error': 'Tipo de objeto no soportado'}, status=400)
+
+        notificacion.save()  # Guarda el estado de la notificación
+        actualizar_notificacion(notificacion.id, notificacion.estado)
+        return JsonResponse({'success': True, 'message': f'Notificación {accion}ada correctamente'})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+from django.http import JsonResponse
+
+def check_cookie(request):
+    # Verificar si la cookie 'jwt' está presente
+    if 'jwt' in request.COOKIES:
+        return JsonResponse({"exists": True})
+    return JsonResponse({"exists": False})
+
+
+from rest_framework.permissions import IsAuthenticated
+from .models import Comentario
+class ComentariosPacienteAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
+
+    def get(self, request, dni):
+        try:
+            # Verificar si el usuario tiene rol "paciente"
+            user = User.objects.get(dni=dni, role='paciente')
+        except User.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado o no es paciente'}, status=404)
+
+        # Obtener todos los comentarios del usuario
+        comentarios = Comentario.objects.filter(user=user).select_related('escena')
+
+        # Agrupar comentarios por escena
+        agrupados = {}
+        for comentario in comentarios:
+            escena_nombre = comentario.escena.nombre
+            if escena_nombre not in agrupados:
+                agrupados[escena_nombre] = []
+            agrupados[escena_nombre].append({
+                'id': comentario.id,
+                'texto': comentario.texto,
+                'visibilidad': comentario.visibilidad
+            })
+
+        # Crear estructura de respuesta
+        respuesta = [{'escena': escena, 'comentarios': datos} for escena, datos in agrupados.items()]
+
+        return Response(respuesta, status=200)
+
+class BorrarComentarioAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
+    def delete(self, request, id, *args, **kwargs):
+        try:
+            comentario = Comentario.objects.get(pk=id)
+            comentario.delete()
+            return Response({'message': 'Comentario eliminado exitosamente'}, status=status.HTTP_200_OK)
+        except Comentario.DoesNotExist:
+            return Response({'error': 'Comentario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        
+
+
+class CambiarVisibilidadComentarioView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
+    def patch(self, request, id):
+        try:
+            # Obtiene el comentario
+            comentario = Comentario.objects.get(id=id)
+            
+            # Extrae los datos del cuerpo de la solicitud
+            import json
+            body = json.loads(request.body)
+            nueva_visibilidad = body.get('visibilidad')
+            
+            if nueva_visibilidad is None:
+                return JsonResponse({'error': 'Falta el campo "visibilidad"'}, status=400)
+            
+            # Cambia la visibilidad y guarda el comentario
+            comentario.visibilidad = nueva_visibilidad
+            comentario.save()
+            
+            return JsonResponse({'message': 'Visibilidad actualizada correctamente', 'id': comentario.id, 'visibilidad': comentario.visibilidad})
+        except Comentario.DoesNotExist:
+            return JsonResponse({'error': 'Comentario no encontrado'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)

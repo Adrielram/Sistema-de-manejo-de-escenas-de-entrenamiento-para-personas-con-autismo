@@ -3,34 +3,35 @@ import React, { useState, useEffect } from "react";
 import SearchBar from "../../../components/Buscador";
 import Box from "../../../components/Box";
 
-const GruposPage = () => {
+const PacientesPage = ({token}) => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  const [grupos, setGrupos] = useState([]);
+  const [pacientes, setPacientes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [nextPage, setNextPage] = useState(null);
   const [prevPage, setPrevPage] = useState(null);
-
-  const fetchGrupos = async () => {
+  const fetchPacientes = async () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `${baseUrl}grupos/?nombre=${query}&page=${page}`
+        `${baseUrl}pacientes/?nombre=${query}&page=${page}`
       );
       const data = await response.json();
-      setGrupos(data.results);
+      console.log("Data:", data);
+      setPacientes(data.results);
+      console.log("Pacientes:", data.results);
       setNextPage(data.next);
       setPrevPage(data.previous);
     } catch (error) {
-      console.error("Error fetching grupos:", error);
+      console.error("Error fetching pacientes:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchGrupos();
+    fetchPacientes();
   }, [query, page]);
 
   const handleSearch = (searchQuery) => {
@@ -42,29 +43,26 @@ const GruposPage = () => {
     setPage(newPage);
   };
 
-  return (
+  return (    
     <div>
       <SearchBar onSearch={handleSearch} />
       {loading ? (
         <p>Loading...</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-1 gap-x-1 p-1 sm:p-2 bg-white mt-5">
-          {grupos.map((grupo) => (
-            <div
-              key={grupo.id}
-              className="flex flex-col items-center justify-center w-full"
-            >
+          {pacientes.map((paciente) => (
+            <div key={paciente.dni} className="flex flex-col items-center justify-center w-full">
               <Box
-                elem={grupo}
+                elem={paciente}
                 opciones={{
-                  personalInfo: false,
+                  personalInfo: true,
                   buttonVer: false,
-                  buttonEdit: true,
+                  buttonEdit: false,
                   buttonSeguimiento: false,
-                  buttonComments: false,
+                  buttonComments: true,
                   trashBin: true,
                 }}
-                img="/icon/grupo.png"
+                img="/icon/persona_silueta.png"
               />
             </div>
           ))}
@@ -96,4 +94,4 @@ const GruposPage = () => {
   );
 };
 
-export default GruposPage;
+export default PacientesPage;

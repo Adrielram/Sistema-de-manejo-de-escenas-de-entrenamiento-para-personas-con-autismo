@@ -8,7 +8,7 @@ import { clearUser } from '../../slices/userSlice';
 import { RootState } from "../../store/store"; // Asegúrate de importar el tipo correcto
 import {useRouter} from 'next/navigation';
 
-export default function Header() {
+export default function Header({token}) {
   const dispatch = useDispatch();
   const router = useRouter();
   const { center } = useSelector((state: RootState) => state.user)
@@ -70,7 +70,7 @@ export default function Header() {
             >
               Cerrar sesión
             </button>
-            <NotificationMenu />
+            <NotificationMenu token={token} />
           </>
         ) : (
           <>

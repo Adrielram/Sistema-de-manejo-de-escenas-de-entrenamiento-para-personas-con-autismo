@@ -2,7 +2,17 @@ from rest_framework import serializers
 from .models import *
 
 
-from .models import User, Objetivo, Escena, CentroProfesional, Centrodesalud, Grupo
+from .models import User, Objetivo, Escena, CentroProfesional, Centrodesalud, Grupo, Grupo
+
+from rest_framework import serializers
+from .models import User
+
+class UserSerializer(serializers.ModelSerializer):
+    nombre_padre = serializers.CharField(source='user_id_padre.nombre', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'user_id_padre', 'nombre_padre']
 
 # Primero define los serializadores
 class CentrodesaludSerializer(serializers.ModelSerializer):
@@ -16,11 +26,6 @@ class CentrodesaludSerializer(serializers.ModelSerializer):
         if instance.role != 'terapeuta':
             return None
         return super().to_representation(instance)
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['dni', 'nombre']
 
 class PacienteSerializer(serializers.ModelSerializer):
     padreACargo = serializers.SerializerMethodField()
@@ -312,3 +317,10 @@ class RespuestaSerializer(serializers.ModelSerializer):
 
     def get_nombre_pregunta(self, obj):        
         return obj.pregunta.texto if obj.pregunta else None
+
+class GroupSerializer(serializers.ModelSerializer):
+    nombre_centro = serializers.CharField(source='centrodesalud.nombre', read_only=True)
+    class Meta:
+        model = Grupo
+        fields = ['id', 'nombre', 'nombre_centro']
+

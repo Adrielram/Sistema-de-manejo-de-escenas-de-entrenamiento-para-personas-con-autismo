@@ -28,6 +28,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    "channels",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -39,6 +40,19 @@ INSTALLED_APPS = [
     "corsheaders",
     'django_filters',
 ]
+
+# Configuración de Channels
+ASGI_APPLICATION = 'backendapp.asgi.application'
+
+# Configuración de Redis
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -116,6 +130,8 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
+
+API_URL = "http://localhost:8000/api/"
 
 
 # Static files (CSS, JavaScript, Images)
