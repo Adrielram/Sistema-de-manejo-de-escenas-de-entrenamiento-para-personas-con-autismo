@@ -26,7 +26,7 @@ from django_filters import rest_framework as filters
 import json
 from rest_framework.generics import UpdateAPIView
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework import statusfrom .authentication import CookieJWTAuthentication
+from .authentication import CookieJWTAuthentication
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
 class UpdateGroupAssociationsView(APIView):
@@ -916,12 +916,12 @@ class EscenaListView(generics.ListAPIView):
     filterset_class = NameFilter
 
 
-class CentrosSaludListView(generics.RetrieveDestroyAPIView):
+class CentrosSaludListView(generics.ListAPIView):
     queryset = Centrodesalud.objects.all()
     serializer_class = CentroSaludSerializer
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
-    filterset_class = NameFilter
+    filterset_class = NameFilter  
 
 def get_related_centers(self):
         username = self.kwargs.get('username')
