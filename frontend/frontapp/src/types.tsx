@@ -13,3 +13,16 @@ export type MenuItemWithSubMenuProps = {
     item: SideNavItem;
     toggleOpen: () => void;
 }
+
+export type OptionsProps = {
+  personalInfo?: boolean;
+  buttonVer?: boolean;
+  trashBin?: boolean;
+  commentsButton?: boolean;
+  editButton?: boolean;
+  supervisionButton?: boolean;
+  seePatientsButton?: boolean;
+  revisionButton?: boolean;
+  scenesCommentsButton?: boolean;
+  formsButton?: boolean;
+};

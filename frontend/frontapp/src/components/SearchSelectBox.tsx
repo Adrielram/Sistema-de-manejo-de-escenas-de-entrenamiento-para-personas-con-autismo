@@ -11,7 +11,9 @@ interface MultiSearchSelectBoxProps {
   getItemLabel: (item: Item) => string;
   selectedItems: Item[];
   onSelectItems: (items: Item[]) => void;
-  apiUrl: string; // URL para la API de escenas
+  apiUrl: string; // URL para la API de búsqueda
+  resetTrigger?: boolean; // Nuevo prop para indicar cuándo resetear el componente
+
 }
 
 const SearchSelectBox = ({
@@ -21,11 +23,20 @@ const SearchSelectBox = ({
   selectedItems,
   onSelectItems,
   apiUrl,
+  resetTrigger, // Nuevo prop
+
 }: MultiSearchSelectBoxProps) => {
   const [searchValue, setSearchValue] = useState("");
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Efecto para resetear el componente cuando se activa resetTrigger
+  useEffect(() => {
+    if (resetTrigger) {
+      setSearchValue(""); // Limpia el valor del campo de búsqueda
+      setItems([]); // Limpia los ítems cargados
+    }
+  }, [resetTrigger]);
 
   // Fetch items cuando searchValue cambia
   useEffect(() => {
@@ -33,7 +44,13 @@ const SearchSelectBox = ({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${apiUrl}?nombre=${encodeURIComponent(searchValue)}`);
+        const response = await fetch(`${apiUrl}?nombre=${encodeURIComponent(searchValue)}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+        });
         if (!response.ok) {
           throw new Error("Error al cargar las escenas.");
         }
@@ -95,7 +112,7 @@ const SearchSelectBox = ({
       <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
         {!loading && items.length === 0 && !error && (
           <div className="text-gray-500 text-center py-4">
-            No hay elementos disponibles
+            Busca Algo! 🚀
           </div>
         )}
 

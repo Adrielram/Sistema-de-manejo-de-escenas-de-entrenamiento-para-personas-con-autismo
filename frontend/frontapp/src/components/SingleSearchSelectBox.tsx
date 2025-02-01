@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 
 interface Item {
   id: number;
@@ -10,9 +10,9 @@ interface SingleSearchSelectBoxProps {
   title: string;
   searchPlaceholder: string;
   getItemLabel: (item: Item) => string;
-  selectedItemId: number | null;
+  selectedItemId: number | unknown[] | null;
   onSelectItem: (id: number | null) => void;
-  apiUrl: string; // URL para la API de escenas
+  apiUrl: string;
 }
 
 const SingleSearchSelectBox = ({
@@ -27,44 +27,67 @@ const SingleSearchSelectBox = ({
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  // Fetch items cuando searchValue cambia
-  useEffect(() => {
-    const fetchItems = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`${apiUrl}?nombre=${encodeURIComponent(searchValue)}`);
-        if (!response.ok) {
-          throw new Error("Error al cargar las escenas.");
-        }
-        const data = await response.json();
-        setItems(data.results || []);
-      } catch (err) {
-        console.error("Error fetching items:", err);
-        setError("Error al cargar las escenas.");
-      } finally {
-        setLoading(false);
+  const fetchItems = useCallback(async (resetResults = false) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `${apiUrl}?nombre=${encodeURIComponent(searchValue)}&page=${page}&limit=4`
+      );
+      if (!response.ok) {
+        throw new Error("Error al cargar las escenas.");
       }
-    };
+      const data = await response.json();
+      
+      // Update items based on whether we're resetting or loading more
+      setItems(prevItems => 
+        resetResults ? data.results : [...prevItems, ...data.results]
+      );
+      
+      // Check if there are more results
+      setHasMore(data.next !== null);
+    } catch (err) {
+      console.error("Error fetching items:", err);
+      setError("Error al cargar las escenas.");
+    } finally {
+      setLoading(false);
+    }
+  }, [searchValue, apiUrl, page]);
 
-    // Llamar al backend si hay un valor de búsqueda
+  // Effect to fetch items when search value changes
+  useEffect(() => {
+    // Reset page and fetch fresh results
+    setPage(1);
+    setHasMore(true);
+    
     if (searchValue.trim() !== "") {
       const delayDebounceFn = setTimeout(() => {
-        fetchItems();
-      }, 300); // Debounce de 300ms
+        fetchItems(true);
+      }, 300);
 
-      return () => clearTimeout(delayDebounceFn); // Limpiar timeout en cada cambio
+      return () => clearTimeout(delayDebounceFn);
     } else {
-      setItems([]); // Limpiar resultados si no hay búsqueda
+      setItems([]); // Clear results if no search
     }
-  }, [searchValue, apiUrl]);
+  }, [searchValue, fetchItems]);
+
+  // Handle infinite scroll
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
+    
+    if (scrollHeight - scrollTop === clientHeight && hasMore && !loading) {
+      setPage(prevPage => prevPage + 1);
+    }
+  };
 
   return (
     <div className="bg-white p-8 rounded-xl shadow-lg border border-blue-100 mb-6">
       <h3 className="font-semibold text-gray-700 mb-4 text-lg">{title}</h3>
 
-      {/* Buscador */}
+      {/* Search input */}
       <div className="mb-4">
         <input
           type="text"
@@ -75,17 +98,14 @@ const SingleSearchSelectBox = ({
         />
       </div>
 
-      {/* Estado de carga */}
-      {loading && <p className="text-gray-500 text-center">Cargando...</p>}
-
-      {/* Mensaje de error */}
-      {error && <p className="text-red-500 text-center">{error}</p>}
-
-      {/* Lista scrolleable */}
-      <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+      {/* Scrollable list with infinite scroll */}
+      <div 
+        className="space-y-3 max-h-64 overflow-y-auto pr-2"
+        onScroll={handleScroll}
+      >
         {!loading && items.length === 0 && !error && (
           <div className="text-gray-500 text-center py-4">
-            No hay elementos disponibles
+            Busca Escenas! 🚀
           </div>
         )}
 
@@ -112,9 +132,23 @@ const SingleSearchSelectBox = ({
             </label>
           </div>
         ))}
+
+        {/* Loading indicator for more results */}
+        {loading && (
+          <div className="text-center text-gray-500 py-2">
+            Cargando más...
+          </div>
+        )}
+
+        {/* No more results indicator */}
+        {!hasMore && items.length > 0 && (
+          <div className="text-center text-gray-500 py-2">
+            No hay más resultados
+          </div>
+        )}
       </div>
 
-      {/* Escena seleccionada */}
+      {/* Selected item section */}
       {selectedItemId && (
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex justify-between items-center">

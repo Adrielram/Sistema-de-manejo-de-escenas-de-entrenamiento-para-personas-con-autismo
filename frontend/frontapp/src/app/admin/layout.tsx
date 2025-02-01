@@ -1,5 +1,6 @@
 import React from 'react'
 import SideNav from '../../components/SideNav'
+import Header from '../../components/Header' // Importamos el Header
 import { SIDENAV_ITEMS_ADMIN } from '../../constants'
 import Header from '../../components/Header'
 import { Inter } from 'next/font/google';
