@@ -21,11 +21,11 @@ class CentrodesaludSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre']
 
 
-    def to_representation(self, instance):
-        # Solo devolver usuarios con rol 'terapeuta'
-        if instance.role != 'terapeuta':
-            return None
-        return super().to_representation(instance)
+#    def to_representation(self, instance):
+#        # Solo devolver usuarios con rol 'terapeuta'
+#        if instance.role != 'terapeuta':
+#            return None
+#        return super().to_representation(instance)
 
 class PacienteSerializer(serializers.ModelSerializer):
     padreACargo = serializers.SerializerMethodField()

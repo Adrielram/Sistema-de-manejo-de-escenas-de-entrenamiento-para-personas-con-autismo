@@ -8,10 +8,10 @@ import { clearUser } from '../../slices/userSlice';
 import { RootState } from "../../store/store"; // Asegúrate de importar el tipo correcto
 import {useRouter} from 'next/navigation';
 
-export default function Header({token}) {
+export default function Header({ token }: { token?: string }) {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { center } = useSelector((state: RootState) => state.user)
+  const { center } = useSelector((state: RootState) => state.user);
   
   const { username, isLoggedIn } = useSelector((state: RootState) => state.user);
   const handleLogout = async () => {

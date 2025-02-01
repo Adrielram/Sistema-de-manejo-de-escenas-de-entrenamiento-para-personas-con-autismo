@@ -432,7 +432,7 @@ def verify_session(request):
         }, status=200)
     except Exception as e:
         return Response({"message": "Token inválido o expirado"}, status=401)
-
+'''
 class PacienteListView(APIView):
     def get(self, request):
         query = request.query_params.get('query', '').lower()  # Parámetro de búsqueda
@@ -448,7 +448,7 @@ class PacienteListView(APIView):
 
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
+'''
 @permission_classes([AllowAny])
 def objetivos_list(request):
     objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
@@ -958,7 +958,7 @@ class GrupoById(APIView):
         serializer = GrupoSerializer(grupo)
         return Response(serializer.data)
     
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 class NotAssociatedCentersListView(generics.ListAPIView):
     serializer_class = CentroSaludSerializer
     pagination_class = DynamicPagination
@@ -970,7 +970,7 @@ class NotAssociatedCentersListView(generics.ListAPIView):
         # Filtra los centros de salud donde el profesional no esté relacionado
         return Centrodesalud.objects.exclude(id__in=related_centers)
 
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 class AssociatedCentersListView(generics.ListAPIView):
     serializer_class = CentroSaludSerializer
     pagination_class = DynamicPagination
@@ -2463,11 +2463,13 @@ class GroupDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = GroupSerializer
 
 from django.http import JsonResponse
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from .models import Notificacion
 from rest_framework.permissions import IsAuthenticated
+from api.authentication import CookieJWTAuthentication
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+#@authentication_classes([CookieJWTAuthentication])
+@permission_classes([AllowAny])
 def obtener_notificaciones_pendientes(request):
     # Filtrar notificaciones pendientes para el usuario actual
     notificaciones = Notificacion.objects.filter(
