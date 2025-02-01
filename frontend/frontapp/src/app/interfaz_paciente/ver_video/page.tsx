@@ -102,7 +102,13 @@ const VerVideo = () => {
     const fetchPersObjEsc = async (escena_id: number) => {
       try {
         const response = await fetch(
-          `http://localhost:8000/api/get-persona-obj-esc/?username=${username}&objetivo_id=${objetivoId}&escena_id=${escena_id}`
+          `http://localhost:8000/api/get-persona-obj-esc/?username=${username}&objetivo_id=${objetivoId}&escena_id=${escena_id}`,{
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+          }
         );       
         
         const data = await response.json();
@@ -123,7 +129,14 @@ const VerVideo = () => {
     const LoadData = async () => {
       try {
         // Fetch para obtener las escenas relacionadas al objetivo
-        const response = await fetch(`http://localhost:8000/api/get-escenas-obj/?objetivo_id=${objetivoId}`);
+        const response = await fetch(`http://localhost:8000/api/get-escenas-obj/?objetivo_id=${objetivoId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+
         
         if (!response.ok) {
           throw new Error('Error al obtener las escenas');
@@ -141,7 +154,13 @@ const VerVideo = () => {
         setVideos(data.map((escena: Escena) => escena.link));
   
         // Fetch para obtener las evaluaciones asociadas al objetivo y usuario
-        const evaluacionesResponse = await fetch(`http://localhost:8000/api/get-evaluaciones/?username=${username}&objetivo_id=${objetivoId}`);
+        const evaluacionesResponse = await fetch(`http://localhost:8000/api/get-evaluaciones/?username=${username}&objetivo_id=${objetivoId}`,{
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
         
         if (!evaluacionesResponse.ok) {
           throw new Error('Error al obtener las evaluaciones');

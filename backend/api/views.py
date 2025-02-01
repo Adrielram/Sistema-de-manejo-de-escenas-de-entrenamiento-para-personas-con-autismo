@@ -1505,6 +1505,7 @@ class ComentarioDetalleAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+#@permission_classes([IsAuthenticated])
 class EscenasSegunUsuarioObjetivo(APIView):
     def get(self, request):
         objetivo_id = request.query_params.get('objetivo_id')
@@ -1524,7 +1525,7 @@ class EscenasSegunUsuarioObjetivo(APIView):
         escenas = Escena.objects.filter(id__in=escena_ids).values('id', 'link')
 
         return Response(list(escenas), status=status.HTTP_200_OK)
-    
+#@permission_classes([IsAuthenticated])
 class ObtenerLinksEvaluaciones(APIView):
     def get(self, request):
         username = request.query_params.get('username')
@@ -1586,6 +1587,8 @@ def ObtenerEscenaObjetivo(escena_id, objetivo_id):
     # Retornar el objeto encontrado
     return escena_objetivo
 
+
+#@permission_classes([IsAuthenticated])
 class ObtenerPersonaObjetivoID(APIView):
     def get(self, request):
         username = request.query_params.get('username')

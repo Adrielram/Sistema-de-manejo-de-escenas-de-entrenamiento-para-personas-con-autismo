@@ -22,10 +22,15 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['dni', 'nombre']
 
-class PacienteSerializer(UserSerializer):
+class PacienteSerializer(serializers.ModelSerializer):
+    padreACargo = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = ['username', 'nombre', 'dni', 'padreACargo']
+
+    def get_padreACargo(self, obj):
+        return obj.user_id_padre.nombre if obj.user_id_padre else ''
 
 
 class ObjetivoSerializer(serializers.ModelSerializer):
@@ -100,13 +105,6 @@ class CondicionSerializer(serializers.ModelSerializer):
         model = Condicion
         fields = ['id', 'edad', 'objetivo', 'fecha']
 
-
-class PersonaObjetivoEvaluacionSerializer(serializers.ModelSerializer):
-    objetivo_id = ObjetivoSerializerList()  # Usamos el serializer más simple para evitar anidaciones complejas
-
-    class Meta:
-        model = PersonaObjetivoEvaluacion
-        fields = ['id', 'progreso', 'objetivo_id', 'resultado']
 
 class EscenaSerializer(serializers.ModelSerializer):
     # Relación anidada con `Condicion`
@@ -245,10 +243,10 @@ class GrupoSerializer(serializers.ModelSerializer):
         model = Grupo
         fields = ['id', 'nombre', 'centrodesalud_id']
 
-class FormularioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Formulario
-        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'fecha_creacion']
+#class FormularioSerializer(serializers.ModelSerializer):
+#    class Meta:
+#        model = Formulario
+#        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'fecha_creacion']
 
 
 class PatologiaSerializer(serializers.ModelSerializer):
@@ -257,6 +255,7 @@ class PatologiaSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'descripcion']
 
 class PersonaObjetivoEvaluacionSerializer(serializers.ModelSerializer):
+    objetivo_id = ObjetivoSerializerList()  # Usamos el serializer más simple para evitar anidaciones complejas
     class Meta:
         model = PersonaObjetivoEvaluacion
         fields = ['id', 'user_id', 'objetivo_id', 'resultado', 'progreso', 'evaluacion']
@@ -273,10 +272,6 @@ class PersonaObjetivoEscenaSerializer(serializers.ModelSerializer):
         fields = ['id', 'user_id', 'escena_objetivo', 'orden', 'es_alternativo' ]
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['dni', 'nombre']
 
 class TerapeutaSerializer(UserSerializer):
     class Meta:
