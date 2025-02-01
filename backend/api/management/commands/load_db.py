@@ -2,14 +2,14 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.hashers import make_password
 from datetime import datetime
 from api.models import *
-#import mysql.connector
+import mysql.connector
 from django.conf import settings
 
 class Command(BaseCommand):
     help = 'Loads sample data into database'
 
     def handle(self, *args, **options):
-        '''# Conectar a MySQL y reiniciar la base de datos
+        # Conectar a MySQL y reiniciar la base de datos
         self.stdout.write("Resetting database...")
         try:
             db_config = {
@@ -42,7 +42,7 @@ class Command(BaseCommand):
         call_command('migrate')
 
         # Cargar los datos
-        self.stdout.write("Loading sample data...")'''
+        self.stdout.write("Loading sample data...")
         self.load_sample_data()
 
     def load_sample_data(self, *args, **options):
