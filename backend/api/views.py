@@ -330,8 +330,8 @@ def signIn(request):
             print(user.check_password(user.password))
             if role == 'terapeuta':
                 user.is_active = False
-            
-                
+            else:
+                user.is_active = True           
             user.save()       
             print(f"Usuario creado: {user}")
             if role == 'terapeuta' and centros_de_salud is not None:
