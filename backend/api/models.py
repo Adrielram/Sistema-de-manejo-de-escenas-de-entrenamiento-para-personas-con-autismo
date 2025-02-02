@@ -54,10 +54,9 @@ class Escena(models.Model):
     idioma = models.CharField(max_length=40)
     acento = models.CharField(max_length=40, default="neutro")
     complejidad = models.IntegerField()
-    condiciones = models.CharField(max_length=255)  # Permite valores nulos
+    condicion = models.OneToOneField('Condicion',related_name='escenas', on_delete=models.CASCADE,blank=True,null=True)
     link = models.CharField(max_length=2000)
     nombre = models.CharField(max_length=100, default="Sin Nombre")
-
     class Meta:
         db_table = 'escena'
 
@@ -121,20 +120,7 @@ class Objetivo(models.Model):
     )
     class Meta:   
         db_table = 'objetivo'
-   
-
-class Formulario(models.Model):
-    nombre = models.CharField(max_length=255) # * creo que voy a necesitar cambiarlo a 'nombre'
-    descripcion = models.TextField(blank=True, null=True)
-    es_verificacion_automatica = models.BooleanField(default=False)
-    creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-
-    def _str_(self):
-        return self.nombre
-
-    class Meta:
-        db_table = 'formulario'      
+     
 
 class CentroProfesionalEscena(models.Model):    
     escena_id = models.ForeignKey(
@@ -159,7 +145,7 @@ class CentroProfesionalEscena(models.Model):
 class EscenaObjetivo(models.Model):
     escena = models.ForeignKey('Escena', on_delete=models.CASCADE)
     objetivo = models.ForeignKey('Objetivo', on_delete=models.CASCADE)
-
+    orden = models.IntegerField(blank=True, null=True)
     class Meta:
         db_table = 'escenaObjetivo'
         constraints = [
@@ -200,8 +186,6 @@ class PersonaObjetivoEscena(models.Model):
         blank=True,
         null=True
     )
-    orden = models.IntegerField(blank=True, null=True)
-    es_alternativo = models.BooleanField()
 
     class Meta:
         db_table = 'personaEscenaObjetivo'
@@ -233,6 +217,14 @@ class Objetivoscumplir(models.Model):
             )
         ]
 
+class Condicion(models.Model):
+    id = models.AutoField(primary_key=True)
+    edad = models.IntegerField(blank=True, null=True)
+    objetivo = models.ForeignKey('Objetivo', on_delete=models.CASCADE, null=True)
+    escena = models.OneToOneField('Escena',related_name='condiciones', on_delete=models.CASCADE, null=True)
+    fecha = models.DateTimeField(blank=True, null=True)
+    class Meta:
+        db_table = 'condicion'
 
 class PersonaObjetivoEvaluacion(models.Model):
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)
@@ -257,21 +249,24 @@ class PersonaObjetivoEvaluacion(models.Model):
 
 class Videosvistos(models.Model):
     id = models.AutoField(primary_key=True)
-    persona_objetivo_escena =  models.ForeignKey(
-        'PersonaObjetivoEscena',
+    paciente_id =  models.ForeignKey(
+        'User',
         on_delete=models.CASCADE,
-        related_name='videosvistos_persona_objetivo_escena',
-        blank=True,
-        null=True
+        related_name='videosvistos_paciente_id',
     )
-    visto = models.BooleanField(default=False)
-
+    escena_id =  models.ForeignKey(
+        'Escena',
+        on_delete=models.CASCADE,
+        related_name='videosvistos_escena_id',
+    )
+    fecha = models.DateTimeField(auto_now_add=True)
+    like = models.BooleanField(blank=True, null=True)
     class Meta:     
         db_table = 'videosVistos'
         constraints = [
             models.UniqueConstraint(
-                fields=['persona_objetivo_escena', 'id'],
-                name='unique_escena_user_objetivo_videos_vistos'
+                fields=['paciente_id','escena_id', 'id'],
+                name='unique_escena_user_videos_vistos'
             )
         ]
 
@@ -306,22 +301,20 @@ class Comentario(models.Model):
             )
         ]
 
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 class Notificacion(models.Model):
-    # Usuario destinatario (admin o terapeuta)
     destinatario = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
         related_name='notificaciones_recibidas'
     )
-    # Usuario que envía la notificación
     remitente = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
         related_name='notificaciones_enviadas'
     )
-    # Mensaje de la notificación
     mensaje = models.TextField()
-    # Estado de la notificación
     estado = models.CharField(
         max_length=50, 
         choices=[
@@ -331,12 +324,17 @@ class Notificacion(models.Model):
         ],
         default='pendiente'
     )
-    # Marca de tiempo
+    # Relación genérica
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    objeto_asociado = GenericForeignKey('content_type', 'object_id')
+
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"De {self.remitente} a {self.destinatario} - {self.estado}"
     
+
     class Meta:
         db_table = 'notificacion'
 
@@ -370,3 +368,87 @@ class PersonaPatologia(models.Model):
             )
         ]
 
+
+class Formulario(models.Model):
+    nombre = models.CharField(max_length=255) # * creo que voy a necesitar cambiarlo a 'nombre'
+    descripcion = models.TextField(blank=True, null=True)
+    es_verificacion_automatica = models.BooleanField(default=False)
+    creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE, related_name="formularios_objetivo")
+
+    def _str_(self):
+        return self.nombre
+
+    class Meta:
+        db_table = 'formulario'    
+
+class Pregunta(models.Model):
+    TIPOS_PREGUNTA = [
+        ('multiple-choice', 'Multiple Choice'),
+        ('respuesta-corta', 'Respuesta Corta'),
+        ('respuesta-larga', 'Respuesta Larga'),
+    ]
+
+    formulario = models.ForeignKey(Formulario, related_name="preguntas", on_delete=models.CASCADE)
+    texto = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=TIPOS_PREGUNTA)
+    correcta = models.CharField(max_length=255, blank=True, null=True)  # Solo para verificación automática
+    escena = models.ForeignKey(Escena, on_delete=models.CASCADE, related_name="preguntas", blank=True, null=True)
+
+    def __str__(self):
+        return self.texto
+
+
+class Opcion(models.Model):
+    pregunta = models.ForeignKey(Pregunta, related_name="opciones", on_delete=models.CASCADE)
+    texto = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.texto
+
+import uuid
+class Respuesta(models.Model):
+    pregunta = models.ForeignKey(Pregunta, related_name="respuestas", on_delete=models.CASCADE)
+    paciente = models.ForeignKey(User, on_delete=models.CASCADE, related_name="respuestas")
+    respuesta = models.TextField()
+    correcta = models.BooleanField(null=True)  # Solo para verificación automática
+    nota = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)  # Nota de 0 a 10
+    intento_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    fecha_intento = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Respuesta de {self.paciente.username} a {self.pregunta.texto}"
+    
+class ComentarioProfesional(models.Model):
+    respuesta = models.ForeignKey(Respuesta, related_name="comentarios", on_delete=models.CASCADE)
+    terapeuta = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comentarios")
+    texto = models.TextField()
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comentario de {self.terapeuta.username} en {self.respuesta}"
+    
+class FormularioPacienteRevision(models.Model):
+    formulario = models.ForeignKey('Formulario', on_delete=models.CASCADE)
+    paciente_dni = models.CharField(max_length=20)
+    revision = models.BooleanField(default=False)  # Si el terapeuta habilitó la revisión
+    verificado_automatico = models.BooleanField(default=False)  # Si se corrigió automáticamente
+    fecha_respuesta = models.DateTimeField(auto_now_add=True)
+    volver_a_realizar = models.BooleanField(default=False)
+
+class RegistroEvaluacion(models.Model):
+    id = models.AutoField(primary_key=True)  # ID autoincremental
+    objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE, related_name="registros")
+    paciente = models.ForeignKey(User, on_delete=models.CASCADE, related_name="registros")
+    edad = models.PositiveIntegerField()
+    patologias = models.ManyToManyField(Patologia, related_name="registros")
+    escena = models.ForeignKey(Escena, on_delete=models.CASCADE, related_name="registros")
+    complejidad = models.PositiveIntegerField()  # Se obtiene desde Escena
+    resultado = models.DecimalField(max_digits=5, decimal_places=2)  # Evaluación en porcentaje
+
+    def __str__(self):
+        return f"Eval {self.id} - Obj {self.objetivo.id} - Escena {self.escena.id} - {self.resultado}%"    
+    class Meta:
+        db_table = 'registroEvaluacion'   
+    

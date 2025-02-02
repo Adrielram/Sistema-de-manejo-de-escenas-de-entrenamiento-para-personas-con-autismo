@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation'; // Importa useRouter para manejar la navegación
 import { setCenter } from '../../../slices/userSlice';
@@ -22,9 +22,15 @@ export default function Therapist() {
   const [associatedCenters, setAssociatedCenters] = useState([]); // Para almacenar los centros asociados
   const [resetTrigger, setResetTrigger] = useState(false);
 
-  const fetchAssociatedCenters = async () => {
+  const fetchAssociatedCenters = useCallback( async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/get_associated_centers/${username}/`);
+      const response = await fetch(`http://localhost:8000/api/get_associated_centers/${username}/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+      });
       if (!response.ok) throw new Error('Error al cargar los centros asociados');
       const data = await response.json();
       setAssociatedCenters(data.results); // Guarda los centros asociados en el estado
@@ -32,13 +38,11 @@ export default function Therapist() {
       console.error(err);
       alert('Hubo un error al cargar los centros asociados.');
     }
-  };
+  },[username]);
 
   useEffect(() => {
-    if (username && associatedCenters.length === 0) {
-      fetchAssociatedCenters();
-    }
-  });
+      fetchAssociatedCenters()
+  },[fetchAssociatedCenters,username]);
 
   const handleSubmitOfAssociation = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -58,6 +62,7 @@ export default function Therapist() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(therapistCenterData), // Serializar el cuerpo correctamente
+        credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
       });
   
       if (!response.ok) {
@@ -97,6 +102,7 @@ export default function Therapist() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(therapistCenterData), // Serializar el cuerpo correctamente
+        credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
       });
   
       if (!response.ok) {

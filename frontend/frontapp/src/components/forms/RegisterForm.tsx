@@ -243,6 +243,8 @@ export default function RegisterForm() {
             <option value="Paciente">Paciente</option>
             <option value="Padre">Padre</option>
             <option value="Terapeuta">Terapeuta</option>
+            <option value="Admin">Admin</option>
+
           </select>
         </div>
 

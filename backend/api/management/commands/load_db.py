@@ -161,12 +161,17 @@ class Command(BaseCommand):
             profesional=terapeuta
         )
 
+        # Create condiciones
+        condicion1 = Condicion.objects.create(
+            edad= 10
+        )
+
+
         # Create scenes
         escena_1 = Escena.objects.create(
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            condiciones="Normal",
             link="https://ejemplo.com/video1",
             nombre="Escena 1",
             descripcion = "Esta escena reflexiona sobre la importancia de la amistad"
@@ -175,7 +180,6 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            condiciones="Normal",
             link="https://ejemplo.com/video2",
             nombre="Escena 2",
             descripcion = "Esta escena refleja la importancia de la familia"
@@ -185,7 +189,6 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=2,
-            condiciones="Normal",
             link="https://ejemplo.com/video3",
             nombre="Escena 3",
             descripcion = "Esta escena demuestra la importancia de la educación"
@@ -195,7 +198,6 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=4,
-            condiciones="Normal",
             link="https://ejemplo.com/video4",
             nombre="Escena 4",
             descripcion = "Esta escena refuerza la importancia de la juventud"
@@ -204,27 +206,25 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=3,
-            condiciones="Normal",
             link="https://ejemplo.com/video5",
             nombre="Escena 5",
             descripcion = "Esta escena refleja la importancia del viaje antes que el destino"
 
-            
         )
         escena_6 = Escena.objects.create(
             idioma="Español",
             acento="neutro",
             complejidad=5,
-            condiciones="Normal",
             link="https://ejemplo.com/video6",
             nombre="Escena 6",
             descripcion = "Esta escena refuerza la importancia de la juventud"
         )
+        ##estos tienen video que funciona
         escena_7 = Escena.objects.create(
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            condiciones="Normal",
+            condicion= condicion1,
             link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
             nombre="Escena 1",
             descripcion = "Esta escena aclara la importancia de los abuelos"
@@ -233,7 +233,6 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            condiciones="Normal",
             link="https://drive.google.com/file/d/1qzY31odKmd2FlrjU0VK4dkfezlzEcoaJ/preview",
             nombre="Escena 2",
             descripcion = "Esta escena muestra la vida en la fabella"
@@ -242,7 +241,6 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            condiciones="Normal",
             link="https://drive.google.com/file/d/1yPgHYRagTJXTqlrGhNkZDEy5zNY4-f77/preview",
             nombre="Escena 3",
             descripcion = "Esta escena recomienda comportamientos bajo"
@@ -302,15 +300,18 @@ class Command(BaseCommand):
         )
         escena_obj_3 = EscenaObjetivo.objects.create(
             escena=escena_7,
-            objetivo=objetivo_3
+            objetivo=objetivo_3,
+            orden= 1
         )
         escena_obj_4 = EscenaObjetivo.objects.create(
             escena=escena_8,
-            objetivo=objetivo_3
+            objetivo=objetivo_3,
+            orden= 2
+            
         )
         escena_obj_5 = EscenaObjetivo.objects.create(
             escena=escena_9,
-            objetivo=objetivo_3
+            objetivo=objetivo_3,
         )
         escena_obj_6 = EscenaObjetivo.objects.create(
             escena=escena_7,
@@ -329,64 +330,72 @@ class Command(BaseCommand):
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_3,
-            orden=1,
-            es_alternativo=False
+
         )
         persona_obj_esc_2 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_4,
-            orden=2,
-            es_alternativo=False
         )
         persona_obj_esc_3 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_5,
-            orden=3,
-            es_alternativo=False
         )
-
+        persona_obj_esc_4 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_1,
+        )
+        persona_obj_esc_5 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_2,
+        )
 
         formulario_1 = Formulario.objects.create(
             nombre="Formulario 1",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            objetivo=objetivo_3
         )
         Formulario.objects.create(
             nombre="Formulario 2",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            objetivo=objetivo_3
         )
         Formulario.objects.create(
             nombre="Formulario 3",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            objetivo=objetivo_2
         )
         Formulario.objects.create(
             nombre="Formulario 4",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            objetivo=objetivo_2
         )
         Formulario.objects.create(
             nombre="Formulario 5",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            objetivo=objetivo_3
         )
         Formulario.objects.create(
             nombre="Formulario 6",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            objetivo=objetivo_3
         )
 
         # Create person-objective-evaluation
@@ -421,8 +430,82 @@ class Command(BaseCommand):
             comentario_contestado=comentario_respuesta
         )
 
+                # Escena 1: Comentarios iniciales y respuestas encadenadas
+        comentario_escena1_paciente = Comentario.objects.create(
+            user=paciente,
+            escena=escena_1,
+            texto="¿Qué significa la señal al lado del puente?",
+        )
+
+        comentario_escena1_terapeuta = Comentario.objects.create(
+            user=terapeuta,
+            escena=escena_1,
+            texto="Esa señal indica que el puente solo soporta 10 toneladas.",
+            comentario_contestado=comentario_escena1_paciente,
+        )
+
+        Comentario.objects.create(
+            user=paciente,
+            escena=escena_1,
+            texto="¡Gracias! Eso explica por qué había un camión detenido ahí.",
+            comentario_contestado=comentario_escena1_terapeuta,
+        )
+
+        # Escena 2: Comentarios iniciales y respuestas encadenadas
+        comentario_escena2_paciente = Comentario.objects.create(
+            user=paciente,
+            escena=escena_2,
+            texto="¿Por qué el auto rojo se detiene en la esquina?",
+        )
+
+        comentario_escena2_terapeuta = Comentario.objects.create(
+            user=terapeuta,
+            escena=escena_2,
+            texto="Se detuvo porque hay un paso de peatones marcado en el suelo.",
+            comentario_contestado=comentario_escena2_paciente,
+        )
+
+        Comentario.objects.create(
+            user=paciente,
+            escena=escena_2,
+            texto="Entendido, es importante respetar a los peatones.",
+            comentario_contestado=comentario_escena2_terapeuta,
+        )
+
+        # Escena 1: Otro hilo de conversación
+        comentario_extra_escena1 = Comentario.objects.create(
+            user=paciente,
+            escena=escena_1,
+            texto="¿Qué es lo que muestra la pantalla del tablero en el minuto 2:15?",
+        )
+
+        Comentario.objects.create(
+            user=terapeuta,
+            escena=escena_1,
+            texto="La pantalla muestra que el auto está en modo de ahorro de energía.",
+            comentario_contestado=comentario_extra_escena1,
+        )
+
+        # Escena 2: Otro hilo de conversación
+        comentario_extra_escena2 = Comentario.objects.create(
+            user=paciente,
+            escena=escena_2,
+            texto="¿Qué tipo de señal es la que está al costado del camino en el minuto 3:45?",
+        )
+
+        Comentario.objects.create(
+            user=terapeuta,
+            escena=escena_2,
+            texto="Esa es una señal de advertencia de curva peligrosa.",
+            comentario_contestado=comentario_extra_escena2,
+        )
+
+
+
+
         Videosvistos.objects.create(
-            persona_objetivo_escena=persona_obj_esc_1,
+            paciente_id=paciente,
+            escena_id=escena_1
         )
 
         CentroProfesionalEscena.objects.create(

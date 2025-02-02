@@ -84,8 +84,9 @@ const PatientsOfGroupPage: React.FC = () => {
 
   const opProps = {
     editButton: true,
-    commentsButton: true,
+    //commentsButton: true,
     supervisionButton: true,
+    formsButton: true,
   }
 
   return (
@@ -100,7 +101,8 @@ const PatientsOfGroupPage: React.FC = () => {
             img='/icon/persona_silueta.png'
             edit_path="/therapist/selection/group_of_patients/patients/"
             supervision_path='/therapist/selection/group_of_patients/patients/follow_patient/'
-            comments_path='/therapist/selection/group_of_patients/patients/patient_comments/'
+            //comments_path='/therapist/selection/group_of_patients/patients/patient_comments/'
+            forms_path='/therapist/selection/group_of_patients/patients/forms/'
             item_type="patient"
             showImage={showImage}
             currentPage={currentPage}

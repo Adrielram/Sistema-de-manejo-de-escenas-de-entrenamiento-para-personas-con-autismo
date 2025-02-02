@@ -2,6 +2,7 @@
 import React, { useState, useEffect, use } from "react";
 import SingleSearchSelectBox from "../../../../../components/SingleSearchSelectBox";
 import SearchSelectBox from "../../../../../components/SearchSelectBox";
+import SortableSearchSelectBox from "../../../../../components/SortableSearchSelectBox";
 import { useSelector } from 'react-redux';
 import { RootState } from "../../../../../../store/store";
 import { useRouter } from 'next/navigation';
@@ -24,7 +25,13 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
   useEffect(() => {
     const fetchObjetivo = async () => {
       try {
-        const response = await fetch(`${baseUrl}objetivo/${edit_goal}/`);
+        const response = await fetch(`${baseUrl}objetivo/${edit_goal}/`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include' // Include cookies (to handle JWT cookie
+        });
         if (!response.ok) throw new Error('Objetivo no encontrado');
         const objetivo = await response.json();
         console.log("Objetivo:", objetivo);
@@ -55,6 +62,7 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
         center_name: center,
         username: username
       }),
+      credentials: 'include',
     });
   
     if (!nameResponse.ok) {
@@ -155,7 +163,7 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
 
           </div>          
           <div>
-            <SearchSelectBox
+            <SortableSearchSelectBox
               title="Buscar Escenas"
               searchPlaceholder="Escribe el nombre de la escena..."
               getItemLabel={(item) => item.nombre as string}

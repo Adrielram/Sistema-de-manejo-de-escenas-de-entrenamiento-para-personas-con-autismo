@@ -14,6 +14,9 @@ interface PaginadoItemProps {
   supervision_path?: string;
   comments_path?: string;
   revision_path?: string;
+  scenes_comments_path?: string;
+  user_dni?: string;
+  forms_path?: string;
   item_type: string;
   onDelete: (id: string) => void;
 }
@@ -28,6 +31,9 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   supervision_path,
   comments_path,
   revision_path,
+  scenes_comments_path,
+  forms_path,
+  user_dni,
   item_type, 
   showImage, 
   onDelete 
@@ -62,7 +68,11 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   };
 
   const handleComments = () => {
-    router.push(`${comments_path}?patient_id=${id}`);
+    router.push(`${comments_path}?patient_dni=${id}`);
+  };
+
+  const handleScenesComments = () => {
+    router.push(`${scenes_comments_path}?scene_id=${id}`);
   };
   
   const handleEdit = () => {
@@ -70,11 +80,16 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   };
   
   const handleSupervision = () => {
-    router.push(`${supervision_path}?patient_id=${id}`);
+    router.push(`${supervision_path}?patient_dni=${id}&patient_name=${name}`);
+    console.log(`Patient name: ${name}`);
   };
   
   const handleRevision = () => {
-    router.push(`${revision_path}?form_id=${id}`);
+    router.push(`${revision_path}?form_id=${id}&patient_dni=${user_dni}`);
+  };
+
+  const handleForms = () => {
+    router.push(`${forms_path}?patient_dni=${id}`);
   };
 
   const handleVer = () => {
@@ -151,7 +166,23 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
             onClick={handleRevision}
             className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
           >
-            Pacientes
+            Revisar
+          </button>
+        )}
+        {options.scenesCommentsButton && (
+          <button
+            onClick={handleScenesComments}
+            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
+          >
+            Comentarios
+          </button>
+        )}
+        {options.formsButton && (
+          <button
+            onClick={handleForms}
+            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
+          >
+            Evaluaciones
           </button>
         )}
       </div>

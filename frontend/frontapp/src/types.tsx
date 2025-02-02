@@ -6,6 +6,7 @@ export type SideNavItem = {
     icon?: JSX.Element;
     submenu?: boolean;
     subMenuItems?: SideNavItem[];
+    other_page?: boolean;
   };
 
 export type MenuItemWithSubMenuProps = {
@@ -22,4 +23,6 @@ export type OptionsProps = {
   supervisionButton?: boolean;
   seePatientsButton?: boolean;
   revisionButton?: boolean;
+  scenesCommentsButton?: boolean;
+  formsButton?: boolean;
 };

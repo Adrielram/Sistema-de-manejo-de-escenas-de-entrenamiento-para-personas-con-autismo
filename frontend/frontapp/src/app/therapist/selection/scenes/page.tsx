@@ -24,10 +24,13 @@ const ScenesPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(
-        `http://localhost:8000/api/get_scenes/?page=${page}`
-      );
-
+      const response = await fetch(`http://localhost:8000/api/get_scenes/?page=${page}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+      });
       if (!response.ok) {
         throw new Error("Error al obtener Las escenas.");
       }
@@ -81,6 +84,7 @@ const ScenesPage: React.FC = () => {
   const opProps = {
     trashBin: true, 
     editButton: true,
+    scenesCommentsButton: true,
   }
 
   return (
@@ -94,6 +98,7 @@ const ScenesPage: React.FC = () => {
             options={opProps}
             img='/icon/pelicula.png'
             edit_path="/therapist/selection/scenes/"
+            scenes_comments_path="/therapist/selection/scenes/comments/"
             item_type="scene"
             showImage={showImage}
             currentPage={currentPage}
