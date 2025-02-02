@@ -571,8 +571,6 @@ def get_goal_data(request, objetivo_id):
         return Response({"error": "Objetivo no encontrado"}, status=404)
         
 from django.db import transaction
-
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signIn(request):
@@ -602,7 +600,8 @@ def signIn(request):
         numero = request.data.get('numero')
         id_padre = request.data.get('id_padre', None)  # Puede ser opcional
         centros_de_salud = request.data.get('centros_de_salud', None)  # Puede ser opcional
-
+        sintomas = request.data.get('sintomas',[])  # Puede ser opcional
+        texto = request.data.get('texto','')  # Puede ser opcional
         print("Centros de salud "+str(centros_de_salud))
         print(f"Datos recibidos: DNI={dni}, Nombre={nombre}, Fecha={fecha_nac}, Genero={genero}, Role={role}")
 
@@ -665,7 +664,8 @@ def signIn(request):
                 genero=genero,
                 role=role,
                 direccion_id_dir=residencia,  # Se pasa el objeto residencia
-                email='adri@example.com'
+                email='adri@example.com',
+                patologia=texto
             )
 
             if role == 'admin':
@@ -698,7 +698,7 @@ def signIn(request):
             if role == 'terapeuta':
                 user.is_active = False
             else:
-                user.is_active = True
+                user.is_active = True           
             user.save()       
             print(f"Usuario creado: {user}")
             if role == 'terapeuta' and centros_de_salud is not None:
@@ -715,7 +715,32 @@ def signIn(request):
                     return Response(
                         {"error": f"Error al asociar centros de salud: {str(e)}"},
                         status=status.HTTP_400_BAD_REQUEST
-                    )                         
+                    )         
+
+             # Asociar síntomas (solo para pacientes)
+            if role == 'paciente' and sintomas:
+                for sintoma in sintomas:
+                    nombre_patologia = sintoma.get('nombre')
+                    certeza = sintoma.get('similitud')
+
+                    if not nombre_patologia or certeza is None:
+                        return Response(
+                            {"error": f"Faltan datos en el síntoma: {sintoma}"},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+                    try:
+                        patologia = Patologia.objects.get(nombre=nombre_patologia)
+                        PersonaPatologia.objects.create(
+                            user_id=user,
+                            patologia_id=patologia,
+                            certeza=certeza
+                        )
+                    except Patologia.DoesNotExist:
+                        return Response(
+                            {"error": f"No se encontró la patología con nombre '{nombre_patologia}'"},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
         return Response(
             {"message": "Usuario registrado exitosamente"},
             status=status.HTTP_201_CREATED
@@ -1358,7 +1383,6 @@ class GetUnreachedGoalsView(generics.ListAPIView):
         return unreached_goals
 
 
-
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def buscar_padres(request):
@@ -1424,6 +1448,7 @@ class registrar_comentario(APIView):
         
         # Si el serializer no es válido, retornar los errores
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class ComentariosListaAPIView(APIView):
     def get(self, request, *args, **kwargs):
