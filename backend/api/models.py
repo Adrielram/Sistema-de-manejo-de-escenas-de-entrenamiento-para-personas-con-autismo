@@ -442,7 +442,7 @@ class RegistroEvaluacion(models.Model):
     objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE, related_name="registros")
     paciente = models.ForeignKey(User, on_delete=models.CASCADE, related_name="registros")
     edad = models.PositiveIntegerField()
-    patologias = models.ManyToManyField(Patologia, related_name="registros")
+    patologias = models.JSONField(default=list)
     escena = models.ForeignKey(Escena, on_delete=models.CASCADE, related_name="registros")
     complejidad = models.PositiveIntegerField()  # Se obtiene desde Escena
     resultado = models.DecimalField(max_digits=5, decimal_places=2)  # Evaluación en porcentaje

@@ -2397,15 +2397,19 @@ def calcular_edad(fecha_nac):
 def guardar_registro_evaluacion(username, formulario_id):
     paciente = get_object_or_404(User, username=username)
     formulario = get_object_or_404(Formulario, id=formulario_id)
-    objetivo = formulario.objetivo
-    #patologias = paciente.patologias.all()
+    objetivo = formulario.objetivo    
     edad_paciente = calcular_edad(paciente.fecha_nac)
+    # Obtener IDs de patologías del usuario desde PersonaPatologia
+    patologias_ids = list(
+        PersonaPatologia.objects.filter(user_id=paciente).values_list("patologia_id", flat=True)
+    )
     # Obtener todas las preguntas del formulario con su escena asociada
     preguntas_por_escena = defaultdict(list)
     preguntas = Pregunta.objects.filter(formulario=formulario).select_related("escena")
 
     for pregunta in preguntas:
-        preguntas_por_escena[pregunta.escena].append(pregunta)
+        if pregunta.escena:  # Asegura que la escena existe
+            preguntas_por_escena[pregunta.escena].append(pregunta)
 
     registros = []
     for escena, preguntas in preguntas_por_escena.items():
@@ -2428,6 +2432,7 @@ def guardar_registro_evaluacion(username, formulario_id):
             objetivo=objetivo,
             paciente=paciente,
             edad= edad_paciente, 
+            patologias=patologias_ids,
             escena=escena,
             complejidad=escena.complejidad,
             resultado=Decimal(resultado_escena),
