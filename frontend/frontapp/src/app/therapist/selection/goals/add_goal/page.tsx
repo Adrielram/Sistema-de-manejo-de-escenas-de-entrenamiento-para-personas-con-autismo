@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import SingleSearchSelectBox from "../../../../../components/SingleSearchSelectBox";
 import SearchSelectBox from "../../../../../components/SearchSelectBox";
+import { useSelector } from 'react-redux';
+import { RootState } from "../../../../../../store/store";
 
 const CreateObjetivo: React.FC = () => {
   const [titulo, setTitulo] = useState("");
@@ -10,45 +12,69 @@ const CreateObjetivo: React.FC = () => {
   const [selectedScenes, setSelectedScenes] = useState([]);
   const [selectedObjectives, setSelectedObjectives] = useState([]);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-
+  const { center, username } = useSelector((state: RootState) => state.user)
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
   
+    // First, resolve names to IDs
+    const nameResponse = await fetch(`${baseUrl}goal/ResolveNamesToIds/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        center_name: center,
+        username: username
+      }),
+      credentials: 'include', // Include cookies (to handle JWT cookie
+    });
+  
+    if (!nameResponse.ok) {
+      const errorData = await nameResponse.text(); // Read as text instead of JSON for error messages
+      console.error("Error resolving names to IDs:", errorData);
+      alert("Error al resolver los nombres a IDs.");
+      return;
+    }
+    // Here, we parse the JSON data from the response
+    const responseData = await nameResponse.json();
+    console.log("Response Data:", responseData); // For debugging
+  
     const objetivoData = {
       nombre: titulo,
-      descripcion,
+      descripcion: descripcion,
       video_explicativo_id: selectedSceneId, // ID del video explicativo
       escenas: selectedScenes.map((item) => item.id), // IDs de las escenas seleccionadas
       objetivos: selectedObjectives.map((item) => item.id),
+      centro_profesional: responseData.center_professional,
     };
   
     try {
-      const response = await fetch(`${baseUrl}create_objetivo/`, {
+      const createResponse = await fetch(`${baseUrl}create_objetivo/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(objetivoData),
+        credentials: 'include', // Include cookies (to handle JWT cookie
       });
   
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error al crear el objetivo:", errorData);
+      if (!createResponse.ok) {
+        const errorText = await createResponse.text(); // Again, reading as text for error handling
+        console.error("Error al crear el objetivo:", errorText);
         alert("Hubo un problema al crear el objetivo.");
         return;
       }
   
-      const data = await response.json();
+      const data = await createResponse.json();
       console.log("Objetivo creado con éxito:", data);
       alert("Objetivo creado con éxito.");
-      // Aquí podrías redirigir o limpiar el formulario
+      // Here you could redirect or clear the form
     } catch (error) {
-      console.error("Error de red al crear el objetivo:", error);
+      console.error("Network error while creating objetivo:", error);
       alert("Error de red al intentar crear el objetivo.");
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-blue-50 py-12 px-4">
@@ -95,9 +121,8 @@ const CreateObjetivo: React.FC = () => {
               onSelectItem={(id) => {
                 console.log("Escena seleccionada:", id);
                 setSelectedSceneId(id); // Actualiza el estado con el id seleccionado
-              }}
-              apiUrl={`${baseUrl}escenas/`}
-            />
+              } }
+              apiUrl={`${baseUrl}escenas/`}             />
 
 
           </div>          
@@ -149,3 +174,5 @@ const CreateObjetivo: React.FC = () => {
 };
 
 export default CreateObjetivo;
+
+

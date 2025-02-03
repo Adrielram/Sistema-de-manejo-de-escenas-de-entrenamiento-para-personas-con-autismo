@@ -5,13 +5,28 @@ import Opcion from "./Opcion";
 interface PreguntaProps {
   onAddPregunta: (pregunta: any) => void;
   esVerificacionAutomatica: boolean;
+  objetivoId: string;
 }
 
-const Pregunta: React.FC<PreguntaProps> = ({ onAddPregunta, esVerificacionAutomatica }) => {
+const Pregunta: React.FC<PreguntaProps> = ({ onAddPregunta, esVerificacionAutomatica, objetivoId }) => {
   const [texto, setTexto] = useState("");
   const [tipo, setTipo] = useState(esVerificacionAutomatica ? "multiple-choice" : "respuesta-corta");
   const [opciones, setOpciones] = useState<any[]>([]);
   const [correcta, setCorrecta] = useState("");
+  const [escenas, setEscenas] = useState([]);
+  const [escenaId, setEscenaId] = useState(null);  
+
+  useEffect(() => {
+    if (objetivoId) {
+      fetch(`http://localhost:8000/api/objetivo/${objetivoId}/`)
+        .then((res) => res.json())
+        .then((data) => setEscenas(data.escenas_relacionadas || []))
+        .catch((error) => console.error("Error al obtener escenas:", error));
+    } else {
+      setEscenas([]);
+      setEscenaId(null);
+    }
+  }, [objetivoId]); 
   
 
   // Define los tipos de preguntas según el modo de verificación
@@ -34,22 +49,43 @@ const Pregunta: React.FC<PreguntaProps> = ({ onAddPregunta, esVerificacionAutoma
   }, [esVerificacionAutomatica]);
 
   const manejarAgregarPregunta = () => {
+    console.log("Escenas: ", JSON.stringify(escenas));
     const pregunta = {
       texto,
       tipo,
       opciones: tipo === "multiple-choice" ? opciones : undefined,
       correcta: tipo === "multiple-choice" ? correcta : undefined,
+      escena: escenaId || null,
+      nombre_escena: escenas.find((escena) => escena.id === Number(escenaId))?.nombre || null
+
     };
     onAddPregunta(pregunta);
     setTexto("");
     setTipo(esVerificacionAutomatica ? "multiple-choice" : "respuesta-corta");
     setOpciones([]);
     setCorrecta("");
+    setEscenaId(null);
   };
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md space-y-4">
       <h3 className="text-lg font-semibold text-gray-800">Agregar Pregunta</h3>
+      <label className="block text-sm font-medium text-gray-700">
+        Seleccionar Escena:
+        <select
+          value={escenaId || ""}
+          onChange={(e) => setEscenaId(e.target.value || null)}
+          className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Ninguna</option>
+          {escenas.map((escena) => (
+            <option key={escena.id} value={escena.id}>
+              {escena.nombre}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <label className="block text-sm font-medium text-gray-700">
         Texto de la pregunta:
         <input

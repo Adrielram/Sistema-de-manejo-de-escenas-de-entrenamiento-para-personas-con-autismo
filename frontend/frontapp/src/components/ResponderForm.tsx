@@ -2,14 +2,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const ResponderForm = ({ idform, onSubmitted = () => {}}) => {
+const ResponderForm = ({ idform, dni,  onSubmitted = () => {}}) => {
   const [formulario, setFormulario] = useState(null);
   const [respuestas, setRespuestas] = useState({});
   const [error, setError] = useState("");
   const [resultados, setResultados] = useState({});
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  const router = useRouter();
-
+  const router = useRouter();  
+  
   useEffect(() => {
     fetch(`${baseUrl}formularios/${idform}/`)
       .then((res) => res.json())
@@ -48,7 +48,7 @@ const ResponderForm = ({ idform, onSubmitted = () => {}}) => {
         pregunta: pregunta.id,
         respuesta,
         correcta,
-        paciente: 40333444, // Ajusta esto según el paciente actual
+        paciente: dni, // Ajusta esto según el paciente actual
       };
     });
 
@@ -64,7 +64,7 @@ const ResponderForm = ({ idform, onSubmitted = () => {}}) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           formulario_id: idform,
-          paciente_dni: 40333444, // Ajusta según el paciente actual
+          paciente_dni: dni, // Ajusta según el paciente actual
           verificado_automatico: formulario.es_verificacion_automatica,
         }),
       });
@@ -92,10 +92,9 @@ const ResponderForm = ({ idform, onSubmitted = () => {}}) => {
   if (error) return <p className="text-red-500">{error}</p>;
 
   if (!formulario) return <p>Cargando formulario...</p>;
-
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">{formulario.titulo}</h1>
+    <div className="bg-white max-w-4xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">{formulario.nombre}</h1>
       <p className="text-gray-700 mb-6">{formulario.descripcion}</p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -107,6 +106,18 @@ const ResponderForm = ({ idform, onSubmitted = () => {}}) => {
             <label className="block font-medium text-gray-800 mb-2">
               {pregunta.texto}
             </label>
+
+            
+            {(pregunta.nombre_escena ? (
+              <label className="block font-medium text-gray-800 mb-2">
+                Escena relacionada: {pregunta.nombre_escena}
+              </label>
+            ) : (
+              <label className="block font-medium text-gray-800 mb-2">
+                Pregunta General
+              </label>
+            ))}          
+            
 
             {pregunta.tipo === "multiple-choice" ? (
               <div>

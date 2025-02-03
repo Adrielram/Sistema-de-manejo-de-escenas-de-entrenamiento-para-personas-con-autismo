@@ -1,14 +1,8 @@
-"use client"
-
-import { useState, useEffect } from "react";
-
-
-const Page = () => {
-
+const Page = () => {  
 
   return (
     <div>
-      <h1>hiii</h1>
+      Hola
     </div>
   );
 };

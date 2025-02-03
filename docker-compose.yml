@@ -21,8 +21,11 @@ services:
       - ./backend:/app
     depends_on:
       - db
+      - redis
     environment:
       - DATABASE_HOST=db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
 
   frontend:
     user: root # ! borrar
@@ -38,6 +41,12 @@ services:
       - backend
     environment:
       - NODE_ENV=development
+
+  redis:
+    image: redis:6.2
+    container_name: redis_server
+    ports:
+      - "6379:6379"
 
 volumes:
   db_data:
