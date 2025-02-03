@@ -182,7 +182,7 @@ class PersonaObjetivoEscena(models.Model):
         'EscenaObjetivo',
         on_delete=models.SET_NULL,
         related_name='objetivo_relations',
-        db_column='objetivo_id',
+        db_column='EscenaObjetivo_id',
         blank=True,
         null=True
     )
@@ -302,20 +302,22 @@ class Comentario(models.Model):
             )
         ]
 
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 class Notificacion(models.Model):
+    # Usuario destinatario (admin o terapeuta)
     destinatario = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
         related_name='notificaciones_recibidas'
     )
+    # Usuario que envía la notificación
     remitente = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
         related_name='notificaciones_enviadas'
     )
+    # Mensaje de la notificación
     mensaje = models.TextField()
+    # Estado de la notificación
     estado = models.CharField(
         max_length=50, 
         choices=[
@@ -325,11 +327,7 @@ class Notificacion(models.Model):
         ],
         default='pendiente'
     )
-    # Relación genérica
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    objeto_asociado = GenericForeignKey('content_type', 'object_id')
-
+    # Marca de tiempo
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -376,7 +374,7 @@ class Formulario(models.Model):
     es_verificacion_automatica = models.BooleanField(default=False)
     creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE, related_name="formularios_objetivo")
+    objetivo_id = models.ForeignKey(Objetivo, related_name="objetivo", on_delete=models.CASCADE, blank=True, null=True)
 
     def _str_(self):
         return self.nombre
@@ -395,7 +393,6 @@ class Pregunta(models.Model):
     texto = models.CharField(max_length=255)
     tipo = models.CharField(max_length=20, choices=TIPOS_PREGUNTA)
     correcta = models.CharField(max_length=255, blank=True, null=True)  # Solo para verificación automática
-    escena = models.ForeignKey(Escena, on_delete=models.CASCADE, related_name="preguntas", blank=True, null=True)
 
     def __str__(self):
         return self.texto

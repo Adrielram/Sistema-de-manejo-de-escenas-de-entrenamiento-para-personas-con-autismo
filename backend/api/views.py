@@ -440,6 +440,54 @@ def verify_session(request):
         return Response({"message": "Token inválido o expirado"}, status=401)
 
     
+class CargarPersonaObjetivoEvaluacion(APIView):
+    def post(self, request):
+        """
+        Carga datos en la tabla PersonaObjetivoEvaluacion a partir de un JSON enviado en la solicitud.
+        """
+        data = request.data
+        try:
+            # Extraer los datos del JSON
+            user_id = data.get('user_id')
+            objetivo_id = data.get('objetivo_id')
+            resultado = data.get('resultado', None)
+            progreso = data.get('progreso')
+            evaluacion_id = data.get('evaluacion_id', None)
+            # Validar que los campos requeridos estén presentes
+            if not user_id or not objetivo_id or progreso is None:
+                return Response(
+                    {'error': 'Faltan datos requeridos: user_id, objetivo_id o progreso.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Obtener las instancias relacionadas
+            try:
+                user = User.objects.get(dni=user_id)
+                objetivo = Objetivo.objects.get(id=objetivo_id)
+                evaluacion = Formulario.objects.get(id=evaluacion_id) if evaluacion_id else None
+            except User.DoesNotExist:
+                return Response({'error': 'El usuario especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+            except Objetivo.DoesNotExist:
+                return Response({'error': 'El objetivo especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+            except Formulario.DoesNotExist:
+                return Response({'error': 'El formulario especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+            # Crear el registro en la tabla PersonaObjetivoEvaluacion
+            persona_objetivo_evaluacion = PersonaObjetivoEvaluacion.objects.create(
+                user_id=user,
+                objetivo_id=objetivo,
+                resultado=resultado,
+                progreso=progreso,
+                evaluacion=evaluacion
+            )
+            return Response(
+                {'message': 'Registro creado exitosamente.', 'id': persona_objetivo_evaluacion.id},
+                status=status.HTTP_201_CREATED
+            )
+        except Exception as e:
+            return Response(
+                {'error': 'Ocurrió un error al crear el registro.', 'details': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 @api_view(['GET'])
 def objetivos_list(request):
     objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 

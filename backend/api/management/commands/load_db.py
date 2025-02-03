@@ -162,10 +162,14 @@ class Command(BaseCommand):
         )
 
         # Create condiciones
+        condicion1 = Condicion.objects.create(
+            edad= 10
+        )
+
         condicion2 = Condicion.objects.create(
             edad=15
         )
-
+        
         # Create scenes
         escena_1 = Escena.objects.create(
             idioma="Español",
@@ -300,7 +304,6 @@ class Command(BaseCommand):
         escena_obj_3 = EscenaObjetivo.objects.create(
             escena=escena_7,
             objetivo=objetivo_3,
-            orden= 1
         )
         escena_obj_4 = EscenaObjetivo.objects.create(
             escena=escena_8,
@@ -386,8 +389,6 @@ class Command(BaseCommand):
             escena_objetivo=escena_obj_11,
             orden = 5
         )
-
-
 
         formulario_1 = Formulario.objects.create(
             nombre="Formulario 1",
@@ -516,58 +517,6 @@ class Command(BaseCommand):
             comentario_contestado=comentario_respuesta
         )
 
-        # Escena 2: Comentarios iniciales y respuestas encadenadas
-        comentario_escena2_paciente = Comentario.objects.create(
-            user=paciente,
-            escena=escena_2,
-            texto="¿Por qué el auto rojo se detiene en la esquina?",
-        )
-
-        comentario_escena2_terapeuta = Comentario.objects.create(
-            user=terapeuta,
-            escena=escena_2,
-            texto="Se detuvo porque hay un paso de peatones marcado en el suelo.",
-            comentario_contestado=comentario_escena2_paciente,
-        )
-
-        Comentario.objects.create(
-            user=paciente,
-            escena=escena_2,
-            texto="Entendido, es importante respetar a los peatones.",
-            comentario_contestado=comentario_escena2_terapeuta,
-        )
-
-        # Escena 1: Otro hilo de conversación
-        comentario_extra_escena1 = Comentario.objects.create(
-            user=paciente,
-            escena=escena_1,
-            texto="¿Qué es lo que muestra la pantalla del tablero en el minuto 2:15?",
-        )
-
-        Comentario.objects.create(
-            user=terapeuta,
-            escena=escena_1,
-            texto="La pantalla muestra que el auto está en modo de ahorro de energía.",
-            comentario_contestado=comentario_extra_escena1,
-        )
-
-        # Escena 2: Otro hilo de conversación
-        comentario_extra_escena2 = Comentario.objects.create(
-            user=paciente,
-            escena=escena_2,
-            texto="¿Qué tipo de señal es la que está al costado del camino en el minuto 3:45?",
-        )
-
-        Comentario.objects.create(
-            user=terapeuta,
-            escena=escena_2,
-            texto="Esa es una señal de advertencia de curva peligrosa.",
-            comentario_contestado=comentario_extra_escena2,
-        )
-
-
-
-
         Videosvistos.objects.create(
             paciente_id=paciente,
             escena_id=escena_1
@@ -583,142 +532,6 @@ class Command(BaseCommand):
             nombre="Ansiedad Social",
             descripcion="Miedo a interacciones; Interpretación errónea de señales sociales; Vergüenza/temor al rechazo; Fobia social, evaluación negativa, interpretación distorsionada, evitación social, timidez extrema, miedo al juicio, Miedo a hablar en grupo, me muero si me miran, no puedo mirar a los ojos, temblores cuando hablo"
         )
-
-        # Ansiedad Sensorial
-        Patologia.objects.create(
-            nombre="Ansiedad Sensorial",
-            descripcion="Dolor a los sonidos fuertes de una discoteca, me molestan las luces brillantes, no soporto que me toquen, Sobrecarga por ruidos; Hipersensibilidad táctil; Incomodidad con luces/texturas;  Sobrecarga neurológica, hiperestimulación, umbral sensorial bajo, defensividad sensorial, intolerancia a estímulos"
-        )
-
-        # Ansiedad por Espera
-        Patologia.objects.create(
-            nombre="Ansiedad por Espera",
-            descripcion="Me estreso si cambian los planes, necesito saber todo con anticipación, no me gusta lo imprevisto, Necesidad de predictibilidad; Frustración por desorden; Ansiedad por rutinas interrumpidas;  Rigidez cognitiva, necesidad de control, predicción compulsiva, intransigencia, disrupciones de esquema"
-        )
-
-        # Ansiedad Comunicacional
-        Patologia.objects.create(
-            nombre="Ansiedad Comunicacional",
-            descripcion="No sé explicar lo que siento, me cuesta hablar, me bloqueo cuando tengo que comunicar algo, Dificultad para expresarse; Malentendidos frecuentes; Problemas con lenguaje no verbal; Déficit pragmático, comunicación atípica, disregulación emocional, malinterpretación contextual, barrera lingüística"
-        )
-
-        # Ansiedad de Interacción
-        Patologia.objects.create(
-            nombre="Ansiedad de Interacción",
-            descripcion="Pánico en fiestas, no sé cómo empezar una conversación, me dan ganas de irme, Miedo a situaciones nuevas; Pánico en ambientes sociales; Dificultad para iniciar conversaciones; Inhibición social, parálisis conversacional, evitación relacional, ansiedad de encuentro, bloqueo interpersonal"
-        )
-
-        # Trastornos de Ansiedad
-        Patologia.objects.create(
-            nombre="Trastornos de Ansiedad",
-            descripcion="Mil preocupaciones a la vez, mi cabeza no para de dar vueltas, Conjunto de trastornos que incluyen diversos tipos de ansiedad; Desregulación emocional, hiperactivación autonómica, espectro ansioso, manifestaciones psicofisiológicas"
-        )
-
-        # Ansiedad Generalizada
-        Patologia.objects.create(
-            nombre="Ansiedad Generalizada",
-            descripcion="Me preocupo por todo, siempre pensando en lo peor, nervios constantes, Preocupación excesiva y persistente sobre varias áreas de la vida; Preocupación persistente, catastrofización, rumiación cognitiva, tensión crónica, anticipación negativa"
-        )
-
-        # Ansiedad Anticipatoria
-        Patologia.objects.create(
-            nombre="Ansiedad Anticipatoria",
-            descripcion="Ya me estoy imaginando que va a salir mal, no puedo dejar de pensar en lo que viene, Ansiedad sobre eventos futuros, anticipando resultados negativos; Proyección negativa, escenarios catastróficos, preocupación prospectiva, miedo predictivo, antelación angustiante"
-        )
-
-        # Trastornos Sensoriales
-        Patologia.objects.create(
-            nombre="Trastornos Sensoriales",
-            descripcion="El mundo me abruma, demasiados estímulos, no puedo procesarlo todo, Alteraciones en la percepción sensorial que afectan el procesamiento de estímulos; Disregulación perceptiva, alteración neurológica, procesamiento atípico, umbral sensorial desajustado"
-        )
-
-        # Hipersensibilidad Sensorial
-        Patologia.objects.create(
-            nombre="Hipersensibilidad Sensorial",
-            descripcion="Me molesta todo, ruidos me descontrolan, texturas me alteran, Respuesta exagerada a estímulos sensoriales normales; Sensibilidad exacerbada, respuesta hiperdinámica, umbral de tolerancia reducido, reactivididad sensorial"
-        )
-
-        # Trastornos del Neurodesarrollo
-        Patologia.objects.create(
-            nombre="Trastornos del Neurodesarrollo",
-            descripcion="Mi cerebro funciona distinto, no proceso igual que los demás, Conjunto de trastornos que afectan el desarrollo neurológico y comportamiento; Desviación neurocognitiva, atipicidad neurológica, desarrollo neuronal divergente, variabilidad neurofuncional"
-        )
-
-        # Trastorno de Procesamiento Sensorial
-        Patologia.objects.create(
-            nombre="Trastorno de Procesamiento Sensorial",
-            descripcion=" Información sensorial me supera, no filtro bien los estímulos, Dificultad en la organización y respuesta a la información sensorial; Integración sensorial deficiente, modulación neurológica alterada, respuesta sensorial desorganizada"
-        )
-
-        PersonaPatologia.objects.create(
-            user_id=paciente,
-            patologia_id=Patologia.objects.get(nombre="Ansiedad Sensorial")
-        )
-
-        PersonaPatologia.objects.create(
-            user_id=paciente,
-            patologia_id=Patologia.objects.get(nombre="Ansiedad Social")
-        )
-
-        PersonaPatologia.objects.create(
-            user_id=paciente,
-            patologia_id=Patologia.objects.get(nombre="Trastornos de Ansiedad")
-        )
-
-        PersonaPatologia.objects.create(
-            user_id=paciente,
-            patologia_id=Patologia.objects.get(nombre="Hipersensibilidad Sensorial")
-        )
-
-
-        PersonaPatologia.objects.create(
-            user_id=paciente2,
-            patologia_id=Patologia.objects.get(nombre="Ansiedad Comunicacional")
-        )
-
-        PersonaPatologia.objects.create(
-            user_id=paciente2,
-            patologia_id=Patologia.objects.get(nombre="Ansiedad de Interacción")
-        )
-
-        PersonaPatologia.objects.create(
-            user_id=paciente2,
-            patologia_id=Patologia.objects.get(nombre="Ansiedad Anticipatoria")
-        )
-
-        PersonaPatologia.objects.create(
-            user_id=paciente2,
-            patologia_id=Patologia.objects.get(nombre="Trastornos del Neurodesarrollo")
-        )
-
-        PersonaPatologia.objects.create(
-            user_id=paciente3,
-            patologia_id=Patologia.objects.get(nombre="Ansiedad por Espera")
-        )
-
-        PersonaPatologia.objects.create(
-            user_id=paciente3,
-            patologia_id=Patologia.objects.get(nombre="Ansiedad Generalizada")
-        )
-
-        PersonaPatologia.objects.create(
-            user_id=paciente3,
-            patologia_id=Patologia.objects.get(nombre="Trastornos Sensoriales")
-        )
-
-        PersonaPatologia.objects.create(
-            user_id=paciente3,
-            patologia_id=Patologia.objects.get(nombre="Trastorno de Procesamiento Sensorial")
-        )
-
-        condicion1 = Condicion.objects.create(
-            edad= 10,
-            fecha= datetime(2021, 1, 1),
-            escena_id= escena_2.id,
-            objetivo_id= objetivo_3.id,
-        )
-        escena_9.condicion = condicion1
-        escena_9.save()
 
         # Ansiedad Sensorial
         Patologia.objects.create(
