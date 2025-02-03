@@ -162,14 +162,10 @@ class Command(BaseCommand):
         )
 
         # Create condiciones
-        condicion1 = Condicion.objects.create(
-            edad= 10
-        )
-
         condicion2 = Condicion.objects.create(
             edad=15
         )
-        
+
         # Create scenes
         escena_1 = Escena.objects.create(
             idioma="Español",
@@ -303,7 +299,7 @@ class Command(BaseCommand):
         )
         escena_obj_3 = EscenaObjetivo.objects.create(
             escena=escena_7,
-            objetivo=objetivo_3,
+            objetivo=objetivo_3
         )
         escena_obj_4 = EscenaObjetivo.objects.create(
             escena=escena_8,
@@ -311,7 +307,7 @@ class Command(BaseCommand):
         )
         escena_obj_5 = EscenaObjetivo.objects.create(
             escena=escena_9,
-            objetivo=objetivo_3,
+            objetivo=objetivo_3
         )
         escena_obj_6 = EscenaObjetivo.objects.create(
             escena=escena_1,
@@ -389,6 +385,8 @@ class Command(BaseCommand):
             escena_objetivo=escena_obj_11,
             orden = 5
         )
+
+
 
         formulario_1 = Formulario.objects.create(
             nombre="Formulario 1",
@@ -659,5 +657,13 @@ class Command(BaseCommand):
             user_id=paciente3,
             patologia_id=Patologia.objects.get(nombre="Trastorno de Procesamiento Sensorial")
         )
+
+        condicion1 = Condicion.objects.create(
+            edad= 10,
+            fecha= datetime(2021, 1, 1),
+            objetivo_id= objetivo_3.id,
+        )
+        escena_9.condicion = condicion1
+        escena_9.save()
 
         self.stdout.write(self.style.SUCCESS('Successfully loaded sample data'))
