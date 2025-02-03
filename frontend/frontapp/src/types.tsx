@@ -6,6 +6,7 @@ export type SideNavItem = {
     icon?: JSX.Element;
     submenu?: boolean;
     subMenuItems?: SideNavItem[];
+    other_page?: boolean;
   };
 
 export type MenuItemWithSubMenuProps = {
@@ -14,11 +15,14 @@ export type MenuItemWithSubMenuProps = {
 }
 
 export type OptionsProps = {
-  // name se muestra siempre
-  personalInfo?: boolean; // DNI y padre a cargo
-  buttonVer?: boolean; // Muestra botón de "Ver"
-  trashBin?: boolean; // Muestra icono de tacho de basura
-  buttonComments?: boolean; // Muestra botón de "Comentarios"
-  buttonEdit?: boolean; // Muestra botón de "Editar"
-  buttonSeguimiento?: boolean; // Muestra botón de "Seguimiento"
+  personalInfo?: boolean;
+  buttonVer?: boolean;
+  trashBin?: boolean;
+  commentsButton?: boolean;
+  editButton?: boolean;
+  supervisionButton?: boolean;
+  seePatientsButton?: boolean;
+  revisionButton?: boolean;
+  scenesCommentsButton?: boolean;
+  formsButton?: boolean;
 };

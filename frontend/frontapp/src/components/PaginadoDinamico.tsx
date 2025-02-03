@@ -12,6 +12,14 @@ interface BoxPaginadoProps {
   options: OptionsProps;
   img: string;
   edit_path: string;
+  patients_list_path?: string;
+  supervision_path?: string;
+  comments_path?: string;
+  revision_path?: string;
+  scenes_comments_path?: string;
+  forms_path?: string;
+  user_dni?: string;
+  item_type: string;
   showImage: boolean;
   currentPage: number;
   totalItems: number;
@@ -25,6 +33,14 @@ export default function BoxPaginado({
   options,
   img,
   edit_path,
+  patients_list_path,
+  supervision_path,
+  comments_path,
+  revision_path,
+  scenes_comments_path,
+  forms_path,
+  user_dni,
+  item_type,
   showImage,
   currentPage, 
   totalItems: initialTotalItems,
@@ -74,7 +90,7 @@ export default function BoxPaginado({
   return (
     <div className="container mx-auto p-4">
       <hr className="border-none h-1 mb-4 bg-[#f6512b]" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
         {Object.entries(data).map(([key, value]) => (
           <PaginadoItem 
             key={key} 
@@ -83,7 +99,15 @@ export default function BoxPaginado({
             showImage={showImage} 
             options={options} 
             img={img} 
-            edit_path={`${edit_path}${key}`}
+            edit_path={edit_path}
+            patients_list_path={patients_list_path}
+            supervision_path={supervision_path}
+            comments_path={comments_path}
+            revision_path={revision_path}
+            scenes_comments_path={scenes_comments_path}
+            forms_path={forms_path}
+            user_dni={user_dni}
+            item_type={item_type}
             onDelete={handleDelete}
           />
         ))}

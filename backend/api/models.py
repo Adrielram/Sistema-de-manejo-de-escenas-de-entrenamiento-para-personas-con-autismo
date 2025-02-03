@@ -182,7 +182,7 @@ class PersonaObjetivoEscena(models.Model):
         'EscenaObjetivo',
         on_delete=models.SET_NULL,
         related_name='objetivo_relations',
-        db_column='objetivo_id',
+        db_column='EscenaObjetivo_id',
         blank=True,
         null=True
     )
@@ -373,6 +373,7 @@ class Formulario(models.Model):
     es_verificacion_automatica = models.BooleanField(default=False)
     creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    objetivo_id = models.ForeignKey(Objetivo, related_name="objetivo", on_delete=models.CASCADE, blank=True, null=True)
 
     def _str_(self):
         return self.nombre

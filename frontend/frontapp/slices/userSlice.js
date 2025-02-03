@@ -33,7 +33,9 @@ const userSlice = createSlice({
       state.hijoNombre = "";
     },
 
-    setCentroSalud: (state, action) => {
+
+    setCenter: (state, action) => {
+
       state.center = action.payload.center;
     },
     setObjetivoId: (state, action) => {
@@ -51,10 +53,10 @@ const userSlice = createSlice({
     setHijoNombre(state, action) {
       state.hijoNombre = action.payload.hijoNombre;
     },
-  }
-  
-}
-);
 
-export const { setUser, clearUser ,setUserId, setObjetivoId, setIdEscena,setHijoNombre} = userSlice.actions;
+  },
+  
+});
+
+export const { setUser, clearUser , setCenter, setUserId, setObjetivoId, setIdEscena,setHijoNombre} = userSlice.actions;
 export default userSlice.reducer;

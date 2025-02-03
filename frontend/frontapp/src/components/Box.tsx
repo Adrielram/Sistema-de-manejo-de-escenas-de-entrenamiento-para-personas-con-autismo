@@ -3,13 +3,12 @@ import React from 'react';
 //import ReactDOM from 'react-dom';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-
 // Ruta de las imágenes
 //import photo from '../../public/icon/persona_silueta.png'; // Tu imagen de la silueta
 import trashIcon from '../../public/icon/tacho_basura.png'; // Tu ícono de tacho de basura
 
 // poner un parametro por cada opcion, en true o false
-// personalInfo = true -> muestra dni y name del padre, sino no.
+// personalInfo = true -> muestra dni y nombre del padre, sino no.
 // button_ver -> muestra boton de ver el paciente
 // trash_bin -> muestra tacho de basura
 // button_comments -> muestra boton de comentarios
@@ -19,7 +18,7 @@ import trashIcon from '../../public/icon/tacho_basura.png'; // Tu ícono de tach
 // dependiendo la cant de info, la tarjeta puede ser mas grande o mas chica. deberia adaptarse
 
 type OpcionesProps = {
-  // name se muestra siempre
+  // nombre se muestra siempre
   personalInfo?: boolean; // DNI y padre a cargo
   buttonVer?: boolean; // Muestra botón de "Ver"
   trashBin?: boolean; // Muestra icono de tacho de basura
@@ -30,52 +29,88 @@ type OpcionesProps = {
 
 type datosProps = {
   id: number;
-  name: string;
+  nombre: string;
   dni?: string;
-  padreACargo?: string;
+  nombre_padre?: string;
+  role?: string;
 }
 
 type BoxProps = {
   elem: datosProps;
   opciones: OpcionesProps;
   img: string;
-  edit_path?: string;
 };
 
 
-const Box = ({elem , opciones, img, edit_path}:BoxProps) => {
+const Box = ({elem , opciones, img}:BoxProps) => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
-
-  const handleDelete = () => {
-    alert('Eliminar persona');
+  const handleDelete = async () => {
+    let endpoint = '';
+  
+    if (elem.role) {
+      // Es un usuario (paciente o terapeuta)
+      endpoint = elem.role === 'paciente' ? `${baseUrl}pacientes/` : `${baseUrl}terapeutas/`;
+    } else {
+      // Es un grupo
+      endpoint = `${baseUrl}grupos/`;
+    }
+  
+    try {
+      let response;
+      if (elem.role){
+          response = await fetch(`${endpoint}${elem.dni}/`, {
+          method: 'DELETE',
+        });
+      }else{
+          response = await fetch(`${endpoint}${elem.id}/`, {
+          method: 'DELETE',
+        });
+      }
+  
+      if (response.ok) {
+        alert(`Elemento ${elem.nombre} eliminado exitosamente.`);
+        // Aquí podrías actualizar la lista localmente o refetch la lista
+      } else {
+        alert('Error al eliminar el elemento.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Hubo un problema al intentar eliminar el elemento.');
+    }
   };
+  
+  
 
   const handleVer = () => {
-    alert(`Ver detalles de ${elem.name}`);
+    alert(`Ver detalles de ${elem.nombre}`);
   };
 
-  const handleComments = () => {
-    alert(`Ver comentarios de ${elem.name}`);
+  const handleComments = async () => {
+    if (!elem?.dni) {      
+      return;
+    }
+    router.push(`/admin/patients/${elem.dni}`);
   };
 
   const handleEdit = () => {
-    router.push(edit_path);
+    alert(`Editar a ${elem.nombre}`);
   };
 
   const handleSeguimiento = () => {
-    alert(`Ver seguimiento de ${elem.name}`);
+    alert(`Ver seguimiento de ${elem.nombre}`);
   };
 
 
 
   const elemento = {
-    name: elem.name || "Sin asignar",
+    nombre: elem.nombre || "Sin asignar",
     dni: elem.dni || "Sin asignar",
-    padreACargo: elem.padreACargo || "Sin asignar"
+    padreACargo: elem.nombre_padre || "Sin asignar"
   };  
   
   return (
-    <div className="bg-white p-2 sm:p-5 rounded-lg shadow-lg flex flex-col items-center justify-center space-y-1 border-2 border-gray-400 w-full max-w-xs sm:w-[200px] h-auto sm:h-[300px] text-sm sm:text-base mt-5">
+    <div className="bg-white p-2 sm:p-3 rounded-lg shadow-lg flex flex-col items-center justify-center space-y-1 border-2 border-gray-400 w-full max-w-xs sm:w-[200px] h-auto sm:h-[300px] text-sm sm:text-base mt-5">
       {/* Imagen de la persona */}
       <div className="flex items-center justify-center h-[100px]">
         <Image 
@@ -90,7 +125,7 @@ const Box = ({elem , opciones, img, edit_path}:BoxProps) => {
       {/* Contenedor de información */}
       <div className="flex flex-col items-center justify-center space-y-2 w-full h-[120px]"> 
         <p className="text-sm sm:text-base font-medium text-black text-center">
-          {elemento.name}
+          {elemento.nombre}
         </p>
 
         {/* Información personal */}
@@ -113,7 +148,7 @@ const Box = ({elem , opciones, img, edit_path}:BoxProps) => {
         {opciones.buttonVer && (
           <button
             onClick={handleVer}
-            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
+            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-bold"
           >
             Ver
           </button>
@@ -121,7 +156,7 @@ const Box = ({elem , opciones, img, edit_path}:BoxProps) => {
         {opciones.buttonEdit && (
           <button
           onClick={handleEdit}
-          className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
+          className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-bold"
           >
             EDITAR
           </button>
@@ -129,7 +164,7 @@ const Box = ({elem , opciones, img, edit_path}:BoxProps) => {
         {opciones.buttonSeguimiento && (
           <button
           onClick={handleSeguimiento}
-          className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
+          className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-bold"
           >
             Seguimiento
           </button>
@@ -137,7 +172,7 @@ const Box = ({elem , opciones, img, edit_path}:BoxProps) => {
         {opciones.buttonComments && (
           <button
             onClick={handleComments}
-            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
+            className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-bold"
           >
             Comentarios
           </button>

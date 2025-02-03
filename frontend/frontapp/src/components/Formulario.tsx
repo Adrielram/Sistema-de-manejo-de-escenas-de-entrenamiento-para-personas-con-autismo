@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Pregunta from "./Pregunta";
 
 interface FormularioProps {
@@ -7,11 +7,12 @@ interface FormularioProps {
 }
 
 const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
-  const [titulo, setTitulo] = useState("");
+  const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [modoVerificacion, setModoVerificacion] = useState<string | null>(null);
   const [preguntas, setPreguntas] = useState<any[]>([]);
-
+  const [objetivos, setObjetivos] = useState([]);
+  const [objetivo, setObjetivoId] = useState("");
   const agregarPregunta = (pregunta: any) => {
     setPreguntas([...preguntas, pregunta]);
   };
@@ -26,16 +27,36 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
     setPreguntas([]); // Limpiamos el estado de las preguntas
   };
 
+  const manejarCambioObjetivo = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setObjetivoId(e.target.value);
+    setPreguntas([]); // Limpiamos el estado de las preguntas
+  }
+
   const manejarEnvio = () => {
+    if (!nombre || !descripcion || !modoVerificacion || !objetivo) {
+      alert("Por favor complete todos los campos.");
+      return;
+    }
     const formulario = {
-      titulo,
+      nombre,
       descripcion,
       es_verificacion_automatica: modoVerificacion === "con-verificacion",
       creado_por: 31222333, // Aquí puedes usar el ID del usuario autenticado
+      objetivo,
       preguntas,
     };
     onSubmit(formulario);
   };
+
+
+  useEffect(() => {
+    fetch("http://localhost:8000/api/objetivos/")
+      .then((res) => res.json())
+      .then((data) => setObjetivos(data))
+      .catch((error) => console.error("Error al obtener objetivos:", error));
+  }, []);
+
+  console.log("preguntas:" ,JSON.stringify(preguntas));
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-md">
@@ -44,8 +65,8 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-1">Título:</label>
         <input
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
           className="w-full p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none"
           placeholder="Ingrese el título del formulario"
         />
@@ -63,6 +84,22 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
       </div>
 
       <div className="mb-4">
+      <label className="block text-gray-700 font-medium mb-1">Seleccionar Objetivo:</label>
+      <select
+        value={objetivo}
+        onChange={manejarCambioObjetivo}
+        className="w-full p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none"
+      >
+        <option value="">Seleccione un objetivo</option>
+        {objetivos.map((obj) => (
+          <option key={obj.id} value={obj.id}>
+            {obj.nombre}
+          </option>
+        ))}
+      </select>
+    </div>
+
+      <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-1">Modo de Verificación:</label>
         <select
           value={modoVerificacion || ""}
@@ -75,10 +112,11 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
         </select>
       </div>
 
-      {modoVerificacion && (
+      {modoVerificacion && objetivo && (
         <Pregunta
           onAddPregunta={agregarPregunta}
           esVerificacionAutomatica={modoVerificacion === "con-verificacion"}
+          objetivoId={objetivo}
         />
       )}
 
@@ -91,6 +129,7 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
               <div key={index} className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                 <p><strong>Pregunta {index + 1}:</strong> {pregunta.texto}</p>
                 <p><strong>Tipo:</strong> {pregunta.tipo}</p>
+                <p><strong>Escena relacionada: {pregunta.nombre_escena || "Ninguna"}  </strong></p>
                 {pregunta.tipo === "multiple-choice" && (
                   <div>
                     <strong>Opciones:</strong>

@@ -4,7 +4,9 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r'create_objetivo', ObjetivoViewSet, basename='objetivo')
+router.register(r'create_objetivo', ObjetivoViewSet, basename='create_objetivo')
+router.register(r'objetivos', ObjetivoViewSet, basename='objetivo')
+
 
 urlpatterns = [	
     # Definir las rutas para las vistas que tengas en tu aplicación
@@ -13,21 +15,38 @@ urlpatterns = [
     path('logout/', logout, name='logout'),
     path('verify-session/', verify_session, name='verify-session'),
     path('objetivos/', objetivos_list, name='listar_objetivos'),
-    path('obtener_escenas_por_objetivo/', EscenasPorObjetivoListView.as_view(), name='listar_escenas_por_objetivo'),
-    path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
+    path('pacientes/', PacienteListView.as_view(), name='pacientes-list'),
     path('objetivo/<int:objetivo_id>/', get_goal_data, name='get_goal_data'),
+    path('health_centers/<int:center_id>/delete/', delete_health_center, name='delete_health_center'),
+    path('health_centers/', views.listar_centros_de_salud, name='listar_centros_de_salud'),
+    path('get_info/', views.get_provinces_and_cities, name='get_provinces_and_cities'),
+    path('terapeutas/', TerapeutaListView.as_view(), name='terapeutas-list'),
+    path('grupos/', GroupListView.as_view(), name='grupos-list'),
+    path('pacientes/<int:pk>/', PacienteDetailView.as_view(), name='paciente-detail'),
+    path('terapeutas/<int:pk>/', TerapeutaDetailView.as_view(), name='terapeuta-detail'),
+    path('grupos/<int:pk>/', GroupDetailView.as_view(), name='group-detail'),
+    path('obtener_escenas_por_objetivo/', EscenasPorObjetivoListView.as_view(), name='listar_escenas_por_objetivo'),
     path('get-user/', retrieve_user.as_view(), name='retrieve_user'),
     path('update-user/', update_user.as_view(), name='update_user'),
     path('signIn/', views.signIn, name='signIn'),
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('crear-escena/', views.crear_escena, name='crear_escena'),
     path('escenas/', EscenaListView.as_view(), name='escena-list'),
+    path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
+    #path('obtener-escenas/', obtener_escenas, name='obtener_escenas')
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('HijosListView/', views.hijos_list_view, name='HijosListView'),
     path('get-dni/', views.get_dni, name='get-dni'),
     path('get-name/', views.obtener_nombre_por_dni, name='get-name'),
     path('objetivos-ev-paciente/', views.objetivos_evaluacion_usuario, name='objetivos-ev-paciente'),
     path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
+    path('notificaciones/', views.obtener_notificaciones_pendientes, name='notificaciones-pendientes'),
+    path('notificaciones/<int:pk>/', views.obtener_detalle_notificacion, name='notification-detail'),
+    path('notificaciones/<int:pk>/<str:accion>/', procesar_notificacion, name='procesar_notificacion'),
+    path('check-cookie/', check_cookie, name='check_cookie'),
+    path('paciente/<int:dni>/comentarios/', ComentariosPacienteAPIView.as_view(), name='comentarios_paciente'),
+    path('comentarios/borrar/<int:id>/', views.BorrarComentarioAPIView.as_view(), name='borrar_comentario_cbv'),
+    path('comentarios/cambiar-visibilidad/<int:id>/', CambiarVisibilidadComentarioView.as_view(), name='cambiar_visibilidad_comentario'),
     path('registrar_comentario/', registrar_comentario.as_view(), name='registrar_comentario'),
     path('get-escenas-obj/', EscenasSegunUsuarioObjetivo.as_view(), name='get-escenas-obj'),
     path('get-evaluaciones/', ObtenerEvaluaciones.as_view(), name='get-evaluaciones'),
@@ -55,14 +74,65 @@ urlpatterns = [
     path('respuestas/<int:respuesta_id>/actualizar-nota/', ActualizarNotaRespuestaView.as_view(), name='actualizar-nota'),
     path('registrar-respuesta/', registrar_respuesta, name='registrar-respuesta'),
     path('obtener_estado_revision/', obtener_estado_revision, name='obtener_estado_revision'),
+    path('habilitar-revision/<int:revision_id>/<str:paciente_dni>/', habilitar_revision, name='habilitar_revision'),
+    path('habilitar-volver-a-realizar/<int:revision_id>/<str:paciente_dni>/', habilitar_volver_a_realizar, name='habilitar_volver_a_realizar'),
+    path('respuesta/<int:respuesta_id>/correcta/', marcar_correcta, name="marcar_correcta"),
+    path('respuesta/<int:respuesta_id>/incorrecta/', marcar_incorrecta, name="marcar_incorrecta"),
+    path('cargar-persona-objetivo-evaluacion/', CargarPersonaObjetivoEvaluacion.as_view(), name='cargar_persona_objetivo_evaluacion'),
     path('listar_formularios_completados/<str:username>/', views.listar_formularios_completados, name='listar_formularios_completados'),
+    path('HijosListView/', views.hijos_list_view, name='HijosListView'),
+    path('get-dni/', views.get_dni, name='get-dni'),
+    path('get-name/', views.obtener_nombre_por_dni, name='get-name'),
+    path('objetivos-ev-paciente/', views.objetivos_evaluacion_usuario, name='objetivos-ev-paciente'),
+    #path('listar_comentarios/', listar_comentarios, name='listar_comentarios'),   paso id_user y id_objetivo por json 
+#       {
+#           "user_id": 1,
+#           "objetivo_id": 1
+#       }
+    path('goal/ResolveNamesToIds/', ResolveNamesToIds.as_view(), name='ResolveNamesToIds'),
+    path('escenaById/<int:pk>/', EscenaById.as_view(), name='escenaById'),
+    path('grupoById/<int:pk>/', GrupoById.as_view(), name='grupoById'),
+    path('scenes/<int:pk>', EscenaUpdateView.as_view(), name='escena-update'),
+    path('groups/<int:pk>', GrupoUpdateView.as_view(), name='grupo-update'),
+    path('spacy-patologias/', SpacyPatologiasView.as_view(), name='spacy-patologias'),
+    path('registrar_comentario/', registrar_comentario.as_view(), name='registrar_comentario'),
+    path('get-escenas-obj/', EscenasSegunUsuarioObjetivo.as_view(), name='get-escenas-obj'),
+    path('get-evaluaciones/', ObtenerLinksEvaluaciones.as_view(), name='get-evaluaciones'),
+    path('get_patient_forms/', GetPatientForms.as_view(), name='get_patient_forms'),
+    path('get-persona-obj-esc/', ObtenerPersonaObjetivoID.as_view(), name='get-persona-obj-esc'),
+    path('video-visto/', MarcarVideoVistoAPIView.as_view(), name='video-visto'),
+    path('scenes/', ListsScenesView.as_view(), name='list_scenes'),
+    path('get_scenes/', GetScenesView.as_view(), name='get_scenes'),
+    path('scene/<int:pk>/delete/', DeleteSceneView.as_view(), name='delete_scene'),
+    path('group/<int:pk>/delete/', DeleteGroupView.as_view(), name='delete_group'),
+    path('users/<str:username>/groups/', GroupsPerUserView.as_view(), name='groups_per_user'),
+    path('get_groups_per_user/', GetGroupsPerUserView.as_view(), name='get_groups_per_user'),
+    path('group/<int:group_id>/patients/', PatientsPerGroupView.as_view(), name='patients_per_group'),
+    path('get_patients_per_group/', GetPatientsPerGroupView.as_view(), name='get_patients_per_group'),
+    path('forms_per_user/', GetFormsPerUserView.as_view(), name='forms_per_user'),
+    path('assesment/<int:pk>/delete/', DeleteAssesmentView.as_view(), name='delete_assesment'),
+    path('comentarios/lista/', ComentariosListaAPIView.as_view(), name='comentarios-lista'),
+    path('comentarios/', ComentarioDetalleAPIView.as_view(), name='comentario-detalle'),
+    path('get_reached_goals/', GetReachedGoalsView.as_view(), name='get_reached_goals'),
+    path('get_unreached_goals/', GetUnreachedGoalsView.as_view(), name='get_unreached_goals'),
+    path('create_health_center/', views.create_health_center, name='create_health_center'),
+    path('get_health_centers/', views.get_health_centers, name='get_health_centers'),
+    path('get_therapists/', views.get_therapists, name='get_therapists'),
+    path('get_patients/', views.get_patients, name='get_patients'),
+    path('create_group/', views.create_group, name='create_group'),
+    path('get_groups/', views.get_groups, name='get_groups'),
+    path('update_group/<int:group_id>/', views.update_group, name='update_group'),
+    path('personagrupo/<int:grupo_id>/<int:user_id>/', views.delete_person_group, name='delete_person_group'),
+    path('get_patients_not_in_group/', GetPatientsNotInGroupView.as_view(), name='get_patients_not_in_group'),    
+    path('calcular_nota_api/', calcular_nota_api, name='calcular_nota_api'),
+    path('update_group_associations/<int:group_id>/', UpdateGroupAssociationsView.as_view(), name='update_group_associations'),
     path('get-escena/', GetEscenaView.as_view(), name='get-escena'),
     path('verificar-escena/', VerificarEscenaAsignadaView.as_view(), name='verificar-escena'),
     path('buscar-escenas/', EscenaBusquedaView.as_view(), name='buscar-escenas'),
     path('get-objetivos-list/', ObjetivoListView.as_view(), name='objetivos-list'),
     path('escenas-por-objetivo/', EscenasPorObjetivoView.as_view(), name='escenas-por-objetivo'),
     path('verificar-condiciones/', VerificarCondicionesView.as_view(), name='verificar-condiciones'),
-]
 
+]
 
 urlpatterns += [path('', include(router.urls))]

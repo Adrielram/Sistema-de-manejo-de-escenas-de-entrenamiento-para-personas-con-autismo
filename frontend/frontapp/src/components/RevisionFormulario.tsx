@@ -22,20 +22,23 @@ interface Respuesta {
 
 interface Formulario {
   id: number;
-  titulo: string;
+  nombre: string;
   descripcion: string;
+  es_verificacion_automatica: boolean;
 }
 
 interface RespuestasFormularioProps {
   formularioId: number;
-  pacienteDni: number;
-  terapeutaDni: number;
+  pacienteDni: string;
+  terapeutaDni?: number;
+  rolUsuario: "terapeuta" | "persona";
 }
 
 const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
   formularioId,
   pacienteDni,
   terapeutaDni,
+  rolUsuario,
 }) => {
   const [formulario, setFormulario] = useState<Formulario | null>(null);
   const [respuestas, setRespuestas] = useState<Respuesta[]>([]);
@@ -43,6 +46,7 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [comentarios, setComentarios] = useState<{ [key: number]: string }>({});
   const [nuevasNotas, setNuevasNotas] = useState<{ [key: number]: string }>({});
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,11 +57,9 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
         if (!response.ok) {
           throw new Error("Error al cargar los datos del formulario.");
         }
-        const data = await response.json();
-        console.log("Data revision: ", JSON.stringify(data));
+        const data = await response.json();       
   
-        setFormulario(data.formulario);
-  
+        setFormulario(data.formulario);        
         // Obtener el último intento por fecha
         const ultimoIntentoId = data.respuestas.reduce((max, current) =>
           new Date(current.fecha_intento) > new Date(max.fecha_intento) ? current : max
@@ -68,7 +70,7 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
           (respuesta) => respuesta.intento_id === ultimoIntentoId
         );
   
-        setRespuestas(respuestasUltimoIntento);
+        setRespuestas(respuestasUltimoIntento);        
       } catch (err) {
         setError("Error al cargar los datos del formulario.");
       } finally {
@@ -157,20 +159,45 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
     }
   };  
 
-  if (loading) return <p className="text-center text-gray-600">Cargando datos...</p>;
-  if (error) return <p className="text-center text-red-500">{error}</p>;
+  
+  const actualizarRespuesta = async (idRespuesta:number , esCorrecta: boolean) => {
+    try {
+      const url = `${baseUrl}respuesta/${idRespuesta}/${esCorrecta ? "correcta" : "incorrecta"}/`;
+      const response = await fetch(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+      });
 
+      if (!response.ok) {
+        throw new Error("Error al actualizar la respuesta");
+      }
+
+      setRespuestas((prevRespuestas) =>
+        prevRespuestas.map((respuesta) =>
+          respuesta.id === idRespuesta ? { ...respuesta, correcta: esCorrecta } : respuesta
+        )
+      );
+
+      alert(`Respuesta marcada como ${esCorrecta ? "Correcta" : "Incorrecta"}`);
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Hubo un problema al actualizar la respuesta");
+    }
+  };
+
+  if (loading) return <p className="text-center text-gray-600">Cargando datos...</p>; 
+  console.log("Formulario: "+JSON.stringify(respuestas));
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6 bg-white shadow rounded-lg">
       {formulario && (
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">{formulario.titulo}</h1>
+          <h1 className="text-2xl font-bold text-black">{formulario.nombre}</h1>
           <p className="text-gray-600">{formulario.descripcion}</p>
         </div>
       )}
 
       <ul className="space-y-4">
-        {respuestas.map((respuesta) => (          
+        {respuestas.map((respuesta) => (    
           <li
             key={respuesta.id}
             className="p-4 border border-gray-300 rounded-lg shadow-sm"
@@ -190,63 +217,95 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
               <strong>Correcta:</strong> {" "}
               {respuesta.correcta !== null ? (respuesta.correcta ? "Sí" : "No") : "Pendiente"}              
             </p>
+            {/* Botones de Corrección */}
+            {rolUsuario === "terapeuta" && (
+              <>
+                {respuesta.correcta === null && (
+                  <div className="flex space-x-2 mt-2">
+                    <button
+                      onClick={() => actualizarRespuesta(respuesta.id, true)}
+                      className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                    >
+                      ✔️
+                    </button>
+                    <button
+                      onClick={() => actualizarRespuesta(respuesta.id, false)}
+                      className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    >
+                      ❌
+                    </button>
+                  </div>              
+                )}              
+              </>
+            )}
 
-            <div className="mt-4">
-              <h4 className="font-semibold text-gray-800">Comentarios:</h4>
-              <ul className="list-disc list-inside">
-                {respuesta.comentarios.map((comentario) => (
-                  <li key={comentario.id} className="text-gray-600">
-                    {comentario.texto} (Fecha: {new Date(comentario.fecha).toLocaleString()})
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="mt-4">
-              <textarea
-                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                placeholder="Agregar un comentario"
-                value={comentarios[respuesta.id] || ""}
-                onChange={(e) =>
-                  setComentarios((prev) => ({
-                    ...prev,
-                    [respuesta.id]: e.target.value,
-                  }))
-                }
-              ></textarea>
-              <button
-                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                onClick={() => handleAddComment(respuesta.id)}
-              >
-                Enviar Comentario
-              </button>
-            </div>
-            <div className="mt-4">
-              <label className="block text-gray-700 font-medium">Asignar nota:</label>
-              <div className="flex gap-4">
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  step="0.1"
-                  className="mt-2 p-2 border border-gray-300 rounded-lg w-20 focus:outline-none focus:ring focus:ring-blue-300"
-                  placeholder="0-10"
-                  value={nuevasNotas[respuesta.id] || ""}
-                  onChange={(e) =>
-                    setNuevasNotas((prev) => ({
-                      ...prev,
-                      [respuesta.id]: e.target.value,
-                    }))
-                  }
-                />
-                <button
-                  className="mt-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                  onClick={() => handleActualizarNota(respuesta.id)}
-                >
-                  Guardar Nota
-                </button>
-              </div>
-            </div>
+            {(respuesta.comentarios.length > 0) && (
+              <div className="mt-4">                
+                  <h4 className="font-semibold text-gray-800">Comentarios:</h4>
+                  <ul className="list-disc list-inside">
+                    {respuesta.comentarios.map((comentario) => (
+                      <li key={comentario.id} className="text-gray-600">
+                        {comentario.texto} (Fecha: {new Date(comentario.fecha).toLocaleString()})
+                      </li>
+                    ))}
+                  </ul>             
+              </div>              
+            )}
+           
+            {rolUsuario === "terapeuta" && (
+              <>
+                <div className="mt-4">
+                  <textarea
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                    placeholder="Agregar un comentario"
+                    value={comentarios[respuesta.id] || ""}
+                    onChange={(e) =>
+                      setComentarios((prev) => ({
+                        ...prev,
+                        [respuesta.id]: e.target.value,
+                      }))
+                    }
+                  ></textarea>
+                  <button
+                    className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    onClick={() => handleAddComment(respuesta.id)}
+                  >
+                    Enviar Comentario
+                  </button>
+                </div>              
+              </>
+            )}
+           
+            {rolUsuario === "terapeuta" && (
+              <>
+                <div className="mt-4">
+                <label className="block text-gray-700 font-medium">Asignar nota:</label>
+                  <div className="flex gap-4">
+                    <input
+                      type="number"
+                      min="0"
+                      max="10"
+                      step="0.1"
+                      className="mt-2 p-2 border border-gray-300 rounded-lg w-20 focus:outline-none focus:ring focus:ring-blue-300"
+                      placeholder="0-10"
+                      value={nuevasNotas[respuesta.id] || ""}
+                      onChange={(e) =>
+                        setNuevasNotas((prev) => ({
+                          ...prev,
+                          [respuesta.id]: e.target.value,
+                        }))
+                      }
+                    />
+                    <button
+                      className="mt-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                      onClick={() => handleActualizarNota(respuesta.id)}
+                    >
+                      Guardar Nota
+                    </button> 
+                  </div> 
+                </div>                        
+              </>           
+            )}
           </li>
         ))}
       </ul>

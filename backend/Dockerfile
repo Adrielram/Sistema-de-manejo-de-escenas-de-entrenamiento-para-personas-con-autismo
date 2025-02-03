@@ -22,5 +22,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Exponer el puerto
 EXPOSE 8000
 
-# Comando para esperar a MySQL y luego iniciar el servidor
-CMD ["wait-for-it", "db:3306", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["wait-for-it", "db:3306", "--", "daphne", "-b", "0.0.0.0", "-p", "8000", "backendapp.asgi:application"]

@@ -23,6 +23,7 @@ interface Escena {
 const VerVideo = () => {
   const [videos, setVideos] = useState<string[]>([]);
   const [quizzes, setQuizzes] = useState({ formularios: [] });
+  const [quizStates, setQuizStates] = useState<Record<number, { revision: boolean; volver_a_realizar: boolean; tiene_respuestas: boolean }>>({});
   const [escenas, setEscenas] = useState<Escena[]>([]);
   const [escena, setEscena] = useState<Escena>();
   const [like, setLike] = useState<boolean | null>(null);
@@ -292,8 +293,7 @@ const VerVideo = () => {
     router.push('./principal');
   };
 
-  const allQuizzesCompleted = completedQuizzes.length === (quizzes?.formularios?.length || 0);
-
+  const allQuizzesCompleted = completedQuizzes.length === (quizzes?.formularios?.length || 0);  
 
   return (
     <div className="flex flex-col px-4 py-4 min-h-screen">
@@ -376,23 +376,29 @@ const VerVideo = () => {
                         {quiz.nombre}
                       </button>
                       {completedQuizzes.includes(quiz.id) && (
-                        <span className="ml-2 text-green-500 font-semibold">
-                          ✔
-                        </span>
+                        <span className="ml-2 text-green-500 font-semibold">✔</span>
                       )}
+                      <button
+                        disabled={quizStates[quiz.id]?.revision || !quizStates[quiz.id]?.tiene_respuestas}
+                        className={`ml-2 bg-yellow-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all 
+                          ${quizStates[quiz.id]?.revision || !quizStates[quiz.id]?.tiene_respuestas ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-yellow-600'}`}
+                        onClick={() => handleQuizClickRevisar(quiz.id)}
+                      >
+                        Ver Revisión
+                      </button>
                     </div>
                   ))}
                 </div>
-                {allQuizzesCompleted && (
+                {completedQuizzes.length === quizzes.formularios.length && (
                   <button
-                    onClick={handleCompletarObjetivo}
+                    onClick={() => handleCompletarObjetivo()}
                     className="bg-green-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full mt-4"
                   >
                     Completar objetivo
                   </button>
                 )}
               </div>
-          )}
+            )}
         </div>
       </div>
       <h3 className="text-lg font-semibold text-gray-800 mb-2">Comentarios</h3>

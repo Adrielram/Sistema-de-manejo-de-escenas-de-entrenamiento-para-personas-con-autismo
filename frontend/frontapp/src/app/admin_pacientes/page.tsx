@@ -1,5 +1,5 @@
 import React from 'react';
-import Box_paciente from '../../components/Box_paciente';
+import Box_paciente from '../../components/Box';
 
 
 // pasarle a Box_paciente la info del paciente, obteniendola del backend. usar props
