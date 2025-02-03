@@ -1,4 +1,3 @@
-from django.urls import path
 from . import views
 from .views import *
 from django.urls import path, include
@@ -26,12 +25,20 @@ urlpatterns = [
     path('pacientes/<int:pk>/', PacienteDetailView.as_view(), name='paciente-detail'),
     path('terapeutas/<int:pk>/', TerapeutaDetailView.as_view(), name='terapeuta-detail'),
     path('grupos/<int:pk>/', GroupDetailView.as_view(), name='group-detail'),
+    path('obtener_escenas_por_objetivo/', EscenasPorObjetivoListView.as_view(), name='listar_escenas_por_objetivo'),
+    path('get-user/', retrieve_user.as_view(), name='retrieve_user'),
+    path('update-user/', update_user, name='update_user'),
     path('signIn/', views.signIn, name='signIn'),
     path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('crear-escena/', views.crear_escena, name='crear_escena'),
     path('escenas/', EscenaListView.as_view(), name='escena-list'),
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
     #path('obtener-escenas/', obtener_escenas, name='obtener_escenas')
+    path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
+    path('HijosListView/', views.hijos_list_view, name='HijosListView'),
+    path('get-dni/', views.get_dni, name='get-dni'),
+    path('get-name/', views.obtener_nombre_por_dni, name='get-name'),
+    path('objetivos-ev-paciente/', views.objetivos_evaluacion_usuario, name='objetivos-ev-paciente'),
     path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
     path('notificaciones/', views.obtener_notificaciones_pendientes, name='notificaciones-pendientes'),
     path('notificaciones/<int:pk>/', views.obtener_detalle_notificacion, name='notification-detail'),
@@ -44,7 +51,9 @@ urlpatterns = [
     path('get-escenas-obj/', EscenasSegunUsuarioObjetivo.as_view(), name='get-escenas-obj'),
     path('get-evaluaciones/', ObtenerEvaluaciones.as_view(), name='get-evaluaciones'),
     path('get-persona-obj-esc/', ObtenerPersonaObjetivoID.as_view(), name='get-persona-obj-esc'),
-    path('video-visto/', MarcarVideoVistoAPIView.as_view(), name='video-visto'),
+    path('comentarios/', ComentarioDetalleAPIView.as_view(), name='comentario-detalle'),
+    path('comentarios/lista/', ComentariosListaAPIView.as_view(), name='comentarios-lista'),
+    path('video-visto/', MarcarVideoVistoView.as_view(), name='video-visto'),
     path('formularios/', FormularioListCreateView.as_view(), name='formulario-list-create'),
     path('formularios/<int:pk>/', FormularioDetailView.as_view(), name='formulario-detail'),
     path('preguntas/', PreguntaListCreateView.as_view(), name='pregunta-list-create'),
@@ -55,6 +64,7 @@ urlpatterns = [
     path('create_patient_group/', CreateGroup.as_view(), name='create_patient_group'),
     path('disassociate_center/', DisassociateCenterView.as_view(), name='desassociate_center'),
     path('check-cookie/', check_cookie, name='check_cookie'),
+    path('get-escenas-list/', EscenaView.as_view(), name='get-escenas-list'),
     path('getCenterProfesional/', GetCentroProfesionalView.as_view(), name='getCenterProfesional'),
     path('get_goals_centroprofesional/', GetCentroProfesionalObjetivosView.as_view(), name='get_goals_centroprofesional'),
     path('goal/<int:pk>/delete/', DeleteGoalView.as_view(), name='delete_goal'),
@@ -116,6 +126,12 @@ urlpatterns = [
     path('get_patients_not_in_group/', GetPatientsNotInGroupView.as_view(), name='get_patients_not_in_group'),    
     path('calcular_nota_api/', calcular_nota_api, name='calcular_nota_api'),
     path('update_group_associations/<int:group_id>/', UpdateGroupAssociationsView.as_view(), name='update_group_associations'),
+    path('get-escena/', GetEscenaView.as_view(), name='get-escena'),
+    path('verificar-escena/', VerificarEscenaAsignadaView.as_view(), name='verificar-escena'),
+    path('buscar-escenas/', EscenaBusquedaView.as_view(), name='buscar-escenas'),
+    path('get-objetivos-list/', ObjetivoListView.as_view(), name='objetivos-list'),
+    path('escenas-por-objetivo/', EscenasPorObjetivoView.as_view(), name='escenas-por-objetivo'),
+    path('verificar-condiciones/', VerificarCondicionesView.as_view(), name='verificar-condiciones'),
 
 ]
 

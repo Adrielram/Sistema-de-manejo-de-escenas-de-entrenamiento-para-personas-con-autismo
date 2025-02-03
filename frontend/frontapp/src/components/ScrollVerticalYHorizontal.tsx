@@ -1,107 +1,170 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import BigButton from "./BigButton";
+import { useState, useEffect, memo } from "react";
 
-export default function ScrollVerticalYHorizontal() {
+interface CondicionProp {
+  id: number;
+  edad?: number;
+  fecha?: string;
+  objetivo?: string;
+  cumple_condiciones: {
+      edad: boolean;
+      fecha: boolean;
+      objetivo: boolean;
+  };
+}
+interface Props {
+  elementos: Array<{ 
+    id: number; 
+    nombre: string; 
+    descripcion: string; 
+    idioma:string; 
+    acento:string; 
+    complejidad:number;
+    condicion:CondicionProp;
+    bloqueada: boolean; // Nueva propiedad}
+    mensaje_bloqueo?: string;
+  }>;
+  onElementoClick: (id: number) => void;
+  selectedElementoId: number | null;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+function ScrollVerticalYHorizontalComponent({
+  elementos,
+  onElementoClick,
+  selectedElementoId,
+  currentPage,
+  totalPages,
+  onPageChange,
+}: Props) {
   const [isPortrait, setIsPortrait] = useState<boolean>(false);
-  //const [elementos, setElementos] = useState<{ id: number; texto: string }[]>(
-  //  []
-  //);
-
- const elementos = [
-    { id: 1, texto: "Objetivo 1" },
-    { id: 2, texto: "Objetivo 2" },
-    { id: 3, texto: "Objetivo 3" },
-    { id: 4, texto: "Objetivo 4" },
-    { id: 5, texto: "Objetivo 5" },
-    { id: 6, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
-    { id: 7, texto: "Objetivo 2" },
-    { id: 8, texto: "Objetivo 3" },
-    { id: 9, texto: "Objetivo 4" },
-    { id: 10, texto: "Objetivo 5" },
-    { id: 11, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
-    { id: 12, texto: "Objetivo 2" },
-    { id: 13, texto: "Objetivo 3" },
-    { id: 14, texto: "Objetivo 4" },
-    { id: 15, texto: "Objetivo 5" },
-    { id: 16, texto: "Objetivo 6 con mucho texto para probar el ajuste" },
-    { id: 17, texto: "Objetivo 2" },
-    { id: 18, texto: "Objetivo 3" },
-    { id: 19, texto: "Objetivo 4" },
-  ];
-
-  /* useEffect(() => {
-    const fetchObjetivos = async () => {
-      try {
-        const response = await fetch("localhost:8000/api/objetivos");
-        if (!response.ok) {
-          throw new Error(`Error en la solicitud: ${response.status}`);
-        }
-        const data = await response.json();
-        setElementos(data);
-      } catch (error) {
-        console.error("Error al obtener los objetivos:", error);
-        setElementos([]); // En caso de error, dejamos la lista vacía
-      }
-    };
-
-    fetchObjetivos();
-  }, []);
- */
 
   useEffect(() => {
     const updateOrientation = () => {
       setIsPortrait(window.innerHeight > window.innerWidth);
     };
-
     const mediaQuery = window.matchMedia("(orientation: portrait)");
     setIsPortrait(mediaQuery.matches);
-
     mediaQuery.addEventListener("change", updateOrientation);
-
     return () => {
       mediaQuery.removeEventListener("change", updateOrientation);
     };
   }, []);
 
-
-  const handleButtonClick = () => {
-    //aca vamos a hacer la funcionalidad del boton
-  };
-
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Lista de Elementos</h1>
+    <div className="w-full flex flex-col gap-2">
       <div
         className={`overflow-auto ${
           isPortrait ? "overflow-x-scroll" : "overflow-y-scroll"
-        } ${
-          isPortrait ? "max-h-96" : "h-[calc(100vh-100px)]"
-        } bg-gray-100 rounded-lg shadow`}
+        } ${isPortrait ? "max-h-64" : "max-h-[400px]"} bg-gray-50 rounded-lg shadow p-4`}
       >
         <ul
           className={`flex ${
             isPortrait ? "flex-row space-x-4" : "flex-col space-y-2"
-          } p-4`}
+          }`}
         >
           {elementos.map((elemento) => (
             <li
               key={elemento.id}
               className="flex justify-center items-center"
-              style={{ minWidth: isPortrait ? "fit-content" : "150px" }}
+              style={{ minWidth: isPortrait ? "fit-content" : "auto" }}
             >
-              <BigButton
-                title={elemento.texto}
-                color="bg-blue-600"
-                font_bold="font-bold"
-                hover="hover:bg-blue-700"
-                onClick={() => handleButtonClick()}
-              />
+              <div
+                onClick={() => !elemento.bloqueada && onElementoClick(elemento.id)}
+                className={`w-full flex items-center justify-between p-4 rounded-lg shadow-sm border transition-shadow ${
+                  elemento.bloqueada
+                    ? "bg-gray-100 opacity-50 cursor-not-allowed"
+                    : "cursor-pointer bg-white hover:border-blue-300 hover:shadow-md"
+                } ${
+                  selectedElementoId === elemento.id && !elemento.bloqueada
+                    ? "bg-blue-100 border-blue-400"
+                    : "border-gray-200"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-medium">{elemento.nombre}</span>
+                  {elemento.bloqueada && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-5 w-5 text-gray-500"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <p
+                    className={`flex-1 ml-4 text-right ${
+                      isPortrait ? "hidden" : "block"
+                    }`}
+                  >
+                  </p>
+                  {selectedElementoId === elemento.id && !elemento.bloqueada && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 text-blue-600"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </div>
+                {elemento.bloqueada && elemento.mensaje_bloqueo && (
+                    <span className="text-lg text-gray-500 mt-1">
+                      {elemento.mensaje_bloqueo}
+                    </span>
+                  )}
+              </div>
             </li>
           ))}
         </ul>
       </div>
+
+      <div className="flex justify-between items-center px-4 py-2 bg-gray-50 rounded-lg">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className={`px-4 py-1.5 rounded ${
+            currentPage === 1
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+          }`}
+        >
+          Anterior
+        </button>
+        <span className="text-sm">
+          Página {currentPage} de {totalPages}
+        </span>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-1.5 rounded ${
+            currentPage === totalPages
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+          }`}
+        >
+          Siguiente
+        </button>
+      </div>
     </div>
   );
 }
+
+const ScrollVerticalYHorizontal = memo(ScrollVerticalYHorizontalComponent);
+export default ScrollVerticalYHorizontal;

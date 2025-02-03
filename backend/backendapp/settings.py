@@ -20,6 +20,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     'backend',  # Nombre del servicio en Docker Compose
+    '*',
 ]
 
 
@@ -84,6 +85,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backendapp.wsgi.application"
 
+# LOGGER PARA PODER IMPRIMIR X CONSOLA EN VIEWS.PY
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases

@@ -145,7 +145,6 @@ class CentroProfesionalEscena(models.Model):
 class EscenaObjetivo(models.Model):
     escena = models.ForeignKey('Escena', on_delete=models.CASCADE)
     objetivo = models.ForeignKey('Objetivo', on_delete=models.CASCADE)
-    orden = models.IntegerField(blank=True, null=True)
     class Meta:
         db_table = 'escenaObjetivo'
         constraints = [
@@ -154,6 +153,7 @@ class EscenaObjetivo(models.Model):
                 name='unique_escena_objetivo'
             )
         ]
+        
 class Personagrupo(models.Model):
     user_id = models.ForeignKey(
         'User', 
@@ -186,6 +186,7 @@ class PersonaObjetivoEscena(models.Model):
         blank=True,
         null=True
     )
+    orden = models.IntegerField(blank=True, null=True)
 
     class Meta:
         db_table = 'personaEscenaObjetivo'
@@ -398,6 +399,9 @@ class Pregunta(models.Model):
 
     def __str__(self):
         return self.texto
+    
+    class Meta:
+        db_table = 'pregunta' 
 
 
 class Opcion(models.Model):
@@ -406,6 +410,9 @@ class Opcion(models.Model):
 
     def __str__(self):
         return self.texto
+    
+    class Meta:
+        db_table = 'opcion' 
 
 import uuid
 class Respuesta(models.Model):
@@ -420,6 +427,9 @@ class Respuesta(models.Model):
     def __str__(self):
         return f"Respuesta de {self.paciente.username} a {self.pregunta.texto}"
     
+    class Meta:
+        db_table = 'respuesta'  
+    
 class ComentarioProfesional(models.Model):
     respuesta = models.ForeignKey(Respuesta, related_name="comentarios", on_delete=models.CASCADE)
     terapeuta = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comentarios")
@@ -429,6 +439,9 @@ class ComentarioProfesional(models.Model):
     def __str__(self):
         return f"Comentario de {self.terapeuta.username} en {self.respuesta}"
     
+    class Meta:
+        db_table = 'comentarioProfesional'  
+    
 class FormularioPacienteRevision(models.Model):
     formulario = models.ForeignKey('Formulario', on_delete=models.CASCADE)
     paciente_dni = models.CharField(max_length=20)
@@ -437,18 +450,5 @@ class FormularioPacienteRevision(models.Model):
     fecha_respuesta = models.DateTimeField(auto_now_add=True)
     volver_a_realizar = models.BooleanField(default=False)
 
-class RegistroEvaluacion(models.Model):
-    id = models.AutoField(primary_key=True)  # ID autoincremental
-    objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE, related_name="registros")
-    paciente = models.ForeignKey(User, on_delete=models.CASCADE, related_name="registros")
-    edad = models.PositiveIntegerField()
-    patologias = models.ManyToManyField(Patologia, related_name="registros")
-    escena = models.ForeignKey(Escena, on_delete=models.CASCADE, related_name="registros")
-    complejidad = models.PositiveIntegerField()  # Se obtiene desde Escena
-    resultado = models.DecimalField(max_digits=5, decimal_places=2)  # Evaluación en porcentaje
-
-    def __str__(self):
-        return f"Eval {self.id} - Obj {self.objetivo.id} - Escena {self.escena.id} - {self.resultado}%"    
     class Meta:
-        db_table = 'registroEvaluacion'   
-    
+        db_table = 'formularioPacienteRevision'  

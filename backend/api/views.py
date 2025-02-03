@@ -1,27 +1,39 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from django.http import HttpResponseRedirect
 from .models import *
 from .serializers import *
+from .forms import *
 from rest_framework.views import APIView
 from rest_framework import viewsets, status
 from . import views
-from rest_framework.decorators import api_view, permission_classes
 from datetime import datetime
 from django.db import IntegrityError
-from django.db.models import Q
+from django.db.models import Q, Prefetch, Max, Avg
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters
-from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from .models import Notificacion
+from api.authentication import CookieJWTAuthentication
+from django.db import transaction
+from django.utils import timezone
+
+
+from rest_framework.exceptions import NotFound
+
+#User = get_user_model()  # Modelo de usuario creado por nosotros
+
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Q
 from django_filters import rest_framework as filters
 import json
 from rest_framework.generics import UpdateAPIView
@@ -246,12 +258,6 @@ class DynamicPagination(PageNumberPagination):
     max_page_size = 20
     page_size = 8
 
-def check_cookie(request):
-    # Verificar si la cookie 'jwt' está presente
-    if 'jwt' in request.COOKIES:
-        return JsonResponse({"exists": True})
-    return JsonResponse({"exists": False})
-
 @csrf_exempt  # Asegúrate de no tener problemas con CSRF
 @permission_classes([AllowAny])
 def create_health_center(request):
@@ -432,7 +438,791 @@ def verify_session(request):
         }, status=200)
     except Exception as e:
         return Response({"message": "Token inválido o expirado"}, status=401)
+
+    
+@api_view(['GET'])
+def objetivos_list(request):
+    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
+    return JsonResponse(list(objetivos), safe=False)
+
+
+class ObjetivoListView(generics.ListAPIView):
+    serializer_class = ObjetivoSerializer
+    pagination_class = DynamicPagination
+    
+    def get_queryset(self):
+        username = self.request.query_params.get('username')
+        if not username:
+            return Objetivo.objects.none()
+        
+        try:
+            dni = obtener_dni(username)
+        except User.DoesNotExist:
+            return Objetivo.objects.none()
+        
+        # Obtener objetivos asignados al usuario
+        objetivos_ids = PersonaObjetivoEscena.objects.filter(
+            user_id=dni
+        ).values_list(
+            'escena_objetivo__objetivo', 
+            flat=True
+        ).distinct()
+
+        return Objetivo.objects.filter(
+            id__in=objetivos_ids
+        ).prefetch_related(
+            Prefetch(
+                'escenaobjetivo_set',
+                queryset=EscenaObjetivo.objects.prefetch_related(
+                    Prefetch(
+                        'objetivo_relations',  # Usamos el related_name correcto
+                        queryset=PersonaObjetivoEscena.objects.filter(user_id=dni),
+                        to_attr='user_poe'
+                    )
+                )
+            )
+        )
+
+    def list(self, request, *args, **kwargs):
+        username = request.query_params.get('username')
+        if not username:
+            return Response(
+                {"error": "El parámetro 'username' es requerido."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            dni = obtener_dni(username)
+        except User.DoesNotExist:
+            return Response(
+                {"error": f"Usuario '{username}' no encontrado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except ValueError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 '''
+@api_view(['GET'])
+def obj_list_user(request, user_id):
+    objetivos = PersonaObjetivoEscena.objects.filter(user_id=user_id).values()  # Obtiene los objetivos del usuario
+    return JsonResponse(list(objetivos), safe=False)
+    ## CHEQUEAR ESTE BIEN
+'''
+
+##ESTE SE REEMPLAZO POR EL DE ABAJO
+# class ObjetivosUsuarioListView(generics.ListAPIView):
+#     """
+#     Vista para listar los objetivos de un usuario específico
+#     con paginación dinámica.
+#     """
+#     serializer_class = ObjetivoSerializerList
+#     pagination_class = DynamicPagination
+#     # permission_classes = [IsAuthenticated]
+#     filter_backends = [DjangoFilterBackend]
+
+#     def get_queryset(self):
+#         # Obtén el username del request
+#         username = self.request.GET.get('username', None)
+#         if not username:
+#             return Objetivo.objects.none()  # Devuelve un queryset vacío si no hay username
+
+#         # Filtra el usuario por username
+#         try:
+#             usuario = User.objects.get(username=username)
+#         except User.DoesNotExist:
+#             return Objetivo.objects.none()
+
+#         # Paso 1: Filtrar PersonaObjetivoEscena para este usuario
+#         persona_escena_objetivos = PersonaObjetivoEscena.objects.filter(user_id=usuario)
+
+#         # Paso 2: Obtener los EscenaObjetivo asociados
+#         escena_objetivos = EscenaObjetivo.objects.filter(
+#             id__in=persona_escena_objetivos.values_list('escena_objetivo_id', flat=True)
+#         )
+
+#         # Paso 3: Filtrar Objetivos asociados a esas escenas
+#         return Objetivo.objects.filter(
+#             id__in=escena_objetivos.values_list('objetivo_id', flat=True)
+#         )
+
+#     def list(self, request, *args, **kwargs):
+#         """
+#         Personaliza la respuesta para formatear los resultados
+#         con el formato deseado (id, titulo, descripcion).
+#         """
+#         queryset = self.get_queryset()
+#         page = self.paginate_queryset(queryset)
+#         if page is not None:
+#             serializer = self.get_serializer(page, many=True)
+#             # Personalizar los datos para devolver 'titulo' en lugar de 'nombre'
+#             data = [{'id': item['id'], 'titulo': item['nombre'], 'descripcion': item['descripcion']} for item in serializer.data]
+#             return self.get_paginated_response(data)
+
+#         serializer = self.get_serializer(queryset, many=True)
+#         data = [{'id': item['id'], 'titulo': item['nombre'], 'descripcion': item['descripcion']} for item in serializer.data]
+#         return Response(data)
+'''
+class EscenasPorObjetivoView(generics.ListAPIView):
+    serializer_class = EscenaSerializer
+    pagination_class = DynamicPagination
+    
+    def get_queryset(self):
+        objetivo_id = self.request.GET.get('objetivo_id')
+        username = self.request.GET.get('username')
+        
+        if not objetivo_id or not username:
+            return Escena.objects.none()
+        
+        try:
+            dni = obtener_dni(username)
+        except User.DoesNotExist:
+            return Escena.objects.none()
+        
+        # Obtener escenas del objetivo
+        escenas_objetivo = Escena.objects.filter(
+            escenaobjetivo__objetivo=objetivo_id
+        ).prefetch_related(
+            Prefetch(
+                'escenaobjetivo_set',
+                queryset=EscenaObjetivo.objects.select_related('objetivo').prefetch_related(
+                    Prefetch(
+                        'objetivo_relations',
+                        queryset=PersonaObjetivoEscena.objects.filter(user_id=dni),
+                        to_attr='user_poe'
+                    )
+                )
+            )
+        )
+        return escenas_objetivo
+
+    def list(self, request, *args, **kwargs):
+        objetivo_id = request.GET.get('objetivo_id')
+        username = request.GET.get('username')
+        
+        # Validaciones
+        if not objetivo_id:
+            return Response(
+                {"error": "El parámetro 'objetivo_id' es requerido."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not username:
+            return Response(
+                {"error": "El parámetro 'username' es requerido."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            dni = obtener_dni(username)
+        except User.DoesNotExist:
+            return Response(
+                {"error": f"Usuario '{username}' no encontrado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Obtener escenas vistas por el usuario
+        user_vistos_ids = set(
+            Videosvistos.objects.filter(paciente_id__dni=dni)
+            .values_list('escena_id', flat=True)
+        )
+        
+        # Procesamiento del queryset
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            serialized_data = serializer.data
+            
+            required_escena_ids = set()
+            escena_info = {}
+
+            for escena, data_item in zip(page, serialized_data):
+                bloqueada = False
+                required_id = None
+                
+                for eo in escena.escenaobjetivo_set.all():
+                    user_poe = [poe for poe in eo.user_poe if poe.user_id.dni == dni]
+                    current_order = user_poe[0].orden if user_poe else None
+                    
+                    if not current_order or current_order == 1:
+                        continue
+                    
+                    # Obtener prerequisitos dentro del mismo objetivo
+                    prereqs = [
+                        poe.escena_objetivo.escena_id
+                        for poe in PersonaObjetivoEscena.objects.filter(
+                            user_id=dni,
+                            escena_objetivo__objetivo=objetivo_id,
+                            orden__lt=current_order
+                        )
+                    ]
+                    
+                    # Verificar escenas previas
+                    for prereq_id in prereqs:
+                        if prereq_id not in user_vistos_ids:
+                            bloqueada = True
+                            required_id = prereq_id
+                            required_escena_ids.add(prereq_id)
+                            break
+                    if bloqueada:
+                        break
+                
+                data_item['bloqueada'] = bloqueada
+                escena_info[escena.id] = {'required_id': required_id}
+
+            # Obtener nombres de escenas requeridas
+            escenas_requeridas = Escena.objects.filter(
+                id__in=required_escena_ids
+            ).values('id', 'nombre')
+            
+            nombre_map = {e['id']: e['nombre'] for e in escenas_requeridas}
+
+            # Agregar mensajes de bloqueo
+            for data_item in serialized_data:
+                escena_id = data_item['id']
+                required_id = escena_info[escena_id]['required_id']
+                
+                if data_item['bloqueada'] and required_id:
+                    data_item['mensaje_bloqueo'] = f"Completa: '{nombre_map.get(required_id, 'Escena previa')}' para desbloquear"
+                else:
+                    data_item['mensaje_bloqueo'] = None
+
+            return self.get_paginated_response(serialized_data)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+'''
+class EscenasPorObjetivoView(generics.ListAPIView):
+    serializer_class = EscenaSerializer
+    pagination_class = None  # Eliminar la paginación
+    
+    def get_queryset(self):
+        objetivo_id = self.request.GET.get('objetivo_id')
+        username = self.request.GET.get('username')
+        
+        if not objetivo_id or not username:
+            return Escena.objects.none()
+        
+        try:
+            dni = obtener_dni(username)
+        except User.DoesNotExist:
+            return Escena.objects.none()
+        
+        return Escena.objects.filter(
+            escenaobjetivo__objetivo=objetivo_id
+        ).distinct().prefetch_related(
+            Prefetch(
+                'escenaobjetivo_set',
+                queryset=EscenaObjetivo.objects.prefetch_related(
+                    Prefetch(
+                        'objetivo_relations',
+                        queryset=PersonaObjetivoEscena.objects.filter(user_id=dni),
+                        to_attr='user_poe'
+                    )
+                )
+            )
+        )
+
+    def list(self, request, *args, **kwargs):
+        objetivo_id = request.GET.get('objetivo_id')
+        username = request.GET.get('username')
+        
+        # Validaciones (mantenemos las mismas)
+        if not objetivo_id:
+            return Response(
+                {"error": "El parámetro 'objetivo_id' es requerido."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not username:
+            return Response(
+                {"error": "El parámetro 'username' es requerido."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            dni = obtener_dni(username)
+        except User.DoesNotExist:
+            return Response(
+                {"error": f"Usuario '{username}' no encontrado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except ValueError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user_vistos_ids = set(
+            Videosvistos.objects.filter(paciente_id__dni=dni)
+            .values_list('escena_id', flat=True)
+        )
+        
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        serialized_data = serializer.data
+        
+        required_escena_ids = set()
+        escena_info = {}
+
+        # Procesar todas las escenas directamente
+        for escena, data_item in zip(queryset, serialized_data):
+            bloqueada = False
+            required_id = None
+            
+            for eo in escena.escenaobjetivo_set.all():
+                user_poe = [poe for poe in eo.user_poe if poe.user_id.dni == dni]
+                current_order = user_poe[0].orden if user_poe else None
+                
+                if current_order is None:
+                    continue
+                    
+                if current_order == 1:
+                    continue
+                
+                prereqs = [
+                    poe.escena_objetivo.escena_id
+                    for poe in PersonaObjetivoEscena.objects.filter(
+                        user_id=dni,
+                        escena_objetivo__objetivo=objetivo_id,
+                        orden__lt=current_order
+                    )
+                ]
+                
+                for prereq_id in prereqs:
+                    if prereq_id not in user_vistos_ids:
+                        bloqueada = True
+                        required_id = prereq_id
+                        required_escena_ids.add(prereq_id)
+                        break
+                if bloqueada:
+                    break
+            
+            data_item['bloqueada'] = bloqueada
+            escena_info[escena.id] = {'required_id': required_id}
+
+        escenas_requeridas = Escena.objects.filter(
+            id__in=required_escena_ids
+        ).values('id', 'nombre')
+        
+        nombre_map = {e['id']: e['nombre'] for e in escenas_requeridas}
+
+        for data_item in serialized_data:
+            escena_id = data_item['id']
+            required_id = escena_info.get(escena_id, {}).get('required_id')
+            
+            if data_item['bloqueada'] and required_id:
+                data_item['mensaje_bloqueo'] = f"Completa: '{nombre_map.get(required_id, 'Escena previa')}' para desbloquear"
+            else:
+                data_item['mensaje_bloqueo'] = None
+
+        return Response(serialized_data)  # Devolver respuesta simple sin paginación
+
+
+class VerificarEscenaAsignadaView(APIView):
+    """
+    Verifica si un usuario tiene asignada una escena por algún objetivo.
+    """
+    
+    def get(self, request):
+        
+        user_id = request.GET.get('user_id')
+        user_id = obtener_dni(user_id)
+        escena_id = request.GET.get('escena_id')
+
+        # Validar que los parámetros sean proporcionados
+        if not user_id or not escena_id:
+            return Response(
+                {"asignada": False, "objetivo_id": None, "error": "Se requieren 'user_id' y 'escena_id'."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Buscar si la escena está asignada a un usuario por algún objetivo
+        persona_escena = PersonaObjetivoEscena.objects.filter(
+            user_id=user_id,
+            escena_objetivo__escena_id=escena_id
+        ).select_related('escena_objetivo').first()
+
+        return Response({
+            "asignada": bool(persona_escena),
+            "objetivo_id": persona_escena.escena_objetivo.objetivo.id if persona_escena else None
+        }, status=status.HTTP_200_OK)
+
+
+#import logging
+
+#logger = logging.getLogger(__name__)
+
+#devuelve escenas del sistema
+class EscenaView(generics.ListAPIView):
+    queryset = Escena.objects.all().prefetch_related(
+        Prefetch(
+            'escenaobjetivo_set',
+            queryset=EscenaObjetivo.objects.select_related('objetivo').prefetch_related(
+                Prefetch(
+                    'objetivo_relations',  # Usamos el related_name correcto
+                    queryset=PersonaObjetivoEscena.objects.select_related('user_id'),  # ¡Importante!
+                    to_attr='user_poe'  # Almacenamos las relaciones en este atributo
+                )
+            )
+        )
+    )
+    serializer_class = EscenaSerializer
+    pagination_class = DynamicPagination
+    filter_backends = [DjangoFilterBackend]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # Obtener el username del query parameter
+        username = request.query_params.get('username', None)
+        if not username:
+            return Response(
+                {"error": "El parámetro 'username' es requerido."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Obtener el DNI del usuario usando el método obtener_dni
+        try:
+            dni = obtener_dni(username)
+        except User.DoesNotExist:
+            return Response(
+                {"error": f"Usuario '{username}' no encontrado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except ValueError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Obtener escenas vistas por el usuario usando el DNI
+        user_vistos_ids = set(
+            Videosvistos.objects.filter(paciente_id__dni=dni)
+            .values_list('escena_id', flat=True)
+        )
+        
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            serialized_data = serializer.data
+            
+            # Recolectar IDs de escenas requeridas
+            required_escena_ids = set()
+            escena_info = {}
+
+            for escena, data_item in zip(page, serialized_data):
+                bloqueada = False
+                required_id = None
+                
+                # Dentro del loop de escena.escenaobjetivo_set.all():
+                for eo in escena.escenaobjetivo_set.all():
+                    # Filtrar relaciones del usuario para este ESCENA_OBJETIVO específico
+                    user_poe = [poe for poe in eo.user_poe if poe.user_id.dni == dni]
+                    
+                    # Obtener el orden del usuario para este ESCENA_OBJETIVO
+                    current_order = user_poe[0].orden if user_poe else None
+                    
+                    if not current_order or current_order == 1:
+                        continue
+                    
+                    # Obtener requisitos previos: ESCENAS del mismo OBJETIVO con orden < current_order
+                    prereqs = [
+                        poe.escena_objetivo.escena_id
+                        for poe in PersonaObjetivoEscena.objects.filter(
+                            user_id__dni=dni,
+                            escena_objetivo__objetivo=eo.objetivo,  # Mismo objetivo que la escena actual
+                            orden__lt=current_order
+                        )
+                    ]
+                    
+                    # Verificar requisitos
+                    for prereq_id in prereqs:
+                        if prereq_id not in user_vistos_ids:
+                            bloqueada = True
+                            required_id = prereq_id
+                            required_escena_ids.add(prereq_id)
+                            break
+                    if bloqueada:
+                        break
+                
+                data_item['bloqueada'] = bloqueada
+                escena_info[escena.id] = {'required_id': required_id}
+
+            # Obtener nombres de las escenas requeridas
+            escenas_requeridas = Escena.objects.filter(
+                id__in=required_escena_ids
+            ).values('id', 'nombre')
+            
+            nombre_map = {e['id']: e['nombre'] for e in escenas_requeridas}
+
+            # Agregar mensajes al response
+            for data_item in serialized_data:
+                escena_id = data_item['id']
+                required_id = escena_info[escena_id]['required_id']
+                
+                if data_item['bloqueada'] and required_id:
+                    data_item['mensaje_bloqueo'] = f"Ver video: '{nombre_map.get(required_id, 'Escena previa')}' para desbloquear."
+                else:
+                    data_item['mensaje_bloqueo'] = None
+
+            return self.get_paginated_response(serialized_data)
+
+        # (Mismo proceso para caso sin paginación)
+
+class VerificarCondicionesView(APIView):
+    def get(self, request):
+        username = request.query_params.get('username')
+        escena_id = request.query_params.get('escena_id')
+
+        if not username or not escena_id:
+            return Response({'error': 'Username y escena_id son requeridos'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            dni = obtener_dni(username)
+            try:
+                user = User.objects.get(dni=dni)
+            except User.DoesNotExist:
+                return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+            
+            try:
+                escena = Escena.objects.get(id=escena_id)
+            except Escena.DoesNotExist:
+                return Response({'error': 'Escena no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+            
+            condicion = escena.condicion if hasattr(escena, 'condicion') else None
+
+            if not condicion:
+                return Response({
+                    'cumple_condiciones': {
+                        'edad': True,
+                        'fecha': True,
+                        'objetivo': True
+                    }
+                }, status=status.HTTP_200_OK)
+
+            # Verificación de edad
+            cumple_edad = True
+            if condicion.edad and user.fecha_nac:
+                today = timezone.now()
+                age = today.year - user.fecha_nac.year - ((today.month, today.day) < (user.fecha_nac.month, user.fecha_nac.day))
+                cumple_edad = age >= condicion.edad
+
+            # Verificación de fecha
+            cumple_fecha = condicion.fecha is None or timezone.now().date() >= condicion.fecha.date()
+
+            # Verificación de objetivo
+            cumple_objetivo = condicion.objetivo is None or PersonaObjetivoEvaluacion.objects.filter(
+                user_id=user, 
+                objetivo_id=condicion.objetivo_id, 
+                progreso=100
+            ).exists()
+
+            # Generar mensaje de bloqueo
+            mensajes = []
+            if not cumple_edad:
+                mensajes.append("No cumple el requisito de edad")
+            if not cumple_fecha:
+                mensajes.append("No cumple el requisito de fecha")
+            if not cumple_objetivo:
+                mensajes.append("No cumple el requisito de objetivo")
+            
+            mensaje_bloqueo = ". ".join(mensajes) if mensajes else None
+
+            return Response({
+                'cumple_condiciones': {
+                    'edad': cumple_edad,
+                    'fecha': cumple_fecha,
+                    'objetivo': cumple_objetivo
+                },
+                'mensaje_bloqueo': mensaje_bloqueo
+            }, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class EscenaFilter(filters.FilterSet):
+    query = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
+    
+    class Meta:
+        model = Escena
+        fields = ['query']
+
+
+class EscenaBusquedaView(generics.ListAPIView):
+    serializer_class = EscenaSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = EscenaFilter  
+    pagination_class = None
+
+    def get_queryset(self):
+        queryset = Escena.objects.all().prefetch_related(
+            Prefetch(
+                'escenaobjetivo_set',
+                queryset=EscenaObjetivo.objects.select_related('objetivo').prefetch_related(
+                    Prefetch(
+                        'objetivo_relations',
+                        queryset=PersonaObjetivoEscena.objects.select_related('user_id'),
+                        to_attr='user_poe'
+                    )
+                )
+            )
+        )
+        query = self.request.query_params.get('query', None)
+        if query:
+            queryset = queryset.filter(
+                nombre__icontains=query  # Filtra por nombre
+            ) | queryset.filter(
+                descripcion__icontains=query  # Filtra por descripción
+            )
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            username = request.query_params.get('username', None)
+
+            if not username:
+                return Response({"error": "El parámetro 'username' es requerido."}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                dni = obtener_dni(username)
+            except User.DoesNotExist:
+                return Response({"error": f"Usuario '{username}' no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            except ValueError as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+            user_vistos_ids = set(
+                Videosvistos.objects.filter(paciente_id__dni=dni)
+                .values_list('escena_id', flat=True)
+            )
+
+            serialized_data = []
+            required_escena_ids = set()
+            escena_info = {}
+
+            for escena in queryset:
+                bloqueada = False
+                required_id = None
+
+                try:
+                    # Dentro del loop de escena.escenaobjetivo_set.all():
+                    for eo in escena.escenaobjetivo_set.all():
+                        # Filtrar relaciones del usuario para este ESCENA_OBJETIVO específico
+                        user_poe = [poe for poe in eo.user_poe if poe.user_id.dni == dni]
+                        
+                        # Obtener el orden del usuario para este ESCENA_OBJETIVO
+                        current_order = user_poe[0].orden if user_poe else None
+                        
+                        if not current_order or current_order == 1:
+                            continue
+                        
+                        # Obtener requisitos previos: ESCENAS del mismo OBJETIVO con orden < current_order
+                        prereqs = [
+                            poe.escena_objetivo.escena_id
+                            for poe in PersonaObjetivoEscena.objects.filter(
+                                user_id__dni=dni,
+                                escena_objetivo__objetivo=eo.objetivo,  # Mismo objetivo que la escena actual
+                                orden__lt=current_order
+                            )
+                        ]
+                        
+                        # Verificar requisitos
+                        for prereq_id in prereqs:
+                            if prereq_id not in user_vistos_ids:
+                                bloqueada = True
+                                required_id = prereq_id
+                                required_escena_ids.add(prereq_id)
+                                break
+                        if bloqueada:
+                            break
+                
+
+                except Exception as e:
+                    return Response({
+                        "error": "Error en la evaluación de prerequisitos.",
+                        "detalle": str(e),
+                        "escena_id": escena.id
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+                escena_info[escena.id] = {'required_id': required_id}
+                data_item = self.get_serializer(escena).data
+                data_item['bloqueada'] = bloqueada
+                serialized_data.append(data_item)
+
+            escenas_requeridas = Escena.objects.filter(id__in=required_escena_ids).values('id', 'nombre')
+            nombre_map = {e['id']: e['nombre'] for e in escenas_requeridas}
+
+            for data_item in serialized_data:
+                escena_id = data_item['id']
+                required_id = escena_info[escena_id]['required_id']
+                data_item['mensaje_bloqueo'] = f"Ver video: '{nombre_map.get(required_id, 'Escena previa')}' para desbloquear." if data_item['bloqueada'] else None
+
+            return Response(serialized_data)
+
+        except Exception as e:
+            return Response({
+                "error": "Error interno del servidor.",
+                "detalle": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class EscenasPorObjetivoListView(generics.ListAPIView):
+    serializer_class = EscenaSerializer
+    filter_backends = [DjangoFilterBackend]
+
+    def get_queryset(self):
+        # Obtén el ID del objetivo y el usuario de la request
+        objetivo_id = self.request.GET.get('objetivo_id', None)
+        username = self.request.query_params.get('username', None)
+
+        if not objetivo_id:
+            return Escena.objects.none()  # Devuelve un queryset vacío si no hay objetivo_id
+
+        # Filtra las relaciones por el ID del objetivo
+        relaciones = EscenaObjetivo.objects.filter(objetivo=objetivo_id)
+
+        # Obtén las escenas asociadas al objetivo (TODAS)
+        escenas_objetivo = Escena.objects.filter(
+            id__in=relaciones.values_list('escena', flat=True)
+        )
+
+        return escenas_objetivo
+    
+class GetEscenaView(APIView):
+    serializer_class = EscenaSerializer
+
+    def get(self, request):
+        # Obtén el ID de la escena del request
+        escena_id = request.GET.get('escena_id', None)
+
+        if not escena_id:
+            return JsonResponse({"error": "El parámetro 'escena_id' es requerido."}, status=400)
+
+        try:
+            # Busca la escena por su ID
+            escena = Escena.objects.get(id=escena_id)
+        except Escena.DoesNotExist:
+            return JsonResponse({"error": "Escena no encontrada."}, status=404)
+
+        # Serializa la escena y retorna la respuesta
+        serializer = self.serializer_class(escena)
+        return JsonResponse(serializer.data, safe=False)
+
+
 class PacienteListView(APIView):
     def get(self, request):
         query = request.query_params.get('query', '').lower()  # Parámetro de búsqueda
@@ -442,13 +1232,11 @@ class PacienteListView(APIView):
             pacientes = pacientes.filter(
                 models.Q(nombre__icontains=query) |
                 models.Q(dni__icontains=query) |
-                models.Q(genero__icontains=query) |
-                models.Q(username__icontains=query)  # Filtrar por nombre de usuario
+                models.Q(genero__icontains=query)
             ).distinct()  # Evitar duplicados
-
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-'''
+
 @permission_classes([AllowAny])
 def objetivos_list(request):
     objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
@@ -570,7 +1358,134 @@ def get_goal_data(request, objetivo_id):
     except Objetivo.DoesNotExist:
         return Response({"error": "Objetivo no encontrado"}, status=404)
         
-from django.db import transaction
+
+
+class retrieve_user(APIView):
+    
+    def get(self, request):
+        username = request.query_params.get('username', '').strip()
+
+        # Validar que el parámetro 'username' está presente
+        if not username:
+            return Response(
+                {"error": "El parámetro 'username' es obligatorio."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Obtener el usuario con el username proporcionado
+        user = get_object_or_404(User, username=username)
+
+        # Serializar los datos del usuario
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+@api_view(['PUT'])
+def update_user(request):
+    try:
+        # Validar que todos los campos obligatorios estén presentes
+        required_fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'residencia']
+
+        missing_fields = [field for field in required_fields if field not in request.data]
+        if missing_fields:
+            return Response(
+                {"error": f"Faltan los siguientes campos: {', '.join(missing_fields)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Obtener datos de la dirección
+        direccion = request.data.get('residencia', {})
+        id_dir = direccion.get('id_dir')
+        provincia = direccion.get('provincia')
+        ciudad = direccion.get('ciudad')
+        calle = direccion.get('calle')
+        numero = direccion.get('numero')
+
+        # Obtener datos del request
+        dni = request.data.get('dni')
+        nombre = request.data.get('nombre')
+        fecha_nac = request.data.get('fecha_nac')
+        genero = request.data.get('genero')
+        role = request.data.get('role')
+        padre_id = request.data.get('padreACargo', None)  # Obtener el DNI del padre
+
+        # Buscar el usuario por DNI
+        try:
+            user = User.objects.get(dni=dni)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Usuario no encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Validar género
+        if genero not in ['Masculino', 'Femenino']:
+            return Response(
+                {"error": "El género debe ser 'Masculino' o 'Femenino'"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validar rol
+        if role not in [choice[0] for choice in User.ROLE_CHOICES]:
+            return Response(
+                {"error": f"El rol debe ser uno de los siguientes: {[choice[0] for choice in User.ROLE_CHOICES]}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Buscar al padre (si se proporcionó un DNI válido)
+        if padre_id:
+            try:
+                padre = User.objects.get(dni=padre_id)  # Buscar al padre por DNI
+                user.user_id_padre = padre  # Asignar el padre al usuario
+            except User.DoesNotExist:
+                return Response(
+                    {"error": f"No se encontró un usuario con el DNI '{padre_id}'"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        # Actualizar la residencia (dirección) dentro de una transacción
+        with transaction.atomic():
+            # Actualizar la residencia
+            try:
+                residencia = Residencia.objects.get(id_dir=id_dir)
+                residencia.provincia = provincia
+                residencia.ciudad = ciudad
+                residencia.calle = calle
+                residencia.numero = numero
+                residencia.save()
+            except Residencia.DoesNotExist:
+                return Response(
+                    {"error": "Residencia asociada no encontrada"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Actualizar el usuario
+            user.fecha_nac = fecha_nac
+            user.genero = genero
+            user.role = role
+            user.save()  # Guardar todos los cambios del usuario
+
+        return Response(
+            {"message": "Usuario actualizado exitosamente"},
+            status=status.HTTP_200_OK
+        )
+
+    except IntegrityError as e:
+        return Response(
+            {"error": f"Error de integridad: {str(e)}"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except ValidationError as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except Exception as e:
+        return Response(
+            {"error": f"Error inesperado: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signIn(request):
@@ -811,6 +1726,7 @@ def signIn(request):
 #     # Retornar la respuesta como un objeto Response de DRF
 #     return Response({'comentarios': data})
 
+
 @api_view(['GET'])
 def hijos_list_view(request):
     padre_id = request.query_params.get('padre_id')
@@ -835,7 +1751,6 @@ def hijos_list_view(request):
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-from django.db.models import Avg
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import PersonaObjetivoEvaluacion, Objetivo
@@ -877,9 +1792,6 @@ def objetivos_evaluacion_usuario(request):
         })
 
     return Response(data)
-
-
-
 
 @api_view(['GET'])
 def obtener_nombre_por_dni(request):
@@ -984,6 +1896,7 @@ class GrupoById(APIView):
         return Response(serializer.data)
     
 #@permission_classes([IsAuthenticated])
+
 class NotAssociatedCentersListView(generics.ListAPIView):
     serializer_class = CentroSaludSerializer
     pagination_class = DynamicPagination
@@ -2227,7 +3140,6 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import FormularioPacienteRevision
 
-from django.db.models import Max
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import FormularioPacienteRevision
@@ -2262,11 +3174,6 @@ def listar_formularios_completados(request, username):
         return Response({'error': str(e)}, status=500)
 
 
-
-
-    
-
-
     
 class ObtenerEvaluaciones(APIView):
     def get(self, request):
@@ -2287,28 +3194,40 @@ class ObtenerEvaluaciones(APIView):
                 objetivo_id=objetivo_id
             ).exclude(
                 evaluacion__isnull=True  # Asegurarse de que haya evaluación asociada
-            ).values(
-                'evaluacion__id', 
-                'evaluacion__nombre', 
-                'evaluacion__descripcion', 
-                'evaluacion__es_verificacion_automatica', 
-                'evaluacion__fecha_creacion'
+            # COMENTADO LO DE BRANCH DEVELOP:
+            # ).values(
+            #     'evaluacion__id', 
+            #     'evaluacion__nombre', 
+            #     'evaluacion__descripcion', 
+            #     'evaluacion__es_verificacion_automatica', 
+            #     'evaluacion__fecha_creacion'
+            # )
+
+            # # Transformar los datos en una lista de diccionarios
+            # formularios_list = [
+            #     {
+            #         'id': formulario['evaluacion__id'],
+            #         'nombre': formulario['evaluacion__nombre'],
+            #         'descripcion': formulario['evaluacion__descripcion'],
+            #         'es_verificacion_automatica': formulario['evaluacion__es_verificacion_automatica'],
+            #         'fecha_creacion': formulario['evaluacion__fecha_creacion']
+            #     }
+            #     for formulario in formularios
+            # ]
+            # ESTO VIENE DE Paciente Interfaz ----
+            ).select_related('evaluacion').prefetch_related(
+                'evaluacion__preguntas__opciones'
             )
 
-            # Transformar los datos en una lista de diccionarios
-            formularios_list = [
-                {
-                    'id': formulario['evaluacion__id'],
-                    'nombre': formulario['evaluacion__nombre'],
-                    'descripcion': formulario['evaluacion__descripcion'],
-                    'es_verificacion_automatica': formulario['evaluacion__es_verificacion_automatica'],
-                    'fecha_creacion': formulario['evaluacion__fecha_creacion']
-                }
-                for formulario in formularios
-            ]
+            # Serializar los formularios utilizando el FormularioSerializer
+            formularios_serializados = FormularioSerializer(
+                [f.evaluacion for f in formularios], 
+                many=True
+            )
+            # ---- hasta acá PacienteInterface
 
             # Devolver los resultados en formato JSON
-            return Response({'formularios': formularios_list}, status=status.HTTP_200_OK)
+            return Response({'formularios': formularios_serializados.data}, status=status.HTTP_200_OK)
         
         except Exception as e:
             # Manejo de errores genéricos
@@ -2323,70 +3242,163 @@ class ObtenerEvaluaciones(APIView):
 
     
 
-        
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import PersonaObjetivoEvaluacion, User, Objetivo, Formulario
 
-class CargarPersonaObjetivoEvaluacion(APIView):
+class MarcarVideoVistoView(APIView):
     def post(self, request):
-        """
-        Carga datos en la tabla PersonaObjetivoEvaluacion a partir de un JSON enviado en la solicitud.
-        """
-        data = request.data
-
         try:
-            # Extraer los datos del JSON
-            user_id = data.get('user_id')
-            objetivo_id = data.get('objetivo_id')
-            resultado = data.get('resultado', None)
-            progreso = data.get('progreso')
-            evaluacion_id = data.get('evaluacion_id', None)
+            try:
+                user_id = obtener_dni(request.data['paciente_id'])
+                request.data['paciente_id'] = user_id
+            except ValueError as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            except User.DoesNotExist as e:
+                return Response({'error': str(e)}, status=status.HTTP_404_NOT_FOUND)
 
-            # Validar que los campos requeridos estén presentes
-            if not user_id or not objetivo_id or progreso is None:
+
+            # Serializar los datos enviados
+            serializer = VideosvistosSerializer(data=request.data)
+            
+            # Validar los datos
+            if serializer.is_valid():
+                # Crear una nueva instancia del modelo usando el método `create`
+                video_visto = serializer.save()
+                
                 return Response(
-                    {'error': 'Faltan datos requeridos: user_id, objetivo_id o progreso.'},
+                    {
+                        "message": "Video registrado como visto.",
+                        "video_visto_id": video_visto.id,
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+            else:
+                print(serializer.errors)  # <-- Agrega esto para ver el error exacto
+                return Response(
+                    {"errors": serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        
+        except Exception as e:
+            return Response(
+                {"error": f"Error al registrar el video como visto: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        
+
+def check_cookie(request):
+    # Verificar si la cookie 'jwt' está presente
+    if 'jwt' in request.COOKIES:
+        return JsonResponse({"exists": True})
+    return JsonResponse({"exists": False})
+
+class ComentariosListaAPIView(APIView):
+    '''
+        Interfaz que devuelve un hashset de comentarios agrupados por hilo principal.
+    '''
+    def get(self, request, *args, **kwargs):
+        try:
+            # Obtener el id_escena desde los parámetros de consulta
+            id_escena = request.query_params.get('id_escena', None)
+
+            if not id_escena:
+                return Response(
+                    {"error": "El parámetro 'id_escena' es requerido."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            # Obtener todos los comentarios de la escena
+            comentarios = Comentario.objects.filter(escena_id=id_escena).values('id', 'comentario_contestado')
 
-            # Obtener las instancias relacionadas
-            try:
-                user = User.objects.get(dni=user_id)
-                objetivo = Objetivo.objects.get(id=objetivo_id)
-                evaluacion = Formulario.objects.get(id=evaluacion_id) if evaluacion_id else None
-            except User.DoesNotExist:
-                return Response({'error': 'El usuario especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
-            except Objetivo.DoesNotExist:
-                return Response({'error': 'El objetivo especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
-            except Formulario.DoesNotExist:
-                return Response({'error': 'El formulario especificado no existe.'}, status=status.HTTP_404_NOT_FOUND)
+            # Crear un diccionario temporal para mapear cada comentario con su comentario_contestado
+            comentarios_map = {}
+            for comentario in comentarios:
+                comentarios_map[comentario['id']] = comentario['comentario_contestado']
 
-            # Crear el registro en la tabla PersonaObjetivoEvaluacion
-            persona_objetivo_evaluacion = PersonaObjetivoEvaluacion.objects.create(
-                user_id=user,
-                objetivo_id=objetivo,
-                resultado=resultado,
-                progreso=progreso,
-                evaluacion=evaluacion
+            # Crear el hashset final usando la función de recursión
+            hashset = {}
+            for comentario_id in comentarios_map.keys():
+                hilo_principal = self._obtener_hilo_principal(comentarios_map, comentario_id)
+                if hilo_principal not in hashset:
+                    hashset[hilo_principal] = []
+                if comentarios_map[comentario_id]:  # Si tiene un comentario contestado, agrégalo como respuesta
+                    hashset[hilo_principal].append(comentario_id)
+
+            # Eliminar duplicados en las listas del hashset
+            for key in hashset:
+                hashset[key] = list(set(hashset[key]))
+
+            return Response({"hashset": hashset}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": f"Error inesperado: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    def _obtener_hilo_principal(self, comentarios_map, comentario_id):
+        """
+        Función recursiva para encontrar el hilo principal de un comentario.
+        """
+        comentario_contestado = comentarios_map.get(comentario_id)
+        if comentario_contestado is None:  # Es un comentario principal
+            return comentario_id
+        return self._obtener_hilo_principal(comentarios_map, comentario_contestado)
+        
+class ComentarioDetalleAPIView(APIView):
+    """
+    Endpoint para obtener un comentario específico por ID, incluyendo información
+    del usuario que comentó y, si es una respuesta, del usuario al que se responde.
+    """
+    def get(self, request):
+        # Obtener el parámetro id_comentario
+        id_comentario = request.query_params.get('idComentario')
+
+        # Validar que el parámetro esté presente
+        if not id_comentario:
             return Response(
-                {'message': 'Registro creado exitosamente.', 'id': persona_objetivo_evaluacion.id},
-                status=status.HTTP_201_CREATED
+                {"error": "El parámetro 'idComentario' es obligatorio."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Buscar el comentario por ID con sus relaciones
+            comentario = Comentario.objects.select_related(
+                'user',
+                'comentario_contestado',
+                'comentario_contestado__user'
+            ).get(id=id_comentario)
+
+            # Construir la respuesta
+            response_data = {
+                "id": comentario.id,
+                "texto": comentario.texto,
+                "visibilidad": comentario.visibilidad,
+                "usuario": comentario.user.nombre,  # Nombre del usuario que comentó
+                "idComentarioPadre": None,  # Valor por defecto
+            }
+
+            # Si es una respuesta a otro comentario, incluir información adicional
+            if comentario.comentario_contestado:
+                response_data.update({
+                    "idComentarioPadre": comentario.comentario_contestado.id,
+                    "usuarioRespondido": comentario.comentario_contestado.user.nombre
+                })
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Comentario.DoesNotExist:
+            return Response(
+                {"error": "No se encontró un comentario con el ID proporcionado."},
+                status=status.HTTP_404_NOT_FOUND
             )
 
         except Exception as e:
             return Response(
-                {'error': 'Ocurrió un error al crear el registro.', 'details': str(e)},
+                {"error": f"Error inesperado: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 from django.shortcuts import get_object_or_404
 from decimal import Decimal
 from collections import defaultdict
-from django.db.models import Max
 
 from datetime import date
 
@@ -2487,11 +3499,7 @@ class GroupDetailView(generics.RetrieveDestroyAPIView):
     queryset = Grupo.objects.all()
     serializer_class = GroupSerializer
 
-from django.http import JsonResponse
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from .models import Notificacion
-from rest_framework.permissions import IsAuthenticated
-from api.authentication import CookieJWTAuthentication
+
 @api_view(['GET'])
 #@authentication_classes([CookieJWTAuthentication])
 @permission_classes([AllowAny])
@@ -2527,9 +3535,7 @@ def obtener_detalle_notificacion(request, pk):
         # Manejar el caso de una notificación no encontrada o no autorizada
         return JsonResponse({'error': 'Notificación no encontrada o no autorizada'}, status=404)
     
-from django.contrib.contenttypes.models import ContentType
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
+
 from api.models import User
 from .models import Notificacion
 from api.notificaciones.utils import actualizar_notificacion 
@@ -2588,12 +3594,6 @@ def procesar_notificacion(request, pk, accion):
         return JsonResponse({'error': str(e)}, status=500)
     
 from django.http import JsonResponse
-
-def check_cookie(request):
-    # Verificar si la cookie 'jwt' está presente
-    if 'jwt' in request.COOKIES:
-        return JsonResponse({"exists": True})
-    return JsonResponse({"exists": False})
 
 
 from rest_framework.permissions import IsAuthenticated
@@ -2667,3 +3667,4 @@ class CambiarVisibilidadComentarioView(APIView):
             return JsonResponse({'error': 'Comentario no encontrado'}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+

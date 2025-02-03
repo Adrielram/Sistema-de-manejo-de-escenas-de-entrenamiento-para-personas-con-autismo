@@ -1,20 +1,23 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import Comentario from "../../../components/Comentario";
+import React, { useEffect, useState, useRef } from "react";
 import { NuevoComentario } from "../../../components/NuevoComentario";
+import ComentarioPaciente from "../../../components/ComentarioPaciente";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector } from 'react-redux';
-import { RootState } from "../../../../store/store"; 
+import { RootState } from "../../../../store/store";
+import { useDispatch } from "react-redux";
+import { setIdEscena } from "../../../../slices/userSlice";
 
 interface Escena {
   id: number;
   idioma: string;
   acento: string;
+  condiciones: string | null;
   complejidad: number;
-  condiciones: string;
   link: string;
   nombre: string;
+  descripcion: string;
 }
 
 const VerVideo = () => {
@@ -23,28 +26,34 @@ const VerVideo = () => {
   const [quizStates, setQuizStates] = useState<Record<number, { revision: boolean; volver_a_realizar: boolean; tiene_respuestas: boolean }>>({});
   const [escenas, setEscenas] = useState<Escena[]>([]);
   const [escena, setEscena] = useState<Escena>();
-  const [poe, setPoe] = useState<number>();
+  const [like, setLike] = useState<boolean | null>(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [completedQuizzes, setCompletedQuizzes] = useState<number[]>([]);
-  const { username } = useSelector((state: RootState) => state.user);
-  const objetivoId = 1;
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [comentariosHashSet, setComentariosHashSet] = useState<{
+    [key: number]: number[];
+  }>({}); 
   const [reloadComentarios, setReloadComentarios] = useState(false);
+  const router = useRouter();
+  const { username, idEscena, objetivoId } = useSelector((state: RootState) => state.user);
   const searchParams = useSearchParams();
   const completedFormId = searchParams.get('completedFormId');
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const nuevoComentarioRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
     user: username, 
-    escena: 0,
+    escena: Number(idEscena),
     texto: '',
     visibilidad: true,
-    comentario_respondido: null,
+    comentario_respondido: 0,
+    usuarioRespondido: '', 
   });
 
+  //FORMULARIOS
   useEffect(() => {
     const verificarFormulario = async (formId: string) => {
-      const response = await fetch(`${baseUrl}verificar_form_completado/${formId}/${username}/`);
+      const response = await fetch(`http://localhost:8000/api/verificar_form_completado/${formId}/${username}/`);
       if (response.ok) {
         const data = await response.json();
         if (data.status === 'completado') {
@@ -56,33 +65,11 @@ const VerVideo = () => {
     if (completedFormId) {
       verificarFormulario(completedFormId);
     }
-  }, [completedFormId]);
-
-  useEffect(() => {
-    const fetchQuizStates = async () => {
-      const newQuizStates: Record<number, { revision: boolean; volver_a_realizar: boolean; tiene_respuestas: boolean }> = {};
-      for (const quiz of quizzes.formularios) {
-        try {
-          const response = await fetch(`${baseUrl}obtener_estado_revision/?formulario_id=${quiz.id}&username=${username}`);
-          if (response.ok) {
-            const data = await response.json();
-            newQuizStates[quiz.id] = data;
-          }
-        } catch (error) {
-          console.error("Error obteniendo estado de revisión:", error);
-        }
-      }
-      setQuizStates(newQuizStates);
-    };
-
-    if (quizzes.formularios.length > 0) {
-      fetchQuizStates();
-    }
-  }, [quizzes, username]);
+  }, [completedFormId, username]);
 
   useEffect(() => {
     const cargarFormulariosCompletados = async () => {
-      const response = await fetch(`${baseUrl}listar_formularios_completados/${username}/`);
+      const response = await fetch(`http://localhost:8000/api/listar_formularios_completados/${username}/`);
       if (response.ok) {
         const data = await response.json();
         console.log("Data: ", JSON.stringify(data));
@@ -90,117 +77,137 @@ const VerVideo = () => {
         setCompletedQuizzes(completedIds);
       }
     };
-
     cargarFormulariosCompletados();
-  }, []); // Solo se ejecuta al renderizar el componente por primera vez
-
- 
-
+  }, [username]); 
   
+  //COMENTARIOS
+  const handleResponder = async (idComentario: number) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/comentarios/?idComentario=${idComentario}`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setFormData((prev) => ({
+          ...prev,
+          comentario_respondido: idComentario,
+          usuarioRespondido: data.usuario, 
+        }));
+
+        if (nuevoComentarioRef.current) {
+          nuevoComentarioRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      } else {
+        console.error(data.error);
+      }
+    } catch (error) {
+      console.error("Error al obtener el usuario del comentario:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchPersObjEsc = async (escena_id: number) => {
+    const fetchComentarios = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8000/api/get-persona-obj-esc/?username=${username}&objetivo_id=${objetivoId}&escena_id=${escena_id}`,{
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-          }
-        );       
-        
+          `http://localhost:8000/api/comentarios/lista/?id_escena=${idEscena}`
+        );
         const data = await response.json();
-        setPoe(data.id); 
-        setFormData((prev) => ({ ...prev, persona_objetivo_escena: data.id }));
+
+        if (response.ok) {
+          if (data && data.hashset && typeof data.hashset === 'object') {
+            setComentariosHashSet(data.hashset);
+          } else {
+            console.error('Datos inesperados:', data);
+            setComentariosHashSet({});
+          }
+        } else {
+          console.error(data.error);
+          setComentariosHashSet({});
+        }
       } catch (error) {
-        console.error('Error en fetchPersObjEsc:', error);
-      }
+        console.error("Error al obtener los comentarios:", error);
+        setComentariosHashSet({});
+      } 
     };
+    fetchComentarios();
+  }, [idEscena, reloadComentarios]);
 
-    const escenaActual = escena;
-    if (escenaActual) {
-      fetchPersObjEsc(escenaActual.id);
-    }
-  }, [escena, username]);
 
+  //FETCH DE VIDEOS Y EVALUACIONES
   useEffect(() => {
     const LoadData = async () => {
       try {
-        // Fetch para obtener las escenas relacionadas al objetivo
-        const response = await fetch(`http://localhost:8000/api/get-escenas-obj/?objetivo_id=${objetivoId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
-
-        
-        if (!response.ok) {
-          throw new Error('Error al obtener las escenas');
+        if (objetivoId !== "") {  //CASO CUANDO HAY OBJETIVO
+          // Fetch para obtener las escenas relacionadas al objetivo
+          const response = await fetch(`http://localhost:8000/api/get-escenas-obj/?objetivo_id=${objetivoId}`);
+          
+          if (!response.ok) {
+            throw new Error('Error al obtener las escenas');
+          }
+          
+          const data = await response.json();
+          setEscenas(data);
+    
+          // Encuentra el índice de la escena actual en las escenas obtenidas
+          const index = data.findIndex((escena: Escena) => escena.id === Number(idEscena));
+    
+          if (index !== -1) {
+            setCurrentVideoIndex(index); 
+            setEscena(data[index]); 
+            setFormData((prev) => ({ ...prev, escena: data[index].id })); 
+          } else {
+            console.error('La escena actual no se encuentra en las escenas disponibles.');
+          }
+          setVideos(data.map((escena: Escena) => escena.link));
+          
+          // Fetch para obtener las evaluaciones asociadas al objetivo y usuario
+          const evaluacionesResponse = await fetch(`http://localhost:8000/api/get-evaluaciones/?username=${username}&objetivo_id=${objetivoId}`);
+            
+          if (!evaluacionesResponse.ok) {
+            setQuizzes({ formularios: [] });
+            throw new Error('Error al obtener las evaluaciones');
+          }
+      
+          const evaluacionesData = await evaluacionesResponse.json();
+          setQuizzes({ formularios: evaluacionesData.formularios }); 
+        } 
+        else {  //CASO CUANDO NO HAY OBJETIVO
+          // Fetch para obtener la escena
+          const escenaResponse = await fetch(`http://localhost:8000/api/get-escena/?escena_id=${idEscena}`);
+          if (!escenaResponse.ok) {
+            throw new Error('Error al obtener la escena');
+          }
+          const escenaData = await escenaResponse.json();
+          setVideos([escenaData.link]);
+          setCurrentVideoIndex(0);
+          setEscena(escenaData);
+          setEscenas([escenaData]);
         }
-        
-        const data = await response.json();
-        setEscenas(data);
-        if (data.length > 0) {
-          const primeraEscena = data[0];
-          setEscena(primeraEscena);
-          const e = primeraEscena.id;
-          setFormData((prev) => ({ ...prev, escena: e }));
-        }
-  
-        setVideos(data.map((escena: Escena) => escena.link));
-  
-        // Fetch para obtener las evaluaciones asociadas al objetivo y usuario
-        const evaluacionesResponse = await fetch(`http://localhost:8000/api/get-evaluaciones/?username=${username}&objetivo_id=${objetivoId}`,{
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
-        
-        if (!evaluacionesResponse.ok) {
-          throw new Error('Error al obtener las evaluaciones');
-        }
-  
-        const evaluacionesData = await evaluacionesResponse.json();
-        setQuizzes(evaluacionesData); 
-        console.log("Evaluaciones data: ", JSON.stringify(evaluacionesData));
-  
       } catch (error) {
         console.error('Error en LoadData:', error);
+      } finally {
+        setLoading(false);
       }
     };
   
     LoadData();
-  }, [username, objetivoId]); // Elimina `escena` de las dependencias
+  }, [username, objetivoId, idEscena]); 
 
   const handleVerSiguienteVideo = async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
       const nextIndex = currentVideoIndex + 1;
-  
-      // Verifica si hay más videos para mostrar
       if (nextIndex >= escenas.length) {
         console.error('No hay más videos para mostrar');
         return;
       }
-  
-      // Actualiza el índice y la escena actual
+
+      marcarVideoComoVisto();
       setCurrentVideoIndex(nextIndex);
-      const siguienteEscena = escenas[nextIndex]; // Obtiene la siguiente escena
+      const siguienteEscena = escenas[nextIndex];
       setEscena(siguienteEscena);
-  
-      // Marca el video como visto solo después de que `poe` se haya actualizado
-      if (poe) {
-        marcarVideoComoVisto(poe);
-      }
-  
-      // Actualiza el formData con la nueva escena
+      dispatch(setIdEscena({idEscena: siguienteEscena.id}));
       setFormData((prev) => ({ ...prev, escena: siguienteEscena.id }));
   
     } catch (error) {
@@ -215,19 +222,15 @@ const VerVideo = () => {
     setIsLoading(true);
     try {
       const previousIndex = currentVideoIndex - 1;
-  
-      // Verifica si hay un video anterior
       if (previousIndex < 0) {
         console.error('No hay más videos para mostrar hacia atrás');
         return;
       }
   
-      // Actualiza el índice y la escena actual
       setCurrentVideoIndex(previousIndex);
-      const escenaAnterior = escenas[previousIndex]; // Obtiene la escena anterior
+      const escenaAnterior = escenas[previousIndex]; 
       setEscena(escenaAnterior);
-  
-      // Actualiza el formData con la nueva escena
+      dispatch(setIdEscena({idEscena:escenaAnterior.id}));
       setFormData((prev) => ({ ...prev, escena: escenaAnterior.id }));
   
     } catch (error) {
@@ -236,16 +239,20 @@ const VerVideo = () => {
       setIsLoading(false);
     }
   };
+  
 
+  if (loading) {
+    return <p>Cargando...</p>;
+  }
 
-  const marcarVideoComoVisto = async (personaObjetivoEscenaId: number) => {
+  const marcarVideoComoVisto = async () => {
     try {
       const response = await fetch('http://localhost:8000/api/video-visto/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ persona_objetivo_escena_id: personaObjetivoEscenaId }),
+        body: JSON.stringify({ paciente_id: username, escena_id: escena.id, like: like ?? null }),
       });
   
       if (!response.ok) {
@@ -256,21 +263,33 @@ const VerVideo = () => {
     }
   };
 
-  const handleVerListaObjetivos = () => {
-    router.push('./ver_objetivos');
+  const handleVolver = () => {
+    router.push('./principal');
   };
+
+  const handleLike= () => {
+    if (like === true){
+      setLike(null);
+    }else{
+      setLike(true);
+    }
+  }
+
+  const handleDislike = () => {
+    if (like === false){
+      setLike(null);
+    }
+    else{
+      setLike(false); 
+    }
+  }
 
   const handleQuizClick = (index: number) => {      
     router.push(`/interfaz_paciente/evaluacion/${index}`);      
-    //setCompletedQuizzes((prev) => [...new Set([...prev, index])]);
-  };
-
-  const handleQuizClickRevisar = (index: number) => {
-    router.push(`/interfaz_paciente/evaluacion/${index}?ver_revision=true`);
   };
 
   const handleCompletarObjetivo = () => {
-    marcarVideoComoVisto(poe);
+    marcarVideoComoVisto();
     router.push('./principal');
   };
 
@@ -294,44 +313,65 @@ const VerVideo = () => {
         <div className="flex flex-col items-center justify-center flex-grow h-full">
           <div className="flex flex-col justify-center flex-grow space-y-4 w-full max-w-sm">
             <button
-              onClick={handleVerListaObjetivos}
+              onClick={handleVolver}
               className="bg-blue-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full"
             >
               Ver lista de objetivos
             </button>
-
-            {currentVideoIndex < videos.length - 1 && (
-              <button
-                onClick={handleVerSiguienteVideo}
-                disabled={isLoading} 
-                className={`bg-green-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {isLoading ? 'Cargando...' : 'Ver siguiente video'}
-              </button>
-              
-            )}
-            {currentVideoIndex > 0 && (
-              <button
-                onClick={handleVerVideoAnterior}
-                disabled={isLoading}
-                className={`bg-red-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {isLoading ? 'Cargando...' : 'Ver video anterior'}
-              </button>
-            )}
+              {currentVideoIndex < videos.length - 1 && (
+                <button
+                  onClick={handleVerSiguienteVideo}
+                  disabled={isLoading} 
+                  className={`bg-green-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isLoading ? 'Cargando...' : 'Ver siguiente video'}
+                </button>
+                
+              )}
+              {currentVideoIndex > 0 && (
+                <button
+                  onClick={handleVerVideoAnterior}
+                  disabled={isLoading}
+                  className={`bg-red-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all w-full ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isLoading ? 'Cargando...' : 'Ver video anterior'}
+                </button>
+              )}
+        </div>
+          <div className="flex space-x-4 items-center justify-center mt-4">
+            <button
+              onClick={handleLike}
+              className={`rounded-lg px-4 py-2 shadow transition duration-300 ${
+                like === true
+                  ? 'bg-blue-700 text-white border-4 border-blue-900 scale-105'
+                  : 'bg-blue-500 text-white hover:bg-blue-600'
+              }`}
+            >
+              👍 {like === true ? 'Me gusta' : 'Me gusta'}
+            </button>
+            <button
+              onClick={handleDislike}
+              className={`rounded-lg px-4 py-2 shadow transition duration-300 ${
+                like === false
+                  ? 'bg-red-700 text-white border-4 border-red-900 scale-105'
+                  : 'bg-red-500 text-white hover:bg-red-600'
+              }`}
+            >
+              👎 {like === false ? 'No me gusta' : 'No me gusta'}
+            </button>
           </div>
             {/* Quizzes */}
             {currentVideoIndex === videos.length - 1 && (
               <div className="flex flex-col items-center w-full max-w-sm bg-white border border-gray-300 rounded-lg shadow-md p-4 mt-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Quizzes Disponibles</h3>
+                  {quizzes?.formularios?.length > 0 && <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                    Quizzes Disponibles
+                  </h3>}
                 <div className="flex flex-col space-y-2 w-full">
-                  {quizzes?.formularios && quizzes.formularios.map((quiz) => (
+                {quizzes?.formularios?.length > 0 && quizzes.formularios.map((quiz) => (
                     <div key={quiz.id} className="flex items-center w-full">
                       <button
                         onClick={() => handleQuizClick(quiz.id)}
-                        disabled={!quizStates[quiz.id]?.volver_a_realizar && completedQuizzes.includes(quiz.id)}
-                        className={`bg-blue-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all flex-grow 
-                          ${!quizStates[quiz.id]?.volver_a_realizar && completedQuizzes.includes(quiz.id) ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-blue-600'}`}
+                        className={`bg-blue-500 text-white py-2 px-4 rounded-lg text-sm shadow-sm hover:shadow-md transition-all flex-grow `}
                       >
                         {quiz.nombre}
                       </button>
@@ -361,16 +401,39 @@ const VerVideo = () => {
             )}
         </div>
       </div>
-      {/* Comentarios */}
-      <div className="mt-4">
-        <h2 className="text-xl font-semibold mb-2">Comentarios</h2>
-        <Comentario/>
-        <NuevoComentario
-          formData={formData}
-          setFormData={setFormData}
-          onCommentAdded={() => setReloadComentarios(!reloadComentarios)} // Llama a esta función cuando se agrega un comentario
-        />
-      </div>
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">Comentarios</h3>
+        <div>
+          {/* Renderizado de comentarios */}
+          {Object.keys(comentariosHashSet).map((principalId) => (
+            <div key={principalId} className="mb-4">
+              <ComentarioPaciente
+                idComentario={parseInt(principalId)}
+                respuestas={comentariosHashSet[parseInt(principalId)]}
+                onResponder={handleResponder}
+              />
+            </div>
+          ))}
+        </div>
+        {formData.comentario_respondido !== 0 && (
+          <div className="flex items-center text-sm text-gray-600 mt-2">
+            <p>Respondiendo a @{formData.user}</p>
+            <button
+              onClick={() =>
+                setFormData((prev) => ({ ...prev, comentario_respondido: 0 }))
+              }
+              className="ml-2 text-red-500 scale-150 hover:text-red-700 transition-colors"
+            >
+              &#x2716; 
+            </button>
+          </div>
+        )}
+        <div ref={nuevoComentarioRef}>
+          <NuevoComentario
+            formData={formData}
+            setFormData={setFormData}
+            onCommentAdded={() => setReloadComentarios(!reloadComentarios)} 
+          />
+        </div>
     </div>
   );
 };

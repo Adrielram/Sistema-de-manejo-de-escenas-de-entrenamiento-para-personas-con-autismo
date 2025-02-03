@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect,useRef, useState } from "react";
 import Objetivo from "../../../components/Objetivo";
 import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
-import { setUserId, setObjetivoId } from "../../../../slices/userSlice";
-import {useSelector} from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { setUserId, setObjetivoId, setIdEscena } from "../../../../slices/userSlice";
 import { RootState } from "../../../../store/store";
-
+import ComentarioPaciente from "../../../components/ComentarioPaciente";
 type ObjetivoData = {
   id: number;
   nombre: string;
@@ -17,76 +16,112 @@ type ObjetivoData = {
 type PersonaObjetivo = {
   id: number;
   progreso: number;
-  objetivo_id: ObjetivoData;  
+  objetivo_id: ObjetivoData;
   resultado: string | null;
 };
 
+interface Escena {
+  id: number;
+  nombre: string;
+}
+
+
+
 const ObjetivoList = () => {
-  const {userId} = useSelector((state: RootState) => state.user); 
+  const { userId, objetivoId } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const router = useRouter();
   const [objetivos, setObjetivos] = useState<PersonaObjetivo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [nombreUsuario, setNombreUsuario] = useState<string | null>(null); 
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [escenasActivas, setEscenasActivas] = useState<Escena[]>([]);
+  const [escenaSeleccionada, setEscenaSeleccionada] = useState<number | null>(null);
+  const [comentariosHashSet, setComentariosHashSet] = useState<{
+    [key: number]: number[];
+  }>({});
+  const comentariosRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchNombreUsuario = async () => {
-      try {
-        const response = await fetch(`http://localhost:8000/api/get-name/?dni=${userId}`);
-        
-        if (!response.ok) {
-          throw new Error('Error al cargar el nombre del usuario');
-        }
-        
-        const data = await response.json();
-        setNombreUsuario(data.nombre); 
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido');
-      }
-    };
+  const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
-    if (userId) {
-      fetchNombreUsuario();
-    }
-  }, [userId]);
-
+  // Fetch objetivos
   useEffect(() => {
     const fetchObjetivos = async () => {
       try {
         setLoading(true);
         const response = await fetch(`http://localhost:8000/api/objetivos-ev-paciente/?user_id=${userId}`);
-        
-        if (!response.ok) {
-          throw new Error('Error al cargar los objetivos');
-        }
-        
+        if (!response.ok) throw new Error("Error al cargar los objetivos");
         const data = await response.json();
         setObjetivos(data);
-        console.log("Objetivos Data: ", JSON.stringify(data));
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido');
+        setError(err instanceof Error ? err.message : "Error desconocido");
         setObjetivos([]);
       } finally {
         setLoading(false);
       }
     };
 
-    if (userId) {
-      fetchObjetivos();
-    }
+    if (userId) fetchObjetivos();
   }, [userId]);
 
+  // Fetch escenas activas
+  const fetchEscenas = async () => {
+    try {
+      const response = await fetch(`${baseURL}obtener_escenas_por_objetivo/?objetivo_id=${objetivoId}`);
+      if (!response.ok) throw new Error(`Error: ${response.status}`);
+      const data: Escena[] = await response.json();
+      setEscenasActivas(data);
+    } catch (err) {
+      console.error("Error al cargar las escenas", err);
+    }
+  };
+
+  
+
   const handleExpand = (id: number) => {
-    dispatch(setUserId({userId:userId}));
-    dispatch(setObjetivoId({objetivoId:id}));
+    dispatch(setUserId({ userId: userId }));
+    dispatch(setObjetivoId({ objetivoId: id }));
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const handleNavigate = () => {
-    router.push(`./ver_comentario/`);
+  const handleVerComentariosClick = (id: number) => {
+    dispatch(setObjetivoId({ objetivoId: id })); // Guarda el ID del objetivo en Redux
+    setSidebarVisible(true); // Abre el sidebar de las escenas
+    fetchEscenas(); // Carga las escenas asociadas al objetivo
+  };
+
+  const handleEscenaClick = (escenaId: number) => {
+    setEscenaSeleccionada(escenaId);
+    dispatch(setIdEscena({ idEscena: escenaId }));
+    
+    // Fetch de comentarios similar a tu implementación anterior
+    const fetchComentarios = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/comentarios/lista/?id_escena=${escenaId}`
+        );
+        const data = await response.json();
+
+        if (response.ok) {
+          setComentariosHashSet(data.hashset);
+          
+          // Scroll a los comentarios
+          if (comentariosRef.current) {
+            comentariosRef.current.scrollIntoView({ behavior: "smooth" });
+          }
+        } else {
+          console.error(data.error);
+          setComentariosHashSet({});
+        }
+      } catch (error) {
+        console.error("Error al obtener los comentarios:", error);
+        setComentariosHashSet({});
+      }
+    };
+
+    fetchComentarios();
   };
 
   if (loading) {
@@ -106,14 +141,12 @@ const ObjetivoList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-10 px-4">
-      <div className="max-w-2xl mx-auto space-y-4">
-        <h1 className="text-2xl font-bold justify-centrer text-gray-800 mb-6">Paciente: {nombreUsuario}</h1>
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Lista de Objetivos</h1>
-        {objetivos.length === 0 ? (
-          <div className="text-gray-600 text-center">No hay objetivos disponibles</div>
-        ) : (
-          objetivos.map(({ id, progreso, objetivo_id }) => (
+    <div className="min-h-screen bg-gray-100 py-10 px-4 flex flex-col md:flex-row gap-6">
+      {/* Lista de objetivos */}
+      <div className="w-full flex-1">
+        <div className="max-w-2xl mx-auto space-y-4">
+          <h1 className="text-2xl font-bold text-gray-800 mb-6">Lista de Objetivos</h1>
+          {objetivos.map(({ id, progreso, objetivo_id }) => (
             <Objetivo
               key={id}
               id={objetivo_id.id}
@@ -121,12 +154,54 @@ const ObjetivoList = () => {
               descripcion={objetivo_id.descripcion}
               expanded={expandedId === objetivo_id.id}
               onExpand={handleExpand}
-              onNavigate={handleNavigate}              
               progreso={progreso}
+              onNavigate={() => handleVerComentariosClick(objetivo_id.id)} // Usa este evento para manejar el clic
             />
-          ))
+          ))}
+        </div>
+
+        {/* Comentarios debajo de los objetivos */}
+        {escenaSeleccionada && (
+        <div ref={comentariosRef} className="mt-6">
+          <h2 className="text-xl font-bold mb-4">Comentarios de la Escena {escenaSeleccionada}</h2>
+          {Object.keys(comentariosHashSet).length > 0 ? (
+            Object.keys(comentariosHashSet).map((principalId) => (
+              <div key={principalId} className="mb-4">
+                <ComentarioPaciente
+                  idComentario={parseInt(principalId)}
+                  respuestas={comentariosHashSet[parseInt(principalId)]}
+                  onResponder={() => {}}
+                />
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500 text-center">No existen comentarios para esta escena</p>
+          )}
+        </div>
         )}
       </div>
+
+      {/* Sidebar */}
+      {sidebarVisible && (
+        <div className="w-full md:w-[45%] bg-gray-100 rounded-lg shadow p-4">
+          <h2 className="text-xl font-bold mb-2">Escenas</h2>
+          <ul className="space-y-4">
+            {escenasActivas.map((escena) => (
+              <li
+                key={escena.id}
+                className="p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              >
+                <button
+                  onClick={() => handleEscenaClick(escena.id)}
+                  className="text-left w-full"
+                >
+                  <h3 className="text-lg font-semibold text-blue-600 mb-2">{escena.nombre}</h3>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

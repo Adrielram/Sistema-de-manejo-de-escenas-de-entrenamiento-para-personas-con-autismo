@@ -162,10 +162,9 @@ class Command(BaseCommand):
         )
 
         # Create condiciones
-        condicion1 = Condicion.objects.create(
-            edad= 10
+        condicion2 = Condicion.objects.create(
+            edad=15
         )
-
 
         # Create scenes
         escena_1 = Escena.objects.create(
@@ -224,26 +223,26 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            condicion= condicion1,
+            condicion=condicion2,
             link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
-            nombre="Escena 1",
-            descripcion = "Esta escena aclara la importancia de los abuelos"
+            nombre="Escena 7",
+            descripcion = "Esta escena es la de openai"
         )
         escena_8 = Escena.objects.create(
             idioma="Español",
             acento="neutro",
             complejidad=1,
             link="https://drive.google.com/file/d/1qzY31odKmd2FlrjU0VK4dkfezlzEcoaJ/preview",
-            nombre="Escena 2",
-            descripcion = "Esta escena muestra la vida en la fabella"
+            nombre="Escena 8",
+            descripcion = "Esta escena es la de futgame"
         )
         escena_9 = Escena.objects.create(
             idioma="Español",
             acento="neutro",
             complejidad=1,
             link="https://drive.google.com/file/d/1yPgHYRagTJXTqlrGhNkZDEy5zNY4-f77/preview",
-            nombre="Escena 3",
-            descripcion = "Esta escena recomienda comportamientos bajo"
+            nombre="Escena 9",
+            descripcion = "Esta escena es la del cartpole"
         )
 
         # Create objectives
@@ -260,7 +259,7 @@ class Command(BaseCommand):
             centro_profesional=centro_prof
         )
         objetivo_3 = Objetivo.objects.create(
-            nombre="Messi",
+            nombre="Este es el que funca (messi)",
             descripcion="Tenes que vencer a goku",
             escena=escena_5,
             centro_profesional=centro_prof
@@ -305,36 +304,48 @@ class Command(BaseCommand):
         )
         escena_obj_4 = EscenaObjetivo.objects.create(
             escena=escena_8,
-            objetivo=objetivo_3,
-            orden= 2
-            
+            objetivo=objetivo_3   
         )
         escena_obj_5 = EscenaObjetivo.objects.create(
             escena=escena_9,
             objetivo=objetivo_3,
         )
         escena_obj_6 = EscenaObjetivo.objects.create(
-            escena=escena_7,
-            objetivo=objetivo_4
+            escena=escena_1,
+            objetivo=objetivo_3
         )
         escena_obj_7 = EscenaObjetivo.objects.create(
-            escena=escena_8,
-            objetivo=objetivo_5
+            escena=escena_2,
+            objetivo=objetivo_3
         )
         escena_obj_8 = EscenaObjetivo.objects.create(
-            escena=escena_9,
-            objetivo=objetivo_6
+            escena=escena_3,
+            objetivo=objetivo_3
         )
+        escena_obj_9 = EscenaObjetivo.objects.create(
+            escena=escena_4,
+            objetivo=objetivo_3
+        )
+        escena_obj_10 = EscenaObjetivo.objects.create(
+            escena=escena_5,
+            objetivo=objetivo_3
+        )
+        escena_obj_11 = EscenaObjetivo.objects.create(
+            escena=escena_5,
+            objetivo=objetivo_4
+        )
+
 
         # Create person-objective-scene relationship
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_3,
-
+            orden= 1,
         )
         persona_obj_esc_2 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
             escena_objetivo=escena_obj_4,
+            orden= 2,
         )
         persona_obj_esc_3 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
@@ -348,55 +359,123 @@ class Command(BaseCommand):
             user_id=paciente,
             escena_objetivo=escena_obj_2,
         )
+        persona_obj_esc_6 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_6,
+            orden = 3
+        )
+        persona_obj_esc_7 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_7,
+            orden = 4
+        )
+        persona_obj_esc_8 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_8,
+        )
+        persona_obj_esc_9 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_9,
+        )
+        persona_obj_esc_10 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_10,
+        )
+        persona_obj_esc_11 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_11,
+            orden = 5
+        )
+
+
 
         formulario_1 = Formulario.objects.create(
             nombre="Formulario 1",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now(),
-            objetivo=objetivo_3
+            fecha_creacion=datetime.now()
         )
-        Formulario.objects.create(
+        formulario_2= Formulario.objects.create(
             nombre="Formulario 2",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now(),
-            objetivo=objetivo_3
+            fecha_creacion=datetime.now()
         )
         Formulario.objects.create(
             nombre="Formulario 3",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now(),
-            objetivo=objetivo_2
+            fecha_creacion=datetime.now()
         )
         Formulario.objects.create(
             nombre="Formulario 4",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now(),
-            objetivo=objetivo_2
+            fecha_creacion=datetime.now()
         )
         Formulario.objects.create(
             nombre="Formulario 5",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now(),
-            objetivo=objetivo_3
+            fecha_creacion=datetime.now()
         )
         Formulario.objects.create(
             nombre="Formulario 6",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now(),
-            objetivo=objetivo_3
+            fecha_creacion=datetime.now()
         )
+
+        # Añadir preguntas al Formulario 1
+        pregunta_1 = Pregunta.objects.create(
+            formulario=formulario_1,
+            texto="¿Cuál es la capital de Francia?",
+            tipo="multiple-choice",
+            correcta="París"
+        )
+
+        Opcion.objects.create(pregunta=pregunta_1, texto="Madrid")
+        Opcion.objects.create(pregunta=pregunta_1, texto="Roma")
+        Opcion.objects.create(pregunta=pregunta_1, texto="París")
+        Opcion.objects.create(pregunta=pregunta_1, texto="Berlín")
+
+        pregunta_2 = Pregunta.objects.create(
+            formulario=formulario_1,
+            texto="Escribe una breve descripción sobre tu día.",
+            tipo="respuesta-corta"
+        )
+
+        pregunta_3 = Pregunta.objects.create(
+            formulario=formulario_1,
+            texto="Describe tus objetivos para la semana.",
+            tipo="respuesta-larga"
+        )
+
+        # Añadir preguntas al Formulario 2
+        pregunta_4 = Pregunta.objects.create(
+            formulario=formulario_2,
+            texto="¿Qué color es el cielo durante un día despejado?",
+            tipo="multiple-choice",
+            correcta="Azul"
+        )
+
+        Opcion.objects.create(pregunta=pregunta_4, texto="Rojo")
+        Opcion.objects.create(pregunta=pregunta_4, texto="Amarillo")
+        Opcion.objects.create(pregunta=pregunta_4, texto="Azul")
+        Opcion.objects.create(pregunta=pregunta_4, texto="Verde")
+
+        pregunta_5 = Pregunta.objects.create(
+            formulario=formulario_2,
+            texto="¿Cuál es tu plato favorito?",
+            tipo="respuesta-corta"
+        )
+
 
         # Create person-objective-evaluation
         PersonaObjetivoEvaluacion.objects.create(
@@ -405,6 +484,13 @@ class Command(BaseCommand):
             resultado="Progresando bien",
             progreso=75,
             evaluacion=formulario_1
+        )
+        PersonaObjetivoEvaluacion.objects.create(
+            user_id=paciente,
+            objetivo_id=objetivo_3,
+            resultado="Re mal",
+            progreso=0,
+            evaluacion=formulario_2
         )
 
         # Create group memberships
@@ -428,27 +514,6 @@ class Command(BaseCommand):
             escena=escena_1,
             texto="El letrero dice aguante messi",
             comentario_contestado=comentario_respuesta
-        )
-
-                # Escena 1: Comentarios iniciales y respuestas encadenadas
-        comentario_escena1_paciente = Comentario.objects.create(
-            user=paciente,
-            escena=escena_1,
-            texto="¿Qué significa la señal al lado del puente?",
-        )
-
-        comentario_escena1_terapeuta = Comentario.objects.create(
-            user=terapeuta,
-            escena=escena_1,
-            texto="Esa señal indica que el puente solo soporta 10 toneladas.",
-            comentario_contestado=comentario_escena1_paciente,
-        )
-
-        Comentario.objects.create(
-            user=paciente,
-            escena=escena_1,
-            texto="¡Gracias! Eso explica por qué había un camión detenido ahí.",
-            comentario_contestado=comentario_escena1_terapeuta,
         )
 
         # Escena 2: Comentarios iniciales y respuestas encadenadas
@@ -518,6 +583,142 @@ class Command(BaseCommand):
             nombre="Ansiedad Social",
             descripcion="Miedo a interacciones; Interpretación errónea de señales sociales; Vergüenza/temor al rechazo; Fobia social, evaluación negativa, interpretación distorsionada, evitación social, timidez extrema, miedo al juicio, Miedo a hablar en grupo, me muero si me miran, no puedo mirar a los ojos, temblores cuando hablo"
         )
+
+        # Ansiedad Sensorial
+        Patologia.objects.create(
+            nombre="Ansiedad Sensorial",
+            descripcion="Dolor a los sonidos fuertes de una discoteca, me molestan las luces brillantes, no soporto que me toquen, Sobrecarga por ruidos; Hipersensibilidad táctil; Incomodidad con luces/texturas;  Sobrecarga neurológica, hiperestimulación, umbral sensorial bajo, defensividad sensorial, intolerancia a estímulos"
+        )
+
+        # Ansiedad por Espera
+        Patologia.objects.create(
+            nombre="Ansiedad por Espera",
+            descripcion="Me estreso si cambian los planes, necesito saber todo con anticipación, no me gusta lo imprevisto, Necesidad de predictibilidad; Frustración por desorden; Ansiedad por rutinas interrumpidas;  Rigidez cognitiva, necesidad de control, predicción compulsiva, intransigencia, disrupciones de esquema"
+        )
+
+        # Ansiedad Comunicacional
+        Patologia.objects.create(
+            nombre="Ansiedad Comunicacional",
+            descripcion="No sé explicar lo que siento, me cuesta hablar, me bloqueo cuando tengo que comunicar algo, Dificultad para expresarse; Malentendidos frecuentes; Problemas con lenguaje no verbal; Déficit pragmático, comunicación atípica, disregulación emocional, malinterpretación contextual, barrera lingüística"
+        )
+
+        # Ansiedad de Interacción
+        Patologia.objects.create(
+            nombre="Ansiedad de Interacción",
+            descripcion="Pánico en fiestas, no sé cómo empezar una conversación, me dan ganas de irme, Miedo a situaciones nuevas; Pánico en ambientes sociales; Dificultad para iniciar conversaciones; Inhibición social, parálisis conversacional, evitación relacional, ansiedad de encuentro, bloqueo interpersonal"
+        )
+
+        # Trastornos de Ansiedad
+        Patologia.objects.create(
+            nombre="Trastornos de Ansiedad",
+            descripcion="Mil preocupaciones a la vez, mi cabeza no para de dar vueltas, Conjunto de trastornos que incluyen diversos tipos de ansiedad; Desregulación emocional, hiperactivación autonómica, espectro ansioso, manifestaciones psicofisiológicas"
+        )
+
+        # Ansiedad Generalizada
+        Patologia.objects.create(
+            nombre="Ansiedad Generalizada",
+            descripcion="Me preocupo por todo, siempre pensando en lo peor, nervios constantes, Preocupación excesiva y persistente sobre varias áreas de la vida; Preocupación persistente, catastrofización, rumiación cognitiva, tensión crónica, anticipación negativa"
+        )
+
+        # Ansiedad Anticipatoria
+        Patologia.objects.create(
+            nombre="Ansiedad Anticipatoria",
+            descripcion="Ya me estoy imaginando que va a salir mal, no puedo dejar de pensar en lo que viene, Ansiedad sobre eventos futuros, anticipando resultados negativos; Proyección negativa, escenarios catastróficos, preocupación prospectiva, miedo predictivo, antelación angustiante"
+        )
+
+        # Trastornos Sensoriales
+        Patologia.objects.create(
+            nombre="Trastornos Sensoriales",
+            descripcion="El mundo me abruma, demasiados estímulos, no puedo procesarlo todo, Alteraciones en la percepción sensorial que afectan el procesamiento de estímulos; Disregulación perceptiva, alteración neurológica, procesamiento atípico, umbral sensorial desajustado"
+        )
+
+        # Hipersensibilidad Sensorial
+        Patologia.objects.create(
+            nombre="Hipersensibilidad Sensorial",
+            descripcion="Me molesta todo, ruidos me descontrolan, texturas me alteran, Respuesta exagerada a estímulos sensoriales normales; Sensibilidad exacerbada, respuesta hiperdinámica, umbral de tolerancia reducido, reactivididad sensorial"
+        )
+
+        # Trastornos del Neurodesarrollo
+        Patologia.objects.create(
+            nombre="Trastornos del Neurodesarrollo",
+            descripcion="Mi cerebro funciona distinto, no proceso igual que los demás, Conjunto de trastornos que afectan el desarrollo neurológico y comportamiento; Desviación neurocognitiva, atipicidad neurológica, desarrollo neuronal divergente, variabilidad neurofuncional"
+        )
+
+        # Trastorno de Procesamiento Sensorial
+        Patologia.objects.create(
+            nombre="Trastorno de Procesamiento Sensorial",
+            descripcion=" Información sensorial me supera, no filtro bien los estímulos, Dificultad en la organización y respuesta a la información sensorial; Integración sensorial deficiente, modulación neurológica alterada, respuesta sensorial desorganizada"
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad Sensorial")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad Social")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente,
+            patologia_id=Patologia.objects.get(nombre="Trastornos de Ansiedad")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente,
+            patologia_id=Patologia.objects.get(nombre="Hipersensibilidad Sensorial")
+        )
+
+
+        PersonaPatologia.objects.create(
+            user_id=paciente2,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad Comunicacional")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente2,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad de Interacción")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente2,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad Anticipatoria")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente2,
+            patologia_id=Patologia.objects.get(nombre="Trastornos del Neurodesarrollo")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente3,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad por Espera")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente3,
+            patologia_id=Patologia.objects.get(nombre="Ansiedad Generalizada")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente3,
+            patologia_id=Patologia.objects.get(nombre="Trastornos Sensoriales")
+        )
+
+        PersonaPatologia.objects.create(
+            user_id=paciente3,
+            patologia_id=Patologia.objects.get(nombre="Trastorno de Procesamiento Sensorial")
+        )
+
+        condicion1 = Condicion.objects.create(
+            edad= 10,
+            fecha= datetime(2021, 1, 1),
+            escena_id= escena_2.id,
+            objetivo_id= objetivo_3.id,
+        )
+        escena_9.condicion = condicion1
+        escena_9.save()
 
         # Ansiedad Sensorial
         Patologia.objects.create(
