@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector} from "react-redux";
 import { RootState } from "../../../../store/store";
 import SearchWithFatherRes from '../../../components/SearchWithFatherRes';
+import { useRouter } from 'next/navigation';
 
 const UserPage: React.FC = () => {
     const [dni, setDni] = useState("");
@@ -24,8 +25,20 @@ const UserPage: React.FC = () => {
     const [padre, setPadre] = useState<string | null>(null);
     const [showSearchFather, setShowSearchFather] = useState(false);
     const [idPadreSeleccionado, setIdPadreSeleccionado] = useState<number | null>(null);
+    const router = useRouter();
 
-    const { username } = useSelector((state: RootState) => state.user); 
+    const { username } = useSelector((state: RootState) => state.user);
+    
+    const generoMap = {
+        "Masculino": "M",
+        "Femenino": "F"
+    };
+    
+    const reverseGeneroMap = {
+        "M": "Masculino",
+        "F": "Femenino"
+    };
+    
     const handlePadreSeleccionado = (dni: number) => {
         setIdPadreSeleccionado(dni); // Almacena el DNI del padre seleccionado
       };
@@ -41,7 +54,9 @@ const UserPage: React.FC = () => {
                 setDni(data.dni);
                 setNombre(data.nombre);
                 setFechaNac(data.fecha_nac);
-                setGenero(data.genero);
+                if (data.genero) {
+                    setGenero(reverseGeneroMap[data.genero]); 
+                }
                 setRole(data.role);
                 setDireccion({
                     id_dir: data.residencia.id_dir,
@@ -72,7 +87,7 @@ const UserPage: React.FC = () => {
             dni,
             nombre,
             fecha_nac: fechaNac,
-            genero,
+            genero: generoMap[genero],
             role,
             residencia: {
                 id_dir: direccion.id_dir,
@@ -110,6 +125,10 @@ const UserPage: React.FC = () => {
             }
         }
     };
+
+    const handleVolver = () => {
+        router.push("./principal");
+    }
 
     if (loading) {
         return <div className="text-gray-500">Cargando...</div>;
@@ -242,11 +261,17 @@ const UserPage: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <div className="text-right">
+                <div className="text-left flex space-x-4"> {/* Usar flex y espacio entre botones */}
+                    <button
+                        type="button"
+                        onClick={handleVolver}
+                        className="bg-blue-700 text-white p-2 rounded px-6 py-3 hover:bg-blue-800 transition"
+                    >
+                        Volver
+                    </button>
                     <button
                         type="submit"
                         className="bg-orange-700 text-white p-2 rounded px-6 py-3 hover:bg-red-800 transition"
-                        
                     >
                         Guardar
                     </button>
