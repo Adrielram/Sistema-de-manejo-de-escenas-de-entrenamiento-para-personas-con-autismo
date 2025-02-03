@@ -241,7 +241,7 @@ class FormularioSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Formulario
-        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'preguntas', 'objetivo']
+        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'preguntas', 'objetivo_id']
 
 
     def create(self, validated_data):

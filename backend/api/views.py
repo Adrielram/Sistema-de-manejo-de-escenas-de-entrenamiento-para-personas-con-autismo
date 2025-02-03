@@ -1973,7 +1973,7 @@ class AssociateCenterView(generics.CreateAPIView):
     serializer_class = ProfesionalCentroSerializer
 
     def create(self, request, *args, **kwargs):
-        username = request.data.get('center')
+        username = request.data.get('username')
         center_ids = request.data.get('centers', [])
 
         user = User.objects.get(username=username)

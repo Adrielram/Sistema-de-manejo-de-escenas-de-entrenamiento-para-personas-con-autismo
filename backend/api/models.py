@@ -393,7 +393,13 @@ class Pregunta(models.Model):
     texto = models.CharField(max_length=255)
     tipo = models.CharField(max_length=20, choices=TIPOS_PREGUNTA)
     correcta = models.CharField(max_length=255, blank=True, null=True)  # Solo para verificación automática
-
+    escena = models.ForeignKey(
+        Escena, 
+        blank=True,
+        on_delete=models.PROTECT, 
+        related_name='nombre_escena',
+        null = True
+    )
     def __str__(self):
         return self.texto
     

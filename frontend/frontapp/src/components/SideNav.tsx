@@ -41,10 +41,12 @@ const MenuItem = ({ item, depth, admin }: { item: SideNavItem; depth: number; ad
     <div>
       {item.submenu ? (
         <>
-          <Link
+        <Link
             href={item.path}
-            className={`flex flex-row items-center p-2 rounded-lg hover:bg-zinc-100 w-full justify-between text-black ${
-              isActive ? 'bg-[#3EA5E9] text-white hover:bg-[#3EA5FF]' : ''
+            className={`flex flex-row items-center p-2 rounded-lg w-full justify-between text-black 
+              ${pathname.includes(item.path) 
+                ? 'bg-[#3EA5FF] text-white hover:bg-[#2E8BFF]' 
+                : 'hover:bg-zinc-100 hover:text-black'
             } ${fontSizeClass}`}
           >
             <div className="flex flex-row space-x-4 items-center">
