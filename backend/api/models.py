@@ -222,7 +222,6 @@ class Condicion(models.Model):
     id = models.AutoField(primary_key=True)
     edad = models.IntegerField(blank=True, null=True)
     objetivo = models.ForeignKey('Objetivo', on_delete=models.CASCADE, null=True)
-    escena = models.OneToOneField('Escena',related_name='condiciones', on_delete=models.CASCADE, null=True)
     fecha = models.DateTimeField(blank=True, null=True)
     class Meta:
         db_table = 'condicion'

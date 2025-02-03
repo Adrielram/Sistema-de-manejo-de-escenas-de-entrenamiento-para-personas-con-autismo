@@ -22,11 +22,6 @@ interface Condicion {
   edad?: number;
   fecha?: string;
   objetivo?: string;
-  cumple_condiciones: {
-      edad: boolean;
-      fecha: boolean;
-      objetivo: boolean;
-  };
 }
 
 interface Escena {
@@ -131,7 +126,6 @@ export default function Page() {
       
         setEscenas(mappedResults);
         setTotalPages(Math.ceil(data.count / 6));
-  
         // Seleccionar primera escena NO bloqueada
         const primeraEscenaNoBloqueada = mappedResults.find(esc => !esc.bloqueada);
         if (primeraEscenaNoBloqueada) {
@@ -184,7 +178,6 @@ export default function Page() {
     setQuery(searchQuery);
   
     if (searchQuery.trim() === "") {
-      // Realiza una nueva llamada al backend para obtener todos los resultados
       fetchEscenaPorBusqueda("");
       return;
     }
@@ -198,17 +191,18 @@ export default function Page() {
   };
 
 
-  const handleMostrarDescripcion = (escenaP: number) => { 
-  // Buscar en escenasFiltradas si hay una búsqueda activa, sino en escenas
-  const escenaSeleccionada = query 
-    ? escenasFiltradas.find((escena) => escena.id === escenaP)
-    : escenas.find((escena) => escena.id === escenaP);
+  const handleMostrarDescripcion = async (escenaP: number) => {
+    const escenaSeleccionada = query 
+      ? escenasFiltradas.find((escena) => escena.id === escenaP)
+      : escenas.find((escena) => escena.id === escenaP);
   
-  if (escenaSeleccionada && !escenaSeleccionada.bloqueada) {
-    setEscenaSeleccionada(escenaSeleccionada);
-    dispatch(setIdEscena({idEscena: escenaP}));
-  }
-};
+    if (escenaSeleccionada) {
+      setEscenaSeleccionada(escenaSeleccionada);
+      dispatch(setIdEscena({ idEscena: escenaP }));
+    } else {
+      setEscenaSeleccionada(null);
+    }
+  };
 
 
   const handleEscenaClick = () => {
@@ -219,6 +213,8 @@ export default function Page() {
     router.push('./ver_video');
   };
 
+
+  
 
   return (
         <div className="flex flex-col min-h-screen p-4 gap-6">

@@ -671,7 +671,6 @@ class EscenaView(generics.ListAPIView):
 
             return self.get_paginated_response(serialized_data)
 
-        # (Mismo proceso para caso sin paginación)
 
 class VerificarCondicionesView(APIView):
     def get(self, request):
@@ -715,11 +714,12 @@ class VerificarCondicionesView(APIView):
             cumple_fecha = condicion.fecha is None or timezone.now().date() >= condicion.fecha.date()
 
             # Verificación de objetivo
-            cumple_objetivo = condicion.objetivo is None or PersonaObjetivoEvaluacion.objects.filter(
+            cumple_objetivo = condicion.objetivo_id is None or PersonaObjetivoEvaluacion.objects.filter(
                 user_id=user, 
                 objetivo_id=condicion.objetivo_id, 
                 progreso=100
             ).exists()
+            
 
             # Generar mensaje de bloqueo
             mensajes = []

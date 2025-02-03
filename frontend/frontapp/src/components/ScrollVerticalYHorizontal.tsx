@@ -7,12 +7,8 @@ interface CondicionProp {
   edad?: number;
   fecha?: string;
   objetivo?: string;
-  cumple_condiciones: {
-      edad: boolean;
-      fecha: boolean;
-      objetivo: boolean;
-  };
 }
+
 interface Props {
   elementos: Array<{ 
     id: number; 
@@ -22,7 +18,7 @@ interface Props {
     acento:string; 
     complejidad:number;
     condicion:CondicionProp;
-    bloqueada: boolean; // Nueva propiedad}
+    bloqueada: boolean;
     mensaje_bloqueo?: string;
   }>;
   onElementoClick: (id: number) => void;

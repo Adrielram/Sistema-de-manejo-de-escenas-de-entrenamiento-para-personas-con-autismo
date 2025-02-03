@@ -661,7 +661,6 @@ class Command(BaseCommand):
         condicion1 = Condicion.objects.create(
             edad= 10,
             fecha= datetime(2021, 1, 1),
-            escena_id= escena_2.id,
             objetivo_id= objetivo_3.id,
         )
         escena_9.condicion = condicion1
