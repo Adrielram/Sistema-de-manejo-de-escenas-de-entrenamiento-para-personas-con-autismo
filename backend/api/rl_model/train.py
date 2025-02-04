@@ -4,7 +4,7 @@ import shutil
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig, PPO
 from .env import RecommenderEnv
-
+from django.conf import settings
 # Convertir a ruta absoluta
 CHECKPOINT_DIR = os.path.abspath("api/rl_model/data/checkpoint")
 
@@ -38,6 +38,9 @@ def train_model():
 
     # Guardar el nuevo checkpoint
     checkpoint_path = trainer.save(CHECKPOINT_DIR)
+    settings.modelo_ia = PPO.from_checkpoint(checkpoint_path.checkpoint.path)
+
+    print(f"MODELO DE IA: {settings.modelo_ia}")
     print(f"Nuevo checkpoint guardado en: {CHECKPOINT_DIR}")
 
     return CHECKPOINT_DIR

@@ -205,3 +205,6 @@ PINECONE_API_KEY = 'pcsk_6RotVr_Nq6iGe36ryodth5paYcaMdtQQowXKKhz4W5gFvChEehTqJ54
 PINECONE_ENV = 'ipathology'
 CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo
 
+#MODELO DE IA
+modelo_ia = None 
+
