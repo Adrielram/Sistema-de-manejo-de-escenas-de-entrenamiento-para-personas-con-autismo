@@ -84,11 +84,6 @@ urlpatterns = [
     path('get-dni/', views.get_dni, name='get-dni'),
     path('get-name/', views.obtener_nombre_por_dni, name='get-name'),
     path('objetivos-ev-paciente/', views.objetivos_evaluacion_usuario, name='objetivos-ev-paciente'),
-    #path('listar_comentarios/', listar_comentarios, name='listar_comentarios'),   paso id_user y id_objetivo por json 
-#       {
-#           "user_id": 1,
-#           "objetivo_id": 1
-#       }
     path('goal/ResolveNamesToIds/', ResolveNamesToIds.as_view(), name='ResolveNamesToIds'),
     path('escenaById/<int:pk>/', EscenaById.as_view(), name='escenaById'),
     path('grupoById/<int:pk>/', GrupoById.as_view(), name='grupoById'),
