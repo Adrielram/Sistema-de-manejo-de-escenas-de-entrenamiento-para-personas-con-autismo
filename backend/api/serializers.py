@@ -35,6 +35,7 @@ class PacienteSerializer(serializers.ModelSerializer):
         return obj.user_id_padre.nombre if obj.user_id_padre else ''
 
 class ObjetivoSerializer(serializers.ModelSerializer):
+   video_explicativo = serializers.SerializerMethodField()
    video_explicativo_id = serializers.PrimaryKeyRelatedField(
        queryset=Escena.objects.all(), source='escena'
    )
@@ -51,10 +52,15 @@ class ObjetivoSerializer(serializers.ModelSerializer):
        queryset=Objetivo.objects.all(),
        required=False
    )
+   
 
    class Meta:
        model = Objetivo
-       fields = ['id', 'nombre', 'descripcion', 'video_explicativo_id', 'centro_profesional', 'escenas', 'objetivos']
+       fields = ['id', 'nombre', 'descripcion', 'video_explicativo_id','video_explicativo', 'centro_profesional', 'escenas', 'objetivos']
+
+   def get_video_explicativo(self, obj):
+        # Accedemos a la relación escena para obtener el link
+        return obj.escena.link if obj.escena else None
 
    def create(self, validated_data):
        escenas_data = validated_data.pop('escenas', [])
