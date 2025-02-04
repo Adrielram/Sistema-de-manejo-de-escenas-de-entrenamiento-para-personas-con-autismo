@@ -36,3 +36,59 @@ def notificacion_usuario_creado(sender, instance, created, **kwargs):
             print(f"Error: {e}")
         except Exception as e:
             print(f"Error inesperado: {e}")
+
+
+#SEÑALES PARA TAREAS PERIODICAS
+
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
+from django_celery_beat.models import PeriodicTask, IntervalSchedule, CrontabSchedule
+import json
+
+@receiver(post_migrate)
+def create_periodic_tasks(sender, **kwargs):
+    if sender.name == "api":  # Solo ejecutarlo para la app 'api'
+        # Crear un intervalo de 1 día si no existe
+        schedule, _ = IntervalSchedule.objects.get_or_create(
+            every=1, period=IntervalSchedule.DAYS
+        )
+
+        # Crear la tarea programada si no existe
+        task, created = PeriodicTask.objects.get_or_create(
+            name="Generar dataset RL diariamente",
+            defaults={
+                "interval": schedule,
+                "task": "api.rl_model.tasks.generar_dataset",
+                "kwargs": json.dumps({})
+            }
+        )
+
+        if not created:
+            print("⏳ Tarea ya existente, no se volvió a crear.")
+        else:
+            print("✅ Tarea periódica creada con éxito.")
+
+
+@receiver(post_migrate)
+def create_periodic_tasks(sender, **kwargs):
+    if sender.name == "api":  # Solo ejecutarlo para la app 'api'
+        # Crear un cron schedule para que se ejecute todos los días a las 3:00 AM
+        schedule, _ = CrontabSchedule.objects.get_or_create(
+            minute=0, hour=3, day_of_week="*", day_of_month="*", month_of_year="*"
+        )
+
+        # Crear la tarea programada si no existe
+        task, created = PeriodicTask.objects.get_or_create(
+            name="Entrenar modelo diariamente",
+            defaults={
+                "crontab": schedule,
+                "task": "train_if_needed",
+                "kwargs": json.dumps({})  # Si la tarea necesita argumentos, agrégalo aquí
+            }
+        )
+
+        if not created:
+            print("⏳ La tarea de entrenamiento ya existe, no se volvió a crear.")
+        else:
+            print("✅ Tarea de entrenamiento creada con éxito.")
+

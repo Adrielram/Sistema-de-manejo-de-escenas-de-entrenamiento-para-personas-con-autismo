@@ -451,4 +451,8 @@ class RegistroEvaluacion(models.Model):
         return f"Eval {self.id} - Obj {self.objetivo.id} - Escena {self.escena.id} - {self.resultado}%"    
     class Meta:
         db_table = 'registroEvaluacion'   
-    
+
+from django.db import models
+class EntrenamientoRegistro(models.Model):
+    ultima_cantidad = models.IntegerField(default=0)
+    fecha_ultimo_entrenamiento = models.DateTimeField(auto_now=True)   
