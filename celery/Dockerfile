@@ -1,5 +1,5 @@
 # Usa la imagen ya construida del backend en lugar de reinstalar dependencias
-FROM backend
+FROM backend:latest
 # Define el directorio de trabajo
 WORKDIR /app
 
