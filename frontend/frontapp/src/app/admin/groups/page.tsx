@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -141,7 +140,7 @@ const ManageGroupPage = () => {
 
     try {
       const response = await fetch(
-        'http://localhost:8000/api/personagrupo/${selectedGroup.id}/${therapistId}/',
+        `http://localhost:8000/api/personagrupo/${selectedGroup.id}/${therapistId}/`,
         {
           method: "DELETE",
           credentials: "include",
@@ -175,7 +174,7 @@ const ManageGroupPage = () => {
 
     try {
       const response = await fetch(
-        'http://localhost:8000/api/personagrupo/${selectedGroup.id}/${patientId}/',
+        `http://localhost:8000/api/personagrupo/${selectedGroup.id}/${patientId}/`,
         {
           method: "DELETE",
           credentials: "include",
@@ -202,6 +201,7 @@ const ManageGroupPage = () => {
   };
 
   const handleSaveChanges = async () => {
+    console.log("Selected Group ID:", selectedGroup?.id);
     if (!selectedGroup) {
       alert("Primero selecciona un grupo.");
       return;
@@ -212,7 +212,7 @@ const ManageGroupPage = () => {
 
     try {
       const response = await fetch(
-        'http://localhost:8000/api/update_group_associations/${selectedGroup.id}/',
+        `http://localhost:8000/api/update_group_associations/${selectedGroup.id}/`,
         {
           method: "PUT",
           credentials: "include",
@@ -243,10 +243,10 @@ const ManageGroupPage = () => {
   };
 
   return (
-    <main className="flex-1 bg-gray-50 pt-16"> {/* Añadido pt-16 en lugar del div espaciador */}
+    <main className="flex-1 bg-gray-100 pt-16">
       <div className="container mx-auto px-4 lg:pl-64">
         <div className="w-full max-w-7xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm p-6 max-w-3xl relative" style={{ zIndex: 0 }}> {/* Forzamos un z-index bajo */}
+          <div className="bg-white rounded-lg shadow-sm p-6 max-w-3xl ">
             {error && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                 {error}
@@ -257,7 +257,7 @@ const ManageGroupPage = () => {
               <label htmlFor="groupSelect" className="block text-center text-sm mb-2">
                 Seleccionar grupo:
               </label>
-              <div className="relative" style={{ zIndex: 1 }}> {/* z-index más bajo que el header */}
+              <div className="relative" style={{ zIndex: 50 }}>
                 <GenericDropdown
                   title={selectedGroup ? selectedGroup.name : "Seleccionar Grupo"}
                   items={groups}
@@ -270,7 +270,7 @@ const ManageGroupPage = () => {
               <div>
                 <div className="flex flex-wrap gap-5 justify-center mt-5">
                   <div className="flex-1 min-w-[300px] sm:w-[48%] lg:w-[30%]">
-                    <div className="relative" style={{ zIndex: 1 }}> {/* z-index más bajo que el header */}
+                    <div className="relative" style={{ zIndex: 10}}>
                       <GenericDropdown
                         title="Agregar Terapeuta"
                         items={therapists}
@@ -285,7 +285,7 @@ const ManageGroupPage = () => {
                   </div>
 
                   <div className="flex-1 min-w-[300px] sm:w-[48%] lg:w-[30%]">
-                    <div className="relative" style={{ zIndex: 1 }}> {/* z-index más bajo que el header */}
+                    <div className="relative" style={{ zIndex: 10 }}>
                       <GenericDropdown
                         title="Agregar Paciente"
                         items={patients}
@@ -315,7 +315,7 @@ const ManageGroupPage = () => {
         </div>
       </div>
     </main>
-);
+  );
 };
 
 export default ManageGroupPage;

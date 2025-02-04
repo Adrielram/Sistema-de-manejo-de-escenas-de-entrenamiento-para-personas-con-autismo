@@ -3,14 +3,12 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-import { SIDENAV_ITEMS } from '../constants';
 import { SideNavItem } from '../types';
 import { RiArrowDropDownLine } from "react-icons/ri";
 
 const SideNav = ({list, admin}) => {
   return (
-    <div className="md:w-64 bg-white fixed top-[64px] left-0 h-[calc(100vh-64px)] border-r border-zinc-200 overflow-y-auto scrollbar-hidden hidden md:flex z-10">
+    <div className="md:w-64 bg-white fixed top-[64px] left-0 h-[calc(100vh-47px)] border-r border-zinc-200 overflow-y-auto scrollbar-hidden hidden md:flex">
       {/* Contenedor con scroll interno */}
       <div className="flex flex-col space-y-6 w-full h-full mt-4">
 
@@ -37,11 +35,13 @@ const MenuItem = ({ item, depth, admin }: { item: SideNavItem; depth: number; ad
   };
 
   const fontSizeClass = depth === 0 ? 'text-lg' : depth === 1 ? 'text-base' : 'text-sm';
+
+  const isActive = pathname.startsWith(item.path);
   return (
     <div>
       {item.submenu ? (
         <>
-          <Link
+        <Link
             href={item.path}
             className={`flex flex-row items-center p-2 rounded-lg w-full justify-between text-black 
               ${pathname.includes(item.path) 
@@ -74,10 +74,8 @@ const MenuItem = ({ item, depth, admin }: { item: SideNavItem; depth: number; ad
       ) : (
         <Link
           href={item.path}
-          className={`flex flex-row space-x-4 items-center p-2 rounded-lg  
-            ${item.path === pathname 
-              ? 'bg-[#3EA5FF] text-white hover:bg-[#2E8BFF]' 
-              : 'hover:bg-zinc-200 hover:text-black'
+          className={`flex flex-row space-x-4 items-center p-2 rounded-lg hover:bg-zinc-200 ${
+            isActive ? 'bg-[#3EA5E9] text-white hover:bg-[#3EA5FF]' : ''
           } ${fontSizeClass}`}
         >
           {item.icon && React.cloneElement(item.icon, { size: 20 })}          

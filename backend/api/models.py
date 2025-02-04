@@ -145,7 +145,6 @@ class CentroProfesionalEscena(models.Model):
 class EscenaObjetivo(models.Model):
     escena = models.ForeignKey('Escena', on_delete=models.CASCADE)
     objetivo = models.ForeignKey('Objetivo', on_delete=models.CASCADE)
-    orden = models.IntegerField(blank=True, null=True)
     class Meta:
         db_table = 'escenaObjetivo'
         constraints = [
@@ -154,6 +153,7 @@ class EscenaObjetivo(models.Model):
                 name='unique_escena_objetivo'
             )
         ]
+        
 class Personagrupo(models.Model):
     user_id = models.ForeignKey(
         'User', 
@@ -182,10 +182,11 @@ class PersonaObjetivoEscena(models.Model):
         'EscenaObjetivo',
         on_delete=models.SET_NULL,
         related_name='objetivo_relations',
-        db_column='objetivo_id',
+        db_column='EscenaObjetivo_id',
         blank=True,
         null=True
     )
+    orden = models.IntegerField(blank=True, null=True)
 
     class Meta:
         db_table = 'personaEscenaObjetivo'
@@ -221,7 +222,6 @@ class Condicion(models.Model):
     id = models.AutoField(primary_key=True)
     edad = models.IntegerField(blank=True, null=True)
     objetivo = models.ForeignKey('Objetivo', on_delete=models.CASCADE, null=True)
-    escena = models.OneToOneField('Escena',related_name='condiciones', on_delete=models.CASCADE, null=True)
     fecha = models.DateTimeField(blank=True, null=True)
     class Meta:
         db_table = 'condicion'
@@ -373,6 +373,7 @@ class Formulario(models.Model):
     es_verificacion_automatica = models.BooleanField(default=False)
     creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    objetivo_id = models.ForeignKey(Objetivo, related_name="objetivo", on_delete=models.CASCADE, blank=True, null=True)
 
     def _str_(self):
         return self.nombre
@@ -391,9 +392,18 @@ class Pregunta(models.Model):
     texto = models.CharField(max_length=255)
     tipo = models.CharField(max_length=20, choices=TIPOS_PREGUNTA)
     correcta = models.CharField(max_length=255, blank=True, null=True)  # Solo para verificación automática
-
+    escena = models.ForeignKey(
+        Escena, 
+        blank=True,
+        on_delete=models.PROTECT, 
+        related_name='nombre_escena',
+        null = True
+    )
     def __str__(self):
         return self.texto
+    
+    class Meta:
+        db_table = 'pregunta' 
 
 
 class Opcion(models.Model):
@@ -402,6 +412,9 @@ class Opcion(models.Model):
 
     def __str__(self):
         return self.texto
+    
+    class Meta:
+        db_table = 'opcion' 
 
 import uuid
 class Respuesta(models.Model):
@@ -416,6 +429,9 @@ class Respuesta(models.Model):
     def __str__(self):
         return f"Respuesta de {self.paciente.username} a {self.pregunta.texto}"
     
+    class Meta:
+        db_table = 'respuesta'  
+    
 class ComentarioProfesional(models.Model):
     respuesta = models.ForeignKey(Respuesta, related_name="comentarios", on_delete=models.CASCADE)
     terapeuta = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comentarios")
@@ -425,6 +441,9 @@ class ComentarioProfesional(models.Model):
     def __str__(self):
         return f"Comentario de {self.terapeuta.username} en {self.respuesta}"
     
+    class Meta:
+        db_table = 'comentarioProfesional'  
+    
 class FormularioPacienteRevision(models.Model):
     formulario = models.ForeignKey('Formulario', on_delete=models.CASCADE)
     paciente_dni = models.CharField(max_length=20)
@@ -432,3 +451,6 @@ class FormularioPacienteRevision(models.Model):
     verificado_automatico = models.BooleanField(default=False)  # Si se corrigió automáticamente
     fecha_respuesta = models.DateTimeField(auto_now_add=True)
     volver_a_realizar = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'formularioPacienteRevision'  

@@ -20,6 +20,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     'backend',  # Nombre del servicio en Docker Compose
+    '*',
 ]
 
 
@@ -28,6 +29,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    "channels",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -39,6 +41,19 @@ INSTALLED_APPS = [
     "corsheaders",
     'django_filters',
 ]
+
+# Configuración de Channels
+ASGI_APPLICATION = 'backendapp.asgi.application'
+
+# Configuración de Redis
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -70,6 +85,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backendapp.wsgi.application"
 
+# LOGGER PARA PODER IMPRIMIR X CONSOLA EN VIEWS.PY
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -117,6 +149,8 @@ USE_I18N = True
 
 USE_TZ = True
 
+API_URL = "http://localhost:8000/api/"
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -131,14 +165,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 #CODIGO PARA SESION
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'api.authentication.CookieJWTAuthentication',
+#        'api.authentication.CookieJWTAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
+#    'DEFAULT_PERMISSION_CLASSES': [
+#       'rest_framework.permissions.IsAuthenticated',
+#   ],
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
+
 
 
 SIMPLE_JWT = {
@@ -173,4 +208,10 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
+
+## PINECONE 
+
+PINECONE_API_KEY = 'pcsk_6RotVr_Nq6iGe36ryodth5paYcaMdtQQowXKKhz4W5gFvChEehTqJ54usNdnHDT2ejXvcH'
+PINECONE_ENV = 'ipathology'
 CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo
+

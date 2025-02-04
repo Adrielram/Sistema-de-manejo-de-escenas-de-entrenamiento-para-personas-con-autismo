@@ -6,7 +6,7 @@ import React, { useState } from "react";
 
 
 
-const CreateScene: React.FC = () => {
+const CreateGroup: React.FC = () => {
   const { center } = useSelector((state: RootState) => state.user);
   const [nombre_grupo, setNombreGrupo] = useState("");
 
@@ -86,4 +86,4 @@ const handleSubmit = async (e: React.FormEvent) => {
   );
 };
 
-export default CreateScene;
+export default CreateGroup;

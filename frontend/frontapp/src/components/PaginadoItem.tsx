@@ -15,6 +15,7 @@ interface PaginadoItemProps {
   comments_path?: string;
   revision_path?: string;
   scenes_comments_path?: string;
+  user_dni?: string;
   forms_path?: string;
   item_type: string;
   onDelete: (id: string) => void;
@@ -32,6 +33,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   revision_path,
   scenes_comments_path,
   forms_path,
+  user_dni,
   item_type, 
   showImage, 
   onDelete 
@@ -83,7 +85,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   };
   
   const handleRevision = () => {
-    router.push(`${revision_path}?form_id=${id}`);
+    router.push(`${revision_path}?form_id=${id}&patient_dni=${user_dni}`);
   };
 
   const handleForms = () => {
@@ -164,7 +166,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
             onClick={handleRevision}
             className="bg-primary text-white px-7 py-1.5 rounded-2xl hover:bg-primary-dark text-sm font-semibold"
           >
-            Pacientes
+            Revisar
           </button>
         )}
         {options.scenesCommentsButton && (

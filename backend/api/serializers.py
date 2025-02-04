@@ -1,8 +1,14 @@
 from rest_framework import serializers
-from .models import Patologia, User, Objetivo, Escena, CentroProfesional, Centrodesalud, Comentario, Videosvistos, EscenaObjetivo, Objetivoscumplir, Centrodesalud, Grupo, Formulario, PersonaObjetivoEvaluacion, PersonaObjetivoEscena
+from .models import *
+from datetime import datetime
 
 
-from .models import User, Objetivo, Escena, CentroProfesional, Centrodesalud, Grupo
+class UserSerializer(serializers.ModelSerializer):
+    nombre_padre = serializers.CharField(source='user_id_padre.nombre', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'user_id_padre', 'nombre_padre']
 
 # Primero define los serializadores
 class CentrodesaludSerializer(serializers.ModelSerializer):
@@ -11,22 +17,22 @@ class CentrodesaludSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre']
 
 
-    def to_representation(self, instance):
-        # Solo devolver usuarios con rol 'terapeuta'
-        if instance.role != 'terapeuta':
-            return None
-        return super().to_representation(instance)
+#    def to_representation(self, instance):
+#        # Solo devolver usuarios con rol 'terapeuta'
+#        if instance.role != 'terapeuta':
+#            return None
+#        return super().to_representation(instance)
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['dni', 'nombre']
 
-class PacienteSerializer(UserSerializer):
+class PacienteSerializer(serializers.ModelSerializer):
+    padreACargo = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = ['username', 'nombre', 'dni', 'padreACargo']
 
+    def get_padreACargo(self, obj):
+        return obj.user_id_padre.nombre if obj.user_id_padre else ''
 
 class ObjetivoSerializer(serializers.ModelSerializer):
    video_explicativo_id = serializers.PrimaryKeyRelatedField(
@@ -95,32 +101,170 @@ class ObjetivoSerializerList(serializers.ModelSerializer):
         model = Objetivo
         fields = ['id', 'nombre', 'descripcion']
 
+
+
+class ResidenciaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Residencia
+        fields = ['id_dir','provincia', 'ciudad', 'calle', 'numero']
+
+class ResidenciaAllSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Residencia
+        fields = '__all__'  # Incluye todos los campos del modelo Residencia
+
+class UserSerializer(serializers.ModelSerializer):
+    fecha_nac = serializers.SerializerMethodField()  # Personalizar la representación
+    residencia = ResidenciaAllSerializer(source='direccion_id_dir', read_only=True)
+    padreACargo = serializers.CharField(source='user_id_padre.nombre', read_only=True)
+
+    def get_fecha_nac(self, obj):
+        # Convertir fecha_nac a date si es un datetime
+        if isinstance(obj.fecha_nac, datetime):
+            return obj.fecha_nac.date()
+        return obj.fecha_nac  # Si ya es un date o None, retornarlo directamente
+
+    class Meta:
+        model = User
+        fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'residencia', 'padreACargo']
+
+class CondicionSerializer(serializers.ModelSerializer):
+    objetivo = serializers.CharField(source='objetivo.nombre', read_only=True) 
+    objetivo_id = serializers.PrimaryKeyRelatedField(queryset=Objetivo.objects.all(), source='objetivo')
+
+    class Meta:
+        model = Condicion
+        fields = ['id', 'edad', 'objetivo', 'objetivo_id', 'fecha']
+
 class EscenaSerializer(serializers.ModelSerializer):
+    condicion = CondicionSerializer(required=False, allow_null=True)
+
     class Meta:
         model = Escena
-        fields = ['id', 'idioma', 'acento', 'condiciones', 'complejidad', 'link', 'nombre', 'descripcion']
+        fields = ['id', 'idioma', 'acento', 'condicion', 'complejidad', 'link', 'nombre', 'descripcion']
+
+    def create(self, validated_data):
+        condicion_data = validated_data.pop('condicion', None)  # Extraer datos de la condición si existen
+
+        escena = Escena.objects.create(**validated_data)  # Crear la escena
+
+        if condicion_data:
+            condicion = Condicion.objects.create(**condicion_data)  # Crear la condición
+            escena.condicion = condicion  # Asociar la condición con la escena
+            escena.save()  # Guardar cambios en la escena
+        
+        return escena
+
 
     def update(self, instance, validated_data):
-        """
-        Custom update method to handle null conditions
-        """
-        # Update each field from validated data
+        # Extract condicion data if present
+        condicion_data = validated_data.pop('condicion', None)
+        
+        # Update Escena fields
         instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.idioma = validated_data.get('idioma', instance.idioma)
         instance.acento = validated_data.get('acento', instance.acento)
-        instance.condiciones = validated_data.get('condiciones', instance.condiciones)
         instance.complejidad = validated_data.get('complejidad', instance.complejidad)
         instance.link = validated_data.get('link', instance.link)
+
+        # ESTO COMENTADO ESTABA EN DEVELOP:
+        # instance.descripcion = validated_data.get('descripcion', instance.descripcion)
+        # instance.save()
+
+        # # Si hay datos de `condiciones`, actualizarlos o crearlos
+        # if condicion_data:
+        #     if instance.condicion:
+        #         # Si ya existe una condición, actualizarla
+        #         for attr, value in condicion_data.items():
+        #             setattr(instance.condicion, attr, value)
+        #         instance.condicion.save()
+        #     else:
+        #         # Si no existe, crear una nueva condición y asignarla
+        #         condicion = Condicion.objects.create(**condicion_data, escena=instance)
+        #         instance.condicion = condicion
+        #         instance.save()
         
+        # ESTO VINO DE PacienteInterface:
         # Save the updated instance
         instance.save()
+        
+        # Handle Condicion update
+        if condicion_data:
+            # If a condicion already exists, update it
+            if hasattr(instance, 'condicion'):
+                condicion = instance.condicion
+                for attr, value in condicion_data.items():
+                    setattr(condicion, attr, value)
+                condicion.save()
+            # If no condicion exists, create a new one
+            else:
+                Condicion.objects.create(escena=instance, **condicion_data)
+        # If condicion_data is None and a condicion exists, delete it
+        elif hasattr(instance, 'condicion'):
+            instance.condicion.delete()
+        
         return instance
+
 
 
 class CentroSaludSerializer(serializers.ModelSerializer):  
     class Meta:
         model = Centrodesalud
         fields = ['id', 'nombre', 'direccion_id_dir']
+
+
+class OpcionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Opcion
+        fields = ['texto']
+
+class PreguntaSerializer(serializers.ModelSerializer):
+    opciones = OpcionSerializer(many=True, required=False)
+    nombre_escena = serializers.SerializerMethodField(read_only=True)
+
+
+    class Meta:
+        model = Pregunta
+        fields = ['id', 'texto', 'tipo', 'opciones', 'correcta', 'escena', 'nombre_escena']
+
+    def create(self, validated_data):
+        opciones_data = validated_data.pop('opciones', [])
+        pregunta = Pregunta.objects.create(**validated_data)
+        for opcion_data in opciones_data:
+            Opcion.objects.create(pregunta=pregunta, **opcion_data)
+        return pregunta
+    def get_nombre_escena(self, obj):        
+        return obj.escena.nombre if obj.escena else None
+
+class FormularioSerializer(serializers.ModelSerializer):
+    preguntas = PreguntaSerializer(many=True)
+    
+    class Meta:
+        model = Formulario
+        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'preguntas', 'objetivo_id']
+
+
+    def create(self, validated_data):
+        preguntas_data = validated_data.pop('preguntas')
+        formulario = Formulario.objects.create(**validated_data)
+        for pregunta_data in preguntas_data:
+            opciones_data = pregunta_data.pop('opciones', [])
+            pregunta = Pregunta.objects.create(formulario=formulario, **pregunta_data)
+            for opcion_data in opciones_data:
+                Opcion.objects.create(pregunta=pregunta, **opcion_data)
+        return formulario
+
+
+from rest_framework import serializers
+
+class BulkRespuestaSerializer(serializers.ListSerializer):
+    def create(self, validated_data):
+        # Crea múltiples instancias de Respuesta a la vez
+        respuestas = [Respuesta(**item) for item in validated_data]
+        # Guarda las respuestas en la base de datos
+        respuestas_guardadas = Respuesta.objects.bulk_create(respuestas)
+        return respuestas_guardadas  
+
 
 class ProfesionalCentroSerializer(serializers.ModelSerializer):  
     class Meta:
@@ -131,6 +275,25 @@ class PatientGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grupo
         fields = ['id', 'nombre', 'centrodesalud_id']
+
+
+class ComentarioProfesionalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ComentarioProfesional
+        fields = '__all__'
+
+class RespuestaSerializer(serializers.ModelSerializer):
+    comentarios = ComentarioProfesionalSerializer(many=True, read_only=True)
+    nombre_pregunta = serializers.SerializerMethodField()
+    class Meta:
+        model = Respuesta
+        fields = ['id', 'pregunta', 'paciente', 'respuesta', 'correcta', 'nota', 'comentarios', 'nombre_pregunta', 'intento_id', 'fecha_intento']
+        list_serializer_class = BulkRespuestaSerializer
+
+    def get_nombre_pregunta(self, obj):        
+        return obj.pregunta.texto if obj.pregunta else None
+
+
 class ComentarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comentario
@@ -142,14 +305,19 @@ class ComentarioSerializer(serializers.ModelSerializer):
             'texto',
             'visibilidad',
         ]
-
-class VideosVistosSerializer(serializers.ModelSerializer):
+    
+class VideosvistosSerializer(serializers.ModelSerializer):
     class Meta:
         model = Videosvistos
-        fields = ['persona_objetivo_escena', 'visto']
+        fields = ['id', 'paciente_id', 'escena_id', 'fecha', 'like']
+        extra_kwargs = {
+            'id': {'read_only': True},
+            'fecha': {'read_only': True},
+        }
 
     def create(self, validated_data):
         return super().create(validated_data)
+
 
 class GrupoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -157,11 +325,10 @@ class GrupoSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'centrodesalud_id']
 
 
-
-class FormularioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Formulario
-        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'fecha_creacion']
+#class FormularioSerializer(serializers.ModelSerializer):
+#    class Meta:
+#        model = Formulario
+#        fields = ['id', 'nombre', 'descripcion', 'es_verificacion_automatica', 'creado_por', 'fecha_creacion']
 
 
 class PatologiaSerializer(serializers.ModelSerializer):
@@ -170,6 +337,7 @@ class PatologiaSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'descripcion']
 
 class PersonaObjetivoEvaluacionSerializer(serializers.ModelSerializer):
+    objetivo_id = ObjetivoSerializerList()  # Usamos el serializer más simple para evitar anidaciones complejas
     class Meta:
         model = PersonaObjetivoEvaluacion
         fields = ['id', 'user_id', 'objetivo_id', 'resultado', 'progreso', 'evaluacion']
@@ -186,10 +354,6 @@ class PersonaObjetivoEscenaSerializer(serializers.ModelSerializer):
         fields = ['id', 'user_id', 'escena_objetivo', 'orden', 'es_alternativo' ]
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['dni', 'nombre']
 
 class TerapeutaSerializer(UserSerializer):
     class Meta:
@@ -212,3 +376,12 @@ class PacienteSerializer2(UserSerializer):
         if instance.role != 'paciente':
             return None
         return super().to_representation(instance)
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    nombre_centro = serializers.CharField(source='centrodesalud.nombre', read_only=True)
+    class Meta:
+        model = Grupo
+        fields = ['id', 'nombre', 'nombre_centro']
+
+

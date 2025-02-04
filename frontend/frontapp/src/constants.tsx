@@ -113,6 +113,7 @@ export const SIDENAV_ITEMS_ADMIN: SideNavItem[] = [
           path: '/admin/patients',
           icon: <FaPerson />,
           submenu: false,
+          other_page: true,          
       },
       {
           title: 'Administrar Grupos',
@@ -126,13 +127,7 @@ export const SIDENAV_ITEMS_ADMIN: SideNavItem[] = [
               icon: <IoIosAdd />, 
             },     
           ],
-      },
-      {
-        title: 'Administrar Comentarios',
-        path: '/admin/comments',
-        icon: <FaComments />,
-        submenu: false,    
-    },
+      },      
     ],
   },
 ];
