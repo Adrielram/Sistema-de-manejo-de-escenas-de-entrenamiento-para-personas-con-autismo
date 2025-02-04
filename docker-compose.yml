@@ -48,5 +48,29 @@ services:
     ports:
       - "6379:6379"
 
+  celery:    
+    build: 
+      context: ./celery  # Ahora Celery usa su propio Dockerfile
+    container_name: celery
+    command: celery -A backend worker --loglevel=info
+    depends_on:      
+      - redis
+      - backend
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+  celery-beat:    
+    build: 
+      context: ./celery  # Celery Beat también usa su Dockerfile separado
+    container_name: celery_beat
+    command: celery -A backend beat --loglevel=info
+    depends_on:      
+      - redis
+      - celery
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
 volumes:
   db_data:
