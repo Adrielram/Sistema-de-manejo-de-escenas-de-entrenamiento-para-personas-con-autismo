@@ -15,27 +15,44 @@ const CreateGroupPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const healthCentersResponse = await fetch("http://localhost:8000/api/get_health_centers/");
-      const therapistsResponse = await fetch("http://localhost:8000/api/get_therapists/");
-      const patientsResponse = await fetch("http://localhost:8000/api/get_patients/");
-      console.log("El valor de los centros es " + healthCentersResponse)
-      const healthCentersData = await healthCentersResponse.json();
-      const therapistsData = await therapistsResponse.json();
-      const patientsData = await patientsResponse.json();
+      try {
+        const [healthCentersResponse, therapistsResponse, patientsResponse] = await Promise.all([
+          fetch("http://localhost:8000/api/get_health_centers/"),
+          fetch("http://localhost:8000/api/get_therapists/"),
+          fetch("http://localhost:8000/api/get_patients/")
+        ]);
+  
+        // Check if all responses are OK
+        if (!healthCentersResponse.ok || !therapistsResponse.ok || !patientsResponse.ok) {
+          throw new Error("One or more API requests failed");
+        }
+  
+        const healthCentersData = await healthCentersResponse.json();
+        const therapistsData = await therapistsResponse.json();
+        const patientsData = await patientsResponse.json();
+  
+        console.log("Fetched Data:", {
+          healthCenters: healthCentersData,
+          therapists: therapistsData,
+          patients: patientsData
+        });
+  
+        setHealthCenters(healthCentersData);
+        setTherapists(therapistsData);
+        setPatients(patientsData);
 
-      console.log("Datos recibidos:", {
-        healthCenters: healthCentersData,
-        therapists: therapistsData,
-        patients: patientsData
-      });
-
-      setHealthCenters(healthCentersData);
-      setTherapists(therapistsData);
-      setPatients(patientsData);
+      } catch (error) {
+        console.error("Fetch error:", error);
+        alert(`Error fetching data: ${error.message}`);
+      }
     };
-
+  
     fetchData();
   }, []);
+
+  useEffect(() => {
+    console.log("Updated State:", { healthCenters, therapists, patients });
+  }, [healthCenters, therapists, patients]);
 
   const handleAddItem = (item, setAssociatedItems, associatedItems) => {
     if (item) {
@@ -67,7 +84,7 @@ const CreateGroupPage = () => {
           therapist_ids: therapistIds,
           patient_ids: patientIds,
         }));   
-        const response = await fetch("http://localhost:8000/api/create_group/", {
+        const response = await fetch(`http://localhost:8000/api/create_group/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -110,7 +127,7 @@ const CreateGroupPage = () => {
         />
 
         <div className="flex flex-wrap gap-5 justify-center">
-          <div className="flex-1 min-w-[300px]">
+          <div className=" relative flex-1 min-w-[300px]">
             <GenericDropdown
               title="Asociar Terapeuta"
               items={therapists}
@@ -123,7 +140,7 @@ const CreateGroupPage = () => {
             />
           </div>
 
-          <div className="flex-1 min-w-[300px]">
+          <div className= "relative flex-1 min-w-[300px]">
             <GenericDropdown
               title="Asociar Paciente"
               items={patients}
@@ -136,7 +153,7 @@ const CreateGroupPage = () => {
             />
           </div>
 
-          <div className="flex-1 min-w-[300px]">
+          <div className=" relative flex-1 min-w-[300px]">
             <GenericDropdown
               title="Asociar Centro de Salud"
               items={healthCenters}
