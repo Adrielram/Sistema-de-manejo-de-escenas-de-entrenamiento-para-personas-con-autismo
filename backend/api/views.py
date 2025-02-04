@@ -26,6 +26,16 @@ from .models import Notificacion
 from api.authentication import CookieJWTAuthentication
 from django.db import transaction
 from django.utils import timezone
+from django.core.validators import validate_email
+from django.core.mail import send_mail
+from django.conf import settings
+import google.generativeai as genai
+import sys
+import json
+
+
+
+
 
 
 from rest_framework.exceptions import NotFound
@@ -909,9 +919,9 @@ class VerificarEscenaAsignadaView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-#import logging
+import logging
 
-#logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 #devuelve escenas del sistema
 class EscenaView(generics.ListAPIView):
@@ -2396,6 +2406,8 @@ class registrar_comentario(APIView):
     def post(self, request):
         data = request.data.copy() 
         # Modificar el campo 'user' para usar el DNI
+        username= data['user']
+        texto= data['texto']
         try:
             data['user'] = obtener_dni(request.data['user'])
         except Exception as e:
@@ -2405,6 +2417,7 @@ class registrar_comentario(APIView):
         serializer = ComentarioSerializer(data=data)
         if serializer.is_valid():
             serializer.save()  # Guardar el comentario
+            GEMINI_chequear_comentario(username, texto)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         # Si el serializer no es válido, retornar los errores
@@ -3715,4 +3728,106 @@ class CambiarVisibilidadComentarioView(APIView):
             return JsonResponse({'error': 'Comentario no encontrado'}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+        
 
+def sendmail(recipient_emails: list, subject: str, message: str):
+    """
+    Envía un correo electrónico a múltiples destinatarios utilizando la configuración de Django.
+    
+    :param recipient_emails: Lista de correos de los destinatarios
+    :param subject: Asunto del correo
+    :param message: Cuerpo del correo
+    """
+    try:
+        send_mail(
+            subject,
+            message,
+            settings.EMAIL_HOST_USER, 
+            recipient_emails,
+            fail_silently=False,
+        )
+        return {"success": True, "message": "Correo enviado exitosamente."}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def GEMINI_chequear_comentario(username:str,comentario_usuario:str):
+    # poner el encoding utf-8
+    sys.stdout.reconfigure(encoding='utf-8')
+    # Configurar la API de GEMINI
+    genai.configure(api_key=settings.GEMINI_API_KEY)
+
+    prompt = f"""
+    Dado el siguiente comentario realizado por un paciente con trastornos del espectro autista (edad entre 4 y 20 años): 
+
+    "{comentario_usuario}"
+
+    Evalúa el contenido del mensaje y determina si es urgente o no. Un mensaje se considera **URGENTE** si cumple con alguna de las siguientes condiciones:
+    - Contiene amenazas de daño a sí mismo o a otras personas.
+    - Sugiere cualquier tipo de abuso, violencia o situación fuera de la ley.
+    - Contiene referencias a contenido sexual explícito, pornografía o conductas inapropiadas para menores de edad.
+    - Incluye lenguaje extremadamente agresivo, insultos o acoso.
+    - Expresa angustia extrema, pensamientos suicidas o signos de depresión severa.
+    - Muestra confusión o indicios de que el usuario está en peligro inmediato.
+    - Urls de otros sitios web
+
+    Si el mensaje no cumple con ninguna de estas condiciones, se considera **NO URGENTE**.
+
+    Devuelve la respuesta en formato JSON con la siguiente estructura:
+
+    
+    "urgente": true/false,
+    "razon": "Explicación breve de por qué se considera urgente o no."
+    
+    """
+
+    # Generar respuesta con el modelo
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    response = model.generate_content(prompt)
+
+    # Procesar la respuesta
+    raw_text = response.candidates[0].content.parts[0].text
+
+    # Eliminando las etiquetas de código ```json
+    cleaned_text = raw_text.strip("```json\n").strip("\n```")
+    # Convertir el JSON a un diccionario
+    data = json.loads(cleaned_text)
+    therapist_emails = []
+    mensaje = ""
+    razon = data.get('razon')
+    if data.get('urgente') is True:
+        try:
+            patient = User.objects.get(username=username)
+            therapist_emails = User.objects.filter(
+                personagrupos__grupo_id__in=Personagrupo.objects.filter(
+                    user_id=patient
+                ).values_list('grupo_id', flat=True),
+                role='terapeuta'
+            ).values_list('email', flat=True)
+            mensaje = f"""
+Estimado/a terapeuta,
+
+Se ha detectado un comentario urgente de un paciente en el sistema.  
+
+**Paciente:** {username}  
+**Comentario:** "{comentario_usuario}"  
+**Razón de alerta:** {razon}  
+
+Se recomienda revisar este caso a la brevedad y tomar las medidas necesarias.
+
+Atentamente,  
+El Sistema de Monitoreo Automático  
+"""
+
+            sendmail(therapist_emails, f"Alerta de Comentario Urgente - {username}", mensaje)
+        except Personagrupo.DoesNotExist:
+            # Manejo del caso en que no se encuentra el grupo de la persona
+            print("No se encontró el grupo de la persona")
+        except User.DoesNotExist:
+            # Manejo del caso en que no se encuentra el usuario
+            print("No se encontró el usuario")
+        except Exception as e:
+            # Manejo de cualquier otra excepción
+            print(f"Error al enviar el correo: {e}")
+
+    return JsonResponse({"data": data, "therapist_emails": list(therapist_emails), "mensaje": mensaje, "razon": razon})

@@ -306,7 +306,7 @@ class ComentarioSerializer(serializers.ModelSerializer):
             'visibilidad',
         ]
     
-class VideosvistosSerializer(serializers.ModelSerializer):
+class VideosVistosSerializer(serializers.ModelSerializer):
     class Meta:
         model = Videosvistos
         fields = ['id', 'paciente_id', 'escena_id', 'fecha', 'like']
