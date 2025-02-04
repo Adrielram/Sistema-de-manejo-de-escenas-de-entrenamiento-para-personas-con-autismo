@@ -14,10 +14,10 @@ def train_if_needed():
 # api/rl_model/tasks.py
 
 import pandas as pd
-from celery import shared_task
+from backendapp.celery import celery_app
 from api.models import RegistroEvaluacion
 
-@shared_task
+@celery_app.task(name="generar_dataset")
 def generar_dataset():
     """Genera el dataset_rl.csv a partir de la tabla RegistroEvaluacion."""
     registros = RegistroEvaluacion.objects.all()
@@ -37,6 +37,6 @@ def generar_dataset():
 
     # Crear DataFrame y guardar como CSV
     df = pd.DataFrame(data)
-    df.to_csv("dataset_rl.csv", sep=";", index=False)
+    df.to_csv("api/rl_model/data/dataset_rl.csv", sep=";", index=False)
 
     return "Dataset generado correctamente."

@@ -42,9 +42,12 @@ INSTALLED_APPS = [
     "django_celery_beat",
 ]
 
-CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_BROKER_URL = "redis://redis:6379/0"  # Usá el nombre del contenedor de Redis
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
+
+# Agregar un backend de resultados
+CELERY_RESULT_BACKEND = "redis://redis:6379/0"
 
 # Configuración de Channels
 ASGI_APPLICATION = 'backendapp.asgi.application'
