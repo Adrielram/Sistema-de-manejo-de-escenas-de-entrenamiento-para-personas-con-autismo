@@ -23,8 +23,10 @@ interface DraggableSearchSelectBoxProps {
   getItemLabel: (item: SceneWithOrder) => string;
   selectedItems: SceneWithOrder[];
   onSelectItems: (items: SceneWithOrder[]) => void;
+  onOrderChange?: (orderableItems: SceneWithOrder[], nonOrderableItems: SceneWithOrder[]) => void;
   apiUrl: string;
   resetTrigger?: boolean;
+  initialAssignedItems?: SceneWithOrder[]; // Nueva prop para los datos iniciales asignados
 }
 
 // Componente para cada item sortable
@@ -99,14 +101,23 @@ const DraggableSearchSelectBox = ({
   getItemLabel,
   selectedItems,
   onSelectItems,
+  onOrderChange,
   apiUrl,
   resetTrigger,
+  initialAssignedItems = [], // Valor por defecto para initialAssignedItems
 }: DraggableSearchSelectBoxProps) => {
   const [searchValue, setSearchValue] = useState("");
   const [items, setItems] = useState<SceneWithOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Inicializar selectedItems con los datos iniciales asignados
+  useEffect(() => {
+    if (initialAssignedItems.length > 0) {
+      onSelectItems(initialAssignedItems);
+    }
+  }, [initialAssignedItems]);
+  
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -114,17 +125,26 @@ const DraggableSearchSelectBox = ({
     })
   );
 
-  // Separar items ordenables y no ordenables
-  const orderableItems = selectedItems.filter(item => item.order !== null)
-    .sort((a, b) => a.order - b.order);
-  const nonOrderableItems = selectedItems.filter(item => item.order === null);
+   // Separar items ordenables y no ordenables
+   const  orderableItems = selectedItems.filter(item => item.order !== null)
+   .sort((a, b) => a.order - b.order);
+   const nonOrderableItems = selectedItems.filter(item => item.order === null);
 
+ // Notificar al padre cuando cambie el orden
+ useEffect(() => {
+   if (onOrderChange) {
+     onOrderChange(orderableItems, nonOrderableItems);
+   }
+ }, [orderableItems, nonOrderableItems]);
+
+ 
   useEffect(() => {
     if (resetTrigger) {
       setSearchValue("");
       setItems([]);
     }
   }, [resetTrigger]);
+
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -136,7 +156,14 @@ const DraggableSearchSelectBox = ({
           throw new Error("Error al cargar los items.");
         }
         const data = await response.json();
-        setItems(data.results || []);
+        console.log("Respuesta de la API (items):", data); // Depuración
+  
+        const escenas = data.escenas || [];
+        //const noAsignadas = escenas.filter((escena) => !escena.asignada);
+  
+        setItems(escenas);
+        //ayuda aca
+        onSelectItems(escenas.filter((escena) => escena.asignada))
       } catch (err) {
         console.error("Error fetching items:", err);
         setError("Error al cargar los items.");
@@ -144,17 +171,18 @@ const DraggableSearchSelectBox = ({
         setLoading(false);
       }
     };
-
+  
     if (searchValue.trim() !== "") {
       const delayDebounceFn = setTimeout(() => {
         fetchItems();
       }, 300);
-
+  
       return () => clearTimeout(delayDebounceFn);
     } else {
       setItems([]);
     }
   }, [searchValue, apiUrl]);
+  
 
   const handleSelectItem = (item: SceneWithOrder, isOrderable: boolean) => {
     const isSelected = selectedItems.some((selected) => selected.id === item.id);

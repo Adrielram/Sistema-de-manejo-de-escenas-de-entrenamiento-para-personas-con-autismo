@@ -24,7 +24,8 @@ urlpatterns = [
     path('escenas/', EscenaListView.as_view(), name='escena-list'),
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
     #path('obtener-escenas/', obtener_escenas, name='obtener_escenas')
-    path('objetivos-ev-paciente/', views.objetivos_evaluacion_usuario, name='objetivos-ev-paciente'),
+    path('patients/<str:patientId>/objectives/<int:objectiveId>/unassign/', UnassignObjective.as_view(), name='unassign_objective'),
+    path('objetivos-es-paciente/', views.objetivos_escena_usuario, name='objetivos-es-paciente'),
     path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
     path('get_not_associated_centers/<str:username>/', NotAssociatedCentersListView.as_view(), name='get_not_associated_centers'),
     path('get_associated_centers/<str:username>/', AssociatedCentersListView.as_view(), name='get_associated_centers'),
@@ -56,7 +57,9 @@ urlpatterns = [
     path('group/<int:group_id>/patients/', PatientsPerGroupView.as_view(), name='patients_per_group'),
     path('get_patients_per_group/', GetPatientsPerGroupView.as_view(), name='get_patients_per_group'),
     path('get_therapists_per_group/', GetTherapistsPerGroupView.as_view(), name='get_therapists_per_group'),
-
+    path('objetivo/<int:objetivo_id>/escenas/<int:patient_id>/', Get_escenas_by_objetivo_by_user.as_view(), name='get_escenas_by_objetivo_by_user'),
+    path('objetivo/<int:objetivo_id>/user/<int:patient_id>/escenas/', Get_escenas_by_objetivo.as_view(), name='get_escenas_by_objetivo'),
+    path('objetivo_save_order/', SaveOrderView.as_view(), name='objetivo_save_order'), 
     path('forms_per_user/', GetFormsPerUserView.as_view(), name='forms_per_user'),
     path('assesment/<int:pk>/delete/', DeleteAssesmentView.as_view(), name='delete_assesment'),
     path('comentarios/lista/', ComentariosListaAPIView.as_view(), name='comentarios-lista'),
@@ -76,7 +79,6 @@ urlpatterns = [
     path('personagrupo/<int:grupo_id>/<int:user_id>/', views.delete_person_group, name='delete_person_group'),
     path('get_patients_not_in_group/', GetPatientsNotInGroupView.as_view(), name='get_patients_not_in_group'),
     path('get_therapists_not_in_group/', GetTherapistsNotInGroupView.as_view(), name='get_therapists_not_in_group'),
-
     path('get_patients/', GetPatientsView.as_view(), name='get_patients'),
 
     path('get_groups_per_user_not_in/', GetGroupsPerUserNotInView.as_view(), name='get_groups_per_user_not_in'),

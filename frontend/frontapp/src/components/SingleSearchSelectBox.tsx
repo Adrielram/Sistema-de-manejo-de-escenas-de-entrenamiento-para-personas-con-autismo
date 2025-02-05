@@ -27,7 +27,6 @@ const SingleSearchSelectBox = ({
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
   const fetchItems = useCallback(async (resetResults = false) => {
@@ -35,13 +34,13 @@ const SingleSearchSelectBox = ({
     setError(null);
     try {
       const response = await fetch(
-        `${apiUrl}?nombre=${encodeURIComponent(searchValue)}&page=${page}&limit=4`
+        `${apiUrl}?nombre=${encodeURIComponent(searchValue)}`
       );
       if (!response.ok) {
         throw new Error("Error al cargar las escenas.");
       }
       const data = await response.json();
-      
+        
       // Update items based on whether we're resetting or loading more
       setItems(prevItems => 
         resetResults ? data.results : [...prevItems, ...data.results]
@@ -55,12 +54,11 @@ const SingleSearchSelectBox = ({
     } finally {
       setLoading(false);
     }
-  }, [searchValue, apiUrl, page]);
+  }, [searchValue, apiUrl]);
 
   // Effect to fetch items when search value changes
   useEffect(() => {
     // Reset page and fetch fresh results
-    setPage(1);
     setHasMore(true);
     
     if (searchValue.trim() !== "") {
@@ -74,20 +72,12 @@ const SingleSearchSelectBox = ({
     }
   }, [searchValue, fetchItems]);
 
-  // Handle infinite scroll
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
-    
-    if (scrollHeight - scrollTop === clientHeight && hasMore && !loading) {
-      setPage(prevPage => prevPage + 1);
-    }
-  };
-
+  
   return (
     <div className="bg-white p-8 rounded-xl shadow-lg border border-blue-100 mb-6">
       <h3 className="font-semibold text-gray-700 mb-4 text-lg">{title}</h3>
 
-      {/* Search input */}
+      {/* Buscador */}
       <div className="mb-4">
         <input
           type="text"
@@ -98,14 +88,19 @@ const SingleSearchSelectBox = ({
         />
       </div>
 
+      
+      {/* Estado de carga */}
+      {loading && <p className="text-gray-500 text-center">Cargando...</p>}
+
+      {/* Mensaje de error */}
+      {error && <p className="text-red-500 text-center">{error}</p>}
+
+
       {/* Scrollable list with infinite scroll */}
-      <div 
-        className="space-y-3 max-h-64 overflow-y-auto pr-2"
-        onScroll={handleScroll}
-      >
+      <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
         {!loading && items.length === 0 && !error && (
           <div className="text-gray-500 text-center py-4">
-            Busca Escenas! 🚀
+            Busca Algo! 🚀
           </div>
         )}
 

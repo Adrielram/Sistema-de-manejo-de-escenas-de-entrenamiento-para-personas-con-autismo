@@ -101,17 +101,6 @@ class Command(BaseCommand):
             direccion_id_dir=residencias[0]
         )
 
-        terapeuta2 = User.objects.create(
-            username="terapeuta2",
-            password=make_password("tera123"),
-            dni=31222334,
-            nombre="Terapeuta Dos",
-            fecha_nac=datetime(1985, 2, 15),
-            genero="F",
-            role="terapeuta",
-            direccion_id_dir=residencias[0]
-        )
-
         paciente = User.objects.create(
             username="paciente1",
             password=make_password("pac123"),
@@ -307,10 +296,10 @@ class Command(BaseCommand):
         )
         escena_obj_2 = EscenaObjetivo.objects.create(
             escena=escena_4,
-            objetivo=objetivo_2
+            objetivo=objetivo_1
         )
         escena_obj_3 = EscenaObjetivo.objects.create(
-            escena=escena_7,
+            escena=escena_5,
             objetivo=objetivo_3
         )
         escena_obj_4 = EscenaObjetivo.objects.create(
@@ -337,12 +326,12 @@ class Command(BaseCommand):
         # Create person-objective-scene relationship
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_3,
+            escena_objetivo=escena_obj_1,
             orden= 1,
         )
         persona_obj_esc_2 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_4,
+            escena_objetivo=escena_obj_2,
             orden= 2,
         )
         persona_obj_esc_3 = PersonaObjetivoEscena.objects.create(
@@ -351,11 +340,12 @@ class Command(BaseCommand):
         )
         persona_obj_esc_4 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_1,
+            escena_objetivo=escena_obj_3,
+            orden = 1
         )
         persona_obj_esc_5 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_2,
+            escena_objetivo=escena_obj_4,
         )
 
         formulario_1 = Formulario.objects.create(
@@ -457,6 +447,14 @@ class Command(BaseCommand):
         PersonaObjetivoEvaluacion.objects.create(
             user_id=paciente,
             objetivo_id=objetivo_3,
+            resultado="Re mal",
+            progreso=0,
+            evaluacion=formulario_2
+        )
+        
+        PersonaObjetivoEvaluacion.objects.create(
+            user_id=paciente,
+            objetivo_id=objetivo_4,
             resultado="Re mal",
             progreso=0,
             evaluacion=formulario_2

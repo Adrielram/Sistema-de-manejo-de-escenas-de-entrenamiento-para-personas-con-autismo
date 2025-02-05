@@ -21,6 +21,7 @@ export default function Therapist() {
   const {username} = useSelector((state: RootState) => state.user);
   const [associatedCenters, setAssociatedCenters] = useState([]); // Para almacenar los centros asociados
   const [resetTrigger, setResetTrigger] = useState(false);
+  const [resetTrigger2, setResetTrigger2] = useState(false);
 
   const fetchAssociatedCenters = async () => {
     try {
@@ -35,10 +36,11 @@ export default function Therapist() {
   };
 
   useEffect(() => {
-    if (username && associatedCenters.length === 0) {
+    if (username) {
       fetchAssociatedCenters();
     }
-  });
+}, [username, associatedCenters]); // Agrega associatedCenters como dependencia
+
 
   const handleSubmitOfAssociation = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -73,6 +75,8 @@ export default function Therapist() {
       console.log("Centros asociados con éxito:", data);
       alert("Centros asociados con éxito.");
       // Aquí podrías redirigir o limpiar el formulario
+      fetchAssociatedCenters(); // Vuelve a obtener los centros asociados
+
     } catch (error) {
       console.error("Error de red al asociar centros:", error);
       alert("Error de red al intentar asociar centros.");
@@ -103,7 +107,7 @@ export default function Therapist() {
         return;
       }
       setselectedCentersToDisassociate([]); // Limpiar los centros seleccionados
-      setResetTrigger((prev) => !prev); // Activa el reinicio del SearchSelectBox
+      setResetTrigger2((prev) => !prev); // Activa el reinicio del SearchSelectBox
 
       const data = await response.json();
       console.log("Centros desasociados con éxito:", data);
@@ -164,7 +168,7 @@ export default function Therapist() {
                   getItemLabel={(item) => item.nombre as string}
                   selectedItems={selectedCentersToDisassociate}
                   onSelectItems={setselectedCentersToDisassociate}
-                  resetTrigger={resetTrigger} // Pasa el trigger al SearchSelectBox
+                  resetTrigger={resetTrigger2} // Pasa el trigger al SearchSelectBox
 
                   apiUrl={`http://localhost:8000/api/get_associated_centers/${username}/`}
                 />

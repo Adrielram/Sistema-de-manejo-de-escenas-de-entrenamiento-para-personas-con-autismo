@@ -158,8 +158,8 @@ const CreateObjetivo: React.FC = () => {
             />
 
             <SearchSelectBox
-              title="Buscar Objetivos"
-              searchPlaceholder="Escribe el nombre del objetivo..."
+              title="Buscar SubObjetivos"
+              searchPlaceholder="Escribe el nombre del subobjetivo..."
               getItemLabel={(item) => item.nombre as string} // Asumiendo que cada objetivo tiene un campo 'nombre'
               selectedItems={selectedObjectives}
               onSelectItems={setSelectedObjectives} // Maneja la selección de objetivos

@@ -1,24 +1,30 @@
 import { useCallback, useEffect, useState } from "react";
 
 interface AssignedObjectivesProps {
-  patientId: string;
+  patientId: string | null; // Acepta null
 }
 
 const AssignedObjectives = ({ patientId }: AssignedObjectivesProps) => {
   const [objectives, setObjectives] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const fetchAssignedObjectives = useCallback(async () => {
+    if (!patientId) {
+      console.error("patientId es null o undefined");
+      return;
+    }
+
     try {
-      const response = await fetch(`http://localhost:8000/api/objetivos-ev-paciente/?user_id=${patientId}`);
+      setLoading(true);
+      const response = await fetch(`${baseUrl}objetivos-es-paciente/?user_id=${patientId}`);
       if (!response.ok) {
         throw new Error("Error al obtener los objetivos");
       }
       const data = await response.json();
       setObjectives(data);
     } catch (err) {
-      setError(err.message);
+      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }
@@ -26,29 +32,34 @@ const AssignedObjectives = ({ patientId }: AssignedObjectivesProps) => {
 
   const handleUnassignObjective = async (objectiveId: number) => {
     try {
-      const response = await fetch(`/api/patients/${patientId}/objectives/${objectiveId}/unassign/`, {
-        method: "DELETE",
+      const response = await fetch(`${baseUrl}patients/${patientId}/objectives/${objectiveId}/unassign/`, {
+        method: "POST",
       });
       if (!response.ok) {
         throw new Error("Error al desasignar el objetivo");
       }
-      // Actualizar la lista de objetivos
       setObjectives(objectives.filter((obj) => obj.id !== objectiveId));
+      alert("Objetivos Desasignados Correctamente");
+
     } catch (err) {
-      setError(err.message);
+      console.error("Unassign error:", err);
     }
   };
 
   useEffect(() => {
-    fetchAssignedObjectives();
+    if (patientId) {
+      fetchAssignedObjectives();
+    } else {
+      setLoading(false);
+    }
   }, [fetchAssignedObjectives, patientId]);
+
+  if (!patientId) {
+    return <div className="text-gray-500 text-center py-4">No se ha seleccionado un paciente.</div>;
+  }
 
   if (loading) {
     return <div>Cargando objetivos...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
   }
 
   return (
@@ -57,7 +68,6 @@ const AssignedObjectives = ({ patientId }: AssignedObjectivesProps) => {
         Objetivos Asignados
       </h3>
 
-      {/* Lista scrolleable */}
       <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
         {objectives.length === 0 ? (
           <div className="text-gray-500 text-center py-4">

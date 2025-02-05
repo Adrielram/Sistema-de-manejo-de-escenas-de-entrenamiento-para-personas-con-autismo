@@ -477,45 +477,147 @@ def crear_escena(request):
     
 from django.db.models import Avg
 
+class UnassignObjective(APIView):
+    def post(self, request, patientId, objectiveId):
+        try:
+            # Validar si el usuario existe
+            try:
+                user = User.objects.get(dni=patientId)
+            except User.DoesNotExist:
+                return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+            # Obtener los IDs de EscenaObjetivo asociados al objetivoId
+            escena_objetivo_ids = EscenaObjetivo.objects.filter(objetivo_id=objectiveId).values_list('id', flat=True)
+
+            # Eliminar registros en PersonaObjetivoEscena
+            deleted_count, _ = PersonaObjetivoEscena.objects.filter(user_id=user, escena_objetivo_id__in=escena_objetivo_ids).delete()
+
+            # Eliminar registros en PersonaObjetivoEvaluacion
+            deleted_evaluaciones, _ = PersonaObjetivoEvaluacion.objects.filter(
+                user_id=user, 
+                objetivo_id=objectiveId
+            ).delete()
+
+            return Response({"message": f"Se eliminaron {deleted_count} registros."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            
+
+
+
 @api_view(['GET'])
-def objetivos_evaluacion_usuario(request):
+def objetivos_escena_usuario(request):
     user_id = request.query_params.get('user_id')
+    
     if not user_id:
-        return Response({"error": "Falta el parámetro 'user_id'."}, status=400)
+        return Response({"error": "El parámetro 'user_id' es requerido."}, status=400)
 
     # Agrupar por objetivo_id y calcular el progreso promedio
     objetivos_agrupados = (
-        PersonaObjetivoEvaluacion.objects
+        PersonaObjetivoEscena.objects
         .filter(user_id=user_id)
-        .values('objetivo_id')  # Solo obtenemos los IDs para la agrupación
-        .annotate(
-            progreso_promedio=Avg('progreso')
-        )
+        .values('escena_objetivo__objetivo_id')  # Acceder a objetivo_id a través de escena_objetivo
+        .distinct()  # Eliminar duplicados
+
     )
 
     if not objetivos_agrupados:
         return Response({"error": "No se encontraron objetivos para este usuario."}, status=404)
 
-
-    # Serializar los datos agrupados manualmente
+    # Obtener los datos de los objetivos
+    objetivos_ids = [obj['escena_objetivo__objetivo_id'] for obj in objetivos_agrupados]
+    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=objetivos_ids)}
+    
     data = []
-    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=[o['objetivo_id'] for o in objetivos_agrupados])}
     for obj in objetivos_agrupados:
-        # Luego, en el bucle:
-        objetivo = objetivos_map[obj['objetivo_id']]
-        data.append({
-            "id": obj['objetivo_id'],  # ID del objetivo
-            "progreso": obj['progreso_promedio'],  # Progreso promedio
-            "objetivo_id": {  # Datos relacionados del objetivo
-                "id": objetivo.id,
-                "nombre": objetivo.nombre,
-                "descripcion": objetivo.descripcion
-            },
-            "resultado": None  # Puedes ajustar esto según tus necesidades
-        })
+        objetivo_id = obj['escena_objetivo__objetivo_id']
+        objetivo = objetivos_map.get(objetivo_id)
+        
+        if objetivo:
+            data.append({
+                "id": objetivo_id,
+                "objetivo_id": {
+                    "id": objetivo.id,
+                    "nombre": objetivo.nombre,
+                    "descripcion": objetivo.descripcion
+                },
+                "resultado": None
+            })
 
     return Response(data)
 
+class Get_escenas_by_objetivo(APIView):
+    def get(self, request, objetivo_id, patient_id):
+        # Obtener el objetivo
+        objetivo = get_object_or_404(Objetivo, id=objetivo_id)
+
+        # Obtener todas las relaciones EscenaObjetivo para este objetivo
+        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo).select_related('escena')
+
+        # Extraer todas las escenas del objetivo
+        escenas = [eo.escena for eo in escenas_objetivo]
+
+        # Obtener asignaciones del usuario para este objetivo
+        asignaciones = PersonaObjetivoEscena.objects.filter(
+            user_id=patient_id,
+            escena_objetivo__objetivo=objetivo  # Filtrar por el objetivo actual
+        ).select_related('escena_objetivo')
+
+        # Crear un diccionario {escena_id: (asignada, orden)}
+        asignaciones_dict = {a.escena_objetivo.escena.id: (True, a.orden) for a in asignaciones}
+
+        # Estructurar la respuesta
+        escenas_data = []
+        for escena in escenas:
+            asignada, orden = asignaciones_dict.get(escena.id, (False, None))
+            escenas_data.append({
+                "id": escena.id,
+                "nombre": escena.nombre,
+                "descripcion": escena.descripcion,  # Asegúrate de que este campo exista en Escena
+                "asignada": asignada,
+                "orden": orden  # Si es None, se interpreta como "sin orden"
+            })
+
+        # Devolver la respuesta con toda la info necesaria
+        return Response({
+            "objetivo_id": objetivo.id,
+            "objetivo_nombre": objetivo.nombre,
+            "escenas": escenas_data
+        }, status=status.HTTP_200_OK)
+
+
+class Get_escenas_by_objetivo_by_user(APIView):
+    def get(self, request, objetivo_id, patient_id):
+        # Obtener el objetivo
+        objetivo = get_object_or_404(Objetivo, id=objetivo_id)
+        
+        # Obtener todas las relaciones EscenaObjetivo para este objetivo
+        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo).select_related('escena')
+        
+        # Obtener las escenas ya asignadas al paciente
+        escenas_asignadas = PersonaObjetivoEscena.objects.filter(
+            user_id=patient_id,
+            escena_objetivo__objetivo=objetivo
+        ).values_list('escena_objetivo__escena_id', flat=True)
+        
+        # Filtrar las escenas que no están asignadas al paciente
+        escenas_filtradas = [
+            eo.escena for eo in escenas_objetivo
+            if eo.escena.id not in escenas_asignadas
+        ]
+        
+        # Serializar las escenas filtradas
+        serializer = EscenaSerializer(escenas_filtradas, many=True)
+        
+        # Devolver la respuesta
+        return Response({
+            "objetivo_id": objetivo.id,
+            "objetivo_nombre": objetivo.nombre,
+            "escenas": serializer.data
+        }, status=status.HTTP_200_OK)
+    
 class NameFilter(filters.FilterSet):
     nombre = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
     centro_profesional = filters.NumberFilter(field_name='centro_profesional', lookup_expr='exact')
@@ -596,7 +698,7 @@ class AssociateCenterView(generics.CreateAPIView):
     serializer_class = ProfesionalCentroSerializer
 
     def create(self, request, *args, **kwargs):
-        username = request.data.get('center')
+        username = request.data.get('username')
         center_ids = request.data.get('centers', [])
 
         user = User.objects.get(username=username)
@@ -1440,6 +1542,76 @@ class MarcarVideoVistoAPIView(APIView):
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
 
+class SaveOrderView(APIView):
+    def post(self, request):
+        try:
+            patient_id = request.data.get("patientId")
+            objetivo_id = request.data.get("objetivoId")
+            ordered_escenas = request.data.get("ordered_escenas", [])
+            non_ordered_escenas = request.data.get("non_ordered_escenas", [])
+
+            if not patient_id or not objetivo_id:
+                return Response({"error": "patientId y objetivoId son obligatorios."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validar existencia del usuario y el objetivo
+            try:
+                user = User.objects.get(dni=patient_id)
+            except User.DoesNotExist:
+                return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+            # Usar una transacción para garantizar consistencia
+            with transaction.atomic():
+                # Obtener los IDs de EscenaObjetivo que corresponden al objetivo dado
+                escena_objetivo_ids = EscenaObjetivo.objects.filter(objetivo_id=objetivo_id).values_list("id", flat=True)
+                print("escena_objetivo_ids", escena_objetivo_ids)
+                # Eliminar todas las entradas anteriores con ese usuario y esas escenas
+                PersonaObjetivoEscena.objects.filter(user_id=user, escena_objetivo__in=escena_objetivo_ids).delete()
+
+                # Insertar nuevas escenas ordenadas
+                for escena in ordered_escenas:
+                    try:
+                        escena_obj = EscenaObjetivo.objects.get(escena_id=escena["id"], objetivo_id=objetivo_id)
+                        PersonaObjetivoEscena.objects.create(
+                            user_id=user,
+                            escena_objetivo=escena_obj,
+                            orden=escena["order"]+1
+                        )
+                    except EscenaObjetivo.DoesNotExist:
+                        return Response({"error": f"EscenaObjetivo con id {escena['id']} no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+                # Insertar nuevas escenas no ordenadas (orden en NULL)
+                for escena_id in non_ordered_escenas:
+                    try:
+                        escena_obj = EscenaObjetivo.objects.get(escena_id=escena_id, objetivo_id=objetivo_id)
+                        PersonaObjetivoEscena.objects.create(
+                            user_id=user,
+                            escena_objetivo=escena_obj,
+                            orden=None
+                        )
+                    except EscenaObjetivo.DoesNotExist:
+                        return Response({"error": f"EscenaObjetivo con id {escena_id} no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+
+                        
+             # 🔥 NUEVA LÓGICA: Crear evaluaciones si hay formularios para este objetivo
+                formularios = Formulario.objects.filter(objetivo_id=objetivo_id)
+                for formulario in formularios:
+                    # Verificar si ya existe la evaluación para evitar duplicados
+                    if not PersonaObjetivoEvaluacion.objects.filter(user_id=user, objetivo_id=objetivo_id, evaluacion=formulario).exists():
+                        PersonaObjetivoEvaluacion.objects.create(
+                            user_id=user,
+                            objetivo_id=Objetivo.objects.get(id=objetivo_id),
+                            evaluacion=formulario,
+                            progreso=0  # Inicializamos el progreso en 0
+                        )
+
+            return Response({"message": "Orden guardado exitosamente y evaluaciones actualizadas."}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            import traceback
+            print("🔥 ERROR en SaveOrderView:", str(e))  # Imprime el error simple
+            print(traceback.format_exc())  # Muestra el traceback completo en la consola
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 import spacy
@@ -1470,7 +1642,8 @@ class SpacyPatologiasView(APIView):
             
         return vectores
 
-    def encontrar_patologias_similares(self, texto_input, umbral=0.7):
+
+    def encontrar_patologias_similares(self, texto_input, umbral=0.5):
         doc_input = self.nlp(texto_input)
         input_vector = np.mean([token.vector for token in doc_input if token.has_vector], axis=0)
         
