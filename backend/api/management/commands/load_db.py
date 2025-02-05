@@ -171,7 +171,7 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            link="https://ejemplo.com/video1",
+            link="https://drive.google.com/file/d/1jDUv2cWsGROqI-Cs7XUmHUEp2Qhe7-TA/view?usp=sharing",
             nombre="Escena 1",
             descripcion = "Esta escena reflexiona sobre la importancia de la amistad"
         )
@@ -179,7 +179,7 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            link="https://ejemplo.com/video2",
+            link="https://drive.google.com/file/d/1jDUv2cWsGROqI-Cs7XUmHUEp2Qhe7-TA/view?usp=sharing",
             nombre="Escena 2",
             descripcion = "Esta escena refleja la importancia de la familia"
 
@@ -188,7 +188,7 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=2,
-            link="https://ejemplo.com/video3",
+            link="https://drive.google.com/file/d/1zCpLV-NkRAI_nnh82hAGmcFi3kdyU0t-/view?usp=sharing",
             nombre="Escena 3",
             descripcion = "Esta escena demuestra la importancia de la educación"
 
@@ -197,7 +197,7 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=4,
-            link="https://ejemplo.com/video4",
+            link="https://drive.google.com/file/d/1zCpLV-NkRAI_nnh82hAGmcFi3kdyU0t-/view?usp=sharing",
             nombre="Escena 4",
             descripcion = "Esta escena refuerza la importancia de la juventud"
         )
@@ -205,7 +205,7 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=3,
-            link="https://ejemplo.com/video5",
+            link="https://drive.google.com/file/d/1ecZueXAucLxCeD2IYMo3furoH3pVtAYi/view?usp=sharing",
             nombre="Escena 5",
             descripcion = "Esta escena refleja la importancia del viaje antes que el destino"
 
@@ -214,7 +214,7 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=5,
-            link="https://ejemplo.com/video6",
+            link="https://drive.google.com/file/d/1ecZueXAucLxCeD2IYMo3furoH3pVtAYi/view?usp=sharing",
             nombre="Escena 6",
             descripcion = "Esta escena refuerza la importancia de la juventud"
         )

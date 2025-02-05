@@ -19,7 +19,7 @@ interface Objetivo {
   id: number;
   nombre: string;
   descripcion: string;
-  videoDescriptivo: string;  // Nuevo campo
+  videoExplicativo: string;  // Nuevo campo
 }
 
 interface Condicion {
@@ -73,7 +73,7 @@ export default function Page() {
           id: obj.id,
           nombre: obj.nombre,
           descripcion: obj.descripcion,
-          videoDescriptivo: obj.video_explicativo_id  // PERO DEVUELVE ID.. QUIERO LINK.
+          videoExplicativo: obj.video_explicativo  // PERO DEVUELVE ID.. QUIERO LINK.
         }));
         setObjetivos(mapped);
         setTotalPages(Math.ceil(data.count / 6));
@@ -261,9 +261,9 @@ export default function Page() {
           {selectedObjetivo && (
             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mt-4">
               <h2 className="text-lg font-semibold mb-3">Video Descriptivo</h2>
-              <div className="relative w-full aspect-video">
+              <div className="mr-0 lg:mr-4 mb-4 lg:mb-0 relative w-full max-w-[854px]">
                 <iframe
-                  src={selectedObjetivo.videoDescriptivo}
+                  src={selectedObjetivo.videoExplicativo}
                   className="rounded-lg shadow-lg border-0 w-full h-full"
                   allow="autoplay; fullscreen"
                   style={{ aspectRatio: "16 / 9" }}
