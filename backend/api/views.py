@@ -3400,7 +3400,7 @@ class GroupDetailView(generics.RetrieveDestroyAPIView):
 
 @api_view(['GET'])
 #@authentication_classes([CookieJWTAuthentication])
-#@permission_classes([AllowAny])
+@permission_classes([AllowAny])
 def obtener_notificaciones_pendientes(request):
     # Filtrar notificaciones pendientes para el usuario actual
     notificaciones = Notificacion.objects.filter(
