@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import BoxPaginado from "../../../../components/PaginadoDinamico";
 import { useSelector } from 'react-redux';
 import { RootState } from "../../../../../store/store";
+import NoGroupsMessage from "../../../../components/NoGroupsMessage";
 
 interface PaginatedResponse {
   count: number;
@@ -97,7 +98,9 @@ const GroupsPage: React.FC = () => {
         <div className="text-center">Cargando...</div>
       ) : (
         <div className="container mx-auto p-4">
-          <BoxPaginado 
+          {totalItems === 0 ? ( // Check if there are no items
+            <NoGroupsMessage /> // Render the NoGroupsMessage component
+          ) : (<BoxPaginado 
             data={data} 
             options={opProps}
             img='/icon/silueta_de_multiples_usuarios.png'
@@ -111,6 +114,7 @@ const GroupsPage: React.FC = () => {
             itemsPerPage={8}
             onItemDeleted={handleItemDeleted}
           />
+        )}
         </div>
       )}
     </div>

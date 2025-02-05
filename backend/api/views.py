@@ -560,6 +560,40 @@ class EscenasPorObjetivoView(generics.ListAPIView):
         )
         return escenas_objetivo
 
+    
+class GetPatientsView(generics.ListAPIView):
+    queryset = User.objects.filter(role='paciente')
+    serializer_class = PacienteSerializer
+
+
+class GrupoUpdateView(UpdateAPIView):
+    queryset = Grupo.objects.all()
+    serializer_class = GrupoSerializer
+
+    def update(self, request, *args, **kwargs):
+        # Get the Grupo instance to update
+        instance = self.get_object()
+        grupo_id = instance.id
+
+
+        # Delete only the patients from the group, not the therapists
+        Personagrupo.objects.filter(grupo_id=grupo_id).delete()
+
+        # Handle the new patients
+        pacientes = request.data.get('pacientes', [])
+        for paciente_id in pacientes:
+            try:
+                user = User.objects.get(dni=paciente_id)
+                # Only add if they're actually a patient
+                if user.role == 'paciente':
+                    Personagrupo.objects.create(
+                        user_id=user,
+                        grupo_id=instance
+                    )
+            except User.DoesNotExist:
+                return Response(
+                    {"error": f"User with DNI {paciente_id} does not exist."},
+                    status=status.HTTP_400_BAD_REQUEST
     def list(self, request, *args, **kwargs):
         objetivo_id = request.GET.get('objetivo_id')
         username = request.GET.get('username')
@@ -688,6 +722,52 @@ class EscenasPorObjetivoView(generics.ListAPIView):
             )
         )
 
+        # Add any new therapists from the request
+        new_terapeutas = request.data.get('terapeutas', [])
+        for terapeuta_id in new_terapeutas:
+            try:
+                user = User.objects.get(dni=terapeuta_id)
+                # Only add if they're actually a therapist
+                if user.role == 'terapeuta':
+                    Personagrupo.objects.create(
+                        user_id=user,
+                        grupo_id=instance
+                    )
+            except User.DoesNotExist:
+                return Response(
+                    {"error": f"Therapist with DNI {terapeuta_id} does not exist."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Prepare response data
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        response_data = dict(serializer.data)
+
+        response_data["terapeutas"] = [
+            {
+                "id": terapeuta.dni,
+                "nombre": terapeuta.nombre,
+                "dni": terapeuta.dni
+            }
+            for terapeuta in User.objects.filter(
+                personagrupos__grupo_id=instance,
+                role='terapeuta'
+            )
+        ]
+        response_data["pacientes"] = [
+            {
+                "id": paciente.dni,
+                "nombre": paciente.nombre,
+                "dni": paciente.dni
+            }
+            for paciente in User.objects.filter(
+                personagrupos__grupo_id=instance,
+                role='paciente'
+            )
+        ]
+
+        return Response(response_data, status=status.HTTP_200_OK)
     def list(self, request, *args, **kwargs):
         objetivo_id = request.GET.get('objetivo_id')
         username = request.GET.get('username')
@@ -983,6 +1063,173 @@ class VerificarCondicionesView(APIView):
             ).exists()
             
 
+@api_view(['POST'])
+def crear_escena(request):
+    try:
+        serializer = EscenaSerializer(data=request.data)
+        
+        # Validar datos
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Escena creada exitosamente", "data": serializer.data},
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Exception as e:
+        return Response(
+            {"error": f"Error inesperado: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+from django.db.models import Avg
+
+class UnassignObjective(APIView):
+    def post(self, request, patientId, objectiveId):
+        try:
+            # Validar si el usuario existe
+            try:
+                user = User.objects.get(dni=patientId)
+            except User.DoesNotExist:
+                return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+            # Obtener los IDs de EscenaObjetivo asociados al objetivoId
+            escena_objetivo_ids = EscenaObjetivo.objects.filter(objetivo_id=objectiveId).values_list('id', flat=True)
+
+            # Eliminar registros en PersonaObjetivoEscena
+            deleted_count, _ = PersonaObjetivoEscena.objects.filter(user_id=user, escena_objetivo_id__in=escena_objetivo_ids).delete()
+
+            # Eliminar registros en PersonaObjetivoEvaluacion
+            deleted_evaluaciones, _ = PersonaObjetivoEvaluacion.objects.filter(
+                user_id=user, 
+                objetivo_id=objectiveId
+            ).delete()
+
+            return Response({"message": f"Se eliminaron {deleted_count} registros."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            
+
+
+
+@api_view(['GET'])
+def objetivos_escena_usuario(request):
+    user_id = request.query_params.get('user_id')
+    
+    if not user_id:
+        return Response({"error": "El parámetro 'user_id' es requerido."}, status=400)
+
+    # Agrupar por objetivo_id y calcular el progreso promedio
+    objetivos_agrupados = (
+        PersonaObjetivoEscena.objects
+        .filter(user_id=user_id)
+        .values('escena_objetivo__objetivo_id')  # Acceder a objetivo_id a través de escena_objetivo
+        .distinct()  # Eliminar duplicados
+
+    )
+
+    if not objetivos_agrupados:
+        return Response({"error": "No se encontraron objetivos para este usuario."}, status=404)
+
+    # Obtener los datos de los objetivos
+    objetivos_ids = [obj['escena_objetivo__objetivo_id'] for obj in objetivos_agrupados]
+    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=objetivos_ids)}
+    
+    data = []
+    for obj in objetivos_agrupados:
+        objetivo_id = obj['escena_objetivo__objetivo_id']
+        objetivo = objetivos_map.get(objetivo_id)
+        
+        if objetivo:
+            data.append({
+                "id": objetivo_id,
+                "objetivo_id": {
+                    "id": objetivo.id,
+                    "nombre": objetivo.nombre,
+                    "descripcion": objetivo.descripcion
+                },
+                "resultado": None
+            })
+
+    return Response(data)
+
+class Get_escenas_by_objetivo(APIView):
+    def get(self, request, objetivo_id, patient_id):
+        # Obtener el objetivo
+        objetivo = get_object_or_404(Objetivo, id=objetivo_id)
+
+        # Obtener todas las relaciones EscenaObjetivo para este objetivo
+        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo).select_related('escena')
+
+        # Extraer todas las escenas del objetivo
+        escenas = [eo.escena for eo in escenas_objetivo]
+
+        # Obtener asignaciones del usuario para este objetivo
+        asignaciones = PersonaObjetivoEscena.objects.filter(
+            user_id=patient_id,
+            escena_objetivo__objetivo=objetivo  # Filtrar por el objetivo actual
+        ).select_related('escena_objetivo')
+
+        # Crear un diccionario {escena_id: (asignada, orden)}
+        asignaciones_dict = {a.escena_objetivo.escena.id: (True, a.orden) for a in asignaciones}
+
+        # Estructurar la respuesta
+        escenas_data = []
+        for escena in escenas:
+            asignada, orden = asignaciones_dict.get(escena.id, (False, None))
+            escenas_data.append({
+                "id": escena.id,
+                "nombre": escena.nombre,
+                "descripcion": escena.descripcion,  # Asegúrate de que este campo exista en Escena
+                "asignada": asignada,
+                "orden": orden  # Si es None, se interpreta como "sin orden"
+            })
+
+        # Devolver la respuesta con toda la info necesaria
+        return Response({
+            "objetivo_id": objetivo.id,
+            "objetivo_nombre": objetivo.nombre,
+            "escenas": escenas_data
+        }, status=status.HTTP_200_OK)
+
+
+class Get_escenas_by_objetivo_by_user(APIView):
+    def get(self, request, objetivo_id, patient_id):
+        # Obtener el objetivo
+        objetivo = get_object_or_404(Objetivo, id=objetivo_id)
+        
+        # Obtener todas las relaciones EscenaObjetivo para este objetivo
+        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo).select_related('escena')
+        
+        # Obtener las escenas ya asignadas al paciente
+        escenas_asignadas = PersonaObjetivoEscena.objects.filter(
+            user_id=patient_id,
+            escena_objetivo__objetivo=objetivo
+        ).values_list('escena_objetivo__escena_id', flat=True)
+        
+        # Filtrar las escenas que no están asignadas al paciente
+        escenas_filtradas = [
+            eo.escena for eo in escenas_objetivo
+            if eo.escena.id not in escenas_asignadas
+        ]
+        
+        # Serializar las escenas filtradas
+        serializer = EscenaSerializer(escenas_filtradas, many=True)
+        
+        # Devolver la respuesta
+        return Response({
+            "objetivo_id": objetivo.id,
+            "objetivo_nombre": objetivo.nombre,
+            "escenas": serializer.data
+        }, status=status.HTTP_200_OK)
+    
+class NameFilter(filters.FilterSet):
+    nombre = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
+    centro_profesional = filters.NumberFilter(field_name='centro_profesional', lookup_expr='exact')
             # Generar mensaje de bloqueo
             mensajes = []
             if not cumple_edad:
@@ -1022,6 +1269,16 @@ class EscenaBusquedaView(generics.ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
+        related_centers = get_related_centers(self)
+        # Filtra los centros de salud donde el profesional no esté relacionado
+        return Centrodesalud.objects.filter(id__in=related_centers)
+
+class AssociateCenterView(generics.CreateAPIView):
+    serializer_class = ProfesionalCentroSerializer
+
+    def create(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        center_ids = request.data.get('centers', [])
         queryset = Escena.objects.all().prefetch_related(
             Prefetch(
                 'escenaobjetivo_set',
@@ -1063,6 +1320,115 @@ class EscenaBusquedaView(generics.ListAPIView):
                 Videosvistos.objects.filter(paciente_id__dni=dni)
                 .values_list('escena_id', flat=True)
             )
+
+class CreateGroup(generics.CreateAPIView):
+    serializer_class = PatientGroupSerializer
+
+    def create(self, request, *args, **kwargs):
+        try:
+            # Obtener el centro de salud por su nombre
+            center_name = request.data.get('nombre_centro')
+            center = Centrodesalud.objects.get(nombre=center_name)
+
+            # Crear el grupo
+            nombre_grupo = request.data.get('nombre_grupo')
+            grupo = Grupo.objects.create(
+                nombre=nombre_grupo,
+                centrodesalud_id=center
+            )
+
+            # Agregar pacientes al grupo
+            pacientes = request.data.get('pacientes', [])
+            for paciente_dni in pacientes:
+                try:
+                    user = User.objects.get(dni=paciente_dni)
+                    if user.role == 'paciente':  # Solo agregar si el usuario es un paciente
+                        Personagrupo.objects.create(
+                            user_id=user,
+                            grupo_id=grupo
+                        )
+                except User.DoesNotExist:
+                    return Response(
+                        {"error": f"Paciente con DNI {paciente_dni} no existe."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                        # Agregar pacientes al grupo
+
+            terapeutas = request.data.get('terapeutas', [])
+            for terapeuta_dni in terapeutas:
+                try:
+                    user = User.objects.get(dni=terapeuta_dni)
+                    Personagrupo.objects.create(
+                        user_id=user,
+                        grupo_id=grupo
+                    )
+                except User.DoesNotExist:
+                    return Response(
+                        {"error": f"Terapeuta con DNI {terapeuta_dni} no existe."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # Agregar terapeuta al grupo
+            terapeuta = request.data.get('terapeuta')
+            try:
+                user = User.objects.get(username=terapeuta)
+                if user.role == 'terapeuta':  # Solo agregar si el usuario es un terapeuta
+                    Personagrupo.objects.create(
+                        user_id=user,
+                        grupo_id=grupo
+                    )
+            except User.DoesNotExist:
+                return Response(
+                    {"error": f"Terapeuta con DNI {terapeuta} no existe."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Serializar la respuesta
+            grupo_serialized = PatientGroupSerializer(grupo).data
+
+            # Agregar información de terapeutas y pacientes al resultado
+            grupo_serialized["terapeutas"] = [
+                {
+                    "id": terapeuta.dni,
+                    "nombre": terapeuta.nombre,
+                    "dni": terapeuta.dni
+                }
+                for terapeuta in User.objects.filter(
+                    personagrupos__grupo_id=grupo,
+                    role='terapeuta'
+                )
+            ]
+            grupo_serialized["pacientes"] = [
+                {
+                    "id": paciente.dni,
+                    "nombre": paciente.nombre,
+                    "dni": paciente.dni
+                }
+                for paciente in User.objects.filter(
+                    personagrupos__grupo_id=grupo,
+                    role='paciente'
+                )
+            ]
+
+            return Response({
+                'message': 'Grupo creado exitosamente',
+                'group': grupo_serialized
+            }, status=status.HTTP_201_CREATED)
+
+        except Centrodesalud.DoesNotExist:
+            return Response(
+                {"error": f'Centro de salud con nombre "{center_name}" no encontrado.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        except IntegrityError:
+            return Response(
+                {"error": f'El grupo con nombre "{request.data.get("nombre_grupo")}" ya existe.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
             serialized_data = []
             required_escena_ids = set()
@@ -1265,6 +1631,38 @@ class GrupoUpdateView(UpdateAPIView):
 
  
 
+        return Grupo.objects.filter(id__in=grupos_ids)
+    
+
+class GetGroupsPerUserNotInView(generics.ListAPIView):
+    serializer_class = GrupoSerializer
+    pagination_class = DynamicPagination
+
+    def get_queryset(self):
+        username = self.request.query_params.get('username')
+
+        if not username:
+            raise NotFound("El parámetro 'username' es requerido.")
+        
+        # Obtener el usuario
+        user = User.objects.get(username=username)
+        
+        # Grupos en los que el usuario está asociado
+        grupos_con_usuario = Personagrupo.objects.filter(user_id=user).values_list('grupo_id', flat=True)
+        
+        # Grupos sin ninguna persona asociada
+        grupos_sin_personas = Grupo.objects.exclude(id__in=Personagrupo.objects.values_list('grupo_id', flat=True))
+        
+        # Grupos en los que el usuario no está asociado
+        grupos_sin_usuario = Grupo.objects.exclude(id__in=grupos_con_usuario)
+        
+        # Combinar ambos conjuntos: grupos sin usuario y grupos sin personas
+        queryset = Grupo.objects.filter(
+            Q(id__in=grupos_sin_usuario) | Q(id__in=grupos_sin_personas)
+        ).distinct()
+
+        return queryset
+
         # Add new Personagrupo entries for the selected patients
         for paciente_id in pacientes:
             try:
@@ -1337,6 +1735,30 @@ class update_user(APIView):
         try:
             # Validar que todos los campos obligatorios estén presentes
             required_fields = ['dni', 'nombre', 'fecha_nac', 'genero', 'role', 'residencia']
+
+class GetTherapistsPerGroupView(generics.ListAPIView):
+    serializer_class = PacienteSerializer
+    pagination_class = DynamicPagination
+
+    def get_queryset(self):
+        group_id = self.request.query_params.get('group_id')
+        username = self.request.query_params.get('username')
+        try:
+            group = Grupo.objects.get(id=group_id)
+
+        except Grupo.DoesNotExist:
+            raise NotFound("El grupo especificado no existe.")
+
+        persona_grupo_qs = Personagrupo.objects.filter(grupo_id=group)            
+
+        users_dni = persona_grupo_qs.values_list('user_id__dni', flat=True)
+
+        return User.objects.filter(dni__in=users_dni, role='terapeuta').exclude(username=username)
+    
+
+
+class GetPatientsNotInGroupView(generics.ListAPIView):
+    serializer_class = PacienteSerializer
 
             missing_fields = [field for field in required_fields if field not in request.data]
             if missing_fields:
@@ -2624,6 +3046,35 @@ class SpacyPatologiasView(APIView):
         })
         
 
+        # Filtrar usuarios con rol de 'paciente' que no están en el grupo específico o en ningún grupo
+        return User.objects.filter(
+            Q(role='paciente'),
+            Q(personagrupos__isnull=True) | ~Q(dni__in=users_in_group)
+        ).distinct()
+
+class GetTherapistsNotInGroupView(generics.ListAPIView):
+    serializer_class = PacienteSerializer
+
+    def get_queryset(self):
+        # Retrieve group_id from query parameters
+        group_id = self.request.query_params.get('group_id')
+
+        if not group_id:
+            raise ValidationError("El parámetro 'group_id' es obligatorio.")
+
+        try:
+            group = Grupo.objects.get(id=group_id)
+        except Grupo.DoesNotExist:
+            raise NotFound("El grupo especificado no existe.")
+
+        # Obtener los IDs de los usuarios que están en el grupo especificado
+        users_in_group = Personagrupo.objects.filter(grupo_id=group).values_list('user_id', flat=True)
+
+        # Filtrar usuarios con rol de 'paciente' que no están en el grupo específico o en ningún grupo
+        return User.objects.filter(
+            Q(role='terapeuta'),
+            Q(personagrupos__isnull=True) | ~Q(dni__in=users_in_group)
+        ).distinct()
     
 def get_groups(request):
     if request.method == "GET":
@@ -2680,6 +3131,32 @@ def update_group(request, group_id):
 
             if len(users) != len(all_user_ids):
                 return JsonResponse({"error": "Uno o más usuarios no existen"}, status=400)
+
+class GetTherapistsExcludingView(generics.ListAPIView):
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        User = get_user_model()
+        
+        return User.objects.filter(
+            role='terapeuta'
+        ).exclude(
+            username=username
+        )
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        data = [{
+            'dni': user.dni,
+            'nombre': user.nombre,
+            'fecha_nac': user.fecha_nac,
+            'genero': user.genero,
+            'patologia': user.patologia
+        } for user in queryset]
+        
+        return Response(data, status=status.HTTP_200_OK)
+class GetFormsPerUserView(generics.ListAPIView):
+    serializer_class = FormularioSerializer
+    pagination_class = DynamicPagination
 
             # Eliminar todas las relaciones previas de este grupo
             Personagrupo.objects.filter(grupo_id=grupo).delete()
@@ -3072,6 +3549,7 @@ def listar_formularios_completados(request, username):
         return Response({'error': str(e)}, status=500)
 
 
+
     
 class ObtenerEvaluaciones(APIView):
     def get(self, request):
@@ -3350,6 +3828,76 @@ def guardar_registro_evaluacion(username, formulario_id):
 
 
 
+class SaveOrderView(APIView):
+    def post(self, request):
+        try:
+            patient_id = request.data.get("patientId")
+            objetivo_id = request.data.get("objetivoId")
+            ordered_escenas = request.data.get("ordered_escenas", [])
+            non_ordered_escenas = request.data.get("non_ordered_escenas", [])
+
+            if not patient_id or not objetivo_id:
+                return Response({"error": "patientId y objetivoId son obligatorios."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validar existencia del usuario y el objetivo
+            try:
+                user = User.objects.get(dni=patient_id)
+            except User.DoesNotExist:
+                return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+            # Usar una transacción para garantizar consistencia
+            with transaction.atomic():
+                # Obtener los IDs de EscenaObjetivo que corresponden al objetivo dado
+                escena_objetivo_ids = EscenaObjetivo.objects.filter(objetivo_id=objetivo_id).values_list("id", flat=True)
+                print("escena_objetivo_ids", escena_objetivo_ids)
+                # Eliminar todas las entradas anteriores con ese usuario y esas escenas
+                PersonaObjetivoEscena.objects.filter(user_id=user, escena_objetivo__in=escena_objetivo_ids).delete()
+
+                # Insertar nuevas escenas ordenadas
+                for escena in ordered_escenas:
+                    try:
+                        escena_obj = EscenaObjetivo.objects.get(escena_id=escena["id"], objetivo_id=objetivo_id)
+                        PersonaObjetivoEscena.objects.create(
+                            user_id=user,
+                            escena_objetivo=escena_obj,
+                            orden=escena["order"]+1
+                        )
+                    except EscenaObjetivo.DoesNotExist:
+                        return Response({"error": f"EscenaObjetivo con id {escena['id']} no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+                # Insertar nuevas escenas no ordenadas (orden en NULL)
+                for escena_id in non_ordered_escenas:
+                    try:
+                        escena_obj = EscenaObjetivo.objects.get(escena_id=escena_id, objetivo_id=objetivo_id)
+                        PersonaObjetivoEscena.objects.create(
+                            user_id=user,
+                            escena_objetivo=escena_obj,
+                            orden=None
+                        )
+                    except EscenaObjetivo.DoesNotExist:
+                        return Response({"error": f"EscenaObjetivo con id {escena_id} no encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+
+                        
+             # 🔥 NUEVA LÓGICA: Crear evaluaciones si hay formularios para este objetivo
+                formularios = Formulario.objects.filter(objetivo_id=objetivo_id)
+                for formulario in formularios:
+                    # Verificar si ya existe la evaluación para evitar duplicados
+                    if not PersonaObjetivoEvaluacion.objects.filter(user_id=user, objetivo_id=objetivo_id, evaluacion=formulario).exists():
+                        PersonaObjetivoEvaluacion.objects.create(
+                            user_id=user,
+                            objetivo_id=Objetivo.objects.get(id=objetivo_id),
+                            evaluacion=formulario,
+                            progreso=0  # Inicializamos el progreso en 0
+                        )
+
+            return Response({"message": "Orden guardado exitosamente y evaluaciones actualizadas."}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            import traceback
+            print("🔥 ERROR en SaveOrderView:", str(e))  # Imprime el error simple
+            print(traceback.format_exc())  # Muestra el traceback completo en la consola
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -3364,6 +3912,26 @@ def calcular_nota_api(request):
 
 
 
+
+    def encontrar_patologias_similares(self, texto_input, umbral=0.5):
+        doc_input = self.nlp(texto_input)
+        input_vector = np.mean([token.vector for token in doc_input if token.has_vector], axis=0)
+        
+        patologias_similares = []
+        
+        for nombre, vector_patologia in self.vectores_patologias.items():
+            if vector_patologia is not None:
+                similitud = np.dot(input_vector, vector_patologia) / (
+                    np.linalg.norm(input_vector) * np.linalg.norm(vector_patologia)
+                )
+                
+                if similitud > umbral:
+                    patologias_similares.append({
+                        'nombre': nombre,
+                        'similitud': float(similitud)
+                    })
+        
+        return sorted(patologias_similares, key=lambda x: x['similitud'], reverse=True)
 class PacienteListView(generics.ListAPIView):
     queryset = User.objects.filter(role='paciente')
     serializer_class = UserSerializer

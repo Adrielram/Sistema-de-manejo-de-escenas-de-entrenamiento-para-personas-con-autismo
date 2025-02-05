@@ -322,10 +322,10 @@ class Command(BaseCommand):
         )
         escena_obj_2 = EscenaObjetivo.objects.create(
             escena=escena_4,
-            objetivo=objetivo_2
+            objetivo=objetivo_1
         )
         escena_obj_3 = EscenaObjetivo.objects.create(
-            escena=escena_7,
+            escena=escena_5,
             objetivo=objetivo_3
         )
         escena_obj_4 = EscenaObjetivo.objects.create(
@@ -365,12 +365,12 @@ class Command(BaseCommand):
         # Create person-objective-scene relationship
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_3,
+            escena_objetivo=escena_obj_1,
             orden= 1,
         )
         persona_obj_esc_2 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_4,
+            escena_objetivo=escena_obj_2,
             orden= 2,
         )
         persona_obj_esc_3 = PersonaObjetivoEscena.objects.create(
@@ -379,11 +379,12 @@ class Command(BaseCommand):
         )
         persona_obj_esc_4 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_1,
+            escena_objetivo=escena_obj_3,
+            orden = 1
         )
         persona_obj_esc_5 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_2,
+            escena_objetivo=escena_obj_4,
         )
         persona_obj_esc_6 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
@@ -514,6 +515,14 @@ class Command(BaseCommand):
         PersonaObjetivoEvaluacion.objects.create(
             user_id=paciente,
             objetivo_id=objetivo_3,
+            resultado="Re mal",
+            progreso=0,
+            evaluacion=formulario_2
+        )
+        
+        PersonaObjetivoEvaluacion.objects.create(
+            user_id=paciente,
+            objetivo_id=objetivo_4,
             resultado="Re mal",
             progreso=0,
             evaluacion=formulario_2
