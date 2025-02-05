@@ -260,7 +260,7 @@ export default function Page() {
           {/* Reproductor de video del objetivo */}
           {selectedObjetivo && (
             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mt-4">
-              <h2 className="text-lg font-semibold mb-3">Video Descriptivo</h2>
+              <h2 className="text-lg font-semibold mb-3">Video Explicativo</h2>
               <div className="mr-0 lg:mr-4 mb-4 lg:mb-0 relative w-full max-w-[854px]">
                 <iframe
                   src={selectedObjetivo.videoExplicativo}
