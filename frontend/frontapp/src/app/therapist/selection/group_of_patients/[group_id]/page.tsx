@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { RootState } from "../../../../../../store/store";
+import { useSelector } from "react-redux";
 
-interface Paciente {
+interface Persona {
   dni: number;
   nombre: string;
 }
@@ -11,9 +13,13 @@ interface Paciente {
 const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params }) => {
   const [grupoId, setGrupoId] = useState<string | null>(null);
   const [nombre_grupo, setNombreGrupo] = useState("");
-  const [pacientesDisponibles, setPacientesDisponibles] = useState<Paciente[]>([]);
-  const [pacientesEnGrupo, setPacientesEnGrupo] = useState<Paciente[]>([]);
+  const [pacientesDisponibles, setPacientesDisponibles] = useState<Persona[]>([]);
+  const [pacientesEnGrupo, setPacientesEnGrupo] = useState<Persona[]>([]);
   const [pacientesSeleccionados, setPacientesSeleccionados] = useState<Set<number>>(new Set());
+  const [terapeutasDisponibles, setTerapeutasDisponibles] = useState<Persona[]>([]);
+  const [terapeutasEnGrupo, setTerapeutasEnGrupo] = useState<Persona[]>([]);
+  const [terapeutasSeleccionados, setTerapeutasSeleccionados] = useState<Set<number>>(new Set());
+  const {username} = useSelector((state: RootState) => state.user);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
@@ -93,16 +99,53 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
       }
     };
 
+
+    const fetchTerapeutasDisponibles = async () => {
+      try {
+        const response = await fetch(`${baseUrl}get_therapists_not_in_group/?group_id=${grupoId}`);
+        if (!response.ok) {
+          throw new Error("Error al obtener los terapeutas disponibles");
+        }
+        const data = await response.json();
+        setTerapeutasDisponibles(data);
+      } catch (error) {
+        console.error(error);
+        alert("No se pudieron cargar los terapeutas disponibles");
+      }
+    };
+
     const fetchPacientesEnGrupo = async () => {
       try {
-        const response = await fetch(`${baseUrl}get_patients_per_group/?group_id=${grupoId}`);
+        const response = await fetch(`${baseUrl}get_patients_per_group/?group_id=${grupoId}&user=${username}`);
         if (!response.ok) {
           throw new Error("Error al obtener los pacientes en el grupo");
         }
         const data = await response.json();
-        setPacientesEnGrupo(data);
-        // Initialize selected patients with those already in the group
-        setPacientesSeleccionados(new Set(data.map((paciente: Paciente) => paciente.dni)));
+        console.log("Pacientes en el grupo:", data);
+    
+        // Extract the `results` array from the response
+        const pacientesArray = data.results || [];
+        setPacientesEnGrupo(pacientesArray);
+        setPacientesSeleccionados(new Set(pacientesArray.map((paciente: Persona) => paciente.dni)));
+      } catch (error) {
+        console.error(error);
+        alert("No se pudieron cargar los pacientes en el grupo");
+      }
+    };
+
+    const fetchTerapeutasEnGrupo = async () => {
+      try {
+        const response = await fetch(`${baseUrl}get_therapists_per_group/?group_id=${grupoId}`);
+        if (!response.ok) {
+          throw new Error("Error al obtener los terapeutas en el grupo");
+        }
+        const data = await response.json();
+        console.log("Terapeutas en el grupo:", data);
+    
+        // Extract the `results` array from the response
+        const terapeutasArray = data.results || [];
+        setTerapeutasEnGrupo(terapeutasArray);
+        setTerapeutasSeleccionados(new Set(terapeutasArray.map((terapeuta: Persona) => terapeuta.dni)));
       } catch (error) {
         console.error(error);
         alert("No se pudieron cargar los pacientes en el grupo");
@@ -112,6 +155,8 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
     fetchGroupDetails();
     fetchPacientesDisponibles();
     fetchPacientesEnGrupo();
+    fetchTerapeutasDisponibles();
+    fetchTerapeutasEnGrupo();
   }, [grupoId]);
 
   const handlePacienteSelection = (pacienteId: number) => {
@@ -121,6 +166,18 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
         newSet.delete(pacienteId);
       } else {
         newSet.add(pacienteId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleTerapeutaSelection = (terapeutaId: number) => {
+    setTerapeutasSeleccionados((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(terapeutaId)) {
+        newSet.delete(terapeutaId);
+      } else {
+        newSet.add(terapeutaId);
       }
       return newSet;
     });
@@ -137,16 +194,20 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
     const grupoActualizado = {
       nombre: nombre_grupo,
       pacientes: Array.from(pacientesSeleccionados),
+      terapeutas: Array.from(terapeutasSeleccionados),
     };
 
     try {
       const response = await fetch(`${baseUrl}groups/${grupoId}`, {
-        method: "PATCH",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(grupoActualizado),
+        
       });
+
+      console.log("Response:", response.json());
 
       if (response.ok) {
         alert("Grupo actualizado exitosamente");
@@ -221,6 +282,47 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
                 ))}
               </div>
             </div>
+
+            <div>
+              <label className="block font-semibold text-gray-700 mb-2">Terapeutas en el Grupo</label>
+              <div className="space-y-2">
+                {terapeutasEnGrupo.map((terapeuta) => (
+                  <div key={terapeuta.dni} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`terapeuta-${terapeuta.dni}`}
+                      checked={terapeutasSeleccionados.has(terapeuta.dni)}
+                      onChange={() => handleTerapeutaSelection(terapeuta.dni)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-[#3EA5FF]"
+                    />
+                    <label htmlFor={`paciente-${terapeuta.dni}`} className="ml-2 text-gray-800">
+                      {terapeuta.nombre}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-gray-700 mb-2">Terapeutas Disponibles</label>
+              <div className="space-y-2">
+                {terapeutasDisponibles.map((terapeuta) => (
+                  <div key={terapeuta.dni} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`terapeuta-${terapeuta.dni}`}
+                      checked={terapeutasSeleccionados.has(terapeuta.dni)}
+                      onChange={() => handleTerapeutaSelection(terapeuta.dni)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-[#3EA5FF]"
+                    />
+                    <label htmlFor={`terapeuta-${terapeuta.dni}`} className="ml-2 text-gray-800">
+                      {terapeuta.nombre}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
 
           <div className="lg:col-span-2 mt-6">

@@ -25,4 +25,11 @@ export type OptionsProps = {
   revisionButton?: boolean;
   scenesCommentsButton?: boolean;
   formsButton?: boolean;
+  manageGroupsButton?: boolean;
 };
+
+export interface SceneWithOrder {
+  id: number;
+  nombre: string;
+  order: number;
+}

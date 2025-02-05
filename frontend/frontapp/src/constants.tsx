@@ -12,6 +12,7 @@ import { GiHealthNormal } from "react-icons/gi";
 import { FaComments } from "react-icons/fa";
 
 import { SideNavItem } from './types';
+import { FaLayerGroup } from "react-icons/fa";
 
 export const SIDENAV_ITEMS: SideNavItem[] = [
     {
@@ -75,6 +76,12 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
                 title: 'Agregar Grupo', 
                 path: '/therapist/selection/group_of_patients/add_group',
                 icon: <IoIosAdd />, 
+              },
+              { 
+                title: 'Otros Grupos', 
+                path: '/therapist/selection/group_of_patients/groups_available',
+                icon: <FaLayerGroup />,
+                
               },
             ],
         },

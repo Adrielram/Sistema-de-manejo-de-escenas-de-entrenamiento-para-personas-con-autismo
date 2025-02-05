@@ -36,6 +36,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   user_dni,
   item_type, 
   showImage, 
+
   onDelete 
 }) => {
   const router = useRouter();
@@ -66,6 +67,8 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   const handleSeePatients = () => {
     router.push(`${patients_list_path}?group_id=${id}`);
   };
+
+  
 
   const handleComments = () => {
     router.push(`${comments_path}?patient_dni=${id}`);
@@ -137,6 +140,8 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
             Editar
           </button>
         )}
+
+
         {options.supervisionButton && (
           <button
             onClick={handleSupervision}
@@ -188,7 +193,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
       </div>
 
       {/* Icono del tacho de basura */}
-      {showImage && (
+      {showImage && options.trashBin && (
         <div className="flex justify-center w-full mt-2">
           <Image
             width={24}

@@ -97,6 +97,19 @@ class Command(BaseCommand):
             nombre="Terapeuta Uno",
             fecha_nac=datetime(1985, 2, 15),
             genero="F",
+            email="adrielgames2@gmail.com",
+            role="terapeuta",
+            direccion_id_dir=residencias[0]
+        )
+
+        terapeuta2 = User.objects.create(
+            username="terapeuta2",
+            password=make_password("tera123"),
+            dni=1,
+            nombre="Terapeuta Dos",
+            fecha_nac=datetime(1985, 2, 15),
+            genero="M",
+            email="aferrero@alumnos.exa.unicen.edu.ar",
             role="terapeuta",
             direccion_id_dir=residencias[0]
         )
@@ -155,10 +168,24 @@ class Command(BaseCommand):
             centrodesalud_id=centros[0]
         )
 
+        grupo2 = Grupo.objects.create(
+            nombre="Grupo 2",
+            centrodesalud_id=centros[1]
+        )
+
+        grupo3 = Grupo.objects.create(
+            nombre="Grupo 3",
+            centrodesalud_id=centros[0]
+        )
+
         # Link professional to center
         centro_prof = CentroProfesional.objects.create(
             centrodesalud=centros[0],
             profesional=terapeuta
+        )
+        centro_prof2 = CentroProfesional.objects.create(
+            centrodesalud=centros[0],
+            profesional=terapeuta2
         )
 
         # Create condiciones
@@ -295,10 +322,10 @@ class Command(BaseCommand):
         )
         escena_obj_2 = EscenaObjetivo.objects.create(
             escena=escena_4,
-            objetivo=objetivo_2
+            objetivo=objetivo_1
         )
         escena_obj_3 = EscenaObjetivo.objects.create(
-            escena=escena_7,
+            escena=escena_5,
             objetivo=objetivo_3
         )
         escena_obj_4 = EscenaObjetivo.objects.create(
@@ -338,12 +365,12 @@ class Command(BaseCommand):
         # Create person-objective-scene relationship
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_3,
+            escena_objetivo=escena_obj_1,
             orden= 1,
         )
         persona_obj_esc_2 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_4,
+            escena_objetivo=escena_obj_2,
             orden= 2,
         )
         persona_obj_esc_3 = PersonaObjetivoEscena.objects.create(
@@ -352,11 +379,12 @@ class Command(BaseCommand):
         )
         persona_obj_esc_4 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_1,
+            escena_objetivo=escena_obj_3,
+            orden = 1
         )
         persona_obj_esc_5 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_2,
+            escena_objetivo=escena_obj_4,
         )
         persona_obj_esc_6 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
@@ -491,6 +519,14 @@ class Command(BaseCommand):
             progreso=0,
             evaluacion=formulario_2
         )
+        
+        PersonaObjetivoEvaluacion.objects.create(
+            user_id=paciente,
+            objetivo_id=objetivo_4,
+            resultado="Re mal",
+            progreso=0,
+            evaluacion=formulario_2
+        )
 
         # Create group memberships
         Personagrupo.objects.create(
@@ -502,6 +538,12 @@ class Command(BaseCommand):
             user_id=terapeuta,
             grupo_id=grupo
         )
+
+        Personagrupo.objects.create(
+            user_id=terapeuta2,
+            grupo_id=grupo
+        )
+
 
         comentario_respuesta = Comentario.objects.create(
             user=paciente,

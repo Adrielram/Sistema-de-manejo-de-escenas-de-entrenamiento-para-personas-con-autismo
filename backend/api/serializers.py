@@ -76,31 +76,37 @@ class ObjetivoSerializer(serializers.ModelSerializer):
            
        return objetivo
    
-   def update(self, instance, validated_data):
-        # Actualizar los campos básicos
+    def update(self, instance, validated_data):
+        # Actualizar los campos básicos del modelo
         instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.descripcion = validated_data.get('descripcion', instance.descripcion)
         instance.escena = validated_data.get('escena', instance.escena)
         instance.centro_profesional = validated_data.get('centro_profesional', instance.centro_profesional)
+        instance.save()
 
-        # Manejar escenas
+        # Manejar las relaciones con 'escenas'
         if 'escenas' in validated_data:
+            escenas_data = validated_data.pop('escenas', [])
             # Eliminar las relaciones existentes
             EscenaObjetivo.objects.filter(objetivo=instance).delete()
             # Crear las nuevas relaciones
-            for escena in validated_data['escenas']:
-                EscenaObjetivo.objects.create(objetivo=instance, escena=escena)
+            for escena_id in escenas_data:
+                EscenaObjetivo.objects.create(
+                    objetivo=instance,
+                    escena_id=escena_id,
+                )
 
-        # Manejar objetivos previos
+        # Manejar las relaciones con 'objetivos'
         if 'objetivos' in validated_data:
+            objetivos_data = validated_data.pop('objetivos', [])
             # Eliminar las relaciones existentes
             Objetivoscumplir.objects.filter(objetivo=instance).delete()
             # Crear las nuevas relaciones
-            for objetivo_previo in validated_data['objetivos']:
+            for objetivo_previo in objetivos_data:
                 Objetivoscumplir.objects.create(objetivo=instance, objetivo_previo=objetivo_previo)
 
-        instance.save()
         return instance
+
 
 class ObjetivoSerializerList(serializers.ModelSerializer):
     class Meta:
@@ -312,7 +318,7 @@ class ComentarioSerializer(serializers.ModelSerializer):
             'visibilidad',
         ]
     
-class VideosvistosSerializer(serializers.ModelSerializer):
+class VideosVistosSerializer(serializers.ModelSerializer):
     class Meta:
         model = Videosvistos
         fields = ['id', 'paciente_id', 'escena_id', 'fecha', 'like']
