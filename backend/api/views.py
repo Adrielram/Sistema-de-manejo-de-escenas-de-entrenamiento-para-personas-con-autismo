@@ -2672,3 +2672,26 @@ class CambiarVisibilidadComentarioView(APIView):
             return JsonResponse({'error': 'Comentario no encontrado'}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+        
+from django.http import JsonResponse
+import json
+from api.rl_model.utils import get_recommendation
+
+def recommend_scene(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        objetivo_id = data["objetivo_id"]
+        edad = data["edad"]
+        patologias = data["patologias"]        
+
+        recommended_scene = get_recommendation(objetivo_id, edad, patologias)
+
+        return JsonResponse({"scene_id": recommended_scene})
+    
+    except KeyError as e:
+        return JsonResponse({"error": f"Falta el parámetro {str(e)}"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)

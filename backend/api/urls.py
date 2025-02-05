@@ -116,7 +116,8 @@ urlpatterns = [
     path('get_patients_not_in_group/', GetPatientsNotInGroupView.as_view(), name='get_patients_not_in_group'),    
     path('calcular_nota_api/', calcular_nota_api, name='calcular_nota_api'),
     path('update_group_associations/<int:group_id>/', UpdateGroupAssociationsView.as_view(), name='update_group_associations'),
-
+    #IA
+    path("recommend/", recommend_scene, name="recommend_scene"),
 ]
 
 urlpatterns += [path('', include(router.urls))]

@@ -8,7 +8,7 @@ def generar_patologias():
     cantidad = random.randint(0, 5)  # Puede haber de 0 a 5 patologías por registro
     return random.sample(patologias_disponibles, cantidad)
 
-def poblar_registros(cantidad=100):
+def poblar_registros(cantidad=500):
     paciente = User.objects.get(dni=40333444)  # Obtener el paciente específico
     objetivos = list(Objetivo.objects.filter(id__in=range(1, 7)))  # Objetivos del 1 al 6
     escenas = list(Escena.objects.filter(id__in=range(1, 10)))  # Escenas del 1 al 9
@@ -37,4 +37,4 @@ def poblar_registros(cantidad=100):
     print(f"✅ Se insertaron {cantidad} registros en la base de datos.")
 
 # Ejecutar la función
-poblar_registros(100)
+poblar_registros(500)

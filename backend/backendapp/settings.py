@@ -205,6 +205,9 @@ PINECONE_API_KEY = 'pcsk_6RotVr_Nq6iGe36ryodth5paYcaMdtQQowXKKhz4W5gFvChEehTqJ54
 PINECONE_ENV = 'ipathology'
 CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo
 
-#MODELO DE IA
-modelo_ia = None 
 
+from api.rl_model.rl_model_manager import RLModelManager
+
+# Cargar el modelo PPO al iniciar Django
+rl_model_manager = RLModelManager()
+rl_model_manager.load_model()

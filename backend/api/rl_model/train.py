@@ -4,7 +4,7 @@ import shutil
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig, PPO
 from .env import RecommenderEnv
-from django.conf import settings
+from api.rl_model.rl_model_manager import RLModelManager
 # Convertir a ruta absoluta
 CHECKPOINT_DIR = os.path.abspath("api/rl_model/data/checkpoint")
 
@@ -28,19 +28,22 @@ def train_model():
         trainer.restore(CHECKPOINT_DIR)  # Ahora con ruta absoluta
 
     # Entrenar el modelo
-    for i in range(30):
+    for i in range(200):
         result = trainer.train()
-        print(f"Iteración: {result['training_iteration']}")
+        print(f"Iteración: {result['training_iteration']} - Total loss: {result['total_loss']}")
 
     # Borrar el checkpoint anterior si existe
     if os.path.exists(CHECKPOINT_DIR):
-        shutil.rmtree(CHECKPOINT_DIR)
-
-    # Guardar el nuevo checkpoint
-    checkpoint_path = trainer.save(CHECKPOINT_DIR)
-    settings.modelo_ia = PPO.from_checkpoint(checkpoint_path.checkpoint.path)
-
-    print(f"MODELO DE IA: {settings.modelo_ia}")
-    print(f"Nuevo checkpoint guardado en: {CHECKPOINT_DIR}")
+        shutil.rmtree(CHECKPOINT_DIR)    
+    
+    trainer.save(CHECKPOINT_DIR)        
+    # Esperar hasta que el checkpoint esté completamente disponible
+    import time
+    time.sleep(1)
+    
+    # Actualizar el modelo global con el nuevo checkpoint
+    rl_manager = RLModelManager()
+    rl_manager.update_model()
+    print("Modelo actualizado en memoria.")
 
     return CHECKPOINT_DIR

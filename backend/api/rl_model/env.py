@@ -14,7 +14,7 @@ class RecommenderEnv(gym.Env):
         self.data_folder = os.path.join(os.path.dirname(__file__), "data")
         self.dataset = self.load_latest_csv()
 
-        self.num_escenas = self.dataset["Escena"].nunique()
+        self.num_escenas = self.dataset["Escena"].max()
         self.unique_patologias = sorted({int(x) for sublist in self.dataset["Patologias"].apply(safe_eval) for x in sublist})
         self.num_patologias = len(self.unique_patologias)
         self.observation_space = spaces.Box(low=0, high=1, shape=(2 + self.num_patologias + self.num_escenas,), dtype=np.float32)
