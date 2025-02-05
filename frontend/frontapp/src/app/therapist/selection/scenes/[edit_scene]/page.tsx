@@ -30,7 +30,13 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
 
     const fetchScene = async () => {
       try {
-        const response = await fetch(`${baseUrl}escenaById/${sceneId}/`);
+        const response = await fetch(`${baseUrl}escenaById/${sceneId}/`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+        });
         if (!response.ok) {
           throw new Error("Error al obtener los datos de la escena");
         }

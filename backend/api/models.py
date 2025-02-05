@@ -222,7 +222,6 @@ class Condicion(models.Model):
     id = models.AutoField(primary_key=True)
     edad = models.IntegerField(blank=True, null=True)
     objetivo = models.ForeignKey('Objetivo', on_delete=models.CASCADE, null=True)
-    escena = models.OneToOneField('Escena',related_name='condiciones', on_delete=models.CASCADE, null=True)
     fecha = models.DateTimeField(blank=True, null=True)
     class Meta:
         db_table = 'condicion'
@@ -393,7 +392,13 @@ class Pregunta(models.Model):
     texto = models.CharField(max_length=255)
     tipo = models.CharField(max_length=20, choices=TIPOS_PREGUNTA)
     correcta = models.CharField(max_length=255, blank=True, null=True)  # Solo para verificación automática
-
+    escena = models.ForeignKey(
+        Escena, 
+        blank=True,
+        on_delete=models.PROTECT, 
+        related_name='nombre_escena',
+        null = True
+    )
     def __str__(self):
         return self.texto
     

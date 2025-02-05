@@ -8,7 +8,6 @@ interface DropdownProps {
   listName: string; // Nombre de la lista
   onSelect?: (selectedItem: string) => void; // Callback al seleccionar un ítem
 }
-
 const DropDownList: React.FC<DropdownProps> = ({ listName, items, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);

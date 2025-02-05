@@ -100,6 +100,7 @@ const PatientForms: React.FC = () => {
             edit_path="/therapist/selection/assesments/"
             revision_path="/therapist/selection/group_of_patients/patients/forms/revision/" 
             item_type="patient"
+            user_dni={patient_dni}
             showImage={showImage}
             currentPage={currentPage}
             totalItems={totalItems}

@@ -1,5 +1,10 @@
 from pathlib import Path
 from datetime import timedelta #Para sesion
+#import os
+#from dotenv import load_dotenv
+
+#dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "frontapp", ".env.local"))
+#load_dotenv(dotenv_path)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +25,16 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     'backend',  # Nombre del servicio en Docker Compose
+    '*',
 ]
+
+
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    "channels",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -37,6 +46,19 @@ INSTALLED_APPS = [
     "corsheaders",
     'django_filters',
 ]
+
+# Configuración de Channels
+ASGI_APPLICATION = 'backendapp.asgi.application'
+
+# Configuración de Redis
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -68,6 +90,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backendapp.wsgi.application"
 
+# LOGGER PARA PODER IMPRIMIR X CONSOLA EN VIEWS.PY
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -115,6 +154,8 @@ USE_I18N = True
 
 USE_TZ = True
 
+API_URL = "http://localhost:8000/api/"
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -129,10 +170,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 #CODIGO PARA SESION
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+#        'api.authentication.CookieJWTAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+#    'DEFAULT_PERMISSION_CLASSES': [
+#       'rest_framework.permissions.IsAuthenticated',
+#   ],
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
+
+
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Duración del token de acceso
@@ -143,9 +190,14 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'dni',  # Cómo se llamará el campo en el token JWT ESTO SE HIZO PARA QUE ANDE EL SERIALIZER AL MOMENTO DE UTILIZAR COOKIES
 }
 CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Dirección de tu frontend (Next.js en desarrollo)
     "http://frontend:3000",  # Nombre del servicio en Docker Compose
+]
+
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000/',  # Dominio del frontend
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -161,3 +213,19 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
+
+## PINECONE 
+
+PINECONE_API_KEY = 'pcsk_6RotVr_Nq6iGe36ryodth5paYcaMdtQQowXKKhz4W5gFvChEehTqJ54usNdnHDT2ejXvcH'
+PINECONE_ENV = 'ipathology'
+CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Servidor SMTP de Gmail
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER="centrocasabella54@gmail.com"   
+EMAIL_HOST_PASSWORD='hlor hwyu icgr kiae'       
+
+GEMINI_API_KEY="AIzaSyBWoI7vFiDGIUlJrP5QgZV7wT1G1nviNAE"

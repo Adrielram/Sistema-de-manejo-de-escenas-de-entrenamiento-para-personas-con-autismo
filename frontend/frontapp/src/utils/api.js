@@ -14,6 +14,7 @@ export const create_objetivo = async (nuevoObjetivo) => {
               descripcion: nuevoObjetivo.descripcion,
               escenaId: nuevoObjetivo.escenaId
           }),
+          credentials: 'include'
       });
 
       const data = await response.json();
@@ -49,6 +50,7 @@ export const create_scene = async (nuevaEscena) => {
                 complejidad:nuevaEscena.complejidad,
                 link: nuevaEscena.link
             }),
+            credentials: 'include'
         });
   
         const data = await response.json();
@@ -67,6 +69,28 @@ export const create_scene = async (nuevaEscena) => {
     }
   };
 
+
+  export const enviarFormulario = async (formulario) => {
+    try {
+      const respuesta = await fetch(`${baseUrl}formularios/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formulario),
+      }); 
+      const data = await respuesta.json();
+      if (respuesta.status === 201) {
+          return { success: true, data };
+      } else {
+          return { success: false, error: data.error || 'No se pudo crear el formulario' };
+      }
+    } catch (error) {
+      console.error('Error al enviar formulario:', error);
+    }
+  };
+  
+
   export const create_group = async (nuevoGrupo) => {
     try {
         const addGroupUrl = `${baseUrl}create_patient_group/`;    
@@ -83,6 +107,7 @@ export const create_scene = async (nuevaEscena) => {
                 pacientes: nuevoGrupo.pacientes || [], // Incluimos pacientes si los hay
                 terapeutas: nuevoGrupo.terapeutas || [] // Incluimos terapeutas si los hay
             }),
+            credentials: 'include'
         });
   
         const data = await response.json();

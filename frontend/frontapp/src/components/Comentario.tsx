@@ -1,114 +1,158 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-
-const comentarios = [
-  { id: 1, texto: "Este es el primer comentario" },
-  { id: 2, texto: "Otro comentario importante" },
-  { id: 3, texto: "Este objetivo es clave para el proyecto" },
-];
-
-const objetivos = [
-  { id: 1, texto: "Hablar en una plaza con paqui" },
-  { id: 2, texto: "Hablar en una plaza con paqui otra vez" },
-];
-
-const Comentario = () => {
-  const [objetivoAbierto, setObjetivoAbierto] = useState<number | null>(null);
+const Comentario = ({dni}) => {
+  
+  const [escenas, setEscenas] = useState<any[]>([]);
   const [comentarioActivo, setComentarioActivo] = useState<number | null>(null);
 
-  const toggleDesplegarObjetivo = (id : number) => {
-    setObjetivoAbierto((prev) => (prev === id ? null : id)); // Alterna el estado del objetivo
-    setComentarioActivo(null); // Cierra cualquier comentario abierto cuando se cambia de objetivo
+  
+  const fetchComentarios = async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${baseUrl}paciente/${dni}/comentarios/`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Error al obtener los comentarios");
+      }
+      const data = await response.json();
+      setEscenas(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  
+  const fetchBorrarComentario = async (id) => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${baseUrl}comentarios/borrar/${id}/`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Error al borrar el comentario");
+      }
+      alert("Comentario eliminado exitosamente");
+      setEscenas((prevEscenas) =>
+        prevEscenas.map((escena) => ({
+          ...escena,
+          comentarios: escena.comentarios.filter((comentario) => comentario.id !== id),
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const toggleEngranaje = (id : number) => {
-    setComentarioActivo((prev) => (prev === id ? null : id)); // Alterna el comentario activo
+  const actualizarVisibilidadLocal = (id, nuevaVisibilidad) => {
+    setEscenas((prevEscenas) =>
+      prevEscenas.map((escena) => ({
+        ...escena,
+        comentarios: escena.comentarios.map((comentario) =>
+          comentario.id === id
+            ? { ...comentario, visibilidad: nuevaVisibilidad }
+            : comentario
+        ),
+      }))
+    );
+  };
+  
+  // Modifica fetchCambiarVisibilidad para actualizar el estado local
+  const fetchCambiarVisibilidad = async (id, visibilidad) => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${baseUrl}comentarios/cambiar-visibilidad/${id}/`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ visibilidad }),
+      });
+      if (!response.ok) {
+        throw new Error("Error al cambiar la visibilidad");
+      }
+      const data = await response.json();
+      console.log("Visibilidad actualizada:", data);
+  
+      // Actualizar estado local
+      actualizarVisibilidadLocal(id, visibilidad);
+      alert("Visibilidad actualizada correctamente");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  
+
+  useEffect(() => {
+    if (!dni) return;  
+    fetchComentarios();
+  }, [dni]);
+  
+
+  const toggleEngranaje = (id: number) => {
+    setComentarioActivo((prev) => (prev === id ? null : id));
   };
 
   return (
-    
     <div>
-      {objetivos.map((objetivo) => (
-        <div
-          key={objetivo.id}
-          className="flex flex-col w-full bg-greens-light_green shadow-2xl rounded-lg p-4 mb-4"
-        >
-          {/* Cabecera del objetivo */}
-          <div className="flex flex-row items-center justify-between w-full">
-            <div className="flex flex-col justify-center">
-              <p className="font-bold text-black">
-                COMENTARIOS OBJETIVO {objetivo.id}
-              </p>
-              <p className="ml-3 text-black">DESCRIPCIÓN DEL OBJETIVO: {objetivo.texto} </p>
-            </div>
-
-            <Image
-              src="/menu_desplegable.png"
-              alt="Menu Desplegable"
-              width={40}
-              height={40}
-              className="cursor-pointer"
-              onClick={() => toggleDesplegarObjetivo(objetivo.id)} 
-            />
-          </div>
-
-          {/* Lista de comentarios del objetivo */}
-          {objetivoAbierto === objetivo.id && (
-            <div className="flex flex-col gap-4 mt-4">
-              {comentarios.map((comentario) => (
-                <div
-                  key={comentario.id}
-                  className="flex flex-col bg-white p-3 rounded-lg shadow-md"
-                >
-                  {/* Cabecera del comentario */}
-                  <div className="flex flex-row items-center justify-between">
-                    <div className="flex items-center">
-                      <Image
-                        src="/engranaje.png"
-                        alt="Engranaje"
-                        width={30}
-                        height={30}
-                        className="cursor-pointer"
-                        onClick={() => toggleEngranaje(comentario.id)} // Alterna el engranaje del comentario
-                      />
-                      <p className="ml-4 text-black font-medium">{comentario.texto}</p>
-                    </div>
-                  </div>
-
-                  {/* Detalles del comentario */}
-                  {comentarioActivo === comentario.id && (
-                    <div className="mt-3 p-3 bg-gray-100 rounded-lg shadow-inner">
-                      <div className="flex items-center justify-between">
-                        <p className="font-bold text-black">VISIBILIDAD</p>                       
-                      </div>
-                      <div className="flex flex-col mt-2">
-                        <label className="text-black">
-                            <input
-                            type="radio"
-                            name="visibilidad" // Usar el mismo "name" agrupa los botones
-                            className="mr-2"
-                            />
-                            PUBLICO
-                        </label>
-                        <label className="text-black">
-                            <input
-                            type="radio"
-                            name="visibilidad"
-                            className="mr-2"
-                            />
-                            PRIVADO
-                        </label>
-                        </div>
-                      <button className="mt-3 text-red-500 font-bold">
-                        BORRAR COMENTARIO
-                      </button>
-                    </div>
-                  )}
+      {escenas.map((escena) => (
+        <div key={escena.escena} className="flex flex-col w-full m-2 bg-greens-light_green shadow-2xl rounded-lg p-4 mb-4">
+          <p className="font-bold text-black">ESCENA: {escena.escena}</p>
+          {escena.comentarios.map((comentario) => (
+            <div key={comentario.id} className="flex flex-col bg-white p-3 rounded-lg shadow-md mt-2 mb-2">
+              <div className="flex flex-row items-center justify-between">
+                <div className="flex items-center">
+                  <Image
+                    src="/engranaje.png"
+                    alt="Engranaje"
+                    width={30}
+                    height={30}
+                    className="cursor-pointer"
+                    onClick={() => toggleEngranaje(comentario.id)}
+                  />
+                  <p className="ml-4 text-black font-medium">{comentario.texto}</p>
                 </div>
-              ))}
+              </div>
+
+              {comentarioActivo === comentario.id && (
+                <div className="mt-3 p-3 bg-gray-100 rounded-lg shadow-inner">
+                  <div className="flex items-center justify-between">
+                    <p className="font-bold text-black">VISIBILIDAD</p>
+                  </div>
+                  <div className="flex flex-col mt-2">
+                  <label className="text-black">
+                    <input
+                      type="radio"
+                      name={`visibilidad-${comentario.id}`}
+                      className="mr-2"
+                      defaultChecked={comentario.visibilidad}
+                      onChange={() => fetchCambiarVisibilidad(comentario.id, true)}
+                    />
+                    PUBLICO
+                  </label>
+                  <label className="text-black">
+                    <input
+                      type="radio"
+                      name={`visibilidad-${comentario.id}`}
+                      className="mr-2"
+                      defaultChecked={!comentario.visibilidad}
+                      onChange={() => fetchCambiarVisibilidad(comentario.id, false)}
+                    />
+                    PRIVADO
+                  </label>
+                  </div>
+                  <button className="mt-3 text-red-500 font-bold"
+                          onClick={() => fetchBorrarComentario(comentario.id)}
+                  >
+                    BORRAR COMENTARIO
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          ))}
         </div>
       ))}
     </div>

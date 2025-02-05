@@ -10,9 +10,10 @@ import {useRouter} from 'next/navigation';
 import React from 'react';
 
 export default React.memo(function Header() {
+export default function Header({ token }: { token?: string }) {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { center } = useSelector((state: RootState) => state.user)
+  const { center } = useSelector((state: RootState) => state.user);
   
   const { username, isLoggedIn, role } = useSelector((state: RootState) => state.user);
   const handleLogout = async () => {
@@ -74,6 +75,7 @@ export default React.memo(function Header() {
             {role === 'terapeuta' || role === 'Admin' ? (
             <NotificationMenu />
             ) : null}
+
           </>
         ) : (
           <>
