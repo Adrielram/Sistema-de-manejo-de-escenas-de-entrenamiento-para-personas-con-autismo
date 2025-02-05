@@ -123,7 +123,7 @@ export default function RegisterForm() {
     e.preventDefault();
     setError('');
     setSuccess(false);
-    if (!sintomasEnviados) {
+    if (formData.rol === 'Paciente' && !sintomasEnviados) {
       setError('Debe enviar sus síntomas antes de registrarse.');
       return;
     }

@@ -699,4 +699,11 @@ class Command(BaseCommand):
         escena_9.condicion = condicion1
         escena_9.save()
 
+        Notificacion.objects.create(
+            destinatario=terapeuta,
+            remitente=paciente,
+            mensaje="EL PACIENTE 1 SE TA PORTANDO MALLLL",
+            estado="Pendiente",
+        )
+
         self.stdout.write(self.style.SUCCESS('Successfully loaded sample data'))

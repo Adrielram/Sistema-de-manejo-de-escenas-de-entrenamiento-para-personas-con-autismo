@@ -3400,7 +3400,7 @@ class GroupDetailView(generics.RetrieveDestroyAPIView):
 
 @api_view(['GET'])
 #@authentication_classes([CookieJWTAuthentication])
-@permission_classes([AllowAny])
+#@permission_classes([AllowAny])
 def obtener_notificaciones_pendientes(request):
     # Filtrar notificaciones pendientes para el usuario actual
     notificaciones = Notificacion.objects.filter(
@@ -3415,7 +3415,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Notificacion
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def obtener_detalle_notificacion(request, pk):
     try:
         # Buscar la notificación por id y asegurarse de que pertenece al usuario autenticado
@@ -3438,7 +3438,7 @@ from api.models import User
 from .models import Notificacion
 from api.notificaciones.utils import actualizar_notificacion 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 
 def procesar_notificacion(request, pk, accion):
     """
