@@ -45,7 +45,7 @@ export default function Therapist() {
     if (username) {
       fetchAssociatedCenters();
     }
-}, [username, associatedCenters]); // Agrega associatedCenters como dependencia
+}, [username, associatedCenters, fetchAssociatedCenters]); // Agrega associatedCenters como dependencia
 
 
   const handleSubmitOfAssociation = async (event: React.FormEvent) => {

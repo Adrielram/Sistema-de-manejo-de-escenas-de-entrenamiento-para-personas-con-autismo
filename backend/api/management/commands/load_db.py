@@ -254,8 +254,7 @@ class Command(BaseCommand):
             link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
             nombre="Escena 7",
             descripcion = "Esta escena es la de openai"
-            nombre="Escena 7",
-            descripcion = "Esta escena es la de openai"
+
         )
         escena_8 = Escena.objects.create(
             idioma="Español",
@@ -264,8 +263,7 @@ class Command(BaseCommand):
             link="https://drive.google.com/file/d/1qzY31odKmd2FlrjU0VK4dkfezlzEcoaJ/preview",
             nombre="Escena 8",
             descripcion = "Esta escena es la de futgame"
-            nombre="Escena 8",
-            descripcion = "Esta escena es la de futgame"
+   
         )
         escena_9 = Escena.objects.create(
             idioma="Español",
@@ -274,8 +272,7 @@ class Command(BaseCommand):
             link="https://drive.google.com/file/d/1yPgHYRagTJXTqlrGhNkZDEy5zNY4-f77/preview",
             nombre="Escena 9",
             descripcion = "Esta escena es la del cartpole"
-            nombre="Escena 9",
-            descripcion = "Esta escena es la del cartpole"
+
         )
 
         # Create objectives
@@ -292,7 +289,6 @@ class Command(BaseCommand):
             centro_profesional=centro_prof
         )
         objetivo_3 = Objetivo.objects.create(
-            nombre="Este es el que funca (messi)",
             nombre="Este es el que funca (messi)",
             descripcion="Tenes que vencer a goku",
             escena=escena_5,
@@ -338,11 +334,10 @@ class Command(BaseCommand):
         escena_obj_4 = EscenaObjetivo.objects.create(
             escena=escena_8,
             objetivo=objetivo_3   
-            objetivo=objetivo_3   
+
         )
         escena_obj_5 = EscenaObjetivo.objects.create(
             escena=escena_9,
-            objetivo=objetivo_3
             objetivo=objetivo_3
         )
         escena_obj_6 = EscenaObjetivo.objects.create(
@@ -361,11 +356,8 @@ class Command(BaseCommand):
             escena=escena_4,
             objetivo=objetivo_3
         )
-        escena_obj_10 = EscenaObjetivo.objects.create(
-            escena=escena_5,
-            objetivo=objetivo_3
-        )
-        escena_obj_11 = EscenaObjetivo.objects.create(
+
+        escena_obj_1 = EscenaObjetivo.objects.create(
             escena=escena_5,
             objetivo=objetivo_4
         )
@@ -413,15 +405,7 @@ class Command(BaseCommand):
             user_id=paciente,
             escena_objetivo=escena_obj_9,
         )
-        persona_obj_esc_10 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_10,
-        )
-        persona_obj_esc_11 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_11,
-            orden = 5
-        )
+
 
 
 
@@ -432,7 +416,6 @@ class Command(BaseCommand):
             creado_por=terapeuta,
             fecha_creacion=datetime.now()
         )
-        formulario_2= Formulario.objects.create(
         formulario_2= Formulario.objects.create(
             nombre="Formulario 2",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",

@@ -9,7 +9,7 @@ import { RootState } from "../../store/store"; // Asegúrate de importar el tipo
 import {useRouter} from 'next/navigation';
 import React from 'react';
 
-export default function Header({ token }: { token?: string }) {
+export default function Header({  }: { token?: string }) {
   const dispatch = useDispatch();
   const router = useRouter();
   const { center } = useSelector((state: RootState) => state.user);
@@ -72,7 +72,7 @@ export default function Header({ token }: { token?: string }) {
               Cerrar sesión
             </button>
             {role === 'terapeuta' || role === 'Admin' ? (
-            <NotificationMenu />
+            <NotificationMenu token={undefined} />
             ) : null}
           </>
         ) : (
@@ -96,4 +96,4 @@ export default function Header({ token }: { token?: string }) {
       </div>
     </nav>
   );
-})
+}
