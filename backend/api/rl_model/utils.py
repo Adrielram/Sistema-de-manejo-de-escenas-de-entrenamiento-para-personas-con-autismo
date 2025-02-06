@@ -20,7 +20,8 @@ def create_observation(objetivo_id, edad, patologias, num_patologias, num_escena
     Ajusta los índices de los datos correctamente.
     """   
 
-    objetivo_id = (objetivo_id - 1) / (max_objetivo_id - 1)
+    objetivo_id = float((objetivo_id - 1) / (max_objetivo_id - 1))
+    print("OBJETIVO_ID observacion: ",objetivo_id)
 
     # Vector de patologías en formato one-hot
     patologias_one_hot = np.zeros(num_patologias)
@@ -51,7 +52,7 @@ def get_recommendation(objetivo_id, edad, patologias):
     Obtiene una recomendación basada en el modelo de IA almacenado en `settings.modelo_ia`.
     """
     # Definir el número de patologías fijo
-    num_patologias = 12
+    num_patologias = 2
 
     # Cargar dataset y calcular el número máximo de escenas
     if not os.path.exists(DATASET_PATH):
@@ -72,7 +73,7 @@ def get_recommendation(objetivo_id, edad, patologias):
     if rl_manager.model is None:
         raise ValueError("El modelo no esta cargado")
     else:
-        result = rl_manager.model.compute_single_action(observation, explore=True, full_fetch=True)
+        result = rl_manager.model.compute_single_action(observation, explore=False, full_fetch=True)
         print("Resultado completo:", result)        
         action = result[0]        
         return int(action) + 1

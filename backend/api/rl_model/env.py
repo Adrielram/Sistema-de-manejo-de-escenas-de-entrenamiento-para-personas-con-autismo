@@ -44,14 +44,18 @@ class RecommenderEnv(gym.Env):
 
         # Ajustar índices para que comiencen en 0
         df["Objetivo ID"] -= 1    
-        df["Patologias"] = df["Patologias"].apply(lambda x: [int(p)-1 for p in safe_eval(x)])  # Restar 1 a cada patología
-
+        df["Patologias"] = df["Patologias"].apply(lambda x: [int(p)-1 for p in safe_eval(x)] if isinstance(x, str) and x else [])
+        print("Dataset: ",df)
         return df
 
 
     def reset(self, seed=None, options=None):
         sample = self.dataset.sample(1).iloc[0]
-        self.objetivo_id = float(sample["Objetivo ID"]) / self.dataset["Objetivo ID"].max()
+        print("Sample: ",sample)
+        # Guardar el objetivo_id original
+        self.objetivo_id_original = sample["Objetivo ID"]  # Sin normalizar
+        self.objetivo_id_normalizado = float((self.objetivo_id_original) / self.dataset["Objetivo ID"].max())  # Normalizado
+    
         self.edad = float(sample["Edad"]) / 100.0
         patologias = safe_eval(sample["Patologias"])
         self.patologias_one_hot = np.zeros(self.num_patologias)
@@ -61,17 +65,37 @@ class RecommenderEnv(gym.Env):
                 self.patologias_one_hot[p] = 1
             else:
                 print(f"Advertencia: Patología {p} fuera de rango.")
+        print("Self.patologias_one_hot: ",self.patologias_one_hot)
         self.escenas_vistas = np.zeros(self.num_escenas)
-        self.state = np.concatenate([[self.objetivo_id, self.edad], self.patologias_one_hot, self.escenas_vistas])
+        self.neg_recompensas = 0
+        self.state = np.concatenate([[self.objetivo_id_normalizado, self.edad], self.patologias_one_hot, self.escenas_vistas])
         return self.state.astype(np.float32), {}
 
-    def step(self, action):
+    def step(self, action):     
+        action = int(action)
         subset = self.dataset[
-            (self.dataset["Objetivo ID"] == int(self.objetivo_id * self.dataset["Objetivo ID"].max())) &
-            (self.dataset["Escena"] == action)
-        ]
-        recompensa = subset["Evaluacion"].values[0] / 100.0 if not subset.empty else -1
+            (self.dataset["Objetivo ID"] == self.objetivo_id_original) &
+            (self.dataset["Escena"] == action+1)
+        ]         
+        
+        if not subset.empty:
+            recompensa = subset["Evaluacion"].max() / 100.0        
+            print("Recompensa subset no vacio: ",recompensa)    
+        else:
+            recompensa = -1   
         self.escenas_vistas[action] = 1
-        self.state = np.concatenate([[self.objetivo_id, self.edad], self.patologias_one_hot, self.escenas_vistas])
-        return self.state.astype(np.float32), recompensa, False, False, {}
+        max_escenas_vistas = 10  
+        done = np.sum(self.escenas_vistas) >= max_escenas_vistas  
+
+        if recompensa == -1:
+            self.neg_recompensas += 1  
+        else:
+            self.neg_recompensas = 0  
+
+        if self.neg_recompensas >= 3:
+            done = True  
+
+        print("DONE:", done)  # 🔥 Verifica que done sea True en algún momento
+        self.state = np.concatenate([[self.objetivo_id_normalizado, self.edad], self.patologias_one_hot, self.escenas_vistas])
+        return self.state.astype(np.float32), recompensa, done, False, {}
 
