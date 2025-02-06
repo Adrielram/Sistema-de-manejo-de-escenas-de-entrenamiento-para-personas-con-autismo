@@ -30,7 +30,8 @@ def train_model():
     # Entrenar el modelo
     for i in range(200):
         result = trainer.train()
-        print(f"Iteración: {result['training_iteration']} - Total loss: {result['total_loss']}")
+        print("RESULT:  ", result)
+        print(f"Iteración: {result['training_iteration']}")
 
     # Borrar el checkpoint anterior si existe
     if os.path.exists(CHECKPOINT_DIR):
