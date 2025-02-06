@@ -81,6 +81,7 @@ urlpatterns = [
 
     path('get_groups_per_user_not_in/', GetGroupsPerUserNotInView.as_view(), name='get_groups_per_user_not_in'),
     path('getTherapistsExcluding/<str:username>/', GetTherapistsExcludingView.as_view(), name='getTherapistsExcluding'),
+    path('patients/', GetPacienteView.as_view(), name='get_paciente'),
     ]
 
 urlpatterns += [path('', include(router.urls))]

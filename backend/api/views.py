@@ -29,6 +29,40 @@ import json
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.generics import UpdateAPIView
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
+from .models import User
+from .serializers import PacienteSerializer
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from django.db.models import Q
+from .models import User
+from .serializers import PacienteSerializer
+
+class GetPacienteView(APIView):
+    def get(self, request):
+        search_term = request.GET.get("dni_o_nombre", "").strip()
+
+        if not search_term:
+            return Response({"error": "Debe proporcionar un DNI o nombre para la búsqueda"}, status=400)
+
+        # Filtrar por DNI o nombre
+        pacientes = User.objects.filter(
+            Q(dni__icontains=search_term) | Q(nombre__icontains=search_term),
+            role="paciente"
+        )
+
+        if not pacientes.exists():
+            return Response({"error": "No se encontraron pacientes"}, status=404)
+
+        # Serializar la lista de pacientes
+        serializer = PacienteSerializer(pacientes, many=True)
+        return Response(serializer.data, status=200)
+
+
 
 class DynamicPagination(PageNumberPagination):
     page_size_query_param = "limit"

@@ -25,6 +25,7 @@ interface BoxPaginadoProps {
   onPageChange: (page: number) => void;
   itemsPerPage: number;
   onItemDeleted?: (id: string) => void;
+  onSelect?: (id: string) => void; // Agrega esta línea
 }
 
 export default function BoxPaginado({ 
