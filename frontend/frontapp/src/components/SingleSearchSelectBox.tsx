@@ -33,14 +33,13 @@ const SingleSearchSelectBox = ({
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        `${apiUrl}?nombre=${encodeURIComponent(searchValue)}`
+      const response = await fetch(`${apiUrl}?nombre=${encodeURIComponent(searchValue)}`
       );
       if (!response.ok) {
         throw new Error("Error al cargar las escenas.");
       }
       const data = await response.json();
-        
+
       // Update items based on whether we're resetting or loading more
       setItems(prevItems => 
         resetResults ? data.results : [...prevItems, ...data.results]

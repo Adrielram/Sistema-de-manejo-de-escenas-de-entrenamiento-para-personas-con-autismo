@@ -165,7 +165,7 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
             />
 
             <SearchSelectBox
-              title="Buscar Objetivos"
+              title="Buscar SubObjetivos"
               searchPlaceholder="Escribe el nombre del objetivo..."
               getItemLabel={(item) => item.nombre as string}
               selectedItems={selectedObjectives}

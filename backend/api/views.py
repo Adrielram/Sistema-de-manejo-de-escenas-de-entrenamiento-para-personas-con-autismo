@@ -113,12 +113,54 @@ def verify_session(request):
         }, status=200)
     except Exception as e:
         return Response({"message": "Token inválido o expirado"}, status=401)
-    
+
+class UnassignPathologyView(generics.DestroyAPIView):
+    def delete(self, request, *args, **kwargs):
+        user_id = request.data.get('user_id')
+        patologia_id = request.data.get('patologia_id')
+        
+        if not user_id or not patologia_id:
+            return Response({"error": "Se requieren user_id y patologia_id"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        patologia = get_object_or_404(PersonaPatologia, user_id=user_id, patologia_id=patologia_id)
+        patologia.delete()
+        
+        return Response({"message": "Patología desasignada correctamente"}, status=status.HTTP_200_OK)
+
+
+class AssignPathologyView(APIView):
+    def post(self, request, *args, **kwargs):
+        user_id = request.data.get('user_id')
+        patologia_id = request.data.get('patologia_id')
+
+        if not user_id or not patologia_id:
+            return Response({'error': 'Faltan datos requeridos'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(dni=user_id)
+            patologia = Patologia.objects.get(id=patologia_id)
+            
+            persona_patologia, created = PersonaPatologia.objects.update_or_create(
+                user_id=user,
+                patologia_id=patologia,
+            )
+            
+            return Response({'message': 'Patología asignada correctamente'}, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+        
+        except User.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        except Patologia.DoesNotExist:
+            return Response({'error': 'Patología no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+        except ValidationError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 def objetivos_list(request):
     objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
     return JsonResponse(list(objetivos), safe=False)
 
+def patologias_list(request):
+    patologias = Patologia.objects.all().values()  # Obtiene todos los objetivos 
+    return JsonResponse(list(patologias), safe=False)
 class PacienteListView(APIView):
     def get(self, request):
         query = request.query_params.get('query', '').lower()  # Parámetro de búsqueda
@@ -867,6 +909,29 @@ class DisassociateCenterView(generics.CreateAPIView):
             return Response({
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
+
+class GetPathologiesFromUserView(generics.RetrieveAPIView):
+    serializer_class = PatologiaSerializer
+
+    def get(self, request, *args, **kwargs):
+        user_id = self.kwargs.get('user_id')
+        
+        if not user_id:
+            return Response({
+                'error': 'Se requiere el parámetro username'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            patologias_fk = PersonaPatologia.objects.filter(user_id=user_id)
+            patologias = Patologia.objects.filter(id__in=patologias_fk.values_list('patologia_id', flat=True))
+            serializer = self.get_serializer(patologias, many=True)
+            return Response(serializer.data)
+
+        except User.DoesNotExist:
+            return Response({
+                'error': 'Usuario no encontrado'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
 
 class GetCentroProfesionalView(generics.RetrieveAPIView):
     serializer_class = ProfesionalCentroSerializer

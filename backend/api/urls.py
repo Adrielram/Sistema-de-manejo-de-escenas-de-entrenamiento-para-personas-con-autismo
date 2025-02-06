@@ -16,6 +16,8 @@ urlpatterns = [
     path('logout/', logout, name='logout'),
     path('verify-session/', verify_session, name='verify-session'),
     path('objetivos/', objetivos_list, name='listar_objetivos'),
+    path('patologias/', patologias_list, name='listar_patologias'),
+
     path('pacientes/', PacienteListView.as_view(), name='paciente-list'),
     path('objetivo/<int:objetivo_id>/', get_goal_data, name='get_goal_data'),
     path('signIn/', views.signIn, name='signIn'),
@@ -80,9 +82,12 @@ urlpatterns = [
     path('get_patients_not_in_group/', GetPatientsNotInGroupView.as_view(), name='get_patients_not_in_group'),
     path('get_therapists_not_in_group/', GetTherapistsNotInGroupView.as_view(), name='get_therapists_not_in_group'),
     path('get_patients/', GetPatientsView.as_view(), name='get_patients'),
-
+    path('get_pathologies_from_user/<int:user_id>/', GetPathologiesFromUserView.as_view(), name='get_pathologies_from_user'),
     path('get_groups_per_user_not_in/', GetGroupsPerUserNotInView.as_view(), name='get_groups_per_user_not_in'),
     path('getTherapistsExcluding/<str:username>/', GetTherapistsExcludingView.as_view(), name='getTherapistsExcluding'),
+    path('assign-pathology/', AssignPathologyView.as_view(), name='assign-pathology'),
+    path('unassign-pathology/', UnassignPathologyView.as_view(), name='unassign-pathology'),
+
     ]
 
 urlpatterns += [path('', include(router.urls))]

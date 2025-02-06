@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import AssignedObjectives from '../../../../../../components/AssignedObjectives';
 import { SceneWithOrder } from '../../../../../../types';
 import SortableSearchSelectBox from '../../../../../../components/SortableSearchSelectBox';
+import UserPathologies from '../../../../../../components/UserPathologies';
 interface Objetivo{
   id: number;
   nombre: string;
@@ -143,6 +144,8 @@ const EditPatient: React.FC<{ params: Promise<{ patient_id: string }> }> = ({ pa
       )}
 
       <AssignedObjectives patientId={patientId} />
+      <UserPathologies userId={patientId} />
+      
     </div>
   );
 };

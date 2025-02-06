@@ -4,6 +4,7 @@ import SingleSearchSelectBox from "../../../../../components/SingleSearchSelectB
 import SearchSelectBox from "../../../../../components/SearchSelectBox";
 import { useSelector } from 'react-redux';
 import { RootState } from "../../../../../../store/store";
+import { useRouter } from 'next/navigation';
 //import { SceneWithOrder } from "../../../../../types"
 
 const CreateObjetivo: React.FC = () => {
@@ -15,7 +16,8 @@ const CreateObjetivo: React.FC = () => {
   const [selectedObjectives, setSelectedObjectives] = useState([]);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const { center, username } = useSelector((state: RootState) => state.user)
-
+  const router = useRouter();
+  
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
   
@@ -82,6 +84,8 @@ const CreateObjetivo: React.FC = () => {
       console.log("Objetivo creado con éxito:", data);
       alert("Objetivo creado con éxito.");
       // Here you could redirect or clear the form
+      router.push('/therapist/selection/goals'); // Redirige a una página de listado de escenas
+
     } catch (error) {
       console.error("Network error while creating objetivo:", error);
       alert("Error de red al intentar crear el objetivo.");
@@ -139,14 +143,6 @@ const CreateObjetivo: React.FC = () => {
 
           </div>          
           <div>
-            {/* <SortableSearchSelectBox
-              title="Buscar Escenas"
-              searchPlaceholder="Escribe el nombre de la escena..."
-              getItemLabel={(item) => item.nombre as string}
-              selectedItems={selectedScenes}
-              onSelectItems={setSelectedScenes}
-              apiUrl={`${baseUrl}escenas/`}
-            /> */}
 
             <SearchSelectBox
               title="Buscar Escenas"
@@ -166,16 +162,6 @@ const CreateObjetivo: React.FC = () => {
               apiUrl={`${baseUrl}objetivos-list/`} // URL para los objetivos
             />
 
-            {/* Botón para manejar los IDs seleccionados 
-            <button
-              onClick={() => console.log("Escenas seleccionadas (IDs):", selectedScenes.map((item) => item.id))}
-              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
-              type="button"
-            >
-              Obtener IDs Seleccionados
-            </button>
-             */}
-           
           </div>
 
           {/* Botón de submit a pantalla completa */}
