@@ -84,7 +84,7 @@ class RecommenderEnv(gym.Env):
         else:
             recompensa = -1   
         self.escenas_vistas[action] = 1
-        max_escenas_vistas = 10  
+        max_escenas_vistas = 3  
         done = np.sum(self.escenas_vistas) >= max_escenas_vistas  
 
         if recompensa == -1:

@@ -12,23 +12,25 @@ def train_model():
     ray.shutdown()
     ray.init(ignore_reinit_error=True)
 
-    # Configurar el entrenamiento
     config = (
         PPOConfig()
         .environment(RecommenderEnv)
         .framework("torch")
         .training(
-            train_batch_size=256,  # Reducido para evitar sobreajuste            
-            num_sgd_iter=10,  # Iteraciones en cada batch (menor es más estable)
-            gamma=0.95,  # Descuento para evitar sesgo en recompensas a largo plazo
-            lambda_=0.95,  # Parámetro de ventaja generalizada (GAE)
-            lr=5e-4,  # Aprendizaje moderado (antes de probar tuning)
-            entropy_coeff=0.01,  # Aumentar para evitar convergencia temprana
-            clip_param=0.2,  # PPO clipping estándar
-            vf_loss_coeff=1.0,  # Equilibrar política y función de valor
+            lr=0.0003,  # Reducir el learning rate para más estabilidad
+            train_batch_size=256,  # Batch más grande para estabilidad
+            gamma=0.99,  
+            entropy_coeff=0.01  # Promueve exploración balanceada
         )
-        .resources(num_gpus=0)
+        .resources(num_gpus=0)        
     )
+
+    '''.exploration(exploration_config={ 
+            "type": "EpsilonGreedy",
+            "initial_epsilon": 1.0,  
+            "final_epsilon": 0.05,  
+            "epsilon_timesteps": 500  # Exploración más gradual
+        })'''
 
     # Cargar el último checkpoint si existe
     trainer = config.build()
@@ -38,7 +40,7 @@ def train_model():
 
     # Entrenar el modelo
     # Prueba con 500 iteraciones primero
-    for i in range(100):  
+    for i in range(500):  
         result = trainer.train()
         episode_reward_mean = result['env_runners'].get('episode_reward_mean', None)
         total_loss = result['info']['learner']['default_policy']['learner_stats']['total_loss']
