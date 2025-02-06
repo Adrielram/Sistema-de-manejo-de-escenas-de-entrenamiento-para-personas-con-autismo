@@ -154,17 +154,17 @@ class EscenaSerializer(serializers.ModelSerializer):
         fields = ['id', 'idioma', 'acento', 'condicion', 'complejidad', 'link', 'nombre', 'descripcion']
 
     def create(self, validated_data):
-        # Extract condicion data if present
-        condicion_data = validated_data.pop('condicion', None)
-        
-        # Create Escena instance
-        escena = Escena.objects.create(**validated_data)
-        
-        # Create associated Condicion if data is provided
+        condicion_data = validated_data.pop('condicion', None)  # Extraer datos de la condición si existen
+
+        escena = Escena.objects.create(**validated_data)  # Crear la escena
+
         if condicion_data:
-            Condicion.objects.create(escena=escena, **condicion_data)
+            condicion = Condicion.objects.create(**condicion_data)  # Crear la condición
+            escena.condicion = condicion  # Asociar la condición con la escena
+            escena.save()  # Guardar cambios en la escena
         
         return escena
+
 
     def update(self, instance, validated_data):
         # Extract condicion data if present
@@ -316,6 +316,7 @@ class ComentarioSerializer(serializers.ModelSerializer):
             'visibilidad',
         ]
     
+
 class VideosVistosSerializer(serializers.ModelSerializer):
     class Meta:
         model = Videosvistos

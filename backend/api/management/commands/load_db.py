@@ -351,6 +351,7 @@ class Command(BaseCommand):
         escena_obj_8 = EscenaObjetivo.objects.create(
             escena=escena_3,
             objetivo=objetivo_3
+
         )
         escena_obj_9 = EscenaObjetivo.objects.create(
             escena=escena_4,
@@ -745,6 +746,5 @@ class Command(BaseCommand):
         )
         escena_9.condicion = condicion1
         escena_9.save()
-
 
         self.stdout.write(self.style.SUCCESS('Successfully loaded sample data'))
