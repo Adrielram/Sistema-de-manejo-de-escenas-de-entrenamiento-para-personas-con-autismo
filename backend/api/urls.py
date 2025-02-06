@@ -16,7 +16,6 @@ urlpatterns = [
     path('verify-session/', verify_session, name='verify-session'),
     path('objetivos/', objetivos_list, name='listar_objetivos'),
     path('patologias/', patologias_list, name='listar_patologias'),
-
     path('pacientes/', PacienteListView.as_view(), name='pacientes-list'),
     path('objetivo/<int:objetivo_id>/', get_goal_data, name='get_goal_data'),
     path('health_centers/<int:center_id>/delete/', delete_health_center, name='delete_health_center'),
@@ -31,7 +30,6 @@ urlpatterns = [
     path('get-user/', retrieve_user.as_view(), name='retrieve_user'),
     path('update-user/', update_user.as_view(), name='update_user'),
     path('signIn/', views.signIn, name='signIn'),
-    path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('crear-escena/', views.crear_escena, name='crear_escena'),
     path('escenas/', EscenaListView.as_view(), name='escena-list'),
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
