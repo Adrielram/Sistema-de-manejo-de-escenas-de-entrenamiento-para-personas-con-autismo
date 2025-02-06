@@ -24,10 +24,13 @@ const ScenesPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(
-        `http://localhost:8000/api/get_scenes/?page=${page}`
-      );
-
+      const response = await fetch(`http://localhost:8000/api/get_scenes/?page=${page}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+      });
       if (!response.ok) {
         throw new Error("Error al obtener Las escenas.");
       }

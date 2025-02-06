@@ -97,6 +97,19 @@ class Command(BaseCommand):
             nombre="Terapeuta Uno",
             fecha_nac=datetime(1985, 2, 15),
             genero="F",
+            email="adrielgames2@gmail.com",
+            role="terapeuta",
+            direccion_id_dir=residencias[0]
+        )
+
+        terapeuta2 = User.objects.create(
+            username="terapeuta2",
+            password=make_password("tera123"),
+            dni=1,
+            nombre="Terapeuta Dos",
+            fecha_nac=datetime(1985, 2, 15),
+            genero="M",
+            email="aferrero@alumnos.exa.unicen.edu.ar",
             role="terapeuta",
             direccion_id_dir=residencias[0]
         )
@@ -155,17 +168,30 @@ class Command(BaseCommand):
             centrodesalud_id=centros[0]
         )
 
+        grupo2 = Grupo.objects.create(
+            nombre="Grupo 2",
+            centrodesalud_id=centros[1]
+        )
+
+        grupo3 = Grupo.objects.create(
+            nombre="Grupo 3",
+            centrodesalud_id=centros[0]
+        )
+
         # Link professional to center
         centro_prof = CentroProfesional.objects.create(
             centrodesalud=centros[0],
             profesional=terapeuta
         )
-
-        # Create condiciones
-        condicion1 = Condicion.objects.create(
-            edad= 10
+        centro_prof2 = CentroProfesional.objects.create(
+            centrodesalud=centros[0],
+            profesional=terapeuta2
         )
 
+        # Create condiciones
+        condicion2 = Condicion.objects.create(
+            edad=15
+        )
 
         # Create scenes
         escena_1 = Escena.objects.create(
@@ -224,8 +250,10 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            condicion= condicion1,
+            condicion=condicion2,
             link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
+            nombre="Escena 7",
+            descripcion = "Esta escena es la de openai"
             nombre="Escena 7",
             descripcion = "Esta escena es la de openai"
         )
@@ -236,12 +264,16 @@ class Command(BaseCommand):
             link="https://drive.google.com/file/d/1qzY31odKmd2FlrjU0VK4dkfezlzEcoaJ/preview",
             nombre="Escena 8",
             descripcion = "Esta escena es la de futgame"
+            nombre="Escena 8",
+            descripcion = "Esta escena es la de futgame"
         )
         escena_9 = Escena.objects.create(
             idioma="Español",
             acento="neutro",
             complejidad=1,
             link="https://drive.google.com/file/d/1yPgHYRagTJXTqlrGhNkZDEy5zNY4-f77/preview",
+            nombre="Escena 9",
+            descripcion = "Esta escena es la del cartpole"
             nombre="Escena 9",
             descripcion = "Esta escena es la del cartpole"
         )
@@ -260,6 +292,7 @@ class Command(BaseCommand):
             centro_profesional=centro_prof
         )
         objetivo_3 = Objetivo.objects.create(
+            nombre="Este es el que funca (messi)",
             nombre="Este es el que funca (messi)",
             descripcion="Tenes que vencer a goku",
             escena=escena_5,
@@ -305,23 +338,38 @@ class Command(BaseCommand):
         escena_obj_4 = EscenaObjetivo.objects.create(
             escena=escena_8,
             objetivo=objetivo_3   
+            objetivo=objetivo_3   
         )
         escena_obj_5 = EscenaObjetivo.objects.create(
             escena=escena_9,
             objetivo=objetivo_3
+            objetivo=objetivo_3
         )
         escena_obj_6 = EscenaObjetivo.objects.create(
-            escena=escena_7,
-            objetivo=objetivo_4
+            escena=escena_1,
+            objetivo=objetivo_3
         )
         escena_obj_7 = EscenaObjetivo.objects.create(
-            escena=escena_8,
-            objetivo=objetivo_5
+            escena=escena_2,
+            objetivo=objetivo_3
         )
         escena_obj_8 = EscenaObjetivo.objects.create(
-            escena=escena_9,
-            objetivo=objetivo_6
+            escena=escena_3,
+            objetivo=objetivo_3
         )
+        escena_obj_9 = EscenaObjetivo.objects.create(
+            escena=escena_4,
+            objetivo=objetivo_3
+        )
+        escena_obj_10 = EscenaObjetivo.objects.create(
+            escena=escena_5,
+            objetivo=objetivo_3
+        )
+        escena_obj_11 = EscenaObjetivo.objects.create(
+            escena=escena_5,
+            objetivo=objetivo_4
+        )
+
 
         # Create person-objective-scene relationship
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
@@ -347,6 +395,35 @@ class Command(BaseCommand):
             user_id=paciente,
             escena_objetivo=escena_obj_4,
         )
+        persona_obj_esc_6 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_6,
+            orden = 3
+        )
+        persona_obj_esc_7 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_7,
+            orden = 4
+        )
+        persona_obj_esc_8 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_8,
+        )
+        persona_obj_esc_9 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_9,
+        )
+        persona_obj_esc_10 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_10,
+        )
+        persona_obj_esc_11 = PersonaObjetivoEscena.objects.create(
+            user_id=paciente,
+            escena_objetivo=escena_obj_11,
+            orden = 5
+        )
+
+
 
         formulario_1 = Formulario.objects.create(
             nombre="Formulario 1",
@@ -355,6 +432,7 @@ class Command(BaseCommand):
             creado_por=terapeuta,
             fecha_creacion=datetime.now()
         )
+        formulario_2= Formulario.objects.create(
         formulario_2= Formulario.objects.create(
             nombre="Formulario 2",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
@@ -436,6 +514,51 @@ class Command(BaseCommand):
         )
 
 
+        # Añadir preguntas al Formulario 1
+        pregunta_1 = Pregunta.objects.create(
+            formulario=formulario_1,
+            texto="¿Cuál es la capital de Francia?",
+            tipo="multiple-choice",
+            correcta="París"
+        )
+
+        Opcion.objects.create(pregunta=pregunta_1, texto="Madrid")
+        Opcion.objects.create(pregunta=pregunta_1, texto="Roma")
+        Opcion.objects.create(pregunta=pregunta_1, texto="París")
+        Opcion.objects.create(pregunta=pregunta_1, texto="Berlín")
+
+        pregunta_2 = Pregunta.objects.create(
+            formulario=formulario_1,
+            texto="Escribe una breve descripción sobre tu día.",
+            tipo="respuesta-corta"
+        )
+
+        pregunta_3 = Pregunta.objects.create(
+            formulario=formulario_1,
+            texto="Describe tus objetivos para la semana.",
+            tipo="respuesta-larga"
+        )
+
+        # Añadir preguntas al Formulario 2
+        pregunta_4 = Pregunta.objects.create(
+            formulario=formulario_2,
+            texto="¿Qué color es el cielo durante un día despejado?",
+            tipo="multiple-choice",
+            correcta="Azul"
+        )
+
+        Opcion.objects.create(pregunta=pregunta_4, texto="Rojo")
+        Opcion.objects.create(pregunta=pregunta_4, texto="Amarillo")
+        Opcion.objects.create(pregunta=pregunta_4, texto="Azul")
+        Opcion.objects.create(pregunta=pregunta_4, texto="Verde")
+
+        pregunta_5 = Pregunta.objects.create(
+            formulario=formulario_2,
+            texto="¿Cuál es tu plato favorito?",
+            tipo="respuesta-corta"
+        )
+
+
         # Create person-objective-evaluation
         PersonaObjetivoEvaluacion.objects.create(
             user_id=paciente,
@@ -470,6 +593,12 @@ class Command(BaseCommand):
             user_id=terapeuta,
             grupo_id=grupo
         )
+
+        Personagrupo.objects.create(
+            user_id=terapeuta2,
+            grupo_id=grupo
+        )
+
 
         comentario_respuesta = Comentario.objects.create(
             user=paciente,
@@ -625,5 +754,14 @@ class Command(BaseCommand):
             user_id=paciente3,
             patologia_id=Patologia.objects.get(nombre="Trastorno de Procesamiento Sensorial")
         )
+
+        condicion1 = Condicion.objects.create(
+            edad= 10,
+            fecha= datetime(2021, 1, 1),
+            objetivo_id= objetivo_3.id,
+        )
+        escena_9.condicion = condicion1
+        escena_9.save()
+
 
         self.stdout.write(self.style.SUCCESS('Successfully loaded sample data'))

@@ -31,6 +31,7 @@ const CreateObjetivo: React.FC = () => {
         center_name: center,
         username: username
       }),
+      credentials: 'include', // Include cookies (to handle JWT cookie
     });
   
     if (!nameResponse.ok) {
@@ -71,6 +72,7 @@ const CreateObjetivo: React.FC = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(objetivoData),
+        credentials: 'include', // Include cookies (to handle JWT cookie
       });
   
       if (!createResponse.ok) {

@@ -222,7 +222,6 @@ class Condicion(models.Model):
     id = models.AutoField(primary_key=True)
     edad = models.IntegerField(blank=True, null=True)
     objetivo = models.ForeignKey('Objetivo', on_delete=models.CASCADE, null=True)
-    escena = models.OneToOneField('Escena',related_name='condiciones', on_delete=models.CASCADE, null=True)
     fecha = models.DateTimeField(blank=True, null=True)
     class Meta:
         db_table = 'condicion'
@@ -302,22 +301,20 @@ class Comentario(models.Model):
             )
         ]
 
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 class Notificacion(models.Model):
-    # Usuario destinatario (admin o terapeuta)
     destinatario = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
         related_name='notificaciones_recibidas'
     )
-    # Usuario que envía la notificación
     remitente = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
         related_name='notificaciones_enviadas'
     )
-    # Mensaje de la notificación
     mensaje = models.TextField()
-    # Estado de la notificación
     estado = models.CharField(
         max_length=50, 
         choices=[
@@ -327,7 +324,11 @@ class Notificacion(models.Model):
         ],
         default='pendiente'
     )
-    # Marca de tiempo
+    # Relación genérica
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    objeto_asociado = GenericForeignKey('content_type', 'object_id')
+
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -393,7 +394,13 @@ class Pregunta(models.Model):
     texto = models.CharField(max_length=255)
     tipo = models.CharField(max_length=20, choices=TIPOS_PREGUNTA)
     correcta = models.CharField(max_length=255, blank=True, null=True)  # Solo para verificación automática
-
+    escena = models.ForeignKey(
+        Escena, 
+        blank=True,
+        on_delete=models.PROTECT, 
+        related_name='nombre_escena',
+        null = True
+    )
     def __str__(self):
         return self.texto
     

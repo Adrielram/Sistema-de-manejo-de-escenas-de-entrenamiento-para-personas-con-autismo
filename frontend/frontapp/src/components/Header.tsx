@@ -9,10 +9,10 @@ import { RootState } from "../../store/store"; // Asegúrate de importar el tipo
 import {useRouter} from 'next/navigation';
 import React from 'react';
 
-export default React.memo(function Header() {
+export default function Header({ token }: { token?: string }) {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { center } = useSelector((state: RootState) => state.user)
+  const { center } = useSelector((state: RootState) => state.user);
   
   const { username, isLoggedIn, role } = useSelector((state: RootState) => state.user);
   const handleLogout = async () => {

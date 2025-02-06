@@ -16,6 +16,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('auth', '0012_alter_user_first_name_max_length'),
+        ('contenttypes', '0002_remove_content_type_name'),
     ]
 
     operations = [
@@ -124,11 +125,6 @@ class Migration(migrations.Migration):
                 'db_table': 'escena',
             },
         ),
-        migrations.AddField(
-            model_name='condicion',
-            name='escena',
-            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='condiciones', to='api.escena'),
-        ),
         migrations.CreateModel(
             name='Comentario',
             fields=[
@@ -200,7 +196,9 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('mensaje', models.TextField()),
                 ('estado', models.CharField(choices=[('pendiente', 'Pendiente'), ('leida', 'Leída'), ('eliminada', 'Eliminada')], default='pendiente', max_length=50)),
+                ('object_id', models.PositiveIntegerField()),
                 ('timestamp', models.DateTimeField(auto_now_add=True)),
+                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype')),
                 ('destinatario', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notificaciones_recibidas', to=settings.AUTH_USER_MODEL)),
                 ('remitente', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notificaciones_enviadas', to=settings.AUTH_USER_MODEL)),
             ],
@@ -309,6 +307,7 @@ class Migration(migrations.Migration):
                 ('texto', models.CharField(max_length=255)),
                 ('tipo', models.CharField(choices=[('multiple-choice', 'Multiple Choice'), ('respuesta-corta', 'Respuesta Corta'), ('respuesta-larga', 'Respuesta Larga')], max_length=20)),
                 ('correcta', models.CharField(blank=True, max_length=255, null=True)),
+                ('escena', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='nombre_escena', to='api.escena')),
                 ('formulario', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='preguntas', to='api.formulario')),
             ],
             options={
