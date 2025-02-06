@@ -221,6 +221,7 @@ PINECONE_ENV = 'ipathology'
 CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo
 
 
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # Servidor SMTP de Gmail
 EMAIL_PORT = 587
@@ -229,3 +230,4 @@ EMAIL_HOST_USER="centrocasabella54@gmail.com"
 EMAIL_HOST_PASSWORD='hlor hwyu icgr kiae'       
 
 GEMINI_API_KEY="AIzaSyBWoI7vFiDGIUlJrP5QgZV7wT1G1nviNAE"
+

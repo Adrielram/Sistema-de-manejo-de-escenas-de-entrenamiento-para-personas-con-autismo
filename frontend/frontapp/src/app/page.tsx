@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -67,8 +68,11 @@ const WelcomeEmailForm: React.FC = () => {
           {status}
         </p>
       )}
+
     </div>
   );
 };
 
+
 export default WelcomeEmailForm;
+
