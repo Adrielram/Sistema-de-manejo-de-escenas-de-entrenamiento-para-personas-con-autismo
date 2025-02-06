@@ -97,6 +97,19 @@ class Command(BaseCommand):
             nombre="Terapeuta Uno",
             fecha_nac=datetime(1985, 2, 15),
             genero="F",
+            email="adrielgames2@gmail.com",
+            role="terapeuta",
+            direccion_id_dir=residencias[0]
+        )
+
+        terapeuta2 = User.objects.create(
+            username="terapeuta2",
+            password=make_password("tera123"),
+            dni=1,
+            nombre="Terapeuta Dos",
+            fecha_nac=datetime(1985, 2, 15),
+            genero="M",
+            email="aferrero@alumnos.exa.unicen.edu.ar",
             role="terapeuta",
             direccion_id_dir=residencias[0]
         )
@@ -155,10 +168,24 @@ class Command(BaseCommand):
             centrodesalud_id=centros[0]
         )
 
+        grupo2 = Grupo.objects.create(
+            nombre="Grupo 2",
+            centrodesalud_id=centros[1]
+        )
+
+        grupo3 = Grupo.objects.create(
+            nombre="Grupo 3",
+            centrodesalud_id=centros[0]
+        )
+
         # Link professional to center
         centro_prof = CentroProfesional.objects.create(
             centrodesalud=centros[0],
             profesional=terapeuta
+        )
+        centro_prof2 = CentroProfesional.objects.create(
+            centrodesalud=centros[0],
+            profesional=terapeuta2
         )
 
         # Create condiciones
@@ -320,11 +347,13 @@ class Command(BaseCommand):
         escena_obj_8 = EscenaObjetivo.objects.create(
             escena=escena_3,
             objetivo=objetivo_3
+
         )
         escena_obj_9 = EscenaObjetivo.objects.create(
             escena=escena_4,
             objetivo=objetivo_3
         )
+
         escena_obj_10 = EscenaObjetivo.objects.create(
             escena=escena_5,
             objetivo=objetivo_3
@@ -502,6 +531,12 @@ class Command(BaseCommand):
             user_id=terapeuta,
             grupo_id=grupo
         )
+
+        Personagrupo.objects.create(
+            user_id=terapeuta2,
+            grupo_id=grupo
+        )
+
 
         comentario_respuesta = Comentario.objects.create(
             user=paciente,

@@ -123,7 +123,8 @@ export default function RegisterForm() {
     e.preventDefault();
     setError('');
     setSuccess(false);
-    if (!sintomasEnviados) {
+    if (formData.rol === 'Paciente' && !sintomasEnviados) {
+
       setError('Debe enviar sus síntomas antes de registrarse.');
       return;
     }
@@ -328,7 +329,8 @@ export default function RegisterForm() {
         {/* Síntomas */}
         {formData.rol === 'Paciente' && 
         (<div>
-          <label className="block text-black">Síntomas y descripción del problema</label>
+          <label className="block text-black">Cuéntanos más sobre ti</label>
+
           <textarea
             name="sintomas"
             value={sintomas}

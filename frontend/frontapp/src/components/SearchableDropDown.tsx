@@ -15,7 +15,6 @@ const GenericDropdown = ({
   const [searchQuery, setSearchQuery] = useState("");
 
   console.log("Dropdown items:", items);
-
   // Filtrar elementos según el campo "name" o "nombre"
   const filteredItems = items.filter((item) => {
     const label = item.name || item.nombre || ""; // Prioriza "name" y luego "nombre"
@@ -81,15 +80,30 @@ const GenericDropdown = ({
             );
           })}
 
-          {/* Mensaje si no hay coincidencias */}
-          {filteredItems.length === 0 && (
-            <div className="p-2.5 text-gray-500 text-center bg-gray-50">
-              Sin resultados
+
+        {filteredItems.map((item, index) => {
+          const label = item.name || item.nombre || "Sin Nombre"; // Mostrar algo por defecto si no hay nombre
+          return (
+            <div
+              key={${item[valueKey]}-${index}}
+              onClick={() => handleSelect(item)}
+              className="p-2.5 cursor-pointer border-b border-gray-200 bg-white hover:bg-gray-50 transition-colors duration-200"
+            >
+              {label}
             </div>
-          )}
-        </div>
-      )}
-    </div>
+          );
+        })}
+
+        {/* Mensaje si no hay coincidencias */}
+        {filteredItems.length === 0 && (
+          <div className="p-2.5 text-gray-500 text-center bg-gray-50">
+            Sin resultados
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+
   );
 };
 
