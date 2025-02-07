@@ -26,17 +26,12 @@ from .models import Notificacion
 from api.authentication import CookieJWTAuthentication
 from django.db import transaction
 from django.utils import timezone
-
 from django.core.validators import validate_email
 from django.core.mail import send_mail
 from django.conf import settings
 import google.generativeai as genai
 import sys
 import json
-
-
-
-
 from rest_framework.exceptions import NotFound
 
 #User = get_user_model()  # Modelo de usuario creado por nosotros
@@ -1035,10 +1030,7 @@ class VerificarCondicionesView(APIView):
         if not username or not escena_id:
             return Response({'error': 'Username y escena_id son requeridos'}, status=status.HTTP_400_BAD_REQUEST)
 
-    def list(self, request, *args, **kwargs):
         try:
-
-
             dni = obtener_dni(username)
             try:
                 user = User.objects.get(dni=dni)
@@ -3690,13 +3682,6 @@ class ObtenerEvaluaciones(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        
-
-
-
-    
-
-
 class MarcarVideoVistoView(APIView):
     def post(self, request):
         try:
@@ -3710,7 +3695,7 @@ class MarcarVideoVistoView(APIView):
 
 
             # Serializar los datos enviados
-            serializer = VideosvistosSerializer(data=request.data)
+            serializer = VideosVistosSerializer(data=request.data)
             
             # Validar los datos
             if serializer.is_valid():
