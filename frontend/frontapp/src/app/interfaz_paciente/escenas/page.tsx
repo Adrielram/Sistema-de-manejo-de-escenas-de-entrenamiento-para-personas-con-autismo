@@ -217,18 +217,19 @@ export default function Page() {
   
 
   return (
-        <div className="flex flex-col min-h-screen p-4 gap-6">
-          <div className="flex flex-col md:flex-row md:h-screen gap-4">
-            <div className="w-full">
-            <SearchBar onSearch={handleSearch} placeholder="Busca una escena..." />
-            {query ? (
-              <div className="mt-4">
-                <h2 className="text-lg font-bold mb-2">Resultados de la Búsqueda</h2>
-                <div className="max-h-[80vh] overflow-auto bg-gray-50 rounded-lg shadow p-4">
-                  <ul className="space-y-2">
+    <div className="flex flex-col min-h-screen p-4 gap-6">
+      <div className="flex flex-col md:flex-row md:h-screen gap-4">
+        {/* Sección principal (Lista de escenas y búsqueda) */}
+        <div className="w-full md:w-2/3">
+          <SearchBar onSearch={handleSearch} placeholder="Busca una escena..." />
+          {query ? (
+            <div className="mt-4">
+              <h2 className="text-lg font-bold mb-2">Resultados de la Búsqueda</h2>
+              <div className="max-h-[80vh] overflow-auto bg-gray-50 rounded-lg shadow p-4">
+                <ul className="space-y-2">
                   {!escenasFiltradas || escenasFiltradas.length === 0 ? (
-                      <p className="text-gray-500 text-center">No se encontraron resultados.</p>
-                    ) : (
+                    <p className="text-gray-500 text-center">No se encontraron resultados.</p>
+                  ) : (
                     escenasFiltradas.map((escena) => (
                       <li
                         key={escena.id}
@@ -258,14 +259,14 @@ export default function Page() {
                             </svg>
                           )}
                         </div>
-                        
+  
                         <div className="flex items-center gap-2">
                           {escena.bloqueada && escena.mensaje_bloqueo && (
                             <span className="text-lg text-gray-500 text-right flex-grow">
                               {escena.mensaje_bloqueo}
                             </span>
                           )}
-                          
+  
                           {!escena.bloqueada && escenaSeleccionada?.id === escena.id && (
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -282,34 +283,40 @@ export default function Page() {
                           )}
                         </div>
                       </li>
-                    )))}
-                  </ul>
-                </div>
-              </div>
-              ) : (
-                <>
-                  <h2 className="text-xl font-bold mb-2 mt-6">Escenas</h2>
-                  {escenas.length > 0 ? (
-                    <ScrollVerticalYHorizontal
-                      elementos={escenas}
-                      onElementoClick={handleMostrarDescripcion}
-                      selectedElementoId={escenaSeleccionada ? escenaSeleccionada.id : null}
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={handlePageChange}
-                    />
-                  ) : (
-                    <div className="text-center py-4 text-gray-500">
-                      No se encontraron objetivos para mostrar.
-                    </div>
+                    ))
                   )}
-                </>
-              )}
+                </ul>
+              </div>
             </div>
-            <div className="hidden md:block w-0.5 bg-gray-200"></div>
-            <EscenaInfo escena={escenaSeleccionada} escenaHandleClick={handleEscenaClick} />
-          </div>
+          ) : (
+            <>
+              <h2 className="text-xl font-bold mb-2 mt-6">Escenas</h2>
+              {escenas.length > 0 ? (
+                <ScrollVerticalYHorizontal
+                  elementos={escenas}
+                  onElementoClick={handleMostrarDescripcion}
+                  selectedElementoId={escenaSeleccionada ? escenaSeleccionada.id : null}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  No se encontraron objetivos para mostrar.
+                </div>
+              )}
+            </>
+          )}
         </div>
-      );
-    }
-
+  
+        {/* Barra divisoria */}
+        <div className="hidden md:block w-0.5 bg-gray-200"></div>
+  
+        {/* Sección de detalles con ancho reducido */}
+        <div className="w-full md:w-1/3">
+          <EscenaInfo escena={escenaSeleccionada} escenaHandleClick={handleEscenaClick} />
+        </div>
+      </div>
+    </div>
+  );
+}  

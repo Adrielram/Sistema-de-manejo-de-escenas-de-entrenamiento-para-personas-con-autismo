@@ -12,14 +12,14 @@ interface PaginatedResponse {
   count: number;
   next: string | null;
   previous: string | null;
-  results: Escena[];
+  results: Objetivo[];
 }
 
 interface Objetivo {
   id: number;
   nombre: string;
   descripcion: string;
-  videoExplicativo: string;  // Nuevo campo
+  video_explicativo: string;
 }
 
 interface Condicion {
@@ -69,11 +69,11 @@ export default function Page() {
         );
         if (!response.ok) throw new Error(`Error: ${response.status}`);
         const data: PaginatedResponse = await response.json();
-        const mapped = data.results.map(obj => ({
+        const mapped: Objetivo[] = data.results.map(obj => ({
           id: obj.id,
           nombre: obj.nombre,
           descripcion: obj.descripcion,
-          videoExplicativo: obj.video_explicativo  // PERO DEVUELVE ID.. QUIERO LINK.
+          video_explicativo: obj.video_explicativo,
         }));
         setObjetivos(mapped);
         setTotalPages(Math.ceil(data.count / 6));
@@ -155,14 +155,12 @@ export default function Page() {
   
   return (
     <div className="min-h-screen p-4 flex flex-col gap-6">
-      
-      {/* Contenedor superior: panel de objetivos, escenas y detalles de la escena */}
-      <div className="flex flex-col md:flex-row md:h-screen gap-6">
-        {/* Panel izquierdo: lista de objetivos y escenas */}
+      <div className="min-h-screen pl-4 flex flex-col md:flex-row md:h-screen gap-6">
+        {/* Left panel: objectives and scenes */}
         <div className="w-full md:w-[65%] flex flex-col gap-6 items-start">
           <div className="w-full">
             <h2 className="text-xl font-bold mb-2 sm:text-2xl">Objetivos</h2>
-            <div className="h-[300px]">
+            <div className="flex">
               <ScrollVerticalYHorizontal
                 elementos={objetivos.map(obj => ({
                   id: obj.id,
@@ -170,7 +168,6 @@ export default function Page() {
                   descripcion: obj.descripcion,
                   bloqueada: false,
                   mensaje_bloqueo: undefined,
-                  // Campos dummy para cumplir con la interfaz
                   idioma: '',
                   acento: '',
                   complejidad: 0,
@@ -191,86 +188,91 @@ export default function Page() {
               />
             </div>
           </div>
+
           {selectedObjetivo && (
             <div className="w-full md:mt-8 mt-6">
               <h2 className="text-xl font-bold mb-2 sm:text-2xl">
                 Escenas de: {selectedObjetivo.nombre}
               </h2>
-              <div className="h-[300px] border-t bg-gray-50 border-gray-200 rounded-lg">
-                <div className="h-full overflow-y-auto pr-2">
-                  {escenasDelObjetivo.map(escena => (
-                    <div
-                      key={escena.id}
-                      onClick={() => handleEscenaClick(escena.id)}
-                      className={`flex items-center justify-between md:p-3 p-4 my-2 rounded-lg border transition-all cursor-pointer ${
-                        escena.bloqueada
-                          ? "bg-gray-100 opacity-50 cursor-not-allowed"
-                          : "cursor-pointer bg-white hover:border-blue-300 hover:shadow-md"
-                      } ${
-                        selectedEscena?.id === escena.id && !escena.bloqueada
-                          ? "bg-blue-100 border-blue-400"
-                          : "border-gray-200"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{escena.nombre}</span>
-                        {escena.bloqueada && (
-                          <svg 
-                            className="h-5 w-5 text-gray-500"
-                            xmlns="http://www.w3.org/2000/svg" 
-                            viewBox="0 0 24 24" 
+              <div className="flex w-full border-t bg-gray-50 border-gray-200 rounded-lg">
+                <div className="w-full p-4 max-h-[48vh] overflow-y-auto">
+                  <div className="space-y-2">
+                    {escenasDelObjetivo.map(escena => (
+                      <div
+                        key={escena.id}
+                        onClick={() => handleEscenaClick(escena.id)}
+                        className={`w-full flex items-center justify-between p-4 rounded-lg shadow-sm border transition-shadow ${
+                          escena.bloqueada 
+                            ? "bg-gray-100 opacity-50 cursor-not-allowed"
+                            : "cursor-pointer bg-white hover:border-blue-300 hover:shadow-md"
+                        } ${
+                          selectedEscena?.id === escena.id && !escena.bloqueada
+                            ? "bg-blue-100 border-blue-400"
+                            : "border-gray-200"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{escena.nombre}</span>
+                          {escena.bloqueada && (
+                            <svg 
+                              className="h-5 w-5 text-gray-500 ml-2"
+                              xmlns="http://www.w3.org/2000/svg" 
+                              viewBox="0 0 24 24" 
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        {escena.mensaje_bloqueo && (
+                          <p className="text-sm text-gray-500 mt-1">{escena.mensaje_bloqueo}</p>
+                        )}
+                        {selectedEscena?.id === escena.id && !escena.bloqueada && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 text-blue-600"
+                            viewBox="0 0 20 20"
                             fill="currentColor"
                           >
                             <path
                               fillRule="evenodd"
-                              d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                               clipRule="evenodd"
                             />
                           </svg>
                         )}
                       </div>
-                      {escena.mensaje_bloqueo && (
-                        <p className="text-sm text-gray-500 mt-1">{escena.mensaje_bloqueo}</p>
-                      )}
-                      {selectedEscena?.id === escena.id && !escena.bloqueada && (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 text-blue-600"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Panel derecho: información de la escena */}
-        <EscenaInfo escena={selectedEscena} escenaHandleClick={handleVerVideo} />
-      </div>
-          {/* Reproductor de video del objetivo */}
+        {/* Right panel: scene info and video */}
+        <div className="w-full md:w-[35%] flex flex-col gap-4">
           {selectedObjetivo && (
-            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mt-4">
-              <h2 className="text-lg font-semibold mb-3">Video Explicativo</h2>
-              <div className="mr-0 lg:mr-4 mb-4 lg:mb-0 relative w-full max-w-[854px]">
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+              <h2>Video Explicativo</h2>
+              <div className="relative w-full" style={{ aspectRatio: "16 / 9" }}>
                 <iframe
-                  src={selectedObjetivo.videoExplicativo}
+                  src={selectedObjetivo.video_explicativo}
                   className="rounded-lg shadow-lg border-0 w-full h-full"
                   allow="autoplay; fullscreen"
-                  style={{ aspectRatio: "16 / 9" }}
                 ></iframe>
               </div>
-              <p className="mt-3 text-sm text-gray-600">{selectedObjetivo.descripcion}</p>
-            </div>)}
+              <p className="mt-3 text-sm text-gray-600">Descripción: {selectedObjetivo.descripcion}</p>
+            </div>
+          )}
+          <EscenaInfo escena={selectedEscena} escenaHandleClick={handleVerVideo} />
+        </div>
+      </div>
     </div>
   );
 }
+ 
