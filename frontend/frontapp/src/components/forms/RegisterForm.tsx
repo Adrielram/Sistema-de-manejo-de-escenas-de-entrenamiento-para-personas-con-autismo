@@ -1,9 +1,11 @@
 // components/RegisterForm.tsx
 'use client';
 
-import { useState,useEffect } from 'react';
+import { useState,useEffect,useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import ReCAPTCHA from "react-google-recaptcha";
+
 
 import SearchWithFatherRes from '../SearchWithFatherRes';
 
@@ -13,7 +15,7 @@ interface Symptom {
 }
 
 export default function RegisterForm() {
-  
+  const recaptchaRef = useRef<ReCAPTCHA | null>(null);
   const [idPadreSeleccionado, setIdPadreSeleccionado] = useState<number | null>(null);
   
   const handlePadreSeleccionado = (dni: number) => {
@@ -45,6 +47,7 @@ export default function RegisterForm() {
   const [success, setSuccess] = useState(false);
   const router = useRouter();
   const [sintomasPrediction, setSintomasPrediction] = useState<Symptom[]>([]);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -119,56 +122,69 @@ export default function RegisterForm() {
   }, [formData.rol, pagina]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log("Centros seleccionados: ", centrosSeleccionados);
-    e.preventDefault();
-    setError('');
-    setSuccess(false);
-    if (formData.rol === 'Paciente' && !sintomasEnviados) {
+  console.log("Centros seleccionados: ", centrosSeleccionados);
+  e.preventDefault();
+  setError('');
+  setSuccess(false);
 
-      setError('Debe enviar sus síntomas antes de registrarse.');
-      return;
-    }
-    if (formData.contrasena !== formData.repetirContrasena) {
-      setError('Las contraseñas no coinciden');
-      return;
+  if (formData.rol === 'Paciente' && !sintomasEnviados) {
+    setError('Debe enviar sus síntomas antes de registrarse.');
+    return;
+  }
+
+  if (formData.contrasena !== formData.repetirContrasena) {
+    setError('Las contraseñas no coinciden');
+    return;
+  }
+
+  const recaptchaValue = recaptchaRef.current?.getValue();
+  if (!recaptchaValue) {
+    setError('Por favor, completa el captcha.');
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost:8000/api/signIn/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        dni: formData.dni,
+        nombre: formData.nombre,
+        fecha_nac: formData.fechaNacimiento,
+        genero: formData.genero,
+        role: formData.rol.toLowerCase(),
+        provincia: formData.provincia,
+        ciudad: formData.ciudad,
+        calle: formData.calle,
+        numero: formData.numero,
+        id_padre: idPadreSeleccionado || null,
+        password: formData.contrasena,
+        centros_de_salud: centrosSeleccionados,
+        sintomas: sintomasPrediction || null, // Enviar la predicción de síntomas 
+        texto: sintomas, // Enviar el texto original de los síntomas
+        captcha: recaptchaValue, // Enviar el token del captcha
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al registrar el usuario');
     }
 
-    try {
-      const response = await fetch('http://localhost:8000/api/signIn/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          dni: formData.dni,
-          nombre: formData.nombre,
-          fecha_nac: formData.fechaNacimiento,
-          genero: formData.genero,
-          role: formData.rol.toLowerCase(),
-          provincia: formData.provincia,
-          ciudad: formData.ciudad,
-          calle: formData.calle,
-          numero: formData.numero,
-          id_padre: idPadreSeleccionado || null,
-          password: formData.contrasena,
-          centros_de_salud: centrosSeleccionados,
-          sintomas: sintomasPrediction || null, // Enviar la predicción de síntomas 
-          texto: sintomas, // Enviar el texto original de los síntomas
-        }),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al registrar el usuario');
-      }
-  
-      setSuccess(true);
-      router.push('/auth/login');
-      console.log('Usuario registrado exitosamente');
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  };
+    setSuccess(true);
+    router.push('/auth/login');
+    console.log('Usuario registrado exitosamente');
+  } catch (err) {
+    setError((err as Error).message);
+  }
+};
+
+const recargarCaptcha = () => {
+  grecaptcha.reset();  // Esto reinicia el CAPTCHA
+};
+
 
   return (
     <div className="w-full max-w-md px-4 py-6 space-y-4 border border-black rounded-lg">
@@ -407,7 +423,20 @@ export default function RegisterForm() {
             </div>         
           </div>
         )}
+        {/* ACA IRIA UN CHECK DE TERMINOS Y CONDICIONES SI SE LO REQUIERE */}
+        <div>
+         <ReCAPTCHA
+        sitekey="6LcQ5s8qAAAAANKXXFcFscOAUhu89owU8pCgujz5"
+        ref={recaptchaRef}
+        />
+        <button
+          onClick={recargarCaptcha}
+          className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition"
+          >
+            Recargar CAPTCHA
+        </button>
 
+        </div>
         {/* Botón de Registrarse */}
         <button
           type="submit"
