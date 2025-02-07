@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "./SmallButton";
 import PaginadoItem from "./PaginadoItem";
 import { OptionsProps } from "../types"; 
@@ -25,7 +25,8 @@ interface BoxPaginadoProps {
   onPageChange: (page: number) => void;
   itemsPerPage: number;
   onItemDeleted?: (id: string) => void;
-  onSelect?: (id: string) => void; // Agrega esta línea
+  onSelect?: (id: string) => void; 
+  actualizar?: boolean// Agrega esta línea
 }
 
 export default function BoxPaginado({ 
@@ -45,11 +46,23 @@ export default function BoxPaginado({
   totalItems: initialTotalItems,
   onPageChange,
   itemsPerPage,
-  onItemDeleted
+  onItemDeleted,
+  actualizar
 }: BoxPaginadoProps) {
   const [data, setData] = useState<Dictionary>(initialData);
   const [totalItems, setTotalItems] = useState(initialTotalItems);
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  useEffect(() => {
+    if (actualizar) {
+      setData(initialData);
+    }
+  }, [initialData,actualizar]);
+  
+
+  if (actualizar == null){
+    actualizar = false;
+  }
 
   const handleNext = () => {
     if (currentPage < totalPages) {
@@ -85,6 +98,11 @@ export default function BoxPaginado({
       onPageChange(currentPage - 1);
     }
   };
+
+
+  console.log("Rendering BoxPaginado with data:", data);
+  console.log("URL de imagen en PaginadoItem:", img);
+  console.log("URL de imagen en PaginadoItem:", showImage);
 
   return (
     <div className="container mx-auto p-4">

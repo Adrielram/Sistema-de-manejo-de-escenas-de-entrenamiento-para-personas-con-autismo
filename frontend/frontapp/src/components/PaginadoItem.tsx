@@ -62,6 +62,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
     }
   };
 
+  console.log("URL de imagen recibida:", img);
   const handleSeePatients = () => {
     router.push(`${patients_list_path}?group_id=${id}`);
   };
@@ -97,6 +98,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
     alert(`Ver detalles de ${name}`);
   };
   
+  console.log("Estoy dentro de PaginadoItem y los datos imprimen lo siguiente -> IMG:", img, "ShowImg", showImage)
   return (
     <div className="bg-white p-2 sm:p-5 rounded-lg shadow-lg flex flex-col items-center justify-center space-y-1 border-2 border-gray-400 w-full max-w-xs sm:w-[200px] h-auto sm:h-[300px] text-sm sm:text-base mt-5">
       {/* Imagen */}

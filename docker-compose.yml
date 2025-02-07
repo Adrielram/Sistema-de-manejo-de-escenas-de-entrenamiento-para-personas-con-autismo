@@ -38,6 +38,5 @@ services:
       - backend
     environment:
       - NODE_ENV=development
-
 volumes:
   db_data:
