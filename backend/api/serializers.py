@@ -35,28 +35,34 @@ class PacienteSerializer(serializers.ModelSerializer):
         return obj.user_id_padre.nombre if obj.user_id_padre else ''
 
 class ObjetivoSerializer(serializers.ModelSerializer):
-    video_explicativo_id = serializers.PrimaryKeyRelatedField(
-        queryset=Escena.objects.all(), source='escena'
-    )
-    centro_profesional = serializers.PrimaryKeyRelatedField(
-        queryset=CentroProfesional.objects.all()
-    )
-    escenas = serializers.ListField(
-        #child=serializers.DictField(),
-        child=serializers.IntegerField(),
-        required=False
-    )
-    objetivos = serializers.PrimaryKeyRelatedField(
-        many=True, 
-        queryset=Objetivo.objects.all(),
-        required=False
-    )
+   video_explicativo = serializers.SerializerMethodField()
+   video_explicativo_id = serializers.PrimaryKeyRelatedField(
+       queryset=Escena.objects.all(), source='escena'
+   )
+   centro_profesional = serializers.PrimaryKeyRelatedField(
+       queryset=CentroProfesional.objects.all()
+   )
+   escenas = serializers.PrimaryKeyRelatedField(
+       many=True,
+       queryset=Escena.objects.all(),
+       required=False
+   )
+   objetivos = serializers.PrimaryKeyRelatedField(
+       many=True, 
+       queryset=Objetivo.objects.all(),
+       required=False
+   )
+   
 
-    class Meta:
+   class Meta:
         model = Objetivo
-        fields = ['id', 'nombre', 'descripcion', 'video_explicativo_id', 'centro_profesional', 'escenas', 'objetivos']
+        fields = ['id', 'nombre', 'descripcion', 'video_explicativo_id','video_explicativo', 'centro_profesional', 'escenas', 'objetivos']
 
-    def create(self, validated_data):
+   def get_video_explicativo(self, obj):
+        # Accedemos a la relación escena para obtener el link
+        return obj.escena.link if obj.escena else None
+
+   def create(self, validated_data):
         escenas_data = validated_data.pop('escenas', [])
         objetivos_data = validated_data.pop('objetivos', [])
         
@@ -74,7 +80,7 @@ class ObjetivoSerializer(serializers.ModelSerializer):
         return objetivo
 
    
-    def update(self, instance, validated_data):
+   def update(self, instance, validated_data):
         # Actualizar los campos básicos del modelo
         instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.descripcion = validated_data.get('descripcion', instance.descripcion)

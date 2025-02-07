@@ -502,7 +502,6 @@ class ObjetivoListView(generics.ListAPIView):
 
             return Objetivo.objects.none()
         
-        # Obtener objetivos asignados al usuario
         objetivos_ids = PersonaObjetivoEscena.objects.filter(
             user_id=dni
         ).values_list(
@@ -510,22 +509,21 @@ class ObjetivoListView(generics.ListAPIView):
             flat=True
         ).distinct()
 
+        # Optimizamos con select_related para traer la relación escena
         return Objetivo.objects.filter(
             id__in=objetivos_ids
-        ).prefetch_related(
+        ).select_related('escena').prefetch_related(
             Prefetch(
                 'escenaobjetivo_set',
                 queryset=EscenaObjetivo.objects.prefetch_related(
                     Prefetch(
-                        'objetivo_relations',  # Usamos el related_name correcto
-
+                        'objetivo_relations',
                         queryset=PersonaObjetivoEscena.objects.filter(user_id=dni),
                         to_attr='user_poe'
                     )
                 )
             )
         )
-
 
     def list(self, request, *args, **kwargs):
         username = request.query_params.get('username')
@@ -2923,8 +2921,10 @@ class EscenasSegunUsuarioObjetivo(APIView):
         escenas = Escena.objects.filter(id__in=escena_ids).values('id', 'link')
 
         return Response(list(escenas), status=status.HTTP_200_OK)
+
 #@permission_classes([IsAuthenticated])
 class ObtenerLinksEvaluaciones(APIView):
+    # devuelve link de evaluaciones asociadas a un objetivo y un usuario
     def get(self, request):
         username = request.query_params.get('username')
         objetivo_id = request.query_params.get('objetivo_id')
