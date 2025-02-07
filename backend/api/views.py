@@ -2695,3 +2695,13 @@ def recommend_scene(request):
         return JsonResponse({"error": f"Falta el parámetro {str(e)}"}, status=400)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+from api.rl_model.train import train_model
+def train_model_view(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+    try:
+        train_model()
+        return JsonResponse({"message": "Modelo entrenado correctamente"})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)

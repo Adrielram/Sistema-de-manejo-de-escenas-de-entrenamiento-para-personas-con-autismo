@@ -40,7 +40,7 @@ def train_model():
 
     # Entrenar el modelo
     # Prueba con 500 iteraciones primero
-    for i in range(500):  
+    for i in range(10):  
         result = trainer.train()
         episode_reward_mean = result['env_runners'].get('episode_reward_mean', None)
         total_loss = result['info']['learner']['default_policy']['learner_stats']['total_loss']
@@ -59,11 +59,11 @@ def train_model():
     if os.path.exists(CHECKPOINT_DIR):
         shutil.rmtree(CHECKPOINT_DIR)    
     
-    trainer.save(CHECKPOINT_DIR)       
-
-    # Actualizar el modelo global con el nuevo checkpoint
-    rl_manager = RLModelManager()
-    rl_manager.update_model()
+    trainer.save(CHECKPOINT_DIR)     
+    rl_manager = RLModelManager()  # Cargar nueva instancia con el modelo actualizado
+    rl_manager.load_model()
+    print(f"🛠 Instancia de RLManager obtenida luego de entrenamiento: {rl_manager}")
+    print("Modelo en memoria después de entrenar:", rl_manager.model)
     print("Modelo actualizado en memoria.")
 
     return CHECKPOINT_DIR

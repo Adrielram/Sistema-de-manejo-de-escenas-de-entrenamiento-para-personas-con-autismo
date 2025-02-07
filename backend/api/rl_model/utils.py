@@ -69,9 +69,14 @@ def get_recommendation(objetivo_id, edad, patologias):
     observation = create_observation(objetivo_id, edad, patologias, num_patologias, num_escenas, max_objetivo_id)
     print("Observación enviada al modelo:", observation)
 
-    rl_manager = RLModelManager()    
+    rl_manager = RLModelManager.get_instance()
+
+    # 🚨 Agregar depuración
+    print(f"🛠 Instancia de RLManager obtenida: {rl_manager}")
+    print(f"📊 Modelo cargado en la instancia: {rl_manager.model}")
+
     if rl_manager.model is None:
-        raise ValueError("El modelo no esta cargado")
+        print("El modelo no está cargado. No se puede hacer una recomendación.")
     else:
         result = rl_manager.model.compute_single_action(observation, explore=False, full_fetch=True)
         print("Resultado completo:", result)        

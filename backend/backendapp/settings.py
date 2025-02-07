@@ -204,10 +204,3 @@ CORS_ALLOW_METHODS = [
 PINECONE_API_KEY = 'pcsk_6RotVr_Nq6iGe36ryodth5paYcaMdtQQowXKKhz4W5gFvChEehTqJ54usNdnHDT2ejXvcH'
 PINECONE_ENV = 'ipathology'
 CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo
-
-
-from api.rl_model.rl_model_manager import RLModelManager
-
-# Cargar el modelo PPO al iniciar Django
-rl_model_manager = RLModelManager()
-rl_model_manager.load_model()
