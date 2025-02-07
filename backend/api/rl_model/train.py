@@ -40,7 +40,7 @@ def train_model():
 
     # Entrenar el modelo
     # Prueba con 500 iteraciones primero
-    for i in range(10):  
+    for i in range(500):  
         result = trainer.train()
         episode_reward_mean = result['env_runners'].get('episode_reward_mean', None)
         total_loss = result['info']['learner']['default_policy']['learner_stats']['total_loss']
@@ -52,8 +52,8 @@ def train_model():
             print("La recompensa se ha estabilizado, deteniendo el entrenamiento.")
             break
         
-        prev_reward = episode_reward_mean'''
-
+        prev_reward = episode_reward_mean
+'''
 
     # Borrar el checkpoint anterior si existe
     if os.path.exists(CHECKPOINT_DIR):

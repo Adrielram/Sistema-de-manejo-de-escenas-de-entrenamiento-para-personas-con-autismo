@@ -15,11 +15,11 @@ def train_if_needed():
 
 import pandas as pd
 from backendapp.celery import celery_app
-from api.models import RegistroEvaluacion
 
 @celery_app.task(name="generar_dataset")
 def generar_dataset():
     """Genera el dataset_rl.csv a partir de la tabla RegistroEvaluacion."""
+    from api.models import RegistroEvaluacion
     registros = RegistroEvaluacion.objects.all()
 
     # Convertir datos a lista de diccionarios
@@ -43,11 +43,12 @@ def generar_dataset():
 
 
 
-from api.models import RegistroEvaluacion, EntrenamientoRegistro
-from .train import train_model
+
 
 @celery_app.task(name="train_if_needed")
 def train_if_needed():
+    from api.models import RegistroEvaluacion, EntrenamientoRegistro
+    from .train import train_model
     # Obtener la última cantidad registrada
     registro, created = EntrenamientoRegistro.objects.get_or_create(id=1)
 

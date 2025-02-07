@@ -14,11 +14,9 @@ class RecommenderEnv(gym.Env):
         self.data_folder = os.path.join(os.path.dirname(__file__), "data")
         self.dataset = self.load_latest_csv()
 
-        self.num_escenas = self.dataset["Escena"].max() 
-        print("Numero de escenas: ",self.num_escenas)
+        self.num_escenas = self.dataset["Escena"].max()       
         self.unique_patologias = sorted({int(x) for sublist in self.dataset["Patologias"].apply(safe_eval) for x in sublist})
-        self.num_patologias = len(self.unique_patologias)
-        print("NUMERO DE PATOLOGIAS: ",self.num_patologias)
+        self.num_patologias = len(self.unique_patologias)    
         self.observation_space = spaces.Box(low=0, high=1, shape=(2 + self.num_patologias + self.num_escenas,), dtype=np.float32)
         self.action_space = spaces.Discrete(self.num_escenas)
         self.reset()
@@ -44,14 +42,12 @@ class RecommenderEnv(gym.Env):
 
         # Ajustar índices para que comiencen en 0
         df["Objetivo ID"] -= 1    
-        df["Patologias"] = df["Patologias"].apply(lambda x: [int(p)-1 for p in safe_eval(x)] if isinstance(x, str) and x else [])
-        print("Dataset: ",df)
+        df["Patologias"] = df["Patologias"].apply(lambda x: [int(p)-1 for p in safe_eval(x)] if isinstance(x, str) and x else [])        
         return df
 
 
     def reset(self, seed=None, options=None):
-        sample = self.dataset.sample(1).iloc[0]
-        print("Sample: ",sample)
+        sample = self.dataset.sample(1).iloc[0]        
         # Guardar el objetivo_id original
         self.objetivo_id_original = sample["Objetivo ID"]  # Sin normalizar
         self.objetivo_id_normalizado = float((self.objetivo_id_original) / self.dataset["Objetivo ID"].max())  # Normalizado
@@ -64,8 +60,7 @@ class RecommenderEnv(gym.Env):
             if 0 <= p < self.num_patologias:  # Verificar que está en rango
                 self.patologias_one_hot[p] = 1
             else:
-                print(f"Advertencia: Patología {p} fuera de rango.")
-        print("Self.patologias_one_hot: ",self.patologias_one_hot)
+                print(f"Advertencia: Patología {p} fuera de rango.")    
         self.escenas_vistas = np.zeros(self.num_escenas)
         self.neg_recompensas = 0
         self.state = np.concatenate([[self.objetivo_id_normalizado, self.edad], self.patologias_one_hot, self.escenas_vistas])
@@ -79,8 +74,7 @@ class RecommenderEnv(gym.Env):
         ]         
         
         if not subset.empty:
-            recompensa = subset["Evaluacion"].max() / 100.0        
-            print("Recompensa subset no vacio: ",recompensa)    
+            recompensa = subset["Evaluacion"].max() / 100.0       
         else:
             recompensa = -1   
         self.escenas_vistas[action] = 1
@@ -98,4 +92,3 @@ class RecommenderEnv(gym.Env):
         print("DONE:", done)  # 🔥 Verifica que done sea True en algún momento
         self.state = np.concatenate([[self.objetivo_id_normalizado, self.edad], self.patologias_one_hot, self.escenas_vistas])
         return self.state.astype(np.float32), recompensa, done, False, {}
-

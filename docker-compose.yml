@@ -55,20 +55,26 @@ services:
     depends_on:      
       - redis
       - backend
+    volumes:
+      - ./backend:/app
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=backendapp.settings
 
   celery-beat:    
     image: backend
     container_name: celery_beat
     command: celery -A backendapp beat --loglevel=info
+    volumes:
+      - ./backend:/app
     depends_on:      
       - redis
       - celery
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=backendapp.settings
 
 volumes:
   db_data:
