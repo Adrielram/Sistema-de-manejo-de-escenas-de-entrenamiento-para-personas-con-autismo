@@ -119,6 +119,7 @@ urlpatterns = [
     #IA
     path("recommend/", recommend_scene, name="recommend_scene"),
     path("train/",train_model_view, name="train_model"),
+    path('load_model/', load_model, name='load_model'),    
 ]
 
 urlpatterns += [path('', include(router.urls))]

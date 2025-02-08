@@ -61,6 +61,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - DJANGO_SETTINGS_MODULE=backendapp.settings
+      - RUNNING_CELERY=1
 
   celery-beat:    
     image: backend
@@ -75,6 +76,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - DJANGO_SETTINGS_MODULE=backendapp.settings
+      - RUNNING_CELERY=1
 
 volumes:
   db_data:

@@ -73,22 +73,27 @@ class RecommenderEnv(gym.Env):
             (self.dataset["Escena"] == action+1)
         ]         
         
+        max_escenas_vistas = 3  
         if not subset.empty:
-            recompensa = subset["Evaluacion"].max() / 100.0       
+            recompensa = (np.sum(self.escenas_vistas) / max_escenas_vistas) * subset["Evaluacion"].max() / 100.0
         else:
             recompensa = -1   
+
+        if self.escenas_vistas[action] == 1:
+            recompensa -= 0.1  # Penalización adicional
+        
         self.escenas_vistas[action] = 1
-        max_escenas_vistas = 3  
         done = np.sum(self.escenas_vistas) >= max_escenas_vistas  
 
         if recompensa == -1:
             self.neg_recompensas += 1  
         else:
-            self.neg_recompensas = 0  
+            self.neg_recompensas = 0          
 
         if self.neg_recompensas >= 3:
             done = True  
 
         print("DONE:", done)  # 🔥 Verifica que done sea True en algún momento
         self.state = np.concatenate([[self.objetivo_id_normalizado, self.edad], self.patologias_one_hot, self.escenas_vistas])
+        print(f"Estado: {self.state}, Acción tomada: {action}, Recompensa: {recompensa}")
         return self.state.astype(np.float32), recompensa, done, False, {}

@@ -2705,3 +2705,15 @@ def train_model_view(request):
         return JsonResponse({"message": "Modelo entrenado correctamente"})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+    
+from django.http import JsonResponse
+from api.rl_model.rl_model_manager import RLModelManager  # Asegúrate de importar correctamente
+
+def load_model(request):
+    """Endpoint que carga el modelo entrenado en la instancia Singleton del backend."""
+    try:
+        rl_manager = RLModelManager()  # Obtener la instancia singleton
+        rl_manager.load_model()  # Cargar el nuevo modelo entrenado
+        return JsonResponse({"message": "Modelo actualizado correctamente"}, status=200)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)

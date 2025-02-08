@@ -24,6 +24,8 @@ class RLModelManager:
         
         if not ray.is_initialized():
             print("🚀 Iniciando Ray...")
+            import faulthandler
+            faulthandler.disable()
             ray.init(ignore_reinit_error=True)
         
         if os.path.exists(CHECKPOINT_DIR):
