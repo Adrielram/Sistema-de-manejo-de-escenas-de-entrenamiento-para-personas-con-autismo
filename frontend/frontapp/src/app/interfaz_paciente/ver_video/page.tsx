@@ -288,9 +288,14 @@ const VerVideo = () => {
     router.push(`/interfaz_paciente/evaluacion/${index}`);      
   };
 
+  const handleQuizClickRevisar = (index: number) => {
+    router.push(`/interfaz_paciente/evaluacion/${index}?ver_revision=true`);
+  };
+
   const handleCompletarObjetivo = () => {
     marcarVideoComoVisto();
-    router.push('./principal');
+    // SOLO SI TODOS LOS QUIZZES ESTÁN COMPLETADOS
+    router.push('./principal'); 
   };
 
   const allQuizzesCompleted = completedQuizzes.length === (quizzes?.formularios?.length || 0);  
