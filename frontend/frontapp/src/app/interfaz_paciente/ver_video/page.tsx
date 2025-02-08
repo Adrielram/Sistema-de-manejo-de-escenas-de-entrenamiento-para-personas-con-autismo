@@ -21,6 +21,7 @@ interface Escena {
 }
 
 const VerVideo = () => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const [videos, setVideos] = useState<string[]>([]);
   const [quizzes, setQuizzes] = useState({ formularios: [] });
   const [quizStates, setQuizStates] = useState<Record<number, { revision: boolean; volver_a_realizar: boolean; tiene_respuestas: boolean }>>({});
@@ -80,6 +81,28 @@ const VerVideo = () => {
     cargarFormulariosCompletados();
   }, [username]); 
   
+  useEffect(() => {
+    const fetchQuizStates = async () => {
+      const newQuizStates: Record<number, { revision: boolean; volver_a_realizar: boolean; tiene_respuestas: boolean }> = {};
+      for (const quiz of quizzes.formularios) {
+        try {
+          const response = await fetch(`${baseUrl}obtener_estado_revision/?formulario_id=${quiz.id}&username=${username}`);
+          if (response.ok) {
+            const data = await response.json();
+            newQuizStates[quiz.id] = data;
+          }
+        } catch (error) {
+          console.error("Error obteniendo estado de revisión:", error);
+        }
+      }
+      setQuizStates(newQuizStates);
+    };
+
+    if (quizzes.formularios.length > 0) {
+      fetchQuizStates();
+    }
+  }, [quizzes, username]);
+
   //COMENTARIOS
   const handleResponder = async (idComentario: number) => {
     try {
