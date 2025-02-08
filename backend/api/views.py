@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from django.http import HttpResponseRedirect
 from .models import *
+from .models import RegistroEvaluacion  # borrar 
 from .serializers import *
 from .forms import *
 from rest_framework.views import APIView

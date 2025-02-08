@@ -53,7 +53,6 @@ class ObjetivoSerializer(serializers.ModelSerializer):
        required=False
    )
    
-
    class Meta:
         model = Objetivo
         fields = ['id', 'nombre', 'descripcion', 'video_explicativo_id','video_explicativo', 'centro_profesional', 'escenas', 'objetivos']
@@ -111,11 +110,6 @@ class ObjetivoSerializer(serializers.ModelSerializer):
 
         return instance
 
-
-class ObjetivoSerializerList(serializers.ModelSerializer):
-    class Meta:
-        model = Objetivo
-        fields = ['id', 'nombre', 'descripcion']
 
 
 
@@ -351,6 +345,11 @@ class GrupoSerializer(serializers.ModelSerializer):
 class PatologiaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patologia
+        fields = ['id', 'nombre', 'descripcion']
+
+class ObjetivoSerializerList(serializers.ModelSerializer):
+    class Meta:
+        model = Objetivo
         fields = ['id', 'nombre', 'descripcion']
 
 class PersonaObjetivoEvaluacionSerializer(serializers.ModelSerializer):
