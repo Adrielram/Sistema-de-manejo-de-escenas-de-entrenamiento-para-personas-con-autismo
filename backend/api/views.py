@@ -133,6 +133,7 @@ class UpdateGroupAssociationsView(APIView):
     
 
 @api_view(['DELETE'])
+@authentication_classes([CookieJWTAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_person_group(request, grupo_id, user_id):
     try:
@@ -3485,7 +3486,7 @@ def habilitar_revision(request, revision_id, paciente_dni):
     if not revision_entry:
         return Response({"error": "Revisión no encontrada"}, status=404)
 
-    revision_entry.revision = True  # habilito la revision
+    revision_entry.revision = False  
     revision_entry.save()
     return Response({"status": "ok", "revision": revision_entry.revision})
 

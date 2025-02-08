@@ -42,10 +42,9 @@ export default function Therapist() {
   },[username]);
 
   useEffect(() => {
-    if (username) {
       fetchAssociatedCenters();
-    }
-}, [username, associatedCenters, fetchAssociatedCenters]); // Agrega associatedCenters como dependencia
+
+}, [username, fetchAssociatedCenters]); // Agrega associatedCenters como dependencia
 
 
   const handleSubmitOfAssociation = async (event: React.FormEvent) => {
@@ -120,6 +119,10 @@ export default function Therapist() {
       const data = await response.json();
       console.log("Centros desasociados con éxito:", data);
       alert("Centros desasociados con éxito.");
+      // Actualiza el estado de associatedCenters quitando el centro desasociado
+      setAssociatedCenters((prevCenters) =>
+        prevCenters.filter((center) => !selectedCentersToDisassociate.some((selected) => selected.id === center.id))
+      );
       // Aquí podrías redirigir o limpiar el formulario
     } catch (error) {
       console.error("Error de red al desasociar centros:", error);

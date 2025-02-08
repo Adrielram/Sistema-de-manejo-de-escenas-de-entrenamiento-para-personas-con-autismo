@@ -264,13 +264,18 @@ class FormularioSerializer(serializers.ModelSerializer):
                 Opcion.objects.create(pregunta=pregunta, **opcion_data)
         # Crear PersonaObjetivoEvaluacion para cada PersonaObjetivoEscena relacionada
         for persona_objetivo_escena in PersonaObjetivoEscena.objects.filter(escena_objetivo__objetivo=formulario.objetivo_id):
-            PersonaObjetivoEvaluacion.objects.create(
+            if not PersonaObjetivoEvaluacion.objects.filter(
             user_id=persona_objetivo_escena.user_id,
             objetivo_id=formulario.objetivo_id,
-            resultado='',
-            progreso=0,
             evaluacion=formulario
-            )
+            ).exists():
+                PersonaObjetivoEvaluacion.objects.create(
+                    user_id=persona_objetivo_escena.user_id,
+                    objetivo_id=formulario.objetivo_id,
+                    resultado='',
+                    progreso=0,
+                    evaluacion=formulario
+                )
         return formulario
 
 
