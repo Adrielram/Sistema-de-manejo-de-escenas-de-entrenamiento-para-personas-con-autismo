@@ -11,10 +11,9 @@ export async function middleware(request) {
     admin: "/admin",
   };
 
-  const cookie = request.headers.get('cookie');
+  //const cookie = request.headers.get('cookie');
 
   // Verificar si existe una cookie válida
-  if (cookie && cookie.includes('jwt=')) {
     try {
       // Llamar al endpoint de verificación de sesión
       const response = await fetch('http://backend:8000/api/verify-session/', {
@@ -46,7 +45,7 @@ export async function middleware(request) {
       console.error('Error al verificar la sesión:', error);
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
-  }
+
 }
 
 // Configuración para las rutas que deben usar este middleware
