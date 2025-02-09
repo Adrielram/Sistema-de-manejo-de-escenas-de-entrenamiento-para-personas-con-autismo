@@ -45,54 +45,6 @@ from django.views.decorators.csrf import csrf_exempt
 from .authentication import CookieJWTAuthentication
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils import timezone
-import json
-from .models import Condicion, Objetivo  # Ensure you import Objetivo
-
-@csrf_exempt
-def create_condition(request):
-    if request.method == "POST":
-        try:
-            # Parse JSON data from request body
-            data = json.loads(request.body)
-            
-            # Extract condition fields, allowing them to be None
-            edad = data.get('edad', None)
-            objetivo_id = data.get('objetivo', None)
-            fecha = data.get('fecha', None)
-
-            # Convert fecha to datetime if provided
-            if fecha:
-                fecha = timezone.datetime.strptime(fecha, "%Y-%m-%d")
-
-            # Fetch Objetivo instance if objetivo_id is provided
-            objetivo = None
-            if objetivo_id is not None:
-                objetivo = Objetivo.objects.get(id=objetivo_id)
-
-            # Create Condicion instance
-            nueva_condicion = Condicion.objects.create(
-                edad=edad,
-                objetivo=objetivo,
-                fecha=fecha
-            )
-
-            return JsonResponse({
-                'id': nueva_condicion.id, 
-                'success': True
-            }, status=201)
-
-        except Objetivo.DoesNotExist:
-            return JsonResponse({"error": "Objetivo no encontrado"}, status=404)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
-
-    return JsonResponse({"error": "Método no permitido"}, status=405)
-
-
 class UpdateGroupAssociationsView(APIView):
     def put(self, request, group_id):
         print("Method:", request.method)
@@ -494,7 +446,6 @@ class ObjetivoListView(generics.ListAPIView):
         try:
             dni = obtener_dni(username)
         except User.DoesNotExist:
-
             return Objetivo.objects.none()
         
         objetivos_ids = PersonaObjetivoEscena.objects.filter(
@@ -512,7 +463,7 @@ class ObjetivoListView(generics.ListAPIView):
                 'escenaobjetivo_set',
                 queryset=EscenaObjetivo.objects.prefetch_related(
                     Prefetch(
-                        'objetivo_relations',
+                        'objetivo_relations',  # Usamos el related_name correcto
                         queryset=PersonaObjetivoEscena.objects.filter(user_id=dni),
                         to_attr='user_poe'
                     )
@@ -522,7 +473,6 @@ class ObjetivoListView(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         username = request.query_params.get('username')
-
         if not username:
             return Response(
                 {"error": "El parámetro 'username' es requerido."},
@@ -542,7 +492,6 @@ class ObjetivoListView(generics.ListAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-
         queryset = self.filter_queryset(self.get_queryset())
         
         page = self.paginate_queryset(queryset)
@@ -804,13 +753,11 @@ class EscenasPorObjetivoView(generics.ListAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-
         user_vistos_ids = set(
             Videosvistos.objects.filter(paciente_id__dni=dni)
             .values_list('escena_id', flat=True)
         )
         
-
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         serialized_data = serializer.data
@@ -1094,10 +1041,6 @@ class VerificarCondicionesView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            serialized_data = []
-            required_escena_ids = set()
-            escena_info = {}
-
 
 class EscenaFilter(filters.FilterSet):
     query = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
@@ -1301,7 +1244,6 @@ class ResolveNamesToIds(APIView):
         }) 
     
 
-
 @permission_classes([AllowAny])
 class ObjetivoViewSet(viewsets.ViewSet):
     def create(self, request):
@@ -1334,7 +1276,6 @@ class ObjetivoViewSet(viewsets.ViewSet):
                 'objetivo': serializer.data
             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class EscenaUpdateView(UpdateAPIView):
     queryset = Escena.objects.all()
@@ -1894,7 +1835,6 @@ def objetivos_evaluacion_usuario(request):
 @api_view(['GET'])
 def obtener_nombre_por_dni(request):
     dni = request.query_params.get('dni')  
-
     try:
         user = User.objects.get(dni=dni)  
         return Response({"nombre": user.nombre}, status=status.HTTP_200_OK)  
@@ -3821,7 +3761,6 @@ class ComentarioDetalleAPIView(APIView):
                     "usuarioRespondido": comentario.comentario_contestado.user.nombre
                 })
 
-
             return Response(response_data, status=status.HTTP_200_OK)
 
         except Comentario.DoesNotExist:
@@ -3989,7 +3928,6 @@ def procesar_notificacion(request, pk, accion):
     :param accion: "aceptar" o "rechazar".
     """
     notificacion = get_object_or_404(Notificacion, pk=pk)
-
 
     # Verifica el tipo de objeto asociado
     content_type = notificacion.content_type
@@ -4211,3 +4149,48 @@ El Sistema de Monitoreo Automático
             print(f"Error al enviar el correo: {e}")
 
     return JsonResponse({"data": data, "therapist_emails": list(therapist_emails), "mensaje": mensaje, "razon": razon})
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+import json
+from .models import Condicion, Objetivo  # Ensure you import Objetivo
+
+@csrf_exempt
+def create_condition(request):
+    if request.method == "POST":
+        try:
+            # Parse JSON data from request body
+            data = json.loads(request.body)
+
+            edad = data.get('edad', None)
+            objetivo_id = data.get('objetivo', None)
+            fecha = data.get('fecha', None)
+
+            # Convert fecha to datetime if provided
+            if fecha:
+                fecha = timezone.datetime.strptime(fecha, "%Y-%m-%d")
+
+            # Fetch Objetivo instance if objetivo_id is provided
+            objetivo = None
+            if objetivo_id is not None:
+                objetivo = Objetivo.objects.get(id=objetivo_id)
+
+            # Create Condicion instance
+            nueva_condicion = Condicion.objects.create(
+                edad=edad,
+                objetivo=objetivo,
+                fecha=fecha
+            )
+
+            return JsonResponse({
+                'id': nueva_condicion.id, 
+                'success': True
+            }, status=201)
+
+        except Objetivo.DoesNotExist:
+            return JsonResponse({"error": "Objetivo no encontrado"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+    return JsonResponse({"error": "Método no permitido"}, status=405)
