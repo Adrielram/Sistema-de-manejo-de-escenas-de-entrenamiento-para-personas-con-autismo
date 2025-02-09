@@ -102,6 +102,9 @@ export const create_scene = async (nuevaEscena) => {
             body: JSON.stringify({
                 nombre_grupo: nuevoGrupo.nombre_grupo,
                 nombre_centro: nuevoGrupo.nombre_centro,
+                terapeuta: nuevoGrupo.terapeuta, // Agregamos el terapeuta al grupo
+                pacientes: nuevoGrupo.pacientes || [], // Incluimos pacientes si los hay
+                terapeutas: nuevoGrupo.terapeutas || [] // Incluimos terapeutas si los hay
             }),
             credentials: 'include'
         });
@@ -120,5 +123,4 @@ export const create_scene = async (nuevaEscena) => {
             error: error.message || 'Error desconocido'
         };
     }
-  };
- 
+};

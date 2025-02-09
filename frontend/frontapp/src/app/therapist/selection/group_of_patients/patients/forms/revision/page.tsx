@@ -68,10 +68,12 @@ const Revision = () => {
       }
 
       alert('Revisión habilitada con éxito')
+      //route.push('/therapist/selection/group_of_patients/patients')
     } catch (error) {
       console.error('Error:', error)
       alert('Hubo un problema al habilitar la revisión')
     }
+    
   }
 
   // 🔹 Función para habilitar volver a realizar

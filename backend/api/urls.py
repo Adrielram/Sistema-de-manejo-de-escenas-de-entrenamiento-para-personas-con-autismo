@@ -15,6 +15,7 @@ urlpatterns = [
     path('logout/', logout, name='logout'),
     path('verify-session/', verify_session, name='verify-session'),
     path('objetivos/', objetivos_list, name='listar_objetivos'),
+    path('patologias/', patologias_list, name='listar_patologias'),
     path('pacientes/', PacienteListView.as_view(), name='pacientes-list'),
     path('objetivo/<int:objetivo_id>/', get_goal_data, name='get_goal_data'),
     path('health_centers/<int:center_id>/delete/', delete_health_center, name='delete_health_center'),
@@ -29,7 +30,6 @@ urlpatterns = [
     path('get-user/', retrieve_user.as_view(), name='retrieve_user'),
     path('update-user/', update_user.as_view(), name='update_user'),
     path('signIn/', views.signIn, name='signIn'),
-    path('buscar_padres/', views.buscar_padres, name='buscar_padres'),
     path('crear-escena/', views.crear_escena, name='crear_escena'),
     path('escenas/', EscenaListView.as_view(), name='escena-list'),
     path('objetivos-list/', ObjetivosListView.as_view(), name='objetivo-list'),
@@ -39,6 +39,8 @@ urlpatterns = [
     path('get-dni/', views.get_dni, name='get-dni'),
     path('get-name/', views.obtener_nombre_por_dni, name='get-name'),
     path('objetivos-ev-paciente/', views.objetivos_evaluacion_usuario, name='objetivos-ev-paciente'),
+    path('patients/<str:patientId>/objectives/<int:objectiveId>/unassign/', UnassignObjective.as_view(), name='unassign_objective'),
+    path('objetivos-es-paciente/', views.objetivos_escena_usuario, name='objetivos-es-paciente'),
     path('obtener_centros_de_salud/', CentrosSaludListView.as_view(), name='obtener_centros_salud'),
     path('notificaciones/', views.obtener_notificaciones_pendientes, name='notificaciones-pendientes'),
     path('notificaciones/<int:pk>/', views.obtener_detalle_notificacion, name='notification-detail'),
@@ -84,7 +86,6 @@ urlpatterns = [
     path('get-dni/', views.get_dni, name='get-dni'),
     path('get-name/', views.obtener_nombre_por_dni, name='get-name'),
     path('objetivos-ev-paciente/', views.objetivos_evaluacion_usuario, name='objetivos-ev-paciente'),
-
     path('goal/ResolveNamesToIds/', ResolveNamesToIds.as_view(), name='ResolveNamesToIds'),
     path('escenaById/<int:pk>/', EscenaById.as_view(), name='escenaById'),
     path('grupoById/<int:pk>/', GrupoById.as_view(), name='grupoById'),
@@ -105,6 +106,10 @@ urlpatterns = [
     path('get_groups_per_user/', GetGroupsPerUserView.as_view(), name='get_groups_per_user'),
     path('group/<int:group_id>/patients/', PatientsPerGroupView.as_view(), name='patients_per_group'),
     path('get_patients_per_group/', GetPatientsPerGroupView.as_view(), name='get_patients_per_group'),
+    path('get_therapists_per_group/', GetTherapistsPerGroupView.as_view(), name='get_therapists_per_group'),
+    path('objetivo/<int:objetivo_id>/escenas/<int:patient_id>/', Get_escenas_by_objetivo_by_user.as_view(), name='get_escenas_by_objetivo_by_user'),
+    path('objetivo/<int:objetivo_id>/user/<int:patient_id>/escenas/', Get_escenas_by_objetivo.as_view(), name='get_escenas_by_objetivo'),
+    path('objetivo_save_order/', SaveOrderView.as_view(), name='objetivo_save_order'), 
     path('forms_per_user/', GetFormsPerUserView.as_view(), name='forms_per_user'),
     path('assesment/<int:pk>/delete/', DeleteAssesmentView.as_view(), name='delete_assesment'),
     path('comentarios/lista/', ComentariosListaAPIView.as_view(), name='comentarios-lista'),
@@ -128,9 +133,15 @@ urlpatterns = [
     path('get-objetivos-list/', ObjetivoListView.as_view(), name='objetivos-list'),
     path('escenas-por-objetivo/', EscenasPorObjetivoView.as_view(), name='escenas-por-objetivo'),
     path('verificar-condiciones/', VerificarCondicionesView.as_view(), name='verificar-condiciones'),
-
+    path('get_therapists_not_in_group/', GetTherapistsNotInGroupView.as_view(), name='get_therapists_not_in_group'),
+    path('get_patients/', GetPatientsView.as_view(), name='get_patients'),
+    path('get_pathologies_from_user/<int:user_id>/', GetPathologiesFromUserView.as_view(), name='get_pathologies_from_user'),
+    path('get_groups_per_user_not_in/', GetGroupsPerUserNotInView.as_view(), name='get_groups_per_user_not_in'),
+    path('getTherapistsExcluding/<str:username>/', GetTherapistsExcludingView.as_view(), name='getTherapistsExcluding'),
+    path('assign-pathology/', AssignPathologyView.as_view(), name='assign-pathology'),
+    path('unassign-pathology/', UnassignPathologyView.as_view(), name='unassign-pathology'),
     path('create_condition/', views.create_condition, name='create_condition')
 
-]
+    ]
 
 urlpatterns += [path('', include(router.urls))]

@@ -19,7 +19,7 @@ export default function TherapistLayout({
       <div className={`flex min-h-screen flex-col bg-white ${inter.className}`}>
         <Header />
         <div className="flex flex-1">
-          <SideNav list={SIDENAV_ITEMS}/>
+          <SideNav list={SIDENAV_ITEMS} admin={undefined}/>
           <main className="flex-1">
             <MarginWidthWrapper>
               <HeaderMobile />

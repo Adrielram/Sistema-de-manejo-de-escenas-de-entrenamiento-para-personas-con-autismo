@@ -5,7 +5,6 @@ import {useSelector} from "react-redux";
 import { RootState } from "../../store/store";
 
 export default function NotificationsMenu({token}) {
-  console.log("Token: ", token);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificaciones, setNotificaciones] = useState(() => {
@@ -36,7 +35,6 @@ export default function NotificationsMenu({token}) {
       
       const handleMessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log("Data: "+JSON.stringify(data));
         if (data.type === "notificacion_actualizada") {          
           fetchNotificaciones();
         } else if (data.type === "enviar_notificacion") {

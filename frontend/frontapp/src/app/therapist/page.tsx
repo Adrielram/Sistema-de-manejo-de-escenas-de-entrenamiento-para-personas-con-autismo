@@ -21,6 +21,7 @@ export default function Therapist() {
   const {username} = useSelector((state: RootState) => state.user);
   const [associatedCenters, setAssociatedCenters] = useState([]); // Para almacenar los centros asociados
   const [resetTrigger, setResetTrigger] = useState(false);
+  const [resetTrigger2, setResetTrigger2] = useState(false);
 
   const fetchAssociatedCenters = useCallback( async () => {
     try {
@@ -41,10 +42,10 @@ export default function Therapist() {
   },[username]);
 
   useEffect(() => {
-      if (username) {
-          fetchAssociatedCenters();
-      }
-  }, [username, fetchAssociatedCenters]);
+      fetchAssociatedCenters();
+
+}, [username, fetchAssociatedCenters]); // Agrega associatedCenters como dependencia
+
 
   const handleSubmitOfAssociation = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -80,6 +81,8 @@ export default function Therapist() {
       console.log("Centros asociados con éxito:", data);
       alert("Centros asociados con éxito.");
       // Aquí podrías redirigir o limpiar el formulario
+      fetchAssociatedCenters(); // Vuelve a obtener los centros asociados
+
     } catch (error) {
       console.error("Error de red al asociar centros:", error);
       alert("Error de red al intentar asociar centros.");
@@ -93,9 +96,6 @@ export default function Therapist() {
       username: username,
       centers: selectedCentersToDisassociate.map(center => center.id),
     };
-  
-    console.log('Datos a enviar:', therapistCenterData); // Para depuración
-    console.log('Datos a enviar 2:', JSON.stringify(therapistCenterData)); // Para depuración
   
     try {
       const response = await fetch(`http://localhost:8000/api/disassociate_center/`, {
@@ -114,11 +114,15 @@ export default function Therapist() {
         return;
       }
       setselectedCentersToDisassociate([]); // Limpiar los centros seleccionados
-      setResetTrigger((prev) => !prev); // Activa el reinicio del SearchSelectBox
+      setResetTrigger2((prev) => !prev); // Activa el reinicio del SearchSelectBox
 
       const data = await response.json();
       console.log("Centros desasociados con éxito:", data);
       alert("Centros desasociados con éxito.");
+      // Actualiza el estado de associatedCenters quitando el centro desasociado
+      setAssociatedCenters((prevCenters) =>
+        prevCenters.filter((center) => !selectedCentersToDisassociate.some((selected) => selected.id === center.id))
+      );
       // Aquí podrías redirigir o limpiar el formulario
     } catch (error) {
       console.error("Error de red al desasociar centros:", error);
@@ -175,7 +179,7 @@ export default function Therapist() {
                   getItemLabel={(item) => item.nombre as string}
                   selectedItems={selectedCentersToDisassociate}
                   onSelectItems={setselectedCentersToDisassociate}
-                  resetTrigger={resetTrigger} // Pasa el trigger al SearchSelectBox
+                  resetTrigger={resetTrigger2} // Pasa el trigger al SearchSelectBox
 
                   apiUrl={`http://localhost:8000/api/get_associated_centers/${username}/`}
                 />

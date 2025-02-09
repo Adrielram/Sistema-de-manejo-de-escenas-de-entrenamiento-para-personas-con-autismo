@@ -74,8 +74,8 @@ const MenuItem = ({ item, depth, admin }: { item: SideNavItem; depth: number; ad
       ) : (
         <Link
           href={item.path}
-          className={`flex flex-row space-x-4 items-center p-2 rounded-lg hover:bg-zinc-200 ${
-            isActive ? 'bg-[#3EA5E9] text-white hover:bg-[#3EA5FF]' : ''
+          className={`flex flex-row space-x-4 items-center p-2 rounded-lg  hover:bg-[#2E8BFF] ${
+            isActive ? 'bg-[#3EA5FF] text-white hover:bg-[#2E8BFF]' : ''
           } ${fontSizeClass}`}
         >
           {item.icon && React.cloneElement(item.icon, { size: 20 })}          

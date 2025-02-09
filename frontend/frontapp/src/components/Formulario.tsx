@@ -12,7 +12,7 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
   const [modoVerificacion, setModoVerificacion] = useState<string | null>(null);
   const [preguntas, setPreguntas] = useState<any[]>([]);
   const [objetivos, setObjetivos] = useState([]);
-  const [objetivo, setObjetivoId] = useState("");
+  const [objetivo_id, setObjetivoId] = useState("");
   const agregarPregunta = (pregunta: any) => {
     setPreguntas([...preguntas, pregunta]);
   };
@@ -33,7 +33,7 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
   }
 
   const manejarEnvio = () => {
-    if (!nombre || !descripcion || !modoVerificacion || !objetivo) {
+    if (!nombre || !descripcion || !modoVerificacion || !objetivo_id) {
       alert("Por favor complete todos los campos.");
       return;
     }
@@ -42,7 +42,7 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
       descripcion,
       es_verificacion_automatica: modoVerificacion === "con-verificacion",
       creado_por: 31222333, // Aquí puedes usar el ID del usuario autenticado
-      objetivo,
+      objetivo_id,
       preguntas,
     };
     onSubmit(formulario);
@@ -86,7 +86,7 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
       <div className="mb-4">
       <label className="block text-gray-700 font-medium mb-1">Seleccionar Objetivo:</label>
       <select
-        value={objetivo}
+        value={objetivo_id}
         onChange={manejarCambioObjetivo}
         className="w-full p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none"
       >
@@ -112,11 +112,11 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
         </select>
       </div>
 
-      {modoVerificacion && objetivo && (
+      {modoVerificacion && objetivo_id && (
         <Pregunta
           onAddPregunta={agregarPregunta}
           esVerificacionAutomatica={modoVerificacion === "con-verificacion"}
-          objetivoId={objetivo}
+          objetivoId={objetivo_id}
         />
       )}
 

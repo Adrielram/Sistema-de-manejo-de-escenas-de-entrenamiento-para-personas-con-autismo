@@ -2,7 +2,6 @@
 import React, { useState, useEffect, use } from "react";
 import SingleSearchSelectBox from "../../../../../components/SingleSearchSelectBox";
 import SearchSelectBox from "../../../../../components/SearchSelectBox";
-import SortableSearchSelectBox from "../../../../../components/SortableSearchSelectBox";
 import { useSelector } from 'react-redux';
 import { RootState } from "../../../../../../store/store";
 import { useRouter } from 'next/navigation';
@@ -47,7 +46,7 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
     };
 
     fetchObjetivo();
-  }, [edit_goal]);
+  }, [baseUrl, edit_goal]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -81,9 +80,12 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
       escenas: selectedScenes.map((item) => item.id),
       objetivos: selectedObjectives.map((item) => item.id),
       centro_profesional: responseData.center_professional,
+      video_explicativo: null, // No se necesita enviar el video explicativo
+
     };
   
     try {
+      console.log("escenas:", selectedScenes.map((item) => item.id),);
       const createResponse = await fetch(`${baseUrl}objetivos/${objetivoId}/`, {
         method: "PUT", // Change to PUT for updating
         credentials: "include",
@@ -163,7 +165,7 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
 
           </div>          
           <div>
-            <SortableSearchSelectBox
+            <SearchSelectBox
               title="Buscar Escenas"
               searchPlaceholder="Escribe el nombre de la escena..."
               getItemLabel={(item) => item.nombre as string}
@@ -173,7 +175,7 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
             />
 
             <SearchSelectBox
-              title="Buscar Objetivos"
+              title="Buscar SubObjetivos"
               searchPlaceholder="Escribe el nombre del objetivo..."
               getItemLabel={(item) => item.nombre as string}
               selectedItems={selectedObjectives}

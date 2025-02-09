@@ -119,7 +119,7 @@ class Command(BaseCommand):
             password=make_password("pac123"),
             dni=40333444,
             nombre="Paciente Uno",
-            fecha_nac=datetime(2010, 5, 20),
+            fecha_nac=datetime(2000, 5, 20),
             genero="M",
             role="paciente",
             direccion_id_dir=residencias[1]
@@ -198,7 +198,7 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            link="https://ejemplo.com/video1",
+            link="https://drive.google.com/file/d/1jDUv2cWsGROqI-Cs7XUmHUEp2Qhe7-TA/preview",
             nombre="Escena 1",
             descripcion = "Esta escena reflexiona sobre la importancia de la amistad"
         )
@@ -206,7 +206,7 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=1,
-            link="https://ejemplo.com/video2",
+            link="https://drive.google.com/file/d/1jDUv2cWsGROqI-Cs7XUmHUEp2Qhe7-TA/preview",
             nombre="Escena 2",
             descripcion = "Esta escena refleja la importancia de la familia"
 
@@ -215,7 +215,7 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=2,
-            link="https://ejemplo.com/video3",
+            link="https://drive.google.com/file/d/1zCpLV-NkRAI_nnh82hAGmcFi3kdyU0t-/preview",
             nombre="Escena 3",
             descripcion = "Esta escena demuestra la importancia de la educación"
 
@@ -224,7 +224,7 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=4,
-            link="https://ejemplo.com/video4",
+            link="https://drive.google.com/file/d/1zCpLV-NkRAI_nnh82hAGmcFi3kdyU0t-/preview",
             nombre="Escena 4",
             descripcion = "Esta escena refuerza la importancia de la juventud"
         )
@@ -232,7 +232,7 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=3,
-            link="https://ejemplo.com/video5",
+            link="https://drive.google.com/file/d/1ecZueXAucLxCeD2IYMo3furoH3pVtAYi/preview",
             nombre="Escena 5",
             descripcion = "Esta escena refleja la importancia del viaje antes que el destino"
 
@@ -241,7 +241,7 @@ class Command(BaseCommand):
             idioma="Español",
             acento="neutro",
             complejidad=5,
-            link="https://ejemplo.com/video6",
+            link="https://drive.google.com/file/d/1ecZueXAucLxCeD2IYMo3furoH3pVtAYi/preview",
             nombre="Escena 6",
             descripcion = "Esta escena refuerza la importancia de la juventud"
         )
@@ -254,6 +254,7 @@ class Command(BaseCommand):
             link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
             nombre="Escena 7",
             descripcion = "Esta escena es la de openai"
+
         )
         escena_8 = Escena.objects.create(
             idioma="Español",
@@ -262,6 +263,7 @@ class Command(BaseCommand):
             link="https://drive.google.com/file/d/1qzY31odKmd2FlrjU0VK4dkfezlzEcoaJ/preview",
             nombre="Escena 8",
             descripcion = "Esta escena es la de futgame"
+   
         )
         escena_9 = Escena.objects.create(
             idioma="Español",
@@ -270,6 +272,7 @@ class Command(BaseCommand):
             link="https://drive.google.com/file/d/1yPgHYRagTJXTqlrGhNkZDEy5zNY4-f77/preview",
             nombre="Escena 9",
             descripcion = "Esta escena es la del cartpole"
+
         )
 
         # Create objectives
@@ -322,15 +325,16 @@ class Command(BaseCommand):
         )
         escena_obj_2 = EscenaObjetivo.objects.create(
             escena=escena_4,
-            objetivo=objetivo_2
+            objetivo=objetivo_1
         )
         escena_obj_3 = EscenaObjetivo.objects.create(
-            escena=escena_7,
+            escena=escena_5,
             objetivo=objetivo_3
         )
         escena_obj_4 = EscenaObjetivo.objects.create(
             escena=escena_8,
             objetivo=objetivo_3   
+
         )
         escena_obj_5 = EscenaObjetivo.objects.create(
             escena=escena_9,
@@ -354,11 +358,7 @@ class Command(BaseCommand):
             objetivo=objetivo_3
         )
 
-        escena_obj_10 = EscenaObjetivo.objects.create(
-            escena=escena_5,
-            objetivo=objetivo_3
-        )
-        escena_obj_11 = EscenaObjetivo.objects.create(
+        escena_obj_1 = EscenaObjetivo.objects.create(
             escena=escena_5,
             objetivo=objetivo_4
         )
@@ -367,12 +367,12 @@ class Command(BaseCommand):
         # Create person-objective-scene relationship
         persona_obj_esc_1 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_3,
+            escena_objetivo=escena_obj_1,
             orden= 1,
         )
         persona_obj_esc_2 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_4,
+            escena_objetivo=escena_obj_2,
             orden= 2,
         )
         persona_obj_esc_3 = PersonaObjetivoEscena.objects.create(
@@ -381,11 +381,12 @@ class Command(BaseCommand):
         )
         persona_obj_esc_4 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_1,
+            escena_objetivo=escena_obj_3,
+            orden = 1
         )
         persona_obj_esc_5 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
-            escena_objetivo=escena_obj_2,
+            escena_objetivo=escena_obj_4,
         )
         persona_obj_esc_6 = PersonaObjetivoEscena.objects.create(
             user_id=paciente,
@@ -405,15 +406,7 @@ class Command(BaseCommand):
             user_id=paciente,
             escena_objetivo=escena_obj_9,
         )
-        persona_obj_esc_10 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_10,
-        )
-        persona_obj_esc_11 = PersonaObjetivoEscena.objects.create(
-            user_id=paciente,
-            escena_objetivo=escena_obj_11,
-            orden = 5
-        )
+
 
 
 
@@ -505,6 +498,51 @@ class Command(BaseCommand):
         )
 
 
+        # Añadir preguntas al Formulario 1
+        pregunta_1 = Pregunta.objects.create(
+            formulario=formulario_1,
+            texto="¿Cuál es la capital de Francia?",
+            tipo="multiple-choice",
+            correcta="París"
+        )
+
+        Opcion.objects.create(pregunta=pregunta_1, texto="Madrid")
+        Opcion.objects.create(pregunta=pregunta_1, texto="Roma")
+        Opcion.objects.create(pregunta=pregunta_1, texto="París")
+        Opcion.objects.create(pregunta=pregunta_1, texto="Berlín")
+
+        pregunta_2 = Pregunta.objects.create(
+            formulario=formulario_1,
+            texto="Escribe una breve descripción sobre tu día.",
+            tipo="respuesta-corta"
+        )
+
+        pregunta_3 = Pregunta.objects.create(
+            formulario=formulario_1,
+            texto="Describe tus objetivos para la semana.",
+            tipo="respuesta-larga"
+        )
+
+        # Añadir preguntas al Formulario 2
+        pregunta_4 = Pregunta.objects.create(
+            formulario=formulario_2,
+            texto="¿Qué color es el cielo durante un día despejado?",
+            tipo="multiple-choice",
+            correcta="Azul"
+        )
+
+        Opcion.objects.create(pregunta=pregunta_4, texto="Rojo")
+        Opcion.objects.create(pregunta=pregunta_4, texto="Amarillo")
+        Opcion.objects.create(pregunta=pregunta_4, texto="Azul")
+        Opcion.objects.create(pregunta=pregunta_4, texto="Verde")
+
+        pregunta_5 = Pregunta.objects.create(
+            formulario=formulario_2,
+            texto="¿Cuál es tu plato favorito?",
+            tipo="respuesta-corta"
+        )
+
+
         # Create person-objective-evaluation
         PersonaObjetivoEvaluacion.objects.create(
             user_id=paciente,
@@ -516,6 +554,14 @@ class Command(BaseCommand):
         PersonaObjetivoEvaluacion.objects.create(
             user_id=paciente,
             objetivo_id=objetivo_3,
+            resultado="Re mal",
+            progreso=0,
+            evaluacion=formulario_2
+        )
+        
+        PersonaObjetivoEvaluacion.objects.create(
+            user_id=paciente,
+            objetivo_id=objetivo_4,
             resultado="Re mal",
             progreso=0,
             evaluacion=formulario_2
