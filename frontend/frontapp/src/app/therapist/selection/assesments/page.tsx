@@ -100,7 +100,7 @@ const AssesmentsPage: React.FC = () => {
             data={data} 
             options={opProps}
             img='/icon/evaluacion.png'
-            ver_path="/therapist/selection/assesments/"
+            ver_path="/therapist/selection/assesments/ver_assesment?form_id="
             item_type="assesment"
             showImage={showImage}
             currentPage={currentPage}
