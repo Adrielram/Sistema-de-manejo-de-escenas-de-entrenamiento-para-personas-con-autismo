@@ -80,9 +80,12 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
       escenas: selectedScenes.map((item) => item.id),
       objetivos: selectedObjectives.map((item) => item.id),
       centro_profesional: responseData.center_professional,
+      video_explicativo: null, // No se necesita enviar el video explicativo
+
     };
   
     try {
+      console.log("escenas:", selectedScenes.map((item) => item.id),);
       const createResponse = await fetch(`${baseUrl}objetivos/${objetivoId}/`, {
         method: "PUT", // Change to PUT for updating
         credentials: "include",
