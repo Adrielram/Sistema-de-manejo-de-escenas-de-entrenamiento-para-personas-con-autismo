@@ -11,7 +11,8 @@ interface BoxPaginadoProps {
   data: Dictionary;
   options: OptionsProps;
   img: string;
-  edit_path: string;
+  ver_path?: string;
+  edit_path?: string;
   patients_list_path?: string;
   supervision_path?: string;
   comments_path?: string;
@@ -32,6 +33,7 @@ export default function BoxPaginado({
   data: initialData, 
   options,
   img,
+  ver_path,
   edit_path,
   patients_list_path,
   supervision_path,
@@ -98,7 +100,8 @@ export default function BoxPaginado({
             name={value} 
             showImage={showImage} 
             options={options} 
-            img={img} 
+            img={img}
+            ver_path={ver_path}
             edit_path={edit_path}
             patients_list_path={patients_list_path}
             supervision_path={supervision_path}

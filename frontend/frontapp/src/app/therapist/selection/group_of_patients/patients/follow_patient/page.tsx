@@ -21,7 +21,7 @@ const GoalsPage = () => {
       try {
         // Fetch de los objetivos alcanzados
         const reachedResponse = await fetch(`http://localhost:8000/api/get_reached_goals/?user_dni=${encodeURIComponent(patient_dni)}`, {
-          method: "POST",
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
           },

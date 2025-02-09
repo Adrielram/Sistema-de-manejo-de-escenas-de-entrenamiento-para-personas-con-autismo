@@ -58,38 +58,6 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
         const response = await fetch(`${baseUrl}get_patients_not_in_group/?group_id=${grupoId}`);
         if (!response.ok) {
           throw new Error("Error al obtener los pacientes disponibles");
-      };
-      unwrapParams();
-    }, [params]);    
-  
-    // Cargar los datos de la escena al montar el componente
-    useEffect(() => {
-      if (!grupoId) return;
-
-      const fetchScene = async () => {
-        console.log("Iniciando fetch para grupoId:", grupoId); // <-- Log antes de la solicitud
-
-        try {
-          const response = await fetch(`${baseUrl}grupoById/${grupoId}/`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: 'include' // Include cookies (to handle JWT cookie
-            });
-          console.log("response" , response);
-
-          if (!response.ok) {
-            throw new Error("Error al obtener los datos de la escena");
-          }
-          const data = await response.json();
-          console.log("data",data);
-          setNombreGrupo(data.nombre || "");
-
-        } catch (error) {
-          console.error(error);
-          alert("No se pudieron cargar los datos de la escena");
-
         }
         const data = await response.json();
         setPacientesDisponibles(data);

@@ -2680,8 +2680,11 @@ class DeleteAssesmentView(generics.DestroyAPIView):
     queryset = Formulario.objects.all()
     serializer_class = FormularioSerializer
 
+
 class GetReachedGoalsView(generics.ListAPIView):
     serializer_class = ObjetivoSerializer
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         user_dni = self.request.query_params.get('user_dni')

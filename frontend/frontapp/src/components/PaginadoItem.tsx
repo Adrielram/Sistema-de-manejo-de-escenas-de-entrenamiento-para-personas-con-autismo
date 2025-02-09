@@ -9,6 +9,7 @@ interface PaginadoItemProps {
   showImage: boolean;
   options: OptionsProps;
   img: string;
+  ver_path?: string;
   edit_path?: string;
   patients_list_path?: string;
   supervision_path?: string;
@@ -26,6 +27,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   name, 
   options, 
   img, 
+  ver_path,
   edit_path,
   patients_list_path,
   supervision_path,
@@ -82,6 +84,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
     router.push(`${edit_path}${id}`);
   };
   
+
   const handleSupervision = () => {
     router.push(`${supervision_path}?patient_dni=${id}&patient_name=${name}`);
     console.log(`Patient name: ${name}`);
@@ -96,7 +99,7 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   };
 
   const handleVer = () => {
-    alert(`Ver detalles de ${name}`);
+    router.push(`${ver_path}${id}`);
   };
   
   return (
