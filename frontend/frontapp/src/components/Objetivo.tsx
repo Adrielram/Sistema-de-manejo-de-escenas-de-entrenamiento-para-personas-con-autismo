@@ -11,14 +11,14 @@ const Objetivo = ({
   onNavigateComentarios,
   onNavigateEvaluaciones,
   progreso,
-  terapeuta_interface
+  terapeuta_interface,
 }: {
   id: number;
   titulo: string;
   descripcion: string;
   expanded: boolean;
   onExpand: (id: number) => void;
-  onNavigateComentarios??: (id: number) => void;  
+  onNavigateComentarios?: (id: number) => void;  
   onNavigateEvaluaciones?: (id: number) => void;
   progreso: number; // Añadido para recibir el progreso
   terapeuta_interface?: boolean; // Añadido para saber si es la interfaz del terapeuta
