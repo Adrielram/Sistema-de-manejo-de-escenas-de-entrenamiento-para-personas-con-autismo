@@ -39,13 +39,7 @@ def train_model():
             gamma=0.99,  
             entropy_coeff=0.01  # Promueve exploración balanceada
         )
-        .resources(num_gpus=0)   
-        .exploration(exploration_config={
-            "type": "EpsilonGreedy",
-            "initial_epsilon": 1.0,  # Máxima exploración al inicio
-            "final_epsilon": 0.01,  # Menor exploración al final
-            "epsilon_timesteps": 10  # Ajusta según tu dataset
-        })     
+        .resources(num_gpus=0)               
     )
 
     '''.exploration(exploration_config={ 
@@ -63,7 +57,7 @@ def train_model():
 
     # Entrenar el modelo
     # Prueba con 500 iteraciones primero
-    for i in range(10):  
+    for i in range(1000):  
         result = trainer.train()
         episode_reward_mean = result['env_runners'].get('episode_reward_mean', None)
         total_loss = result['info']['learner']['default_policy']['learner_stats']['total_loss']

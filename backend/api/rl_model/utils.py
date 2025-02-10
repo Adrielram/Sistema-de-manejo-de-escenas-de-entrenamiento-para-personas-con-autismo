@@ -14,7 +14,7 @@ def safe_eval(value):
 import numpy as np
 from django.conf import settings
 
-def create_observation(objetivo_id, edad, patologias, num_patologias, num_escenas, max_objetivo_id):
+def create_observation(objetivo_id, edad, patologias, num_patologias, max_objetivo_id):
     """
     Crea una observación (estado) para el modelo de recomendación.
     Ajusta los índices de los datos correctamente.
@@ -33,11 +33,10 @@ def create_observation(objetivo_id, edad, patologias, num_patologias, num_escena
         else:
             raise ValueError(f"Patología {p} está fuera del rango válido (1-{num_patologias}).")
 
-    # Inicializar escenas vistas en 0
-    escenas_vistas = np.zeros(num_escenas)
+
 
     # Construir la observación
-    observation = np.concatenate([[objetivo_id, edad / 100.0], patologias_one_hot, escenas_vistas])
+    observation = np.concatenate([[objetivo_id, edad / 100.0], patologias_one_hot])
     return observation.astype(np.float32)
 
 import os
@@ -62,11 +61,10 @@ def get_recommendation(objetivo_id, edad, patologias):
     
     if "Escena" not in df.columns:
         raise ValueError("La columna 'Escena' no existe en el dataset")
-
-    num_escenas = df["Escena"].max() # Obtener el número máximo de escenas
+    
     max_objetivo_id = df["Objetivo ID"].max() # Obtener el máximo ID de objetivo
     # Crear observación
-    observation = create_observation(objetivo_id, edad, patologias, num_patologias, num_escenas, max_objetivo_id)
+    observation = create_observation(objetivo_id, edad, patologias, num_patologias, max_objetivo_id)
     print("Observación enviada al modelo:", observation)
 
     rl_manager = RLModelManager.get_instance()
