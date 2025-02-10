@@ -230,4 +230,5 @@ EMAIL_HOST_USER="centrocasabella54@gmail.com"
 EMAIL_HOST_PASSWORD='hlor hwyu icgr kiae'       
 
 GEMINI_API_KEY="AIzaSyBWoI7vFiDGIUlJrP5QgZV7wT1G1nviNAE"
+RE_CAPTCHA_KEY="6LcQ5s8qAAAAAIZg8IR_QcfbEmY1W22BoEV7sWdl"
 
