@@ -83,7 +83,6 @@ const PatientForms: React.FC = () => {
   }, [currentPage, data, fetchPatientForms]);
 
   const opProps = {
-    editButton: true,
     revisionButton: true,
   }
 
@@ -97,7 +96,6 @@ const PatientForms: React.FC = () => {
             data={data} 
             options={opProps}
             img='/icon/evaluacion.png'
-            edit_path="/therapist/selection/assesments/"
             revision_path="/therapist/selection/group_of_patients/patients/forms/revision/" 
             item_type="patient"
             user_dni={patient_dni}

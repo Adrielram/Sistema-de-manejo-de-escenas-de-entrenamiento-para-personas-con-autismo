@@ -94,6 +94,26 @@ def create_condition(request):
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
 
+class GetPacienteView(APIView):
+    def get(self, request):
+        search_term = request.GET.get("dni_o_nombre", "").strip()
+
+        if not search_term:
+            return Response({"error": "Debe proporcionar un DNI o nombre para la búsqueda"}, status=400)
+
+        # Filtrar por DNI o nombre
+        pacientes = User.objects.filter(
+            Q(dni__icontains=search_term) | Q(nombre__icontains=search_term),
+            role="paciente"
+        )
+
+        if not pacientes.exists():
+            return Response({"error": "No se encontraron pacientes"}, status=404)
+
+        # Serializar la lista de pacientes
+        serializer = PacienteSerializer(pacientes, many=True)
+        return Response(serializer.data, status=200)
+
 class UpdateGroupAssociationsView(APIView):
     def put(self, request, group_id):
         print("Method:", request.method)
