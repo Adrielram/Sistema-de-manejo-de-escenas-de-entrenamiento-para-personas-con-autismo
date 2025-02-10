@@ -8,7 +8,8 @@ const Objetivo = ({
   descripcion,
   expanded,
   onExpand,
-  onNavigate,
+  onNavigateComentarios,
+  onNavigateEvaluaciones,
   progreso,
   terapeuta_interface
 }: {
@@ -17,7 +18,8 @@ const Objetivo = ({
   descripcion: string;
   expanded: boolean;
   onExpand: (id: number) => void;
-  onNavigate?: (id: number) => void;  
+  onNavigateComentarios??: (id: number) => void;  
+  onNavigateEvaluaciones?: (id: number) => void;
   progreso: number; // Añadido para recibir el progreso
   terapeuta_interface?: boolean; // Añadido para saber si es la interfaz del terapeuta
 }) => {
@@ -32,13 +34,13 @@ const Objetivo = ({
           <ProgressBar progress={progreso} /> {/* Usar la barra de progreso aquí */}       
           <div className='flex gap-4'>
             <button
-              onClick={() => onNavigate(id)}
+              onClick={() => onNavigateComentarios(id)}
               className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
             >
               Ver comentarios
             </button>
             <button
-              onClick={() => onNavigate(id)}
+              onClick={() => onNavigateEvaluaciones(id)}
               className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
             >
               Ver evaluaciones

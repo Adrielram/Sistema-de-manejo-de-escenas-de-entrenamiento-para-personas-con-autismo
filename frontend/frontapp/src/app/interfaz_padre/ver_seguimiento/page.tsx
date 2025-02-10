@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setUserId, setObjetivoId, setIdEscena } from "../../../../slices/userSlice";
 import { RootState } from "../../../../store/store";
 import ComentarioPaciente from "../../../components/ComentarioPaciente";
+import BoxPaginado from "../../../components/PaginadoDinamico";
 type ObjetivoData = {
   id: number;
   nombre: string;
@@ -40,6 +41,9 @@ const ObjetivoList = () => {
     [key: number]: number[];
   }>({});
   const comentariosRef = useRef<HTMLDivElement>(null);
+  const [evaluaciones, setEvaluaciones] = useState<{ [key: string]: string }>({});
+  const [totalItems, setTotalItems] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -89,6 +93,52 @@ const ObjetivoList = () => {
     setSidebarVisible(true); // Abre el sidebar de las escenas
     fetchEscenas(); // Carga las escenas asociadas al objetivo
   };
+
+  // Fetch evaluaciones
+  const fetchEvaluaciones = async (page: number) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`http://localhost:8000/api/get_forms_patient/?dni=${userId}&page=${page}`);
+      
+      if (!response.ok) throw new Error("Error al obtener las evaluaciones");
+  
+      const data: { count: number; results: { evaluacion: number }[] } = await response.json();
+      
+      setTotalItems(data.count);  // Total de evaluaciones disponibles
+      
+      const formattedData: { [key: string]: string } = {};
+      data.results.forEach((item) => {
+        formattedData[item.evaluacion.toString()] = `Evaluación ${item.evaluacion}`;
+      });
+  
+      setEvaluaciones(formattedData); // Actualiza las evaluaciones con la página actual
+    } catch (error) {
+      console.error("Error al obtener las evaluaciones:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  
+
+  const handleVerEvaluacionesClick = () => {
+    setSidebarVisible(false); // Cierra el sidebar de escenas
+    setEscenaSeleccionada(null); // Resetea la escena seleccionada
+    setComentariosHashSet({}); // Limpia los comentarios
+    fetchEvaluaciones(currentPage); // Carga las evaluaciones
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchEvaluaciones(newPage); // Actualiza las evaluaciones con la nueva página
+  };
+  
+
+  const opProps = {
+    trashBin: false,
+    buttonVer: true,
+  };
+  
 
   const handleEscenaClick = (escenaId: number) => {
     setEscenaSeleccionada(escenaId);
@@ -153,10 +203,34 @@ const ObjetivoList = () => {
               expanded={expandedId === objetivo_id.id}
               onExpand={handleExpand}
               progreso={progreso}
-              onNavigate={() => handleVerComentariosClick(objetivo_id.id)} // Usa este evento para manejar el clic
+              onNavigateComentarios={() => handleVerComentariosClick(objetivo_id.id)} // Usa este evento para manejar el clic
+              onNavigateEvaluaciones={() => handleVerEvaluacionesClick()} // No implementado
             />
-          ))}
+          ))}         
         </div>
+
+         {!sidebarVisible && (
+          <>
+            {/* Evaluaciones paginadas */}
+            {Object.keys(evaluaciones).length > 0 && (
+              <div className="container mx-auto p-4">
+              <h2 className="text-xl font-bold mb-4">Evaluaciones del Paciente</h2>
+              <BoxPaginado
+                data={evaluaciones}
+                options={opProps}
+                img="/icon/evaluacion.png"
+                ver_path="/interfaz_padre/ver_seguimiento/evaluaciones/"
+                item_type="Evaluación"
+                showImage={true}
+                currentPage={currentPage}
+                totalItems={totalItems}
+                onPageChange={handlePageChange}
+                itemsPerPage={8}
+              />
+            </div>
+            )}          
+          </>
+          )} 
 
         {/* Comentarios debajo de los objetivos */}
         {escenaSeleccionada && (
