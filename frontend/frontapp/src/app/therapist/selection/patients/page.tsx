@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import SearchBar from "../../../../components/Buscador";
 import BoxPaginado from "../../../../components/PaginadoDinamico";
 
-
 type Dictionary = { [key: string]: string };
 
 interface Patient {
@@ -13,7 +12,6 @@ interface Patient {
   dni: string;
   padreACargo: string;
 }
-
 
 const PatientList = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,15 +51,14 @@ const PatientList = () => {
 
   useEffect(() => {
     if (patients.length === 0) return;
-  
+
     const dictionary: Dictionary = patients.reduce((acc, patient) => {
       acc[patient.dni] = patient.nombre;
       return acc;
     }, {} as Dictionary);
-  
-    setPatientsDictionary(dictionary);
-  }, [patients]); // Change from allPatients to patients
 
+    setPatientsDictionary(dictionary);
+  }, [patients]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -114,37 +111,34 @@ const PatientList = () => {
     setSelectedPatient(selected || null);
   };
 
-  console.log("Passing to BoxPaginado - data:", patientsDictionary);
+  const opProps = {
+    editButton: true,
+    supervisionButton: true,
+    formsButton: true,
+  };
 
   return (
     <div>
-      <SearchBar onSearch={handleSearch} />
-
-      {patients.map((patient) => (
-        <div key={patient.dni} className="patient-card">
-          <p>Nombre: {patient.nombre}</p>
-          <p>DNI: {patient.dni}</p>
-          <p>Username: {patient.username}</p>
-          <p>Padre a Cargo: {patient.padreACargo}</p>
-        </div>
-      ))}
-
-      
+      <div className="flex justify-center w-full my-4">
+        <SearchBar onSearch={handleSearch} />
+      </div>
       <div className="container mx-auto p-4">
-      <BoxPaginado
-        data={patientsDictionary || {}}
-        onSelect={handleSelectPatient}
-        options={{}}
-        img="/icon/persona_silueta.png"
-        edit_path=""
-        item_type="Patient"
-        showImage={true}
-        currentPage={1}
-        totalItems={patients.length}
-        onPageChange={() => {}}
-        itemsPerPage={10}
-        actualizar={true}
-      />
+        <BoxPaginado
+          data={patientsDictionary || {}}
+          onSelect={handleSelectPatient}
+          options={opProps}
+          img="/icon/persona_silueta.png"
+          edit_path="/therapist/selection/group_of_patients/patients/"
+          supervision_path="/therapist/selection/group_of_patients/patients/follow_patient/"
+          forms_path="/therapist/selection/group_of_patients/patients/forms/"
+          item_type="Patient"
+          showImage={true}
+          currentPage={1}
+          totalItems={patients.length}
+          onPageChange={() => {}}
+          itemsPerPage={10}
+          actualizar={true}
+        />
       </div>
       {selectedPatient && (
         <div>
