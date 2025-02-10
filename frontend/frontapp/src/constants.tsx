@@ -9,7 +9,6 @@ import { IoIosAdd } from "react-icons/io"; // <IoIosAdd /> icono de agregar
 import { FaPerson } from "react-icons/fa6";
 import { FaUserDoctor } from "react-icons/fa6";
 import { GiHealthNormal } from "react-icons/gi";
-import { FaComments } from "react-icons/fa";
 
 import { SideNavItem } from './types';
 import { FaLayerGroup } from "react-icons/fa";

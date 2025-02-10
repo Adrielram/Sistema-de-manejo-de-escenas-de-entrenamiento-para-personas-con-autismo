@@ -27,6 +27,7 @@ interface DraggableSearchSelectBoxProps {
   apiUrl: string;
   resetTrigger?: boolean;
   initialAssignedItems?: SceneWithOrder[]; // Nueva prop para los datos iniciales asignados
+
 }
 
 // Componente para cada item sortable
@@ -105,6 +106,7 @@ const DraggableSearchSelectBox = ({
   apiUrl,
   resetTrigger,
   initialAssignedItems = [], // Valor por defecto para initialAssignedItems
+
 }: DraggableSearchSelectBoxProps) => {
   const [searchValue, setSearchValue] = useState("");
   const [items, setItems] = useState<SceneWithOrder[]>([]);

@@ -10,21 +10,23 @@ const Objetivo = ({
   onExpand,
   onNavigate,
   progreso,
+  terapeuta_interface
 }: {
   id: number;
   titulo: string;
   descripcion: string;
   expanded: boolean;
   onExpand: (id: number) => void;
-  onNavigate: (id: number) => void;  
+  onNavigate?: (id: number) => void;  
   progreso: number; // Añadido para recibir el progreso
+  terapeuta_interface?: boolean; // Añadido para saber si es la interfaz del terapeuta
 }) => {
   return (
     <div className="bg-white shadow-md rounded-lg cursor-pointer p-4 mb-4">
       <h2 className="text-lg font-bold" onClick={() => onExpand(id)}>
         {titulo}
       </h2>
-      {expanded && (
+      {!terapeuta_interface && expanded && (
         <div>
           <p>{descripcion}</p>
           <ProgressBar progress={progreso} /> {/* Usar la barra de progreso aquí */}       
@@ -43,6 +45,8 @@ const Objetivo = ({
             </button>
           </div>  
         </div>
+      )} : {terapeuta_interface && ( 
+        <><p>{descripcion}</p><ProgressBar progress={progreso} /></>      
       )}
     </div>
   );
