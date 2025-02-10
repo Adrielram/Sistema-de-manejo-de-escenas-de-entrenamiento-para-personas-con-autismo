@@ -22,12 +22,12 @@ const AssesmentsPage: React.FC = () => {
   const [totalItems, setTotalItems] = useState<number>(0);
   const showImage = true;
   const { username } = useSelector((state: RootState) => state.user);
-
+  const { center } = useSelector((state: RootState) => state.user);
   const fetchAssesments = useCallback(async (page: number) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/forms_per_user/?username=${encodeURIComponent(username)}&page=${page}`, {
+      const response = await fetch(`http://localhost:8000/api/forms_per_user/?username=${encodeURIComponent(username)}&centername=${center}&page=${page}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
