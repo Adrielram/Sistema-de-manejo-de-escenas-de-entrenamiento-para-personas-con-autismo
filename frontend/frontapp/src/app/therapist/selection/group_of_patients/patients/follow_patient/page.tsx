@@ -2,9 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import Objetivo from "../../../../../../components/Objetivo";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch,  } from "react-redux";
 import { setUserId, setObjetivoId } from "../../../../../../../slices/userSlice";
-import { RootState } from "../../../../../../../store/store";
 import { useSearchParams } from "next/navigation";
 type ObjetivoData = {
   id: number;
@@ -83,22 +82,22 @@ const GoalsPage = () => {
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-2xl mx-auto space-y-4">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">Lista de Objetivos</h1>
-          {objetivos.map(({ id, progreso, objetivo_id }) => (
-            <Objetivo
-              key={id}
-              id={objetivo_id.id}
-              titulo={objetivo_id.nombre}
-              descripcion={objetivo_id.descripcion}
-              expanded={expandedId === objetivo_id.id}
-              onExpand={handleExpand}
-              progreso={progreso}
-              terapeuta_interface = {true}
-            />
-          ))}
-        </div>
+    <div className="container mx-auto px-4 py-8 min-h-screen">
+      <div className="w-full lg:w-4/5 mx-auto space-y-4">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">Lista de Objetivos</h1>
+        {objetivos.map(({ id, progreso, objetivo_id }) => (
+          <Objetivo
+            key={id}
+            id={objetivo_id.id}
+            titulo={objetivo_id.nombre}
+            descripcion={objetivo_id.descripcion}
+            expanded={expandedId === objetivo_id.id}
+            onExpand={handleExpand}
+            progreso={progreso}
+            terapeuta_interface={true}
+          />
+        ))}
+      </div>
     </div>
   );
 };
