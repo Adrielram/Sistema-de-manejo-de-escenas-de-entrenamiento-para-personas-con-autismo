@@ -2524,6 +2524,7 @@ class GetGroupsPerUserView(generics.ListAPIView):
 
     def get_queryset(self):
         username = self.request.query_params.get('username')
+        centername = self.request.query_params.get('centername')
 
         if not username:
             raise NotFound("El parámetro 'username' es requerido.")
@@ -2531,10 +2532,10 @@ class GetGroupsPerUserView(generics.ListAPIView):
         user = User.objects.get(username=username)
         
         persona_grupo_qs = Personagrupo.objects.filter(user_id=user)
-        
+        centrodesalud = get_object_or_404(Centrodesalud, nombre=centername)
         grupos_ids = persona_grupo_qs.values_list('grupo_id', flat=True)
 
-        return Grupo.objects.filter(id__in=grupos_ids)
+        return Grupo.objects.filter(id__in=grupos_ids, centrodesalud_id=centrodesalud)
     
 
 class GetGroupsPerUserNotInView(generics.ListAPIView):
