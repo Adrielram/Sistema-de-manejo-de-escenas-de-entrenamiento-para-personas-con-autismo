@@ -2695,6 +2695,23 @@ class GetFormsPerUserView(generics.ListAPIView):
             raise NotFound(f"Usuario con username '{username}' no encontrado.")
 
         return Formulario.objects.filter(creado_por=user)
+    
+
+class GetFormsPatientView(generics.ListAPIView):
+    serializer_class = EvaluacionIdSerializer
+    pagination_class = DynamicPagination
+
+    def get_queryset(self):
+        dni = self.request.query_params.get('dni')
+        if not dni:
+            raise NotFound("El parámetro 'dni' es requerido.")
+
+        try:
+            user = User.objects.get(dni=dni)
+        except User.DoesNotExist:
+            raise NotFound(f"Usuario con username '{dni}' no encontrado.")
+        
+        return PersonaObjetivoEvaluacion.objects.filter(user_id=user).values('evaluacion').distinct()
 
 class DeleteAssesmentView(generics.DestroyAPIView):
     queryset = Formulario.objects.all()

@@ -376,7 +376,7 @@ class Formulario(models.Model):
     creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     objetivo_id = models.ForeignKey(Objetivo, related_name="objetivo", on_delete=models.CASCADE, blank=True, null=True)
-
+    
     def _str_(self):
         return self.nombre
 
