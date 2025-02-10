@@ -140,7 +140,8 @@ urlpatterns = [
     path('getTherapistsExcluding/<str:username>/', GetTherapistsExcludingView.as_view(), name='getTherapistsExcluding'),
     path('assign-pathology/', AssignPathologyView.as_view(), name='assign-pathology'),
     path('unassign-pathology/', UnassignPathologyView.as_view(), name='unassign-pathology'),
-    path('create_condition/', views.create_condition, name='create_condition')
+    path('create_condition/', views.create_condition, name='create_condition'),
+    path('get_forms_patient/', GetFormsPatientView.as_view(), name='get_forms_patient'),
 
     ]
 
