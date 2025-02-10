@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect} from "react";
 import Button from "./SmallButton";
 import PaginadoItem from "./PaginadoItem";
 import { OptionsProps } from "../types"; 
@@ -27,6 +27,8 @@ interface BoxPaginadoProps {
   onPageChange: (page: number) => void;
   itemsPerPage: number;
   onItemDeleted?: (id: string) => void;
+  actualizar?: boolean// Agrega esta línea
+
 }
 
 export default function BoxPaginado({ 
@@ -48,11 +50,24 @@ export default function BoxPaginado({
   totalItems: initialTotalItems,
   onPageChange,
   itemsPerPage,
-  onItemDeleted
+  onItemDeleted,
+  actualizar
 }: BoxPaginadoProps) {
   const [data, setData] = useState<Dictionary>(initialData);
   const [totalItems, setTotalItems] = useState(initialTotalItems);
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  useEffect(() => {
+    if (actualizar) {
+      setData(initialData);
+    }
+  }, [initialData,actualizar]);
+
+
+  if (actualizar == null){
+    actualizar = false;
+  }
+
 
   const handleNext = () => {
     if (currentPage < totalPages) {
