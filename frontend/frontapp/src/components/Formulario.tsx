@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Pregunta from "./Pregunta";
-
+import { RootState } from "../../store/store";
+import {useSelector} from "react-redux";
 interface FormularioProps {
   onSubmit: (formulario: any) => void;
 }
@@ -13,6 +14,8 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
   const [preguntas, setPreguntas] = useState<any[]>([]);
   const [objetivos, setObjetivos] = useState([]);
   const [objetivo_id, setObjetivoId] = useState("");
+  const {center} = useSelector((state: RootState) => state.user);
+  const {username} = useSelector((state: RootState) => state.user);
   const agregarPregunta = (pregunta: any) => {
     setPreguntas([...preguntas, pregunta]);
   };
@@ -50,11 +53,11 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
 
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/objetivos/")
+    fetch(`http://localhost:8000/api/objetivos/?username=${username}&centername=${center}`)
       .then((res) => res.json())
       .then((data) => setObjetivos(data))
       .catch((error) => console.error("Error al obtener objetivos:", error));
-  }, []);
+  }, [center]);
 
   console.log("preguntas:" ,JSON.stringify(preguntas));
 

@@ -1304,10 +1304,35 @@ class PacienteListView(APIView):
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-@permission_classes([AllowAny])
-def objetivos_list(request):
-    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
-    return JsonResponse(list(objetivos), safe=False)
+
+from django.http import JsonResponse
+from django.views import View
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+
+class ObjetivosListCentro(View):
+    def get(self, request, *args, **kwargs):
+        username = request.GET.get('username')
+        center_name = request.GET.get('centername')
+
+        if not username or not center_name:
+            return JsonResponse({"error": "Se requieren los parámetros 'username' y 'centername'."}, status=400)
+
+        try:
+            user = User.objects.get(username=username)
+            center = Centrodesalud.objects.get(nombre=center_name)
+            center_professional = CentroProfesional.objects.get(centrodesalud=center, profesional=user)
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "Usuario, centro o relación no encontrados."}, status=404)
+
+        objetivos = Objetivo.objects.filter(centro_profesional=center_professional).values()
+        return JsonResponse(list(objetivos), safe=False)
+
+
+
+    
+
 
 @permission_classes([AllowAny])
 class ResolveNamesToIds(APIView):
@@ -2475,6 +2500,7 @@ class GetGroupsPerUserView(generics.ListAPIView):
 
     def get_queryset(self):
         username = self.request.query_params.get('username')
+        centername = self.request.query_params.get('centername')
 
         if not username:
             raise NotFound("El parámetro 'username' es requerido.")
@@ -2482,10 +2508,10 @@ class GetGroupsPerUserView(generics.ListAPIView):
         user = User.objects.get(username=username)
         
         persona_grupo_qs = Personagrupo.objects.filter(user_id=user)
-        
+        centrodesalud = get_object_or_404(Centrodesalud, nombre=centername)
         grupos_ids = persona_grupo_qs.values_list('grupo_id', flat=True)
 
-        return Grupo.objects.filter(id__in=grupos_ids)
+        return Grupo.objects.filter(id__in=grupos_ids, centrodesalud_id=centrodesalud)
     
 
 class GetGroupsPerUserNotInView(generics.ListAPIView):
@@ -2656,22 +2682,30 @@ class GetTherapistsExcludingView(generics.ListAPIView):
         } for user in queryset]
         
         return Response(data, status=status.HTTP_200_OK)
+    
+
 class GetFormsPerUserView(generics.ListAPIView):
     serializer_class = FormularioSerializer
     pagination_class = DynamicPagination
 
     def get_queryset(self):
         username = self.request.query_params.get('username')
-        if not username:
-            raise NotFound("El parámetro 'username' es requerido.")
-
-        try:
+        centername= self.request.query_params.get('centername') 
+        if not username or not centername:
+            return Response({
+                'error': 'Se requieren los parámetros username y centername'
+            }, status=status.HTTP_400_BAD_REQUEST)           
+        try: 
+            center = Centrodesalud.objects.get(nombre=centername)
             user = User.objects.get(username=username)
+            centro_profesional = CentroProfesional.objects.get(
+                centrodesalud=center, 
+                profesional=user
+            )  
         except User.DoesNotExist:
             raise NotFound(f"Usuario con username '{username}' no encontrado.")
 
-        return Formulario.objects.filter(creado_por=user)
-    
+        return Formulario.objects.filter(objetivo_id__centro_profesional=centro_profesional)    
 
 class GetFormsPatientView(generics.ListAPIView):
     serializer_class = EvaluacionIdSerializer
