@@ -4037,28 +4037,49 @@ def obtener_notificaciones_pendientes(request):
     return JsonResponse({'notificaciones': list(notificaciones)})
 
 from django.http import JsonResponse
+from django.contrib.contenttypes.models import ContentType
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from .models import Notificacion
+from rest_framework.permissions import AllowAny
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication])
 def obtener_detalle_notificacion(request, pk):
     try:
         # Buscar la notificación por id y asegurarse de que pertenece al usuario autenticado
         notificacion = Notificacion.objects.get(id=pk, destinatario=request.user)
-        # Devolver los detalles de la notificación
-        return JsonResponse({
+
+        # Inicializar el detalle de la notificación
+        detalle = {
             'id': notificacion.id,
             'mensaje': notificacion.mensaje,
             'timestamp': notificacion.timestamp,
             'estado': notificacion.estado,
             'remitente': notificacion.remitente.username if notificacion.remitente else None,
             'destinatario': notificacion.destinatario.username if notificacion.destinatario else None,
-        })
+        }
+
+        # Verificar si la notificación está asociada a una escena
+        if notificacion.content_type and notificacion.object_id:
+            content_type = ContentType.objects.get_for_id(notificacion.content_type.id)
+            if content_type.model == 'escena':  # Ajusta el nombre del modelo según corresponda
+                escena = content_type.get_object_for_this_type(id=notificacion.object_id)
+                detalle['escena'] = {             
+                    'nombre': escena.nombre,  # Ajusta los campos según el modelo Escena
+                    'link': escena.link,  # Ajusta si tienes un campo `link`
+                }
+
+        # Devolver los detalles de la notificación
+        return JsonResponse(detalle)
+
     except Notificacion.DoesNotExist:
         # Manejar el caso de una notificación no encontrada o no autorizada
         return JsonResponse({'error': 'Notificación no encontrada o no autorizada'}, status=404)
+
+    except ContentType.DoesNotExist:
+        # Manejar el caso donde el ContentType no existe
+        return JsonResponse({'error': 'Tipo de contenido no válido'}, status=400)
+
     
 
 from api.models import User
