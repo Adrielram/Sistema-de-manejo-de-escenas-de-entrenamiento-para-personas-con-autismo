@@ -134,7 +134,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class CondicionSerializer(serializers.ModelSerializer):
     objetivo = serializers.CharField(source='objetivo.nombre', read_only=True) 
-    objetivo_id = serializers.PrimaryKeyRelatedField(queryset=Objetivo.objects.all(), source='objetivo')
+    objetivo_id = serializers.PrimaryKeyRelatedField(queryset=Objetivo.objects.all(), source='objetivo', required=False, allow_null=True)
 
     class Meta:
         model = Condicion
@@ -142,7 +142,6 @@ class CondicionSerializer(serializers.ModelSerializer):
 
 class EscenaSerializer(serializers.ModelSerializer):
     condicion = CondicionSerializer(required=False, allow_null=True)
-
     class Meta:
         model = Escena
         fields = ['id', 'idioma', 'acento', 'condicion', 'complejidad', 'link', 'nombre', 'descripcion']
@@ -158,6 +157,21 @@ class EscenaSerializer(serializers.ModelSerializer):
             escena.save()  # Guardar cambios en la escena
         
         return escena
+
+    def to_representation(self, instance):
+        # Verificar si existe una notificación en estado 'leida' para la escena
+        notificacion_leida = Notificacion.objects.filter(
+            content_type=ContentType.objects.get_for_model(Escena),
+            object_id=instance.id,
+            estado='leida'
+        ).exists()
+
+        # Si no está autorizada, no mostrar la escena
+        if not notificacion_leida:
+            return None
+
+        # Llamar al método original para la representación
+        return super().to_representation(instance)
 
 
     def update(self, instance, validated_data):

@@ -1936,22 +1936,40 @@ def get_dni(request):
     except User.DoesNotExist:
         return Response({'error': f'No se encontró un usuario con username: {username}'}, status=404)
 
+from api.notificaciones.utils import enviar_notificacion_admin
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication])
 def crear_escena(request):
     try:
-        serializer = EscenaSerializer(data=request.data)
-        
-        # Validar datos
+        data = request.data.copy()   
+        print("Data creador: ",request.user)
+        serializer = EscenaSerializer(data=data)
         if serializer.is_valid():
-            serializer.save()
+            escena = serializer.save()
+
+            print("Se guardo la escena: ",escena)
+            
+            # Crear notificación para el admin
+            admin = User.objects.filter(role='admin').first()
+            if admin:
+                content_type = ContentType.objects.get_for_model(escena)
+                notificacion = Notificacion.objects.create(
+                    destinatario=admin,
+                    remitente=request.user,
+                    mensaje=f"El usuario {request.user} creó la escena '{escena.nombre}'. Requiere revisión.",
+                    estado='pendiente',
+                    content_type=content_type,
+                    object_id=escena.id,
+                )
+                enviar_notificacion_admin(notificacion)
+
             return Response(
                 {"message": "Escena creada exitosamente", "data": serializer.data},
                 status=status.HTTP_201_CREATED
             )
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
     except Exception as e:
         return Response(
             {"error": f"Error inesperado: {str(e)}"},
@@ -3996,6 +4014,7 @@ class GroupDetailView(generics.RetrieveDestroyAPIView):
 #@authentication_classes([CookieJWTAuthentication])
 @permission_classes([AllowAny])
 def obtener_notificaciones_pendientes(request):
+    print("Request user: ",request.user)
     # Filtrar notificaciones pendientes para el usuario actual
     notificaciones = Notificacion.objects.filter(
         destinatario=request.user, estado='pendiente'

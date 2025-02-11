@@ -2,7 +2,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from api.models import User
 
-def enviar_notificacion(notificacion):
+def enviar_notificacion_admin(notificacion):
     channel_layer = get_channel_layer()   
     try:
         admin_user = User.objects.get(role="admin")
