@@ -134,11 +134,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class CondicionSerializer(serializers.ModelSerializer):
     objetivo = serializers.CharField(source='objetivo.nombre', read_only=True) 
-<<<<<<< HEAD
-    objetivo_id = serializers.PrimaryKeyRelatedField(queryset=Objetivo.objects.all(), source='objetivo', required=False, allow_null=True)
-=======
     objetivo_id = serializers.PrimaryKeyRelatedField(queryset=Objetivo.objects.all(), source='objetivo',required=False, allow_null=True)
->>>>>>> a012a1640814606d05bbbbc7b5b22306cb63b482
 
     class Meta:
         model = Condicion
