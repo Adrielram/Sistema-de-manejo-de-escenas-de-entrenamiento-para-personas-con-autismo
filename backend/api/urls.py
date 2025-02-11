@@ -119,6 +119,7 @@ urlpatterns = [
     #IA
     path("recommend/", recommend_scene, name="recommend_scene"),
     path("train/",train_model_view, name="train_model"),
+    path("train_tune/",train_tune_view, name="train_model"),
     path('load_model/', load_model, name='load_model'),    
 ]
 

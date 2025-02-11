@@ -1,6 +1,8 @@
 # api/rl_model/train.py
 import os
 import shutil
+from ray import tune, train
+from ray.tune.schedulers import ASHAScheduler
 import numpy as np
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig, PPO
@@ -39,7 +41,7 @@ def train_model():
             gamma=0.99,  
             entropy_coeff=0.01  # Promueve exploración balanceada
         )
-        .resources(num_gpus=0)               
+        .resources(num_gpus=1)               
     )
 
     '''.exploration(exploration_config={ 
@@ -57,7 +59,7 @@ def train_model():
 
     # Entrenar el modelo
     # Prueba con 500 iteraciones primero
-    for i in range(1000):  
+    for i in range(300):  
         result = trainer.train()
         episode_reward_mean = result['env_runners'].get('episode_reward_mean', None)
         total_loss = result['info']['learner']['default_policy']['learner_stats']['total_loss']
@@ -71,6 +73,11 @@ def train_model():
         
         prev_reward = episode_reward_mean
 '''
+# CODIGO DE TRAIN PERO CON TUNE:
+
+
+
+
 
     # Borrar el checkpoint anterior si existe
     if os.path.exists(CHECKPOINT_DIR):
@@ -96,4 +103,96 @@ def train_model():
             print(f"❌ Error al actualizar modelo en Django: {response.text}")
     except Exception as e:
         print(f"❌ No se pudo conectar al backend: {e}")
+    return CHECKPOINT_DIR
+
+def train_tune_model():
+    ray.shutdown()
+    ray.init(ignore_reinit_error=True, num_gpus=1)  # Habilitar GPU
+
+    # Definir el espacio de búsqueda de hiperparámetros
+    search_space = {
+        "lr": tune.loguniform(1e-4, 1e-2),
+        "gamma": tune.choice([0.95, 0.98, 0.99]),
+        "entropy_coeff": tune.uniform(0.001, 0.02),
+        "clip_param": tune.uniform(0.1, 0.3),
+        "train_batch_size": tune.choice([128, 256, 512]),
+    }
+
+    # Definir el scheduler de Tune
+    scheduler = ASHAScheduler(
+        metric="episode_reward_mean",
+        mode="max",
+        max_t=500,
+        grace_period=50,
+        reduction_factor=2
+    )
+
+    # Función de entrenamiento con Tune
+# Función de entrenamiento con Tune
+    def train_fn(config):
+        trainer = (
+            PPOConfig()
+            .environment(RecommenderEnv)
+            .framework("torch")
+            .training(
+                lr=config["lr"],
+                gamma=config["gamma"],
+                entropy_coeff=config["entropy_coeff"],
+                clip_param=config["clip_param"],
+                train_batch_size=config["train_batch_size"]
+            )
+            .reporting(keep_per_episode_custom_metrics=True)
+            .build()
+        )
+
+        # Restaurar checkpoint si existe
+        if os.path.exists(CHECKPOINT_DIR):
+            print(f"Cargando el checkpoint desde {CHECKPOINT_DIR}")
+            trainer.restore(CHECKPOINT_DIR)
+        for i in range(300):  
+            result = trainer.train()
+            episode_reward_mean = result['env_runners'].get('episode_reward_mean', None)
+            total_loss = result['info']['learner']['default_policy']['learner_stats']['total_loss']
+            train.report({
+                "episode_reward_mean": result.get("episode_reward_mean", -1000.0),
+                "total_loss": result["info"]["learner"]["default_policy"]["learner_stats"]["total_loss"]})
+            print(f"Iteración: {result['training_iteration']}, Recompensa media: {episode_reward_mean}, Total Loss: {total_loss}")
+
+        # Guardar el mejor modelo
+        if os.path.exists(CHECKPOINT_DIR):
+            shutil.rmtree(CHECKPOINT_DIR)
+        trainer.save(CHECKPOINT_DIR)
+
+    # Asignación de recursos usando tune.with_resources
+    trainable_with_resources = tune.with_resources(
+        train_fn,
+        tune.PlacementGroupFactory(
+            # Bundle para el proceso principal (driver)
+            [{"CPU": 4.0, "GPU": 1.0}] 
+            # + Bundles para workers (ajusta "N" al número de workers)
+            + [{"CPU": 1.0}] * 2  # Ejemplo: 2 workers
+        )
+    )
+        #resources=lambda spec: {"gpu": 1, "cpu": 1}  # 1 GPU y 1 CPU por trial
+
+    # Ejecutar la búsqueda de hiperparámetros
+    tuner = tune.Tuner(
+        trainable_with_resources,
+        param_space=search_space,
+        tune_config=tune.TuneConfig(
+            scheduler=scheduler,
+            num_samples=10,
+        ),
+    ) 
+
+    results = tuner.fit()
+    best_result = results.get_best_result()
+    results_df = best_result.get_dataframe()
+    results_df[["training_iteration", "mean_accuracy"]]
+    print("Mejor configuración encontrada:", best_config)
+    # Guardar el mejor modelo
+    rl_manager = RLModelManager()
+    rl_manager.update_model()
+    print("Modelo actualizado en memoria.")
+
     return CHECKPOINT_DIR

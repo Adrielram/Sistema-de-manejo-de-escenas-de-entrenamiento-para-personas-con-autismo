@@ -2706,6 +2706,19 @@ def train_model_view(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
     
+from ray import tune
+from ray.tune.schedulers import ASHAScheduler
+from api.rl_model.train import train_tune_model
+def train_tune_view(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+    try:
+        train_tune_model()
+        return JsonResponse({"message": "Modelo entrenado correctamente"})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+
 from django.http import JsonResponse
 from api.rl_model.rl_model_manager import RLModelManager  # Asegúrate de importar correctamente
 
