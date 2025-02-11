@@ -35,6 +35,7 @@ export default function RegisterForm() {
     numero: '',
     asociarPadre: '',
     sintomas: '',
+    email: '', 
   });
   const [centros, setCentros] = useState<{ id: number; nombre: string }[]>([]); // Inicializar como un array vacío
   const pagina = 1; // Página actual
@@ -122,64 +123,64 @@ export default function RegisterForm() {
   }, [formData.rol, pagina]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-  console.log("Centros seleccionados: ", centrosSeleccionados);
-  e.preventDefault();
-  setError('');
-  setSuccess(false);
-
-  if (formData.rol === 'Paciente' && !sintomasEnviados) {
-    setError('Debe enviar sus síntomas antes de registrarse.');
-    return;
-  }
-
-  if (formData.contrasena !== formData.repetirContrasena) {
-    setError('Las contraseñas no coinciden');
-    return;
-  }
-
-  const recaptchaValue = recaptchaRef.current?.getValue();
-  if (!recaptchaValue) {
-    setError('Por favor, completa el captcha.');
-    return;
-  }
-
-  try {
-    const response = await fetch('http://localhost:8000/api/signIn/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        dni: formData.dni,
-        nombre: formData.nombre,
-        fecha_nac: formData.fechaNacimiento,
-        genero: formData.genero,
-        role: formData.rol.toLowerCase(),
-        provincia: formData.provincia,
-        ciudad: formData.ciudad,
-        calle: formData.calle,
-        numero: formData.numero,
-        id_padre: idPadreSeleccionado || null,
-        password: formData.contrasena,
-        centros_de_salud: centrosSeleccionados,
-        sintomas: sintomasPrediction || null, // Enviar la predicción de síntomas 
-        texto: sintomas, // Enviar el texto original de los síntomas
-        captcha: recaptchaValue, // Enviar el token del captcha
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Error al registrar el usuario');
+    e.preventDefault();
+    setError('');
+    setSuccess(false);
+  
+    if (formData.rol === 'Paciente' && !sintomasEnviados) {
+      setError('Debe enviar sus síntomas antes de registrarse.');
+      return;
     }
-
-    setSuccess(true);
-    router.push('/auth/login');
-    console.log('Usuario registrado exitosamente');
-  } catch (err) {
-    setError((err as Error).message);
-  }
-};
+  
+    if (formData.contrasena !== formData.repetirContrasena) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+  
+    const recaptchaValue = recaptchaRef.current?.getValue();
+    if (!recaptchaValue) {
+      setError('Por favor, completa el captcha.');
+      return;
+    }
+  
+    try {
+      const response = await fetch('http://localhost:8000/api/signIn/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dni: formData.dni,
+          nombre: formData.nombre,
+          fecha_nac: formData.fechaNacimiento,
+          genero: formData.genero,
+          role: formData.rol.toLowerCase(),
+          provincia: formData.provincia,
+          ciudad: formData.ciudad,
+          calle: formData.calle,
+          numero: formData.numero,
+          id_padre: idPadreSeleccionado || null,
+          password: formData.contrasena,
+          centros_de_salud: centrosSeleccionados,
+          sintomas: sintomasPrediction || null,
+          texto: sintomas,
+          captcha: recaptchaValue,
+          email: formData.email, // Incluir el correo electrónico en la solicitud
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al registrar el usuario');
+      }
+  
+      setSuccess(true);
+      router.push('/auth/login');
+      console.log('Usuario registrado exitosamente');
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
 
 const recargarCaptcha = () => {
   grecaptcha.reset();  // Esto reinicia el CAPTCHA
@@ -216,7 +217,18 @@ const recargarCaptcha = () => {
             required
           />
         </div>
-
+        {/*Email*/}
+        <div>
+          <label className="block text-black">Correo Electrónico</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            className="w-full border text-black border-black rounded px-2 py-1"
+            required
+          />
+        </div>
         {/* Fecha de Nacimiento */}
         <div>
           <label className="block text-black">Fecha de Nacimiento</label>

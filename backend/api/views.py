@@ -1661,7 +1661,7 @@ def signIn(request):
         # Validar que todos los campos están presentes
         required_fields = [
             'dni', 'nombre', 'fecha_nac', 'genero', 'role',
-            'provincia', 'ciudad', 'calle', 'numero'
+            'provincia', 'ciudad', 'calle', 'numero','email'
         ]
         missing_fields = [field for field in required_fields if field not in request.data]
 
@@ -1685,6 +1685,7 @@ def signIn(request):
         centros_de_salud = request.data.get('centros_de_salud', None)
         sintomas = request.data.get('sintomas', [])
         texto = request.data.get('texto', '')
+        email = request.data.get('email')
 
         print(f"Datos recibidos: DNI={dni}, Nombre={nombre}, Fecha={fecha_nac}, Genero={genero}, Role={role}")
 
@@ -1695,6 +1696,10 @@ def signIn(request):
         # Verificar si el nombre ya existe
         if User.objects.filter(nombre=nombre).exists():
             return Response({"error": "Ya existe un usuario con ese nombre"}, status=400)
+
+        # Verificar si email ya esta registrado
+        if User.objects.filter(email=email).exists():
+            return Response({"error": "Ya existe un usuario con ese email"}, status=400)
 
         # Validar formato de fecha de nacimiento
         try:
@@ -1733,7 +1738,7 @@ def signIn(request):
                 genero=genero,
                 role=role,
                 direccion_id_dir=residencia,
-                email='adri@example.com',
+                email=email,
                 patologia=texto
             )
 
@@ -4195,7 +4200,7 @@ def GEMINI_chequear_comentario(username:str,comentario_usuario:str):
     genai.configure(api_key=settings.GEMINI_API_KEY)
 
     prompt = f"""
-    Dado el siguiente comentario realizado por un paciente con trastornos del espectro autista (edad entre 4 y 20 años): 
+    Dado el siguiente comentario realizado por un paciente con trastornos del espectro autista (edad entre 4 y 20 años):
 
     "{comentario_usuario}"
 
@@ -4206,16 +4211,21 @@ def GEMINI_chequear_comentario(username:str,comentario_usuario:str):
     - Incluye lenguaje extremadamente agresivo, insultos o acoso.
     - Expresa angustia extrema, pensamientos suicidas o signos de depresión severa.
     - Muestra confusión o indicios de que el usuario está en peligro inmediato.
-    - Urls de otros sitios web
+    - Contiene URLs de otros sitios web no permitidos.
+    - Usa malas palabras, insultos o términos vulgares, incluyendo palabras comunes en Argentina como:
+    - "garchar", "pija", "concha", "coger" (tener en cuenta el contexto), "verga", "culo", "chupar".
+    - Variaciones o palabras escritas al revés como "japi" (posible referencia a "pija").
+    - Insultos como "boludo", "pelotudo", "tarado", "idiota", "conchudo", "hijo de puta", "forro", "mogólico" (considerado altamente ofensivo en Argentina).
+    - Cualquier otra palabra ofensiva utilizada de manera inapropiada.
 
     Si el mensaje no cumple con ninguna de estas condiciones, se considera **NO URGENTE**.
 
     Devuelve la respuesta en formato JSON con la siguiente estructura:
 
-    
-    "urgente": true/false,
-    "razon": "Explicación breve de por qué se considera urgente o no."
-    
+    {
+        "urgente": true/false,
+        "razon": "Explicación breve de por qué se considera urgente o no."
+    }
     """
 
     # Generar respuesta con el modelo

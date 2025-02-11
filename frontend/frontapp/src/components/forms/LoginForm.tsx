@@ -73,7 +73,7 @@ export default function LoginForm() {
           id="user"
           value={user}
           onChange={(e) => setUserState(e.target.value)}
-          placeholder="Nombre de Usuario o DNI"
+          placeholder="Nombre de Usuario"
           required
           className="w-full p-3 border border-gray-300 rounded-md mt-1 text-black"
         />
