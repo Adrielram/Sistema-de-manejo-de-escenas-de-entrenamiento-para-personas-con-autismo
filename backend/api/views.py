@@ -1969,7 +1969,7 @@ def crear_escena(request):
                 notificacion = Notificacion.objects.create(
                     destinatario=admin,
                     remitente=user,
-                    mensaje=f"El usuario {user.username} creó la escena '{escena.nombre}'. Requiere revisión.",
+                    mensaje=f"El usuario {user.username} creó la escena '{escena.nombre}'. El link a la escena es: '{escena.link}",
                     estado='pendiente',
                     content_type=content_type,
                     object_id=escena.id,
