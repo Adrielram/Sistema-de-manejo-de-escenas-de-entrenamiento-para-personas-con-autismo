@@ -26,8 +26,6 @@ interface Escena {
   nombre: string;
 }
 
-
-
 const ObjetivoList = () => {
   const { userId, objetivoId } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
