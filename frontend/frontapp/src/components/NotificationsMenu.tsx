@@ -87,7 +87,7 @@ export default function NotificationsMenu({token}) {
 
       {/* Menú desplegable de notificaciones */}
       {showNotifications && (
-        <div className="absolute right-0 mt-2 w-72 bg-white text-black shadow-lg rounded-md p-4">
+        <div className="absolute right-0 mt-2 w-72 bg-white text-black shadow-lg rounded-md p-4 max-h-96 overflow-y-auto">
           {notificaciones.length > 0 ? (
             <ul className="space-y-2">
               {notificaciones.map((notification) => (

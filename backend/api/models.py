@@ -57,6 +57,7 @@ class Escena(models.Model):
     condicion = models.OneToOneField('Condicion',related_name='escenas', on_delete=models.CASCADE,blank=True,null=True)
     link = models.CharField(max_length=2000)
     nombre = models.CharField(max_length=100, default="Sin Nombre")
+    habilitada = models.BooleanField(default=False)
     class Meta:
         db_table = 'escena'
 
@@ -326,9 +327,7 @@ class Notificacion(models.Model):
     )
     # Relación genérica
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    objeto_asociado = GenericForeignKey('content_type', 'object_id')
-
+    object_id = models.PositiveIntegerField()    
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

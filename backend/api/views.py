@@ -53,6 +53,9 @@ from django.utils import timezone
 import json
 from .models import Condicion, Objetivo  # Ensure you import Objetivo
 
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Subquery, OuterRef
+
 @csrf_exempt
 def create_condition(request):
     if request.method == "POST":
@@ -786,7 +789,7 @@ class EscenasPorObjetivoView(generics.ListAPIView):
             return Escena.objects.none()
         
         return Escena.objects.filter(
-            escenaobjetivo__objetivo=objetivo_id
+            escenaobjetivo__objetivo=objetivo_id, habilitada=True
         ).distinct().prefetch_related(
             Prefetch(
                 'escenaobjetivo_set',
@@ -934,7 +937,7 @@ logger = logging.getLogger(__name__)
 
 #devuelve escenas del sistema
 class EscenaView(generics.ListAPIView):
-    queryset = Escena.objects.all().prefetch_related(
+    queryset = Escena.objects.filter(habilitada=True).prefetch_related(
         Prefetch(
             'escenaobjetivo_set',
             queryset=EscenaObjetivo.objects.select_related('objetivo').prefetch_related(
@@ -1140,7 +1143,7 @@ class EscenaBusquedaView(generics.ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        queryset = Escena.objects.all().prefetch_related(
+        queryset = Escena.objects.filter(habilitada=True).prefetch_related(
             Prefetch(
                 'escenaobjetivo_set',
                 queryset=EscenaObjetivo.objects.select_related('objetivo').prefetch_related(
@@ -1264,7 +1267,7 @@ class EscenasPorObjetivoListView(generics.ListAPIView):
             return Escena.objects.none()  # Devuelve un queryset vacío si no hay objetivo_id
 
         # Filtra las relaciones por el ID del objetivo
-        relaciones = EscenaObjetivo.objects.filter(objetivo=objetivo_id)
+        relaciones = EscenaObjetivo.objects.filter(objetivo=objetivo_id, escena__habilitada=True)
 
         # Obtén las escenas asociadas al objetivo (TODAS)
         escenas_objetivo = Escena.objects.filter(
@@ -1388,9 +1391,8 @@ class ObjetivoViewSet(viewsets.ViewSet):
 
 
 class EscenaUpdateView(UpdateAPIView):
-    queryset = Escena.objects.all()
+    queryset = Escena.objects.filter(habilitada=True)  # Solo escenas habilitadas
     serializer_class = EscenaSerializer
-
     
 class GetPatientsView(generics.ListAPIView):
     queryset = User.objects.filter(role='paciente')
@@ -1474,6 +1476,11 @@ class GrupoUpdateView(UpdateAPIView):
 
         return Response(response_data, status=status.HTTP_200_OK)
 
+from django.contrib.contenttypes.models import ContentType
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from django.shortcuts import get_object_or_404
+
 @api_view(['GET'])
 def get_goal_data(request, objetivo_id):
     try:
@@ -1494,7 +1501,7 @@ def get_goal_data(request, objetivo_id):
                 "complejidad": relacion.escena.complejidad,
                 "link": relacion.escena.link,
             }
-            for relacion in EscenaObjetivo.objects.filter(objetivo=objetivo)
+            for relacion in EscenaObjetivo.objects.filter(objetivo=objetivo, escena__habilitada=True)
         ]
 
         # Añadir las escenas relacionadas al diccionario serializado
@@ -1506,6 +1513,7 @@ def get_goal_data(request, objetivo_id):
         return Response(serialized_objetivo, status=200)
     except Objetivo.DoesNotExist:
         return Response({"error": "Objetivo no encontrado"}, status=404)
+
         
 
 
@@ -1939,23 +1947,40 @@ def get_dni(request):
         return Response({'dni': user.dni})
     except User.DoesNotExist:
         return Response({'error': f'No se encontró un usuario con username: {username}'}, status=404)
-
+    
+     
+from api.notificaciones.utils import enviar_notificacion_admin
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication])
 def crear_escena(request):
     try:
-        serializer = EscenaSerializer(data=request.data)
-        
-        # Validar datos
+        data = request.data.copy()   
+        user = get_object_or_404(User, username=request.user)
+        serializer = EscenaSerializer(data=data)
         if serializer.is_valid():
-            serializer.save()
+            
+            escena = serializer.save()          
+             # Crear notificación para el admin
+            admin = User.objects.filter(role='admin').first()
+            if admin:
+                content_type = ContentType.objects.get_for_model(escena)
+                print("Content_Type:    ",content_type)
+                notificacion = Notificacion.objects.create(
+                    destinatario=admin,
+                    remitente=user,
+                    mensaje=f"El usuario {user.username} creó la escena '{escena.nombre}'. Requiere revisión.",
+                    estado='pendiente',
+                    content_type=content_type,
+                    object_id=escena.id,
+                )
+                enviar_notificacion_admin(notificacion)
             return Response(
                 {"message": "Escena creada exitosamente", "data": serializer.data},
                 status=status.HTTP_201_CREATED
             )
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
     except Exception as e:
         return Response(
             {"error": f"Error inesperado: {str(e)}"},
@@ -2041,7 +2066,7 @@ class Get_escenas_by_objetivo(APIView):
         objetivo = get_object_or_404(Objetivo, id=objetivo_id)
 
         # Obtener todas las relaciones EscenaObjetivo para este objetivo
-        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo).select_related('escena')
+        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo, escena__habilitada = True).select_related('escena')
 
         # Extraer todas las escenas del objetivo
         escenas = [eo.escena for eo in escenas_objetivo]
@@ -2081,7 +2106,7 @@ class Get_escenas_by_objetivo_by_user(APIView):
         objetivo = get_object_or_404(Objetivo, id=objetivo_id)
         
         # Obtener todas las relaciones EscenaObjetivo para este objetivo
-        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo).select_related('escena')
+        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo, escena__habilitada = True).select_related('escena')
         
         # Obtener las escenas ya asignadas al paciente
         escenas_asignadas = PersonaObjetivoEscena.objects.filter(
@@ -2130,13 +2155,13 @@ class ObjetivosListView(generics.ListAPIView):
 
 @permission_classes([AllowAny])
 class EscenaListView(generics.ListAPIView):
-    queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
 
-
+    def get_queryset(self):
+        return Escena.objects.filter(habilitada=True)  # Solo escenas habilitadas 
 class CentrosSaludListView(generics.ListAPIView):
     queryset = Centrodesalud.objects.all()
     serializer_class = CentroSaludSerializer
@@ -2466,10 +2491,13 @@ class ListsScenesView(generics.ListAPIView):
 class GetScenesView(generics.ListAPIView):
     queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
-    pagination_class = DynamicPagination
+    pagination_class = DynamicPagination   
+
+    def get_queryset(self):
+        return Escena.objects.filter(habilitada=True) 
 
 class DeleteSceneView(generics.DestroyAPIView):
-    queryset = Escena.objects.all()
+    queryset = Escena.objects.filter(habilitada=True)
     serializer_class = ObjetivoSerializer
 
 class DeleteGroupView(generics.DestroyAPIView):
@@ -2958,7 +2986,7 @@ class EscenasSegunUsuarioObjetivo(APIView):
             return Response({'error': 'Se requiere el parámetro objetivo_id'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Obtener las escenas relacionadas al objetivo
-        escena_objetivos = EscenaObjetivo.objects.filter(objetivo_id=objetivo_id)
+        escena_objetivos = EscenaObjetivo.objects.filter(objetivo_id=objetivo_id, escena__habilitada=True)
         if not escena_objetivos.exists():
             return Response({'error': 'No se encontraron escenas para el objetivo proporcionado'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -4000,6 +4028,7 @@ class GroupDetailView(generics.RetrieveDestroyAPIView):
 #@authentication_classes([CookieJWTAuthentication])
 @permission_classes([AllowAny])
 def obtener_notificaciones_pendientes(request):
+    print("Request user: ",request.user)
     # Filtrar notificaciones pendientes para el usuario actual
     notificaciones = Notificacion.objects.filter(
         destinatario=request.user, estado='pendiente'
@@ -4049,8 +4078,7 @@ def procesar_notificacion(request, pk, accion):
 
     # Verifica el tipo de objeto asociado
     content_type = notificacion.content_type
-    objeto_asociado = notificacion.objeto_asociado  # Accede al objeto asociado
-
+    
     try:
         if content_type.model == 'user':  # Si es una solicitud de activación de usuario
             usuario = get_object_or_404(User, username=notificacion.remitente.username)
@@ -4065,20 +4093,25 @@ def procesar_notificacion(request, pk, accion):
                 return JsonResponse({'success': True, 'message': f'Usuario {usuario} eliminado y notificación procesada'})
         
         elif content_type.model == 'objetivo':  # Si es una solicitud de agregar un objetivo
-            if accion == 'aceptar':
-                objeto_asociado.aprobado = True
-                objeto_asociado.save()
+            if accion == 'aceptar':                
                 notificacion.estado = 'leida'
-            elif accion == 'rechazar':
-                objeto_asociado.delete()
+            elif accion == 'rechazar':                
                 notificacion.estado = 'eliminada'
 
         elif content_type.model == 'comentario':  # Si es una solicitud de moderar un comentario
             if accion == 'aceptar':
                 notificacion.estado = 'leida'
-            elif accion == 'rechazar':
-                objeto_asociado.delete()
+            elif accion == 'rechazar':                
                 notificacion.estado = 'eliminada'
+        elif content_type.model == 'escena':
+            escena = get_object_or_404(Escena, id=notificacion.object_id)
+            if accion == 'aceptar':
+                escena.habilitada = True  # Habilitar la escena
+                escena.save()
+                notificacion.estado = 'leida'        
+            elif accion == 'rechazar':
+                escena.delete()
+                notificacion.estado = 'eliminada'       
 
         else:
             return JsonResponse({'error': 'Tipo de objeto no soportado'}, status=400)

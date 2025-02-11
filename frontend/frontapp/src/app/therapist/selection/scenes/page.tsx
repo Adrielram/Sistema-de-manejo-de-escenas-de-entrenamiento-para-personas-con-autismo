@@ -39,8 +39,8 @@ const ScenesPage: React.FC = () => {
       setTotalItems(scenesData.count);
 
       const formattedData: { [key: string]: string } = {};
-      scenesData.results.forEach((scene) => {
-        formattedData[scene.id] = scene.nombre;
+      scenesData.results.forEach((scene) => {        
+          formattedData[scene.id] = scene.nombre;
       });
 
       setData(formattedData);

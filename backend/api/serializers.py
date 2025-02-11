@@ -142,7 +142,6 @@ class CondicionSerializer(serializers.ModelSerializer):
 
 class EscenaSerializer(serializers.ModelSerializer):
     condicion = CondicionSerializer(required=False, allow_null=True)
-
     class Meta:
         model = Escena
         fields = ['id', 'idioma', 'acento', 'condicion', 'complejidad', 'link', 'nombre', 'descripcion']
@@ -153,6 +152,7 @@ class EscenaSerializer(serializers.ModelSerializer):
         escena = Escena.objects.create(**validated_data)  # Crear la escena
 
         if condicion_data:
+            print("Entro a condition_data")
             condicion = Condicion.objects.create(**condicion_data)  # Crear la condición
             escena.condicion = condicion  # Asociar la condición con la escena
             escena.save()  # Guardar cambios en la escena
