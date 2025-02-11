@@ -141,7 +141,6 @@ urlpatterns = [
     path('assign-pathology/', AssignPathologyView.as_view(), name='assign-pathology'),
     path('unassign-pathology/', UnassignPathologyView.as_view(), name='unassign-pathology'),
     path('create_condition/', views.create_condition, name='create_condition')
-
-    ]
+]
 
 urlpatterns += [path('', include(router.urls))]
