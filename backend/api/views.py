@@ -35,6 +35,7 @@ import sys
 import json
 import requests
 from rest_framework.exceptions import NotFound
+from django.contrib.auth.tokens import default_token_generator
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
 from rest_framework import generics
@@ -4267,3 +4268,104 @@ El Sistema de Monitoreo Automático
             print(f"Error al enviar el correo: {e}")
 
     return JsonResponse({"data": data, "therapist_emails": list(therapist_emails), "mensaje": mensaje, "razon": razon})
+
+
+@api_view(['POST'])
+def forgot_password(request):
+    """
+    Vista para manejar la solicitud de restablecimiento de contraseña.
+    Envía un correo con un enlace para restablecer la contraseña si el email existe.
+    """
+    try:
+        email = request.data.get("email", "").strip().lower()
+        
+        # Validar que se proporcionó un email
+        if not email:
+            return Response(
+                {"error": "El correo electrónico es requerido"}
+            )
+        
+        # Validar formato del email
+        try:
+            validate_email(email)
+        except ValidationError:
+            return Response(
+                {"error": "El formato del correo electrónico no es válido"}
+            )
+
+        
+        # Buscar usuario por email
+        user = User.objects.filter(email=email).first()
+        
+        # Si no existe el usuario, retornar mensaje genérico por seguridad
+        if not user:
+            return Response(
+                {"error": "No existe un usuario con ese mail asociado"}
+            )
+
+        # Generar token único para este usuario
+        token = default_token_generator.make_token(user)
+        
+        # Construir URL de restablecimiento
+        reset_url = f"http://localhost:3000/auth/reset-password/?token={token}&uid={user.pk}"
+
+        # Preparar contenido del email
+        email_subject = 'Restablecer tu contraseña'
+        email_body = f"""
+        Hola,
+
+        Has solicitado restablecer tu contraseña. 
+        Usa el siguiente enlace para crear una nueva contraseña:
+
+        {reset_url}
+
+        Si no solicitaste este cambio, puedes ignorar este mensaje.
+        El enlace expirará en 1 hora por seguridad.
+
+        Saludos,
+        Centro Casabella
+        """
+
+        # Intentar enviar el email
+        try:
+            sendmail(
+                [email],
+                email_subject,
+                email_body
+            )
+            return Response(
+                {"message": "Recibirás un email con instrucciones brevemente..."},
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            # Registrar el error para debugging
+            logger.error(f"Error enviando email de recuperación: {str(e)}")
+            return Response(
+                {"error": "Hubo un problema al enviar el correo. Por favor, intenta nuevamente."}
+            )
+
+    except Exception as e:
+        # Registrar error general para debugging
+        logger.error(f"Error en forgot_password: {str(e)}")
+        return Response(
+            {"error": "Ocurrió un error inesperado. Por favor, intenta nuevamente."}
+        )
+
+@api_view(['POST'])
+def reset_password(request):
+    token = request.data.get('token')
+    uid = request.data.get('uid')
+    new_password = request.data.get('new_password')
+
+    try:
+        user = User.objects.get(pk=uid)
+    except User.DoesNotExist:
+        return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+    if default_token_generator.check_token(user, token):
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "Contraseña restablecida con éxito."})
+    else:
+        return Response({"error": "Token inválido o expirado."}, status=400)

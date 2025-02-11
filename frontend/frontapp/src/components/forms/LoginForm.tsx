@@ -1,9 +1,8 @@
-// components/forms/LoginForm.js
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
-import { setUser } from '../../../slices/userSlice'; // Asegúrate de que la ruta sea correcta
+import { setUser } from '../../../slices/userSlice';
 import Image from 'next/image';
 
 export default function LoginForm() {
@@ -29,34 +28,33 @@ export default function LoginForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username: user, password}),
-        credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+        body: JSON.stringify({ username: user, password }),
+        credentials: 'include',
       });
 
       if (response.ok) {
-        const data = await response.json(); // Supongamos que el servidor responde con { username: "usuario" }
+        const data = await response.json(); 
 
-        // Actualizamos el estado global con el usuario logueado
-        dispatch(setUser({ username: data.username, loggedIn: true,role:data.role }));
+        dispatch(setUser({ username: data.username, loggedIn: true, role: data.role }));
         
-        console.log('Login exitoso '+ data.username);
+        console.log('Login exitoso ' + data.username);
         if (data.role === "admin") {
-          router.push('/admin/health_center'); // Redirigir al admin
+          router.push('/admin/health_center');
         } else if (data.role === "paciente") {
-          router.push('/interfaz_paciente/principal'); // Redirigir al paciente
+          router.push('/interfaz_paciente/principal');
         } else if (data.role === "padre") {
-          router.push('/interfaz_padre/principal'); // Redirigir al padre
+          router.push('/interfaz_padre/principal');
         } else if (data.role === "terapeuta") {
-          router.push('/therapist'); // Redirigir al terapeuta
+          router.push('/therapist');
         } else {
-          setError('Rol desconocido. Contacte al soporte.'); // Manejar roles inesperados
+          setError('Rol desconocido. Contacte al soporte.');
         }
         
       } else {
         const data = await response.json();
         setError(data.detail || 'Error al iniciar sesión');
       }
-    } catch (err) {
+    } catch {
       setError('Hubo un problema con el servidor. Inténtalo más tarde.');
     }
 
@@ -71,7 +69,7 @@ export default function LoginForm() {
       <div className="mb-4">
         <label htmlFor="user" className="block text-sm font-semibold text-black">Usuario</label>
         <input
-          type="user"
+          type="text"
           id="user"
           value={user}
           onChange={(e) => setUserState(e.target.value)}
@@ -105,6 +103,18 @@ export default function LoginForm() {
           />
         </div>
       </div>
+
+      {/* Enlace "Olvidé mi contraseña" con useRouter */}
+      <div className="text-right mb-4">
+        <button
+          type="button"
+          onClick={() => router.push('./forgot-password')}
+          className="text-sm text-blue-500 hover:underline"
+        >
+          ¿Olvidaste tu contraseña?
+        </button>
+      </div>
+
       <button
         type="submit"
         className="w-full py-3 bg-[#F6512B] text-white font-semibold rounded-md hover:bg-red-900"
