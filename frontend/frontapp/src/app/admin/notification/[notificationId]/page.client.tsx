@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
+interface Escena {
+  nombre: string;
+  link: string;
+}
 interface Notification {
   id: number;
   destinatario: string;
@@ -10,6 +14,7 @@ interface Notification {
   mensaje: string;
   estado: "pendiente" | "leida" | "eliminada";
   timestamp: Date;
+  escena?: Escena;
 }
 
 const NotificationPage = ({ token }: { token: string }) => {
@@ -26,10 +31,10 @@ const NotificationPage = ({ token }: { token: string }) => {
         setLoading(true);
         const response = await fetch(`${baseUrl}notificaciones/${notificationId}/`, {
           method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
+          headers: {            
             "Content-Type": "application/json",
           },
+          credentials: "include",
         });
         if (!response.ok) {
           throw new Error("Error al obtener la notificación");
@@ -113,6 +118,17 @@ const NotificationPage = ({ token }: { token: string }) => {
           <p><strong>Mensaje:</strong> {notification.mensaje}</p>
           <p><strong>Estado:</strong> {notification.estado}</p>
           <p><strong>Fecha:</strong> {new Date(notification.timestamp).toLocaleString()}</p>
+          {notification.escena && (
+            <>
+              <p><strong>Nombre:</strong> {notification.escena.nombre}</p>
+              <p>
+                <strong>Link: </strong> 
+                <a href={notification.escena.link} target="_blank" rel="noopener noreferrer">
+                  {notification.escena.link}
+                </a>
+              </p>
+            </>
+          )}
         </div>
         {(notification.estado === "pendiente" &&
             <div className="mt-4">
