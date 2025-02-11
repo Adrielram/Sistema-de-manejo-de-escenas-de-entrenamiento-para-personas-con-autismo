@@ -57,14 +57,16 @@ from .models import Condicion, Objetivo  # Ensure you import Objetivo
 def create_condition(request):
     if request.method == "POST":
         try:
+            print("Raw request body:", request.body)
             # Parse JSON data from request body
             data = json.loads(request.body)
-            
+            print("Parsed data:", data)
             # Extract condition fields, allowing them to be None
             edad = data.get('edad', None)
             objetivo_id = data.get('objetivo', None)
             fecha = data.get('fecha', None)
 
+            print(f"Extracted fields - edad: {edad}, objetivo_id: {objetivo_id}, fecha: {fecha}")
             # Convert fecha to datetime if provided
             if fecha:
                 fecha = timezone.datetime.strptime(fecha, "%Y-%m-%d")
@@ -496,10 +498,12 @@ class CargarPersonaObjetivoEvaluacion(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
 @api_view(['GET'])
 def objetivos_list(request):
     objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
     return JsonResponse(list(objetivos), safe=False)
+
 def patologias_list(request):
     patologias = Patologia.objects.all().values()  # Obtiene todos los objetivos 
     return JsonResponse(list(patologias), safe=False)
