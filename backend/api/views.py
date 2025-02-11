@@ -789,7 +789,7 @@ class EscenasPorObjetivoView(generics.ListAPIView):
             return Escena.objects.none()
         
         return Escena.objects.filter(
-            escenaobjetivo__objetivo=objetivo_id
+            escenaobjetivo__objetivo=objetivo_id, habilitada=True
         ).distinct().prefetch_related(
             Prefetch(
                 'escenaobjetivo_set',
@@ -937,7 +937,7 @@ logger = logging.getLogger(__name__)
 
 #devuelve escenas del sistema
 class EscenaView(generics.ListAPIView):
-    queryset = Escena.objects.all().prefetch_related(
+    queryset = Escena.objects.filter(habilitada=True).prefetch_related(
         Prefetch(
             'escenaobjetivo_set',
             queryset=EscenaObjetivo.objects.select_related('objetivo').prefetch_related(
@@ -1143,7 +1143,7 @@ class EscenaBusquedaView(generics.ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        queryset = Escena.objects.all().prefetch_related(
+        queryset = Escena.objects.filter(habilitada=True).prefetch_related(
             Prefetch(
                 'escenaobjetivo_set',
                 queryset=EscenaObjetivo.objects.select_related('objetivo').prefetch_related(
@@ -1267,7 +1267,7 @@ class EscenasPorObjetivoListView(generics.ListAPIView):
             return Escena.objects.none()  # Devuelve un queryset vacío si no hay objetivo_id
 
         # Filtra las relaciones por el ID del objetivo
-        relaciones = EscenaObjetivo.objects.filter(objetivo=objetivo_id)
+        relaciones = EscenaObjetivo.objects.filter(objetivo=objetivo_id, escena__habilitada=True)
 
         # Obtén las escenas asociadas al objetivo (TODAS)
         escenas_objetivo = Escena.objects.filter(
@@ -1391,9 +1391,8 @@ class ObjetivoViewSet(viewsets.ViewSet):
 
 
 class EscenaUpdateView(UpdateAPIView):
-    queryset = Escena.objects.all()
+    queryset = Escena.objects.filter(habilitada=True)  # Solo escenas habilitadas
     serializer_class = EscenaSerializer
-
     
 class GetPatientsView(generics.ListAPIView):
     queryset = User.objects.filter(role='paciente')
@@ -1478,7 +1477,6 @@ class GrupoUpdateView(UpdateAPIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Subquery, OuterRef
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
@@ -1486,24 +1484,14 @@ from django.shortcuts import get_object_or_404
 @api_view(['GET'])
 def get_goal_data(request, objetivo_id):
     try:
-        # Obtener el objetivo principal
+        # Obtener el objetivo principal usando get_object_or_404 para manejar la excepción
         objetivo = get_object_or_404(Objetivo, pk=objetivo_id)
-
-        # Serializar el objetivo principal
+        
+        # Serializar el objetivo para obtener todos los campos del serializer
         serializer = ObjetivoSerializer(objetivo)
         serialized_objetivo = serializer.data
 
-        # Obtener el ContentType de Escena para filtrar notificaciones
-        escena_content_type = ContentType.objects.get_for_model(Escena)
-
-        # Subconsulta para verificar si la escena tiene una notificación "leída"
-        notificaciones_leidas = Notificacion.objects.filter(
-            content_type=escena_content_type,
-            object_id=OuterRef('escena'),  # `escena_id` es la FK en EscenaObjetivo
-            estado='leida'
-        ).values('object_id')
-
-        # Obtener escenas relacionadas que tengan una notificación "leída"
+        # Obtener las escenas relacionadas a través de EscenaObjetivo
         escenas_relacionadas = [
             {
                 "id": relacion.escena.id,
@@ -1513,16 +1501,16 @@ def get_goal_data(request, objetivo_id):
                 "complejidad": relacion.escena.complejidad,
                 "link": relacion.escena.link,
             }
-            for relacion in EscenaObjetivo.objects.filter(
-                objetivo=objetivo
-            ).filter(escena__in=Subquery(notificaciones_leidas))  # Filtrar por subconsulta
+            for relacion in EscenaObjetivo.objects.filter(objetivo=objetivo, escena__habilitada=True)
         ]
 
-        # Añadir las escenas filtradas al JSON
+        # Añadir las escenas relacionadas al diccionario serializado
         serialized_objetivo['escenas_relacionadas'] = escenas_relacionadas
 
-        return Response(serialized_objetivo, status=200)
+        # Si necesitas una escena explicativa específica, añádela aquí, aunque ya está en video_explicativo_id
+        # Puedes omitirla si ya está representada por video_explicativo_id en el serializer
 
+        return Response(serialized_objetivo, status=200)
     except Objetivo.DoesNotExist:
         return Response({"error": "Objetivo no encontrado"}, status=404)
 
@@ -1971,6 +1959,7 @@ def crear_escena(request):
         user = get_object_or_404(User, username=request.user)
         serializer = EscenaSerializer(data=data)
         if serializer.is_valid():
+            
             escena = serializer.save()          
              # Crear notificación para el admin
             admin = User.objects.filter(role='admin').first()
@@ -2077,7 +2066,7 @@ class Get_escenas_by_objetivo(APIView):
         objetivo = get_object_or_404(Objetivo, id=objetivo_id)
 
         # Obtener todas las relaciones EscenaObjetivo para este objetivo
-        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo).select_related('escena')
+        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo, escena__habilitada = True).select_related('escena')
 
         # Extraer todas las escenas del objetivo
         escenas = [eo.escena for eo in escenas_objetivo]
@@ -2117,7 +2106,7 @@ class Get_escenas_by_objetivo_by_user(APIView):
         objetivo = get_object_or_404(Objetivo, id=objetivo_id)
         
         # Obtener todas las relaciones EscenaObjetivo para este objetivo
-        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo).select_related('escena')
+        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo, escena__habilitada = True).select_related('escena')
         
         # Obtener las escenas ya asignadas al paciente
         escenas_asignadas = PersonaObjetivoEscena.objects.filter(
@@ -2166,31 +2155,13 @@ class ObjetivosListView(generics.ListAPIView):
 
 @permission_classes([AllowAny])
 class EscenaListView(generics.ListAPIView):
-    queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
 
     def get_queryset(self):
-        request = self.request
-        queryset = Escena.objects.all()
-
-        if request and request.method == "GET":
-            # Obtener el ContentType correspondiente a Escena
-            escena_content_type = ContentType.objects.get_for_model(Escena)
-
-            # Subconsulta para encontrar las escenas con al menos una notificación "leída"
-            notificaciones_leidas = Notificacion.objects.filter(
-                content_type=escena_content_type,
-                object_id=OuterRef('id'),
-                estado='leida'
-            ).values('object_id')
-
-            # Filtrar solo las escenas que tienen una notificación "leída"
-            queryset = queryset.filter(id__in=Subquery(notificaciones_leidas))
-
-        return queryset
+        return Escena.objects.filter(habilitada=True)  # Solo escenas habilitadas 
 class CentrosSaludListView(generics.ListAPIView):
     queryset = Centrodesalud.objects.all()
     serializer_class = CentroSaludSerializer
@@ -2520,30 +2491,13 @@ class ListsScenesView(generics.ListAPIView):
 class GetScenesView(generics.ListAPIView):
     queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
-    pagination_class = DynamicPagination
+    pagination_class = DynamicPagination   
 
     def get_queryset(self):
-        request = self.request
-        queryset = Escena.objects.all()
-
-        if request and request.method == "GET":
-            # Obtener el ContentType correspondiente a Escena
-            escena_content_type = ContentType.objects.get_for_model(Escena)
-
-            # Subconsulta para encontrar las escenas con al menos una notificación "leída"
-            notificaciones_leidas = Notificacion.objects.filter(
-                content_type=escena_content_type,
-                object_id=OuterRef('id'),
-                estado='leida'
-            ).values('object_id')
-
-            # Filtrar solo las escenas que tienen una notificación "leída"
-            queryset = queryset.filter(id__in=Subquery(notificaciones_leidas))
-
-        return queryset
+        return Escena.objects.filter(habilitada=True) 
 
 class DeleteSceneView(generics.DestroyAPIView):
-    queryset = Escena.objects.all()
+    queryset = Escena.objects.filter(habilitada=True)
     serializer_class = ObjetivoSerializer
 
 class DeleteGroupView(generics.DestroyAPIView):
@@ -3032,7 +2986,7 @@ class EscenasSegunUsuarioObjetivo(APIView):
             return Response({'error': 'Se requiere el parámetro objetivo_id'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Obtener las escenas relacionadas al objetivo
-        escena_objetivos = EscenaObjetivo.objects.filter(objetivo_id=objetivo_id)
+        escena_objetivos = EscenaObjetivo.objects.filter(objetivo_id=objetivo_id, escena__habilitada=True)
         if not escena_objetivos.exists():
             return Response({'error': 'No se encontraron escenas para el objetivo proporcionado'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -4152,7 +4106,9 @@ def procesar_notificacion(request, pk, accion):
         elif content_type.model == 'escena':
             escena = get_object_or_404(Escena, id=notificacion.object_id)
             if accion == 'aceptar':
-                notificacion.estado = 'leida'
+                escena.habilitada = True  # Habilitar la escena
+                escena.save()
+                notificacion.estado = 'leida'        
             elif accion == 'rechazar':
                 escena.delete()
                 notificacion.estado = 'eliminada'       

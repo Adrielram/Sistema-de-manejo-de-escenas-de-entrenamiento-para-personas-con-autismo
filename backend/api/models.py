@@ -57,6 +57,7 @@ class Escena(models.Model):
     condicion = models.OneToOneField('Condicion',related_name='escenas', on_delete=models.CASCADE,blank=True,null=True)
     link = models.CharField(max_length=2000)
     nombre = models.CharField(max_length=100, default="Sin Nombre")
+    habilitada = models.BooleanField(default=False)
     class Meta:
         db_table = 'escena'
 
