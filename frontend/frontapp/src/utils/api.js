@@ -44,21 +44,24 @@ export const create_scene = async (nuevaEscena) => {
             },
             body: JSON.stringify({
                 nombre: nuevaEscena.nombre,
+                descripcion: nuevaEscena.descripcion, // Agregamos este campo
                 idioma: nuevaEscena.idioma,
                 acento: nuevaEscena.acento,
-                condicion: nuevaEscena.condicion ?? null, // Si no está definido, asigna null
-                complejidad:nuevaEscena.complejidad,
+                condicion: nuevaEscena.condicion ?? null,
+                complejidad: nuevaEscena.complejidad,
                 link: nuevaEscena.link
             }),
             credentials: 'include'
         });
   
+        // Para ver exactamente qué error está devolviendo el servidor
         const data = await response.json();
+        console.log("Respuesta del servidor:", data);
         
         if (response.status === 201) {
             return { success: true, data };
         } else {
-            return { success: false, error: data.error || 'Error desconocido' };
+            return { success: false, error: data.error || JSON.stringify(data) };
         }
     } catch (error) {
         console.error('Error en la solicitud:', error);
@@ -67,7 +70,7 @@ export const create_scene = async (nuevaEscena) => {
             error: error.message || 'Error desconocido'
         };
     }
-  };
+};
 
   export const enviarFormulario = async (formulario) => {
     try {

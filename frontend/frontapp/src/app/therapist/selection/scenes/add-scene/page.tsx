@@ -1,6 +1,36 @@
 "use client";
 import { create_scene } from '../../../../../utils/api';
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import GenericDropdown from "../../../../../components/SearchableDropDown";
+
+// Define interfaces for our data structures
+interface Objetivo {
+  id: number;
+  nombre: string;
+}
+
+interface CondicionFields {
+  edad?: number;
+  objetivo?: number;
+  fecha?: string;
+}
+
+
+
+interface CondicionDict {
+  objetivo_id: number;  // Cambiado de id a objetivo_id
+}
+
+interface NuevaEscena {
+  nombre: string;
+  descripcion: string;
+  idioma: string;
+  acento: string;
+  condicion: CondicionDict | null;
+  complejidad: number;
+  link: string;
+}
+
 
 const CreateScene: React.FC = () => {
   const [titulo, setTitulo] = useState("");
@@ -10,61 +40,131 @@ const CreateScene: React.FC = () => {
   const [descripcion, setDescripcion] = useState("");
   const [linkVideo, setLinkVideo] = useState("");
 
-  // Nuevos estados para condiciones
+  // Estados para condiciones
   const [mostrarCondicion, setMostrarCondicion] = useState(false);
   const [edad, setEdad] = useState<number | "">("");
   const [objetivo, setObjetivo] = useState<number | null>(null);
   const [fecha, setFecha] = useState("");
+  const [objetivos, setObjetivos] = useState<Objetivo[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dropdownTitle, setDropdownTitle] = useState("Seleccione un objetivo");
+
+  useEffect(() => {
+    const fetchObjetivos = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/objetivos-list/");
+        const data = await response.json();
+        const objetivosArray = data.results || [];
+        setObjetivos(objetivosArray);
+      } catch (error) {
+        console.error("Error al obtener los objetivos:", error);
+        setObjetivos([]);
+      }
+    };
+    fetchObjetivos();
+  }, []);
+
+  const validateForm = (): string | null => {
+    const requiredFields: Record<string, string | number> = {
+      titulo,
+      idioma,
+      linkVideo,
+      acento,
+      complejidad
+    };
+
+    const emptyFields = Object.entries(requiredFields)
+      .filter(([key, value]) => !value || (key === 'complejidad' && value === 0))
+      .map(([key]) => key);
+
+    if (emptyFields.length > 0) {
+      return `Por favor complete los siguientes campos: ${emptyFields.join(', ')}`;
+    }
+
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!titulo || !idioma || !linkVideo || !acento || !complejidad) {
-      alert("Todos los campos son obligatorios");
+    
+    const validationError = validateForm();
+    if (validationError) {
+      alert(validationError);
       return;
     }
-  
+
+    setIsSubmitting(true);
+    
     try {
-      let nuevaCondicionId = null;
-  
-      // Si hay una condición, créala antes de enviar la escena
-      if (mostrarCondicion && (edad || objetivo || fecha)) {
-        const nuevaCondicion = { 
-          edad: edad || null, 
-          objetivo: objetivo || null, 
-          fecha: fecha || null 
-        };
-        const response = await fetch("http://localhost:8000/api/create_condition/", {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(nuevaCondicion),
-        });
-  
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(`Error al crear la condición: ${errorData.error}`);
+      let condicionDict: CondicionDict | null = null;
+    
+      if (mostrarCondicion) {
+        const condicionFields: CondicionFields = {};
+        let objetivoOriginal = null;  // Guardamos el objetivo original
+        
+        if (edad !== "") {
+          condicionFields.edad = edad;
         }
-  
-        const result = await response.json();
-        nuevaCondicionId = result.id; // Guardamos el ID localmente
+        
+        if (objetivo !== null) {
+          condicionFields.objetivo = objetivo;
+          objetivoOriginal = objetivo;  // Guardamos el valor original
+        }
+        
+        if (fecha) {
+          condicionFields.fecha = fecha;
+        }
+      
+        if (Object.keys(condicionFields).length > 0) {
+          console.log("Datos exactos que se envían al backend:", JSON.stringify(condicionFields));
+          
+          try {
+            const response = await fetch("http://localhost:8000/api/create_condition/", {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(condicionFields),
+            });
+      
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`Error al crear la condición: ${errorText}`);
+            }
+      
+            const result = await response.json();
+            console.log("Respuesta de create_condition:", result);
+      
+            if (result.id) {
+              // Usamos el objetivo_id original en lugar del id de la condición
+              condicionDict = { objetivo_id: objetivoOriginal };
+            } else {
+              throw new Error("No se recibió el ID de la condición");
+            }
+          } catch (error) {
+            console.error("Error en create_condition:", error);
+            throw error;
+          }
+        }
       }
-  
-      const nuevaEscena = {
+      
+      const nuevaEscena: NuevaEscena = {
         nombre: titulo,
         descripcion,
         idioma,
         acento,
-        condicion: nuevaCondicionId, // Usamos el ID local
+        condicion: condicionDict,
         complejidad,
         link: linkVideo,
       };
-  
+      
+      console.log("Datos de la escena a enviar:", nuevaEscena);
       const result = await create_scene(nuevaEscena);
+      
       if (result.success) {
         alert("Escena creada exitosamente");
-        // Resetear todos los campos
+        // Reset form fields
         setTitulo("");
         setAcento("");
         setIdioma("");
@@ -75,12 +175,34 @@ const CreateScene: React.FC = () => {
         setObjetivo(null);
         setFecha("");
         setMostrarCondicion(false);
+        setDropdownTitle("Seleccione un objetivo");
       } else {
         alert(`Error al crear la escena: ${result.error}`);
       }
     } catch (error) {
       console.error("Error al crear la escena:", error);
-      alert("Ocurrió un error inesperado");
+      alert(`Ocurrió un error: ${error instanceof Error ? error.message : 'Error inesperado'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleObjetivoSelect = (item: { id: number; name?: string; nombre?: string }) => {
+    try {
+      const id = item.id;
+      const nombre = item.name || item.nombre;
+      
+      if (id && nombre) {
+        setObjetivo(id);
+        setDropdownTitle(nombre);
+      } else {
+        setObjetivo(null);
+        setDropdownTitle("Seleccione un objetivo");
+      }
+    } catch (error) {
+      console.error("Error al seleccionar objetivo:", error);
+      setObjetivo(null);
+      setDropdownTitle("Seleccione un objetivo");
     }
   };
 
@@ -90,7 +212,7 @@ const CreateScene: React.FC = () => {
         <h1 className="text-4xl font-bold text-[#3EA5FF] mb-8 text-center">Crear Escena</h1>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8">
           <div className="space-y-6 bg-white p-8 rounded-xl shadow-lg border border-blue-100">
-          <div>
+            <div>
               <label htmlFor="titulo" className="block font-semibold text-gray-700 mb-2">
                 Título
               </label>
@@ -155,15 +277,16 @@ const CreateScene: React.FC = () => {
                 onChange={(e) => {
                   const value = parseInt(e.target.value, 10);
                   if (value >= 0 && value <= 10) {
-                    setComplejidad(value); // Solo actualiza si está en el rango
+                    setComplejidad(value);
                   }
                 }}
                 className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
                 placeholder="Ingrese la Complejidad"
-                min="0" // Establece el valor mínimo
-                max="10" // Establece el valor máximo
-                />
+                min="0"
+                max="10"
+              />
             </div>
+
             <div>
               <label className="block font-semibold text-gray-700 mb-2">Condiciones</label>
               <button
@@ -188,13 +311,29 @@ const CreateScene: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-gray-700">Objetivo</label>
-                    <input
-                      type="number"
-                      value={objetivo ?? ""}
-                      onChange={(e) => setObjetivo(e.target.value ? parseInt(e.target.value) : null)}
-                      className="w-full border p-2 rounded-lg"
-                      placeholder="Ingrese el objetivo"
-                    />
+                    {objetivos?.length > 0 ? (
+                      <div 
+                        className="relative w-full" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
+                        <GenericDropdown
+                          title={dropdownTitle}
+                          items={objetivos.map((obj) => ({ 
+                            id: obj.id,
+                            name: obj.nombre, // Asegurarnos de usar nombre consistentemente
+                          }))}
+                          onSelect={handleObjetivoSelect}
+                          placeholder="Seleccione un objetivo"
+                          maxHeight="200px"
+                          valueKey="id"
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-sm">No hay objetivos disponibles.</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-gray-700">Fecha</label>
@@ -210,24 +349,24 @@ const CreateScene: React.FC = () => {
             </div>
           </div>
           <div>
-          <label htmlFor="linkVideo" className="block font-semibold text-gray-700 mb-2">
-                Link al Video Explicativo
-              </label>
-              <input
-                id="linkVideo"
-                type="search"
-                value={linkVideo}
-                onChange={(e) => setLinkVideo(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
-                placeholder="Ingrese el link"
-              />
+            <label htmlFor="linkVideo" className="block font-semibold text-gray-700 mb-2">
+              Link al Video Explicativo
+            </label>
+            <input
+              id="linkVideo"
+              type="search"
+              value={linkVideo}
+              onChange={(e) => setLinkVideo(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
+              placeholder="Ingrese el link"
+            />
           </div>
-          
           <button 
             type="submit" 
             className="w-full bg-[#3EA5FF] text-white font-semibold py-4 rounded-xl hover:bg-[#2E8BFF]"
+            disabled={isSubmitting}
           >
-            Crear Escena
+            {isSubmitting ? "Creando..." : "Crear Escena"}
           </button>
         </form>
       </div>
