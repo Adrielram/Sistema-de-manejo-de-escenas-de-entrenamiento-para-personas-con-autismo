@@ -33,8 +33,8 @@ from django.conf import settings
 import google.generativeai as genai
 import sys
 import json
+import requests
 from rest_framework.exceptions import NotFound
-
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
 from rest_framework import generics
@@ -95,6 +95,26 @@ def create_condition(request):
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
+
+class GetPacienteView(APIView):
+    def get(self, request):
+        search_term = request.GET.get("dni_o_nombre", "").strip()
+
+        if not search_term:
+            return Response({"error": "Debe proporcionar un DNI o nombre para la búsqueda"}, status=400)
+
+        # Filtrar por DNI o nombre
+        pacientes = User.objects.filter(
+            Q(dni__icontains=search_term) | Q(nombre__icontains=search_term),
+            role="paciente"
+        )
+
+        if not pacientes.exists():
+            return Response({"error": "No se encontraron pacientes"}, status=404)
+
+        # Serializar la lista de pacientes
+        serializer = PacienteSerializer(pacientes, many=True)
+        return Response(serializer.data, status=200)
 
 class UpdateGroupAssociationsView(APIView):
     def put(self, request, group_id):
@@ -1288,10 +1308,35 @@ class PacienteListView(APIView):
         serializer = PacienteSerializer(pacientes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-@permission_classes([AllowAny])
-def objetivos_list(request):
-    objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
-    return JsonResponse(list(objetivos), safe=False)
+
+from django.http import JsonResponse
+from django.views import View
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+
+class ObjetivosListCentro(View):
+    def get(self, request, *args, **kwargs):
+        username = request.GET.get('username')
+        center_name = request.GET.get('centername')
+
+        if not username or not center_name:
+            return JsonResponse({"error": "Se requieren los parámetros 'username' y 'centername'."}, status=400)
+
+        try:
+            user = User.objects.get(username=username)
+            center = Centrodesalud.objects.get(nombre=center_name)
+            center_professional = CentroProfesional.objects.get(centrodesalud=center, profesional=user)
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "Usuario, centro o relación no encontrados."}, status=404)
+
+        objetivos = Objetivo.objects.filter(centro_profesional=center_professional).values()
+        return JsonResponse(list(objetivos), safe=False)
+
+
+
+    
+
 
 @permission_classes([AllowAny])
 class ResolveNamesToIds(APIView):
@@ -1591,9 +1636,27 @@ class update_user(APIView):
     
 
 @api_view(['POST'])
+#@authentication_classes([CookieJWTAuthentication])
 @permission_classes([AllowAny])
 def signIn(request):
     try:
+        # Validar CAPTCHA
+        captcha_response = request.data.get('captcha')
+        if not captcha_response:
+            return Response({"error": "El CAPTCHA es obligatorio"}, status=400)
+
+        recaptcha_verify_url = "https://www.google.com/recaptcha/api/siteverify"
+        recaptcha_secret_key = settings.RE_CAPTCHA_KEY  # Configurar en settings.py
+
+        response = requests.post(recaptcha_verify_url, data={
+            'secret': recaptcha_secret_key,
+            'response': captcha_response
+        })
+        result = response.json()
+
+        if not result.get('success'):
+            return Response({"error": "La verificación del CAPTCHA falló"}, status=400)
+
         # Validar que todos los campos están presentes
         required_fields = [
             'dni', 'nombre', 'fecha_nac', 'genero', 'role',
@@ -1604,7 +1667,7 @@ def signIn(request):
         if missing_fields:
             return Response(
                 {"error": f"Faltan los siguientes campos: {', '.join(missing_fields)}"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=400
             )
 
         # Obtener datos del request
@@ -1617,61 +1680,47 @@ def signIn(request):
         ciudad = request.data.get('ciudad')
         calle = request.data.get('calle')
         numero = request.data.get('numero')
-        id_padre = request.data.get('id_padre', None)  # Puede ser opcional
-        centros_de_salud = request.data.get('centros_de_salud', None)  # Puede ser opcional
-        sintomas = request.data.get('sintomas',[])  # Puede ser opcional
-        texto = request.data.get('texto','')  # Puede ser opcional
-        print("Centros de salud "+str(centros_de_salud))
+        id_padre = request.data.get('id_padre', None)
+        centros_de_salud = request.data.get('centros_de_salud', None)
+        sintomas = request.data.get('sintomas', [])
+        texto = request.data.get('texto', '')
+
         print(f"Datos recibidos: DNI={dni}, Nombre={nombre}, Fecha={fecha_nac}, Genero={genero}, Role={role}")
 
         # Verificar si el DNI ya existe
         if User.objects.filter(dni=dni).exists():
-            return Response(
-                {"error": "Ya existe un usuario con ese DNI"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Ya existe un usuario con ese DNI"}, status=400)
 
         # Verificar si el nombre ya existe
         if User.objects.filter(nombre=nombre).exists():
-            return Response(
-                {"error": "Ya existe un usuario con ese nombre"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Ya existe un usuario con ese nombre"}, status=400)
 
         # Validar formato de fecha de nacimiento
         try:
             fecha_nac = datetime.strptime(fecha_nac, "%Y-%m-%d")
         except ValueError:
-            return Response(
-                {"error": "El formato de la fecha de nacimiento debe ser YYYY-MM-DD"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "El formato de la fecha de nacimiento debe ser YYYY-MM-DD"}, status=400)
 
         # Validar género
         if genero not in ['Masculino', 'Femenino']:
-            return Response(
-                {"error": "El género debe ser 'Masculino' o 'Femenino'"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "El género debe ser 'Masculino' o 'Femenino'"}, status=400)
 
         # Validar rol
         if role not in [choice[0] for choice in User.ROLE_CHOICES]:
             return Response(
                 {"error": f"El rol debe ser uno de los siguientes: {[choice[0] for choice in User.ROLE_CHOICES]}"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=400
             )
 
-        # Crear la residencia (dirección) dentro de una transacción
+        # Crear la residencia dentro de una transacción
         with transaction.atomic():
-            
-            # Crear y guardar la residencia en la base de datos
             residencia = Residencia(
                 provincia=provincia,
                 ciudad=ciudad,
                 calle=calle,
                 numero=numero
             )
-            residencia.save()  # Guardar la residencia para asegurarse de que tiene un ID asignado
+            residencia.save()
             print(f"Residencia creada con ID: {residencia}")
 
             # Crear el usuario y asignar la residencia
@@ -1682,7 +1731,7 @@ def signIn(request):
                 fecha_nac=fecha_nac,
                 genero=genero,
                 role=role,
-                direccion_id_dir=residencia,  # Se pasa el objeto residencia
+                direccion_id_dir=residencia,
                 email='adri@example.com',
                 patologia=texto
             )
@@ -1690,9 +1739,8 @@ def signIn(request):
             if role == 'admin':
                 return Response(
                     {"error": "No está permitido registrar usuarios con rol de administrador a través de esta API."},
-                    status=status.HTTP_403_FORBIDDEN
+                    status=403
                 )
-
 
             # Asociar padre si el rol es paciente y se proporciona un ID de padre
             if role == 'paciente' and id_padre:
@@ -1700,89 +1748,62 @@ def signIn(request):
                     padre = User.objects.get(dni=id_padre, role='padre')
                     user.user_id_padre = padre
                 except User.DoesNotExist:
-                    return Response(
-                        {"error": "El padre especificado no existe o no tiene el rol de 'padre'"},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )                
-            
+                    return Response({"error": "El padre especificado no existe o no tiene el rol de 'padre'"}, status=400)
+
             password = request.data.get('password')
             if not password:
-                return Response(
-                    {"error": "La contraseña es requerida"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                return Response({"error": "La contraseña es requerida"}, status=400)
+
             user.set_password(password)
-            print("Valida ")
+            print("Validando contraseña")
             print(user.check_password(user.password))
+
             if role == 'terapeuta':
                 user.is_active = False
             else:
-                user.is_active = True           
-            user.save()       
+                user.is_active = True
+
+            user.save()
             print(f"Usuario creado: {user}")
+
+            # Asociar centros de salud (solo para terapeutas)
             if role == 'terapeuta' and centros_de_salud is not None:
-                try:       
+                try:
                     centros_validos = Centrodesalud.objects.filter(id__in=centros_de_salud)
                     if centros_validos.count() != len(centros_de_salud):
-                        return Response(
-                            {"error": "Uno o más centros de salud especificados no existen"},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
+                        return Response({"error": "Uno o más centros de salud especificados no existen"}, status=400)
+
                     for centro in centros_validos:
                         CentroProfesional.objects.create(profesional=user, centrodesalud=centro)
-                except Exception as e:  # Captura cualquier otro error inesperado
-                    return Response(
-                        {"error": f"Error al asociar centros de salud: {str(e)}"},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )         
+                except Exception as e:
+                    return Response({"error": f"Error al asociar centros de salud: {str(e)}"}, status=400)
 
-             # Asociar síntomas (solo para pacientes)
+            # Asociar síntomas (solo para pacientes)
             if role == 'paciente' and sintomas:
                 for sintoma in sintomas:
                     nombre_patologia = sintoma.get('nombre')
                     certeza = sintoma.get('similitud')
 
                     if not nombre_patologia or certeza is None:
-                        return Response(
-                            {"error": f"Faltan datos en el síntoma: {sintoma}"},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
+                        return Response({"error": f"Faltan datos en el síntoma: {sintoma}"}, status=400)
 
                     try:
                         patologia = Patologia.objects.get(nombre=nombre_patologia)
-                        PersonaPatologia.objects.create(
-                            user_id=user,
-                            patologia_id=patologia,
-                            certeza=certeza
-                        )
+                        PersonaPatologia.objects.create(user_id=user, patologia_id=patologia, certeza=certeza)
                     except Patologia.DoesNotExist:
-                        return Response(
-                            {"error": f"No se encontró la patología con nombre '{nombre_patologia}'"},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
-        return Response(
-            {"message": "Usuario registrado exitosamente"},
-            status=status.HTTP_201_CREATED
-        )
+                        return Response({"error": f"No se encontró la patología con nombre '{nombre_patologia}'"}, status=400)
+
+        return Response({"message": "Usuario registrado exitosamente"}, status=201)
 
     except IntegrityError as e:
-        print(f"IntegrityError: {e}")  # Imprime el mensaje completo del error
-        return Response(
-            {"error": f"Error de integridad: {str(e)}"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        print(f"IntegrityError: {e}")
+        return Response({"error": f"Error de integridad: {str(e)}"}, status=400)
     except ValidationError as e:
         print(f"ValidationError: {e}")
-        return Response(
-            {"error": str(e)},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"error": str(e)}, status=400)
     except Exception as e:
         print(f"Error inesperado: {e}")
-        return Response(
-            {"error": f"Error inesperado: {str(e)}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"error": f"Error inesperado: {str(e)}"}, status=500)
 
 # @api_view(['POST'])
 # def listar_comentarios(request):
@@ -2483,6 +2504,7 @@ class GetGroupsPerUserView(generics.ListAPIView):
 
     def get_queryset(self):
         username = self.request.query_params.get('username')
+        centername = self.request.query_params.get('centername')
 
         if not username:
             raise NotFound("El parámetro 'username' es requerido.")
@@ -2490,10 +2512,10 @@ class GetGroupsPerUserView(generics.ListAPIView):
         user = User.objects.get(username=username)
         
         persona_grupo_qs = Personagrupo.objects.filter(user_id=user)
-        
+        centrodesalud = get_object_or_404(Centrodesalud, nombre=centername)
         grupos_ids = persona_grupo_qs.values_list('grupo_id', flat=True)
 
-        return Grupo.objects.filter(id__in=grupos_ids)
+        return Grupo.objects.filter(id__in=grupos_ids, centrodesalud_id=centrodesalud)
     
 
 class GetGroupsPerUserNotInView(generics.ListAPIView):
@@ -2664,21 +2686,46 @@ class GetTherapistsExcludingView(generics.ListAPIView):
         } for user in queryset]
         
         return Response(data, status=status.HTTP_200_OK)
+    
+
 class GetFormsPerUserView(generics.ListAPIView):
     serializer_class = FormularioSerializer
     pagination_class = DynamicPagination
 
     def get_queryset(self):
         username = self.request.query_params.get('username')
-        if not username:
-            raise NotFound("El parámetro 'username' es requerido.")
-
-        try:
+        centername= self.request.query_params.get('centername') 
+        if not username or not centername:
+            return Response({
+                'error': 'Se requieren los parámetros username y centername'
+            }, status=status.HTTP_400_BAD_REQUEST)           
+        try: 
+            center = Centrodesalud.objects.get(nombre=centername)
             user = User.objects.get(username=username)
+            centro_profesional = CentroProfesional.objects.get(
+                centrodesalud=center, 
+                profesional=user
+            )  
         except User.DoesNotExist:
             raise NotFound(f"Usuario con username '{username}' no encontrado.")
 
-        return Formulario.objects.filter(creado_por=user)
+        return Formulario.objects.filter(objetivo_id__centro_profesional=centro_profesional)    
+
+class GetFormsPatientView(generics.ListAPIView):
+    serializer_class = EvaluacionIdSerializer
+    pagination_class = DynamicPagination
+
+    def get_queryset(self):
+        dni = self.request.query_params.get('dni')
+        if not dni:
+            raise NotFound("El parámetro 'dni' es requerido.")
+
+        try:
+            user = User.objects.get(dni=dni)
+        except User.DoesNotExist:
+            raise NotFound(f"Usuario con username '{dni}' no encontrado.")
+        
+        return PersonaObjetivoEvaluacion.objects.filter(user_id=user).values('evaluacion').distinct()
 
 class DeleteAssesmentView(generics.DestroyAPIView):
     queryset = Formulario.objects.all()

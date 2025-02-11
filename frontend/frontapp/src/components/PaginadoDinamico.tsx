@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect} from "react";
 import Button from "./SmallButton";
 import PaginadoItem from "./PaginadoItem";
 import { OptionsProps } from "../types"; 
@@ -27,6 +27,8 @@ interface BoxPaginadoProps {
   onPageChange: (page: number) => void;
   itemsPerPage: number;
   onItemDeleted?: (id: string) => void;
+  actualizar?: boolean// Agrega esta línea
+
 }
 
 export default function BoxPaginado({ 
@@ -48,11 +50,24 @@ export default function BoxPaginado({
   totalItems: initialTotalItems,
   onPageChange,
   itemsPerPage,
-  onItemDeleted
+  onItemDeleted,
+  actualizar
 }: BoxPaginadoProps) {
   const [data, setData] = useState<Dictionary>(initialData);
   const [totalItems, setTotalItems] = useState(initialTotalItems);
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  useEffect(() => {
+    if (actualizar) {
+      setData(initialData);
+    }
+  }, [initialData,actualizar]);
+
+
+  if (actualizar == null){
+    actualizar = false;
+  }
+
 
   const handleNext = () => {
     if (currentPage < totalPages) {
@@ -92,51 +107,62 @@ export default function BoxPaginado({
   return (
     <div className="container mx-auto p-4">
       <hr className="border-none h-1 mb-4 bg-[#f6512b]" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
-        {Object.entries(data).map(([key, value]) => (
-          <PaginadoItem 
-            key={key} 
-            id={key} 
-            name={value} 
-            showImage={showImage} 
-            options={options} 
-            img={img}
-            ver_path={ver_path}
-            edit_path={edit_path}
-            patients_list_path={patients_list_path}
-            supervision_path={supervision_path}
-            comments_path={comments_path}
-            revision_path={revision_path}
-            scenes_comments_path={scenes_comments_path}
-            forms_path={forms_path}
-            user_dni={user_dni}
-            item_type={item_type}
-            onDelete={handleDelete}
+      
+      <div className="flex justify-center items-center">
+        <div className="flex flex-wrap gap-4">
+          {Object.keys(data).length > 0 ? (
+            Object.entries(data).map(([key, value]) => (
+              <PaginadoItem 
+                key={key} 
+                id={key} 
+                name={value} 
+                showImage={showImage} 
+                options={options} 
+                img={img}
+                ver_path={ver_path}
+                edit_path={edit_path}
+                patients_list_path={patients_list_path}
+                supervision_path={supervision_path}
+                comments_path={comments_path}
+                revision_path={revision_path}
+                scenes_comments_path={scenes_comments_path}
+                forms_path={forms_path}
+                user_dni={user_dni}
+                item_type={item_type}
+                onDelete={handleDelete}
+              />
+            ))
+          ) : (
+            <p className="text-center text-gray-500">No hay elementos para mostrar.</p>
+          )}
+        </div>
+      </div>
+  
+      {/* Mostrar la paginación solo si hay elementos */}
+      {totalItems > 0 && (
+        <div className="flex justify-between mt-4">
+          <Button
+            title="Anterior"
+            font_bold="font-bold"
+            onClick={handlePrev}
+            className={`px-4 py-2 rounded ${
+              currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           />
-        ))}
-      </div>
-
-      <div className="flex justify-between mt-4">
-        <Button
-          title="Anterior"
-          font_bold="font-bold"
-          onClick={handlePrev}
-          className={`px-4 py-2 rounded ${
-            currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        />
-        <span className="text-gray-700 font-bold">
-          Página {currentPage} de {totalPages}
-        </span>
-        <Button
-          title="Siguiente"
-          font_bold="font-bold"
-          onClick={handleNext}
-          className={`px-4 py-2 rounded ${
-            currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        />
-      </div>
+          <span className="text-gray-700 font-bold">
+            Página {currentPage} de {totalPages}
+          </span>
+          <Button
+            title="Siguiente"
+            font_bold="font-bold"
+            onClick={handleNext}
+            className={`px-4 py-2 rounded ${
+              currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          />
+        </div>
+      )}
     </div>
   );
+  
 }

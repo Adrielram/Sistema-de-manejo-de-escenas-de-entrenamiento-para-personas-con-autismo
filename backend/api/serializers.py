@@ -367,6 +367,12 @@ class PersonaObjetivoEvaluacionSerializer(serializers.ModelSerializer):
         fields = ['id', 'user_id', 'objetivo_id', 'resultado', 'progreso', 'evaluacion']
         #depth = 1  # Esto permitirá incluir datos relacionados como el `username` y nombres de los objetivos en lugar de solo sus IDs
 
+class EvaluacionIdSerializer(serializers.ModelSerializer):
+    evaluacion = serializers.IntegerField()
+    class Meta:
+        model = PersonaObjetivoEvaluacion
+        fields = ['evaluacion']
+
 class EscenaObjetivoSerializer(serializers.ModelSerializer):
     class Meta:
         model = EscenaObjetivo

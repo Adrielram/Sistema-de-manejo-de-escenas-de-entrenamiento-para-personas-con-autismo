@@ -133,6 +133,8 @@ const EditPatient: React.FC<{ params: Promise<{ patient_id: string }> }> = ({ pa
             onSelectItems={handleSelectItems}
             onOrderChange={handleOrderChange} // Pasar la función de callback
             apiUrl={`${baseUrl}objetivo/${objetivoId}/user/${patientId}/escenas/`} // URL de la API que devuelve las escenas
+            resetTrigger={selectedItems.length === 0}
+
           />
           <button
             onClick={handleSubmit}

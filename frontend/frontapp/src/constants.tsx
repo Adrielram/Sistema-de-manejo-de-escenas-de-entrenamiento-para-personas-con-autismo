@@ -9,11 +9,10 @@ import { IoIosAdd } from "react-icons/io"; // <IoIosAdd /> icono de agregar
 import { FaPerson } from "react-icons/fa6";
 import { FaUserDoctor } from "react-icons/fa6";
 import { GiHealthNormal } from "react-icons/gi";
-import { FaComments } from "react-icons/fa";
 
 import { SideNavItem } from './types';
 import { FaLayerGroup } from "react-icons/fa";
-
+import { FaPersonArrowDownToLine } from "react-icons/fa6";
 export const SIDENAV_ITEMS: SideNavItem[] = [
     {
       title: 'Centros de Salud', // Nuevo título
@@ -65,6 +64,12 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
                 icon: <IoIosAdd />, 
               },
             ],
+        },
+        {
+          title: 'Pacientes',
+          path: '/therapist/selection/patients',
+          icon: <FaPersonArrowDownToLine />,
+          submenu: false,
         },
         {
             title: 'Grupo de Pacientes',
