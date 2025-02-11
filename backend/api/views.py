@@ -53,6 +53,9 @@ from django.utils import timezone
 import json
 from .models import Condicion, Objetivo  # Ensure you import Objetivo
 
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Subquery, OuterRef
+
 @csrf_exempt
 def create_condition(request):
     if request.method == "POST":
@@ -1474,17 +1477,33 @@ class GrupoUpdateView(UpdateAPIView):
 
         return Response(response_data, status=status.HTTP_200_OK)
 
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Subquery, OuterRef
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from django.shortcuts import get_object_or_404
+
 @api_view(['GET'])
 def get_goal_data(request, objetivo_id):
     try:
-        # Obtener el objetivo principal usando get_object_or_404 para manejar la excepción
+        # Obtener el objetivo principal
         objetivo = get_object_or_404(Objetivo, pk=objetivo_id)
-        
-        # Serializar el objetivo para obtener todos los campos del serializer
+
+        # Serializar el objetivo principal
         serializer = ObjetivoSerializer(objetivo)
         serialized_objetivo = serializer.data
 
-        # Obtener las escenas relacionadas a través de EscenaObjetivo
+        # Obtener el ContentType de Escena para filtrar notificaciones
+        escena_content_type = ContentType.objects.get_for_model(Escena)
+
+        # Subconsulta para verificar si la escena tiene una notificación "leída"
+        notificaciones_leidas = Notificacion.objects.filter(
+            content_type=escena_content_type,
+            object_id=OuterRef('escena'),  # `escena_id` es la FK en EscenaObjetivo
+            estado='leida'
+        ).values('object_id')
+
+        # Obtener escenas relacionadas que tengan una notificación "leída"
         escenas_relacionadas = [
             {
                 "id": relacion.escena.id,
@@ -1494,18 +1513,19 @@ def get_goal_data(request, objetivo_id):
                 "complejidad": relacion.escena.complejidad,
                 "link": relacion.escena.link,
             }
-            for relacion in EscenaObjetivo.objects.filter(objetivo=objetivo)
+            for relacion in EscenaObjetivo.objects.filter(
+                objetivo=objetivo
+            ).filter(escena__in=Subquery(notificaciones_leidas))  # Filtrar por subconsulta
         ]
 
-        # Añadir las escenas relacionadas al diccionario serializado
+        # Añadir las escenas filtradas al JSON
         serialized_objetivo['escenas_relacionadas'] = escenas_relacionadas
 
-        # Si necesitas una escena explicativa específica, añádela aquí, aunque ya está en video_explicativo_id
-        # Puedes omitirla si ya está representada por video_explicativo_id en el serializer
-
         return Response(serialized_objetivo, status=200)
+
     except Objetivo.DoesNotExist:
         return Response({"error": "Objetivo no encontrado"}, status=404)
+
         
 
 
@@ -1939,7 +1959,8 @@ def get_dni(request):
         return Response({'dni': user.dni})
     except User.DoesNotExist:
         return Response({'error': f'No se encontró un usuario con username: {username}'}, status=404)
-
+    
+     
 from api.notificaciones.utils import enviar_notificacion_admin
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -1947,27 +1968,24 @@ from api.notificaciones.utils import enviar_notificacion_admin
 def crear_escena(request):
     try:
         data = request.data.copy()   
-        print("Data creador: ",request.user)
+        user = get_object_or_404(User, username=request.user)
         serializer = EscenaSerializer(data=data)
         if serializer.is_valid():
-            escena = serializer.save()
-
-            print("Se guardo la escena: ",escena)
-            
-            # Crear notificación para el admin
+            escena = serializer.save()          
+             # Crear notificación para el admin
             admin = User.objects.filter(role='admin').first()
             if admin:
                 content_type = ContentType.objects.get_for_model(escena)
+                print("Content_Type:    ",content_type)
                 notificacion = Notificacion.objects.create(
                     destinatario=admin,
-                    remitente=request.user,
-                    mensaje=f"El usuario {request.user} creó la escena '{escena.nombre}'. Requiere revisión.",
+                    remitente=user,
+                    mensaje=f"El usuario {user.username} creó la escena '{escena.nombre}'. Requiere revisión.",
                     estado='pendiente',
                     content_type=content_type,
                     object_id=escena.id,
                 )
                 enviar_notificacion_admin(notificacion)
-
             return Response(
                 {"message": "Escena creada exitosamente", "data": serializer.data},
                 status=status.HTTP_201_CREATED
@@ -2154,7 +2172,25 @@ class EscenaListView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
 
+    def get_queryset(self):
+        request = self.request
+        queryset = Escena.objects.all()
 
+        if request and request.method == "GET":
+            # Obtener el ContentType correspondiente a Escena
+            escena_content_type = ContentType.objects.get_for_model(Escena)
+
+            # Subconsulta para encontrar las escenas con al menos una notificación "leída"
+            notificaciones_leidas = Notificacion.objects.filter(
+                content_type=escena_content_type,
+                object_id=OuterRef('id'),
+                estado='leida'
+            ).values('object_id')
+
+            # Filtrar solo las escenas que tienen una notificación "leída"
+            queryset = queryset.filter(id__in=Subquery(notificaciones_leidas))
+
+        return queryset
 class CentrosSaludListView(generics.ListAPIView):
     queryset = Centrodesalud.objects.all()
     serializer_class = CentroSaludSerializer
@@ -2485,6 +2521,26 @@ class GetScenesView(generics.ListAPIView):
     queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
     pagination_class = DynamicPagination
+
+    def get_queryset(self):
+        request = self.request
+        queryset = Escena.objects.all()
+
+        if request and request.method == "GET":
+            # Obtener el ContentType correspondiente a Escena
+            escena_content_type = ContentType.objects.get_for_model(Escena)
+
+            # Subconsulta para encontrar las escenas con al menos una notificación "leída"
+            notificaciones_leidas = Notificacion.objects.filter(
+                content_type=escena_content_type,
+                object_id=OuterRef('id'),
+                estado='leida'
+            ).values('object_id')
+
+            # Filtrar solo las escenas que tienen una notificación "leída"
+            queryset = queryset.filter(id__in=Subquery(notificaciones_leidas))
+
+        return queryset
 
 class DeleteSceneView(generics.DestroyAPIView):
     queryset = Escena.objects.all()
@@ -4068,8 +4124,7 @@ def procesar_notificacion(request, pk, accion):
 
     # Verifica el tipo de objeto asociado
     content_type = notificacion.content_type
-    objeto_asociado = notificacion.objeto_asociado  # Accede al objeto asociado
-
+    
     try:
         if content_type.model == 'user':  # Si es una solicitud de activación de usuario
             usuario = get_object_or_404(User, username=notificacion.remitente.username)
@@ -4084,20 +4139,23 @@ def procesar_notificacion(request, pk, accion):
                 return JsonResponse({'success': True, 'message': f'Usuario {usuario} eliminado y notificación procesada'})
         
         elif content_type.model == 'objetivo':  # Si es una solicitud de agregar un objetivo
-            if accion == 'aceptar':
-                objeto_asociado.aprobado = True
-                objeto_asociado.save()
+            if accion == 'aceptar':                
                 notificacion.estado = 'leida'
-            elif accion == 'rechazar':
-                objeto_asociado.delete()
+            elif accion == 'rechazar':                
                 notificacion.estado = 'eliminada'
 
         elif content_type.model == 'comentario':  # Si es una solicitud de moderar un comentario
             if accion == 'aceptar':
                 notificacion.estado = 'leida'
-            elif accion == 'rechazar':
-                objeto_asociado.delete()
+            elif accion == 'rechazar':                
                 notificacion.estado = 'eliminada'
+        elif content_type.model == 'escena':
+            escena = get_object_or_404(Escena, id=notificacion.object_id)
+            if accion == 'aceptar':
+                notificacion.estado = 'leida'
+            elif accion == 'rechazar':
+                escena.delete()
+                notificacion.estado = 'eliminada'       
 
         else:
             return JsonResponse({'error': 'Tipo de objeto no soportado'}, status=400)

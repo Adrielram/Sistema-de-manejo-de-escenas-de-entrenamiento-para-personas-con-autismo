@@ -5,6 +5,8 @@ import AssignedObjectives from '../../../../../../components/AssignedObjectives'
 import { SceneWithOrder } from '../../../../../../types';
 import SortableSearchSelectBox from '../../../../../../components/SortableSearchSelectBox';
 import UserPathologies from '../../../../../../components/UserPathologies';
+import { useSelector } from "react-redux";
+import { RootState } from '../../../../../../../store/store';
 interface Objetivo{
   id: number;
   nombre: string;
@@ -15,6 +17,8 @@ const EditPatient: React.FC<{ params: Promise<{ patient_id: string }> }> = ({ pa
   const [objetivoId, setObjetivoId] = useState<number | null>(null);
   const [objetivos, setObjetivos] = useState<Objetivo[]>([]);
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const { username } = useSelector( (state: RootState) => state.user)
+  const { center } = useSelector( (state: RootState) => state.user)
 
   // Obtener el patientId de los parámetros
   useEffect(() => {
@@ -32,7 +36,7 @@ const EditPatient: React.FC<{ params: Promise<{ patient_id: string }> }> = ({ pa
   // Función para obtener todos los objetivos
   const fetchObjetivos = async () => {
     try {
-      const response = await fetch(`${baseUrl}objetivos/`);
+      const response = await fetch(`${baseUrl}objetivos/?username=${username}&centername=${center}`);
       if (!response.ok) {
         throw new Error("Error al cargar los objetivos.");
       }

@@ -152,26 +152,12 @@ class EscenaSerializer(serializers.ModelSerializer):
         escena = Escena.objects.create(**validated_data)  # Crear la escena
 
         if condicion_data:
+            print("Entro a condition_data")
             condicion = Condicion.objects.create(**condicion_data)  # Crear la condición
             escena.condicion = condicion  # Asociar la condición con la escena
             escena.save()  # Guardar cambios en la escena
         
         return escena
-
-    def to_representation(self, instance):
-        # Verificar si existe una notificación en estado 'leida' para la escena
-        notificacion_leida = Notificacion.objects.filter(
-            content_type=ContentType.objects.get_for_model(Escena),
-            object_id=instance.id,
-            estado='leida'
-        ).exists()
-
-        # Si no está autorizada, no mostrar la escena
-        if not notificacion_leida:
-            return None
-
-        # Llamar al método original para la representación
-        return super().to_representation(instance)
 
 
     def update(self, instance, validated_data):
