@@ -13,7 +13,7 @@ class RecommenderEnv(gym.Env):
         # Ruta donde se almacenan los CSVs
         self.data_folder = os.path.join(os.path.dirname(__file__), "data")
         self.dataset = self.load_latest_csv()
-
+        self.recompensa_actual = 0
         self.num_escenas = self.dataset["Escena"].max()       
         self.unique_patologias = sorted({int(x) for sublist in self.dataset["Patologias"].apply(safe_eval) for x in sublist})
         self.num_patologias = len(self.unique_patologias)    
@@ -72,27 +72,23 @@ class RecommenderEnv(gym.Env):
             (self.dataset["Objetivo ID"] == self.objetivo_id_original) &
             (self.dataset["Escena"] == action+1)
         ]         
-
         max_escenas_vistas = 3  
         if not subset.empty:
-            recompensa = subset["Evaluacion"].max() / 100.0       
-            recompensa = (np.sum(self.escenas_vistas) / max_escenas_vistas) * subset["Evaluacion"].max() / 100.0
+            self.recompensa_actual = subset["Evaluacion"].max() / 100.0       
+            self.recompensa_actual = (np.sum(self.escenas_vistas) / max_escenas_vistas) * subset["Evaluacion"].max() / 100.0
         else:
-            recompensa = -1   
+            self.recompensa_actual -= 0.1
         if self.escenas_vistas[action] == 1:
-            recompensa -= 0.1  # Penalización adicional
+            self.recompensa_actual -= 0.1  # Penalización adicional
         
+        recompensa = self.recompensa_actual
         self.escenas_vistas[action] = 1
-        max_escenas_vistas = 3  
-        done = np.sum(self.escenas_vistas) >= max_escenas_vistas  
-
-        if recompensa == -1:
-            self.neg_recompensas += 1  
-        else:
-            self.neg_recompensas = 0           
-
-        if self.neg_recompensas >= 3:
-            done = True  
+        #max_escenas_vistas = 3  
+        #done = np.sum(self.escenas_vistas) >= max_escenas_vistas
+        done = False  
+        if self.recompensa_actual < -0.7 or self.recompensa_actual > 0.5:
+            self.recompensa_actual = 0
+            done = True
 
         print("DONE:", done)  # 🔥 Verifica que done sea True en algún momento
         self.state = np.concatenate([[self.objetivo_id_normalizado, self.edad], self.patologias_one_hot, self.escenas_vistas])

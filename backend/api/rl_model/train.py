@@ -30,18 +30,18 @@ def train_model():
     import faulthandler
     faulthandler.disable()
     ray.init(ignore_reinit_error=True)
-
     config = (
         PPOConfig()
         .environment(RecommenderEnv)
         .framework("torch")
         .training(
-            lr=0.0003,  # Reducir el learning rate para más estabilidad
-            train_batch_size=256,  # Batch más grande para estabilidad
-            gamma=0.99,  
-            entropy_coeff=0.01  # Promueve exploración balanceada
+            lr=0.00345198,  # Reducir el learning rate para más estabilidad
+            train_batch_size=512,  # Batch más grande para estabilidad
+            gamma=0.98,  
+            entropy_coeff=0.00427191,  # Promueve exploración balanceada
+            clip_param=0.168183
         )
-        .resources(num_gpus=1)               
+        .resources(num_gpus=0)               
     )
 
     '''.exploration(exploration_config={ 
@@ -149,13 +149,13 @@ def train_tune_model():
         if os.path.exists(CHECKPOINT_DIR):
             print(f"Cargando el checkpoint desde {CHECKPOINT_DIR}")
             trainer.restore(CHECKPOINT_DIR)
-        for i in range(300):  
+        for i in range(500):  
             result = trainer.train()
             episode_reward_mean = result['env_runners'].get('episode_reward_mean', None)
             total_loss = result['info']['learner']['default_policy']['learner_stats']['total_loss']
             train.report({
-                "episode_reward_mean": result.get("episode_reward_mean", -1000.0),
-                "total_loss": result["info"]["learner"]["default_policy"]["learner_stats"]["total_loss"]})
+                "episode_reward_mean": episode_reward_mean,
+                "total_loss": total_loss})
             print(f"Iteración: {result['training_iteration']}, Recompensa media: {episode_reward_mean}, Total Loss: {total_loss}")
 
         # Guardar el mejor modelo
