@@ -535,7 +535,7 @@ class ObjetivoListView(generics.ListAPIView):
 
         # Optimizamos con select_related para traer la relación escena
         return Objetivo.objects.filter(
-            id__in=objetivos_ids
+            id__in=objetivos_ids, habilitada=True
         ).select_related('escena').prefetch_related(
             Prefetch(
                 'escenaobjetivo_set',
@@ -1333,7 +1333,7 @@ class ObjetivosListCentro(View):
         except ObjectDoesNotExist:
             return JsonResponse({"error": "Usuario, centro o relación no encontrados."}, status=404)
 
-        objetivos = Objetivo.objects.filter(centro_profesional=center_professional).values()
+        objetivos = Objetivo.objects.filter(centro_profesional=center_professional, habilitada=True).values()
         return JsonResponse(list(objetivos), safe=False)
 
 
@@ -1356,14 +1356,30 @@ class ResolveNamesToIds(APIView):
     
 
 
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication])
 class ObjetivoViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
+            user = get_object_or_404(User, username=request.user)
             # Serializar los datos
             serializer = ObjetivoSerializer(data=request.data)
             if serializer.is_valid():
                 objetivo = serializer.save()
+                 # Crear notificación para el admin
+                admin = User.objects.filter(role='admin').first()
+                if admin:
+                    content_type = ContentType.objects.get_for_model(objetivo)
+                    print("Content_Type:    ",content_type)
+                    notificacion = Notificacion.objects.create(
+                        destinatario=admin,
+                        remitente=user,
+                        mensaje=f"El usuario {user.username} creó el objetivo '{objetivo.nombre}' Revisar.",
+                        estado='pendiente',
+                        content_type=content_type,
+                        object_id=objetivo.id,
+                    )
+                    enviar_notificacion_admin(notificacion)                
                 return Response({
                     'message': 'Objetivo creado con éxito',
                     'objetivo': serializer.data
@@ -1897,7 +1913,7 @@ def objetivos_evaluacion_usuario(request):
     # Agrupar por objetivo_id y calcular el progreso promedio
     objetivos_agrupados = (
         PersonaObjetivoEvaluacion.objects
-        .filter(user_id=user_id)
+        .filter(user_id=user_id, evaluacion__habilitada=True)
         .values('objetivo_id')  # Solo obtenemos los IDs para la agrupación
         .annotate(
             progreso_promedio=Avg('progreso')
@@ -1909,7 +1925,7 @@ def objetivos_evaluacion_usuario(request):
 
     # Serializar los datos agrupados manualmente
     data = []
-    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=[o['objetivo_id'] for o in objetivos_agrupados])}
+    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=[o['objetivo_id'] for o in objetivos_agrupados], habilitada=True)}
     for obj in objetivos_agrupados:
         # Luego, en el bucle:
         objetivo = objetivos_map[obj['objetivo_id']]
@@ -1969,7 +1985,7 @@ def crear_escena(request):
                 notificacion = Notificacion.objects.create(
                     destinatario=admin,
                     remitente=user,
-                    mensaje=f"El usuario {user.username} creó la escena '{escena.nombre}'. El link a la escena es: '{escena.link}",
+                    mensaje=f"El usuario {user.username} creó la escena '{escena.nombre}'.",
                     estado='pendiente',
                     content_type=content_type,
                     object_id=escena.id,
@@ -2040,7 +2056,7 @@ def objetivos_escena_usuario(request):
 
     # Obtener los datos de los objetivos
     objetivos_ids = [obj['escena_objetivo__objetivo_id'] for obj in objetivos_agrupados]
-    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=objetivos_ids)}
+    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=objetivos_ids, habilitada=True)}
     
     data = []
     for obj in objetivos_agrupados:
@@ -2147,7 +2163,7 @@ class NameFilter(filters.FilterSet):
         fields = ['nombre', 'centro_profesional']
 
 class ObjetivosListView(generics.ListAPIView):    
-    queryset = Objetivo.objects.all()
+    queryset = Objetivo.objects.filter(habilitada=True)
     serializer_class = ObjetivoSerializerList
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
@@ -2471,7 +2487,7 @@ class GetCentroProfesionalObjetivosView(generics.ListAPIView):
                 profesional=user
             )
             
-            return Objetivo.objects.filter(centro_profesional=centro_profesional)
+            return Objetivo.objects.filter(centro_profesional=centro_profesional, habilitada=True)
 
         except Centrodesalud.DoesNotExist:
             raise NotFound('Centro de salud no encontrado')
@@ -2737,7 +2753,7 @@ class GetFormsPerUserView(generics.ListAPIView):
         except User.DoesNotExist:
             raise NotFound(f"Usuario con username '{username}' no encontrado.")
 
-        return Formulario.objects.filter(objetivo_id__centro_profesional=centro_profesional)    
+        return Formulario.objects.filter(objetivo_id__centro_profesional=centro_profesional, habilitada=True)    
 
 class GetFormsPatientView(generics.ListAPIView):
     serializer_class = EvaluacionIdSerializer
@@ -2753,7 +2769,7 @@ class GetFormsPatientView(generics.ListAPIView):
         except User.DoesNotExist:
             raise NotFound(f"Usuario con username '{dni}' no encontrado.")
         
-        return PersonaObjetivoEvaluacion.objects.filter(user_id=user).values('evaluacion').distinct()
+        return PersonaObjetivoEvaluacion.objects.filter(user_id=user, evaluacion__habilitada=True).values('evaluacion').distinct()
 
 class DeleteAssesmentView(generics.DestroyAPIView):
     queryset = Formulario.objects.all()
@@ -3014,7 +3030,8 @@ class ObtenerLinksEvaluaciones(APIView):
             # Filtrar las evaluaciones asociadas
             evaluaciones = PersonaObjetivoEvaluacion.objects.filter(
                 user_id=user_id,
-                objetivo_id=objetivo_id
+                objetivo_id=objetivo_id,
+                evaluacion__habilitada=True
             ).exclude(
                 evaluacion__isnull=True  # Asegurarse de que haya evaluación
             ).values_list('evaluacion__link', flat=True)
@@ -3042,7 +3059,7 @@ class GetPatientForms(generics.ListAPIView):
                 evaluacion__isnull=True  # Asegurarse de que haya evaluación
             ).values_list('evaluacion', flat=True)
 
-            return Formulario.objects.filter(id__in=assesments_ids)
+            return Formulario.objects.filter(id__in=assesments_ids, habilitada=True)
         
         except Exception as e:
             raise Exception(f"Ocurrió un error al obtener los formularios: {str(e)}")
@@ -4067,7 +4084,57 @@ def obtener_detalle_notificacion(request, pk):
                 detalle['escena'] = {             
                     'nombre': escena.nombre,  # Ajusta los campos según el modelo Escena
                     'link': escena.link,  # Ajusta si tienes un campo `link`
+                }        
+        
+        if notificacion.content_type and notificacion.object_id:
+            content_type = ContentType.objects.get_for_id(notificacion.content_type.id)
+            if content_type.model == 'objetivo':  # Ajusta el nombre del modelo según corresponda
+                objetivo = content_type.get_object_for_this_type(id=notificacion.object_id)
+                detalle['objetivo'] = {             
+                    'nombre': objetivo.nombre,  # Ajusta los campos según el modelo Escena
+                    'video_explicativo': objetivo.escena.link,  # Ajusta si tienes un campo `link`
+                    'descripcion': objetivo.descripcion,
                 }
+                # Agregar los links de las escenas vinculadas al objetivo
+                escenas_vinculadas = EscenaObjetivo.objects.filter(objetivo=objetivo).select_related('escena')
+                detalle['escenas_vinculadas'] = [
+                    {
+                        'id': escena_obj.escena.id,
+                        'link': escena_obj.escena.link,  # Asegúrate de que el modelo Escena tenga un campo `link`
+                    }
+                    for escena_obj in escenas_vinculadas
+                ]
+
+                # Agregar los nombres de los objetivos previos vinculados al objetivo
+                objetivos_previos = Objetivoscumplir.objects.filter(objetivo=objetivo).select_related('objetivo_previo')
+                print("ObjetivosPrevios: ",objetivos_previos)
+                detalle['objetivos_previos'] = [
+                    {
+                        'id': obj_previo.objetivo_previo.id,
+                        'nombre': obj_previo.objetivo_previo.nombre,
+                    }
+                    for obj_previo in objetivos_previos
+                ]
+
+        # Caso 3: Formulario
+        if content_type.model == 'formulario':  
+            formulario = content_type.get_object_for_this_type(id=notificacion.object_id)
+            detalle['formulario'] = {
+                'nombre': formulario.nombre,
+                'descripcion': formulario.descripcion,
+                'fecha_creacion': formulario.fecha_creacion,
+            }
+            # Obtener preguntas y opciones
+            preguntas = formulario.preguntas.prefetch_related('opciones')
+            detalle['preguntas'] = [
+                {
+                    'id': pregunta.id,
+                    'texto': pregunta.texto,
+                    'tipo': pregunta.tipo,
+                    'opciones': [{'id': opcion.id, 'texto': opcion.texto} for opcion in pregunta.opciones.all()]
+                }
+                for pregunta in preguntas
+            ]
 
         # Devolver los detalles de la notificación
         return JsonResponse(detalle)
@@ -4114,16 +4181,25 @@ def procesar_notificacion(request, pk, accion):
                 return JsonResponse({'success': True, 'message': f'Usuario {usuario} eliminado y notificación procesada'})
         
         elif content_type.model == 'objetivo':  # Si es una solicitud de agregar un objetivo
-            if accion == 'aceptar':                
-                notificacion.estado = 'leida'
-            elif accion == 'rechazar':                
-                notificacion.estado = 'eliminada'
-
-        elif content_type.model == 'comentario':  # Si es una solicitud de moderar un comentario
+            objetivo = get_object_or_404(Objetivo, id=notificacion.object_id)
             if accion == 'aceptar':
-                notificacion.estado = 'leida'
-            elif accion == 'rechazar':                
-                notificacion.estado = 'eliminada'
+                objetivo.habilitada = True  # Habilitar la escena
+                objetivo.save()
+                notificacion.estado = 'leida'        
+            elif accion == 'rechazar':
+                objetivo.delete()
+                notificacion.estado = 'eliminada'       
+
+        elif content_type.model == 'formulario':  # Si es una solicitud de agregar un objetivo
+            formulario = get_object_or_404(Formulario, id=notificacion.object_id)
+            if accion == 'aceptar':
+                formulario.habilitada = True  # Habilitar la escena
+                formulario.save()
+                notificacion.estado = 'leida'        
+            elif accion == 'rechazar':
+                formulario.delete()
+                notificacion.estado = 'eliminada'       
+
         elif content_type.model == 'escena':
             escena = get_object_or_404(Escena, id=notificacion.object_id)
             if accion == 'aceptar':
