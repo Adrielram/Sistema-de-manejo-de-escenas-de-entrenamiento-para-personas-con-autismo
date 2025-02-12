@@ -41,7 +41,7 @@ export default function Header({ token }: { token?: string }) {
   };
 
   return (
-    <nav className="bg-[#F6512B] fixed top-0 left-0 w-full flex items-center justify-between px-4 py-2 text-white shadow-md">
+    <nav className="bg-[#F6512B] fixed top-0 left-0 w-full z-50 flex items-center justify-between px-4 py-2 text-white shadow-md">
       {/* Logo Section (Left-aligned) */}
       <div className="flex items-center space-x-2">
         <Image
@@ -60,11 +60,13 @@ export default function Header({ token }: { token?: string }) {
       {/* Action Buttons or Greeting (Right-aligned) */}
       <div
     className={`flex items-center space-x-2 sm:space-x-4 ${
-          isLoggedIn && center ? 'mr-[30px] md:mr-0' : ''
+          isLoggedIn ? 'mr-[30px] md:mr-0' : ''
         }`}> 
            {isLoggedIn ? (
           <>
-            <p className="text-white font-semibold">Hola, {username}!</p>
+            <p className="hidden md:block md:text-white md:font-semibold">
+              Hola, {username}!
+            </p>
             <button
               onClick={handleLogout}
               className="rounded border-2 border-black bg-white px-2 py-1 text-xs font-bold text-black transition duration-100 hover:bg-red-500 hover:text-white sm:px-3 sm:py-1 sm:text-base"

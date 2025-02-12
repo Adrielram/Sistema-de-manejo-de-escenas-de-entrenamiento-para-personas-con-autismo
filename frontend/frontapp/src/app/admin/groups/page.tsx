@@ -257,7 +257,7 @@ const ManageGroupPage = () => {
               <label htmlFor="groupSelect" className="block text-center text-sm mb-2">
                 Seleccionar grupo:
               </label>
-              <div className="relative" style={{ zIndex: 50 }}>
+              <div className="relative" style={{ zIndex: 10 }}>
                 <GenericDropdown
                   title={selectedGroup ? selectedGroup.name : "Seleccionar Grupo"}
                   items={groups}

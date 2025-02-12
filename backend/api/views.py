@@ -302,16 +302,6 @@ def create_health_center(request):
 
     return JsonResponse({'message': 'Método no permitido'}, status=405)
 
-@permission_classes([AllowAny])
-def get_provinces_and_cities(request):
-    provinces = Residencia.objects.values('provincia').distinct()
-    cities = Residencia.objects.values('ciudad').distinct()
-    return JsonResponse({
-        "provinces": list(provinces),
-        "cities": list(cities),
-    })
-
-
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])

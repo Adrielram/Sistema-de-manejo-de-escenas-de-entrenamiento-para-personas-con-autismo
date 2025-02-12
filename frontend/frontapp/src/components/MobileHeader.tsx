@@ -5,7 +5,6 @@ import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { SIDENAV_ITEMS } from '../constants';
 import { SideNavItem } from '../types';
 //import { Icon } from '@iconify/react';
 import { RiArrowDropDownLine } from "react-icons/ri";
@@ -35,7 +34,7 @@ const sidebar = {
   },
 };
 
-const HeaderMobile = () => {
+const HeaderMobile = ({lista_items}) => {
   const pathname = usePathname();
   const containerRef = useRef(null);
   //const containerRef = useRef<HTMLDivElement>(null);
@@ -61,8 +60,8 @@ const HeaderMobile = () => {
         variants={variants}
         className="absolute grid w-full gap-3 px-10 py-16 max-h-screen overflow-y-auto"
       >
-        {SIDENAV_ITEMS.map((item, idx) => {
-          const isLastItem = idx === SIDENAV_ITEMS.length - 1; // Check if it's the last item
+        {lista_items.map((item, idx) => {
+          const isLastItem = idx === lista_items.length - 1; // Check if it's the last item
 
           return (
             <div key={idx}>

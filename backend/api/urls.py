@@ -20,7 +20,6 @@ urlpatterns = [
     path('objetivo/<int:objetivo_id>/', get_goal_data, name='get_goal_data'),
     path('health_centers/<int:center_id>/delete/', delete_health_center, name='delete_health_center'),
     path('health_centers/', views.listar_centros_de_salud, name='listar_centros_de_salud'),
-    path('get_info/', views.get_provinces_and_cities, name='get_provinces_and_cities'),
     path('terapeutas/', TerapeutaListView.as_view(), name='terapeutas-list'),
     path('grupos/', GroupListView.as_view(), name='grupos-list'),
     path('pacientes/<int:pk>/', PacienteDetailView.as_view(), name='paciente-detail'),
