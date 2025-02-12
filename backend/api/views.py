@@ -35,6 +35,7 @@ import sys
 import json
 import requests
 from rest_framework.exceptions import NotFound
+from django.contrib.auth.tokens import default_token_generator
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
 from rest_framework import generics
@@ -1668,7 +1669,7 @@ def signIn(request):
         # Validar que todos los campos están presentes
         required_fields = [
             'dni', 'nombre', 'fecha_nac', 'genero', 'role',
-            'provincia', 'ciudad', 'calle', 'numero'
+            'provincia', 'ciudad', 'calle', 'numero','email'
         ]
         missing_fields = [field for field in required_fields if field not in request.data]
 
@@ -1692,6 +1693,7 @@ def signIn(request):
         centros_de_salud = request.data.get('centros_de_salud', None)
         sintomas = request.data.get('sintomas', [])
         texto = request.data.get('texto', '')
+        email = request.data.get('email')
 
         print(f"Datos recibidos: DNI={dni}, Nombre={nombre}, Fecha={fecha_nac}, Genero={genero}, Role={role}")
 
@@ -1702,6 +1704,10 @@ def signIn(request):
         # Verificar si el nombre ya existe
         if User.objects.filter(nombre=nombre).exists():
             return Response({"error": "Ya existe un usuario con ese nombre"}, status=400)
+
+        # Verificar si email ya esta registrado
+        if User.objects.filter(email=email).exists():
+            return Response({"error": "Ya existe un usuario con ese email"}, status=400)
 
         # Validar formato de fecha de nacimiento
         try:
@@ -1740,7 +1746,7 @@ def signIn(request):
                 genero=genero,
                 role=role,
                 direccion_id_dir=residencia,
-                email='adri@example.com',
+                email=email,
                 patologia=texto
             )
 
@@ -4248,7 +4254,7 @@ def GEMINI_chequear_comentario(username:str,comentario_usuario:str):
     genai.configure(api_key=settings.GEMINI_API_KEY)
 
     prompt = f"""
-    Dado el siguiente comentario realizado por un paciente con trastornos del espectro autista (edad entre 4 y 20 años): 
+    Dado el siguiente comentario realizado por un paciente con trastornos del espectro autista (edad entre 4 y 20 años):
 
     "{comentario_usuario}"
 
@@ -4259,16 +4265,21 @@ def GEMINI_chequear_comentario(username:str,comentario_usuario:str):
     - Incluye lenguaje extremadamente agresivo, insultos o acoso.
     - Expresa angustia extrema, pensamientos suicidas o signos de depresión severa.
     - Muestra confusión o indicios de que el usuario está en peligro inmediato.
-    - Urls de otros sitios web
+    - Contiene URLs de otros sitios web no permitidos.
+    - Usa malas palabras, insultos o términos vulgares, incluyendo palabras comunes en Argentina como:
+    - "garchar", "pija", "concha", "coger" (tener en cuenta el contexto), "verga", "culo", "chupar".
+    - Variaciones o palabras escritas al revés como "japi" (posible referencia a "pija").
+    - Insultos como "boludo", "pelotudo", "tarado", "idiota", "conchudo", "hijo de puta", "forro", "mogólico" (considerado altamente ofensivo en Argentina).
+    - Cualquier otra palabra ofensiva utilizada de manera inapropiada.
 
     Si el mensaje no cumple con ninguna de estas condiciones, se considera **NO URGENTE**.
 
     Devuelve la respuesta en formato JSON con la siguiente estructura:
 
-    
-    "urgente": true/false,
-    "razon": "Explicación breve de por qué se considera urgente o no."
-    
+    {
+        "urgente": true/false,
+        "razon": "Explicación breve de por qué se considera urgente o no."
+    }
     """
 
     # Generar respuesta con el modelo
@@ -4321,3 +4332,104 @@ El Sistema de Monitoreo Automático
             print(f"Error al enviar el correo: {e}")
 
     return JsonResponse({"data": data, "therapist_emails": list(therapist_emails), "mensaje": mensaje, "razon": razon})
+
+
+@api_view(['POST'])
+def forgot_password(request):
+    """
+    Vista para manejar la solicitud de restablecimiento de contraseña.
+    Envía un correo con un enlace para restablecer la contraseña si el email existe.
+    """
+    try:
+        email = request.data.get("email", "").strip().lower()
+        
+        # Validar que se proporcionó un email
+        if not email:
+            return Response(
+                {"error": "El correo electrónico es requerido"}
+            )
+        
+        # Validar formato del email
+        try:
+            validate_email(email)
+        except ValidationError:
+            return Response(
+                {"error": "El formato del correo electrónico no es válido"}
+            )
+
+        
+        # Buscar usuario por email
+        user = User.objects.filter(email=email).first()
+        
+        # Si no existe el usuario, retornar mensaje genérico por seguridad
+        if not user:
+            return Response(
+                {"error": "No existe un usuario con ese mail asociado"}
+            )
+
+        # Generar token único para este usuario
+        token = default_token_generator.make_token(user)
+        
+        # Construir URL de restablecimiento
+        reset_url = f"http://localhost:3000/auth/reset-password/?token={token}&uid={user.pk}"
+
+        # Preparar contenido del email
+        email_subject = 'Restablecer tu contraseña'
+        email_body = f"""
+        Hola,
+
+        Has solicitado restablecer tu contraseña. 
+        Usa el siguiente enlace para crear una nueva contraseña:
+
+        {reset_url}
+
+        Si no solicitaste este cambio, puedes ignorar este mensaje.
+        El enlace expirará en 1 hora por seguridad.
+
+        Saludos,
+        Centro Casabella
+        """
+
+        # Intentar enviar el email
+        try:
+            sendmail(
+                [email],
+                email_subject,
+                email_body
+            )
+            return Response(
+                {"message": "Recibirás un email con instrucciones brevemente..."},
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            # Registrar el error para debugging
+            logger.error(f"Error enviando email de recuperación: {str(e)}")
+            return Response(
+                {"error": "Hubo un problema al enviar el correo. Por favor, intenta nuevamente."}
+            )
+
+    except Exception as e:
+        # Registrar error general para debugging
+        logger.error(f"Error en forgot_password: {str(e)}")
+        return Response(
+            {"error": "Ocurrió un error inesperado. Por favor, intenta nuevamente."}
+        )
+
+@api_view(['POST'])
+def reset_password(request):
+    token = request.data.get('token')
+    uid = request.data.get('uid')
+    new_password = request.data.get('new_password')
+
+    try:
+        user = User.objects.get(pk=uid)
+    except User.DoesNotExist:
+        return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+    if default_token_generator.check_token(user, token):
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "Contraseña restablecida con éxito."})
+    else:
+        return Response({"error": "Token inválido o expirado."}, status=400)

@@ -142,7 +142,9 @@ urlpatterns = [
     path('unassign-pathology/', UnassignPathologyView.as_view(), name='unassign-pathology'),
     path('create_condition/', views.create_condition, name='create_condition'),
     path('get_forms_patient/', GetFormsPatientView.as_view(), name='get_forms_patient'),
-    path('patients/', GetPacienteView.as_view(), name='get_paciente')
+    path('patients/', GetPacienteView.as_view(), name='get_paciente'),
+    path('forgot-password/', forgot_password,name="forgot-passowrd"),
+    path('reset-password/', reset_password, name="reset_password"),
 ]
 
 urlpatterns += [path('', include(router.urls))]
