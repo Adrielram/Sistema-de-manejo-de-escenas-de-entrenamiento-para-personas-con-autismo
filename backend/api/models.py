@@ -119,6 +119,7 @@ class Objetivo(models.Model):
         db_column='centroProfesional_id',
         related_name='objetivo_centro_salud_id'
     )
+    habilitada = models.BooleanField(default=False)
     class Meta:   
         db_table = 'objetivo'
      
@@ -375,7 +376,7 @@ class Formulario(models.Model):
     creado_por = models.ForeignKey(User, on_delete=models.CASCADE, related_name="formularios")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     objetivo_id = models.ForeignKey(Objetivo, related_name="objetivo", on_delete=models.CASCADE, blank=True, null=True)
-    
+    habilitada = models.BooleanField(default=False)
     def _str_(self):
         return self.nombre
 
