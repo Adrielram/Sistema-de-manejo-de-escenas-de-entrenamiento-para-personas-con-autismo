@@ -46,8 +46,8 @@ export const create_scene = async (nuevaEscena) => {
                 nombre: nuevaEscena.nombre,
                 idioma: nuevaEscena.idioma,
                 acento: nuevaEscena.acento,
-                condicion: nuevaEscena.condicion ?? null, // Si no está definido, asigna null
-                complejidad:nuevaEscena.complejidad,
+                condicion: nuevaEscena.condicionFields ?? null,
+                complejidad: nuevaEscena.complejidad,
                 link: nuevaEscena.link
             }),
             credentials: 'include'

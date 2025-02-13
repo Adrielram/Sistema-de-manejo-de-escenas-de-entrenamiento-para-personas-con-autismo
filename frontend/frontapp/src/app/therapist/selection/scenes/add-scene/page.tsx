@@ -1,6 +1,31 @@
 "use client";
 import { create_scene } from '../../../../../utils/api';
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import GenericDropdown from "../../../../../components/SearchableDropDown";
+
+// Define interfaces for our data structures
+interface Objetivo {
+  id: number;
+  nombre: string;
+}
+
+interface CondicionFields {
+  edad?: number;
+  objetivo_id?: number;
+  fecha?: string;
+}
+
+
+interface NuevaEscena {
+  nombre: string;
+  descripcion: string;
+  idioma: string;
+  acento: string;
+  condicionFields: CondicionFields | null;
+  complejidad: number;
+  link: string;
+}
+
 
 const CreateScene: React.FC = () => {
   const [titulo, setTitulo] = useState("");
@@ -15,6 +40,44 @@ const CreateScene: React.FC = () => {
   const [edad, setEdad] = useState<number | "">("");
   const [objetivo, setObjetivo] = useState<number | null>(null);
   const [fecha, setFecha] = useState("");
+  const [objetivos, setObjetivos] = useState<Objetivo[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dropdownTitle, setDropdownTitle] = useState("Seleccione un objetivo");
+  
+  useEffect(() => {
+    const fetchObjetivos = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/objetivos-list/");
+        const data = await response.json();
+        const objetivosArray = data.results || [];
+        setObjetivos(objetivosArray);
+      } catch (error) {
+        console.error("Error al obtener los objetivos:", error);
+        setObjetivos([]);
+      }
+    };
+    fetchObjetivos();
+  }, []);
+
+  const validateForm = (): string | null => {
+    const requiredFields: Record<string, string | number> = {
+      titulo,
+      idioma,
+      linkVideo,
+      acento,
+      complejidad
+    };
+
+    const emptyFields = Object.entries(requiredFields)
+      .filter(([key, value]) => !value || (key === 'complejidad' && value === 0))
+      .map(([key]) => key);
+
+    if (emptyFields.length > 0) {
+      return `Por favor complete los siguientes campos: ${emptyFields.join(', ')}`;
+    }
+
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,43 +87,41 @@ const CreateScene: React.FC = () => {
     }
   
     try {
-      let nuevaCondicionId = null;
-  
-      // Si hay una condición, créala antes de enviar la escena
-      if (mostrarCondicion && (edad || objetivo || fecha)) {
-        const nuevaCondicion = { 
-          edad: edad || null, 
-          objetivo: objetivo || null, 
-          fecha: fecha || null 
-        };
-        const response = await fetch("http://localhost:8000/api/create_condition/", {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(nuevaCondicion),
-        });
-  
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(`Error al crear la condición: ${errorData.error}`);
+      // Crear el objeto condicionFields aquí mismo, sin usar setState
+      let condicionFields: CondicionFields | null = null;
+      
+      if (mostrarCondicion) {
+        condicionFields = {};
+        
+        if (edad !== "") {
+          condicionFields.edad = Number(edad);
         }
-  
-        const result = await response.json();
-        nuevaCondicionId = result.id; // Guardamos el ID localmente
+        
+        if (objetivo !== null) {
+          condicionFields.objetivo_id = objetivo;
+        }
+        
+        if (fecha) {
+          condicionFields.fecha = fecha;
+        }
+        
+        // Si no hay ningún campo con valor, establecer como null
+        if (Object.keys(condicionFields).length === 0) {
+          condicionFields = null;
+        }
       }
-  
-      const nuevaEscena = {
+      
+      const nuevaEscena: NuevaEscena = {
         nombre: titulo,
         descripcion,
         idioma,
         acento,
-        condicion: nuevaCondicionId, // Usamos el ID local
+        condicionFields, // Usar directamente el objeto creado
         complejidad,
         link: linkVideo,
       };
-  
+
+      
       const result = await create_scene(nuevaEscena);
       if (result.success) {
         alert("Escena creada exitosamente");

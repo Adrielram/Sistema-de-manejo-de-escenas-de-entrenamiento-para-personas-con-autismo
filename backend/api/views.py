@@ -2149,9 +2149,13 @@ class EscenaById(APIView):
     def get(self, request, pk):
         # Obtener el objeto Escena por su ID (pk)
         escena = get_object_or_404(Escena, pk=pk)
-        serializer = EscenaSerializer(escena)
-        return Response(serializer.data)
-    
+        
+        # Serializar la escena, lo cual incluye la condición si existe
+        escena_serializer = EscenaSerializer(escena)
+        
+        # Obtener los datos serializados
+        escena_data = escena_serializer.data
+        return Response(escena_data)
 class GrupoById(APIView):
     def get(self, request, pk):
         # Obtener el objeto Grupo por su ID (pk)

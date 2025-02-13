@@ -56,7 +56,7 @@ class Escena(models.Model):
     complejidad = models.IntegerField()
     condicion = models.OneToOneField('Condicion',related_name='escenas', on_delete=models.CASCADE,blank=True,null=True)
     link = models.CharField(max_length=2000)
-    nombre = models.CharField(max_length=100, default="Sin Nombre")
+    nombre = models.CharField(max_length=100, default="Sin Nombre", unique=True)
     class Meta:
         db_table = 'escena'
 

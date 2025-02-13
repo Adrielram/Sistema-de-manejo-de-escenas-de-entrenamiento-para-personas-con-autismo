@@ -95,6 +95,8 @@ const EditPatient: React.FC<{ params: Promise<{ patient_id: string }> }> = ({ pa
       }
       setSelectedItems([]);
       alert("¡Cambios guardados exitosamente!");
+      fetchObjetivos();
+
     } catch (error) {
       console.error("Error saving order:", error);
       alert("Hubo un error al guardar los cambios.");

@@ -142,10 +142,21 @@ class CondicionSerializer(serializers.ModelSerializer):
 
 class EscenaSerializer(serializers.ModelSerializer):
     condicion = CondicionSerializer(required=False, allow_null=True)
+    condicionFields = serializers.DictField(write_only=True, required=False)
 
     class Meta:
-        model = Escena
-        fields = ['id', 'idioma', 'acento', 'condicion', 'complejidad', 'link', 'nombre', 'descripcion']
+            model = Escena
+            fields = [
+                'id',
+                'idioma',
+                'acento',
+                'condicion',       # Campo de lectura
+                'condicionFields', # Campo de escritura para la condición
+                'complejidad',
+                'link',
+                'nombre',
+                'descripcion'
+            ]
 
     def create(self, validated_data):
         condicion_data = validated_data.pop('condicion', None)  # Extraer datos de la condición si existen
@@ -155,58 +166,41 @@ class EscenaSerializer(serializers.ModelSerializer):
         if condicion_data:
             condicion = Condicion.objects.create(**condicion_data)  # Crear la condición
             escena.condicion = condicion  # Asociar la condición con la escena
-            escena.save()  # Guardar cambios en la escena
+            
+        escena.save()  # Guardar cambios en la escena
         
         return escena
 
 
     def update(self, instance, validated_data):
-        # Extract condicion data if present
-        condicion_data = validated_data.pop('condicion', None)
-        
-        # Update Escena fields
+        # Extraer la información de condición (si se envió)
+        condicion_data = validated_data.pop('condicionFields', None)
+
+        # Actualizar los campos propios de la escena
         instance.nombre = validated_data.get('nombre', instance.nombre)
+        instance.descripcion = validated_data.get('descripcion', instance.descripcion)
         instance.idioma = validated_data.get('idioma', instance.idioma)
         instance.acento = validated_data.get('acento', instance.acento)
         instance.complejidad = validated_data.get('complejidad', instance.complejidad)
         instance.link = validated_data.get('link', instance.link)
-
-        # ESTO COMENTADO ESTABA EN DEVELOP:
-        # instance.descripcion = validated_data.get('descripcion', instance.descripcion)
-        # instance.save()
-
-        # # Si hay datos de `condiciones`, actualizarlos o crearlos
-        # if condicion_data:
-        #     if instance.condicion:
-        #         # Si ya existe una condición, actualizarla
-        #         for attr, value in condicion_data.items():
-        #             setattr(instance.condicion, attr, value)
-        #         instance.condicion.save()
-        #     else:
-        #         # Si no existe, crear una nueva condición y asignarla
-        #         condicion = Condicion.objects.create(**condicion_data, escena=instance)
-        #         instance.condicion = condicion
-        #         instance.save()
-        
-        # ESTO VINO DE PacienteInterface:
-        # Save the updated instance
         instance.save()
-        
-        # Handle Condicion update
-        if condicion_data:
-            # If a condicion already exists, update it
-            if hasattr(instance, 'condicion'):
-                condicion = instance.condicion
-                for attr, value in condicion_data.items():
-                    setattr(condicion, attr, value)
-                condicion.save()
-            # If no condicion exists, create a new one
-            else:
-                Condicion.objects.create(escena=instance, **condicion_data)
-        # If condicion_data is None and a condicion exists, delete it
-        elif hasattr(instance, 'condicion'):
-            instance.condicion.delete()
-        
+
+        # Si se enviaron datos de condición, procesarlos
+        if condicion_data is not None:
+            # Extraer los valores a comparar
+            edad = condicion_data.get('edad')
+            fecha = condicion_data.get('fecha')
+            # Se asume que 'objetivo_id' es el valor enviado para identificar el objetivo.
+            objetivo = condicion_data.get('objetivo_id')
+
+            
+            nueva_condicion = Condicion.objects.create(**condicion_data)
+            instance.condicion = nueva_condicion
+
+            # Se asigna la condición (nueva o reutilizada) a la escena.
+            # La condición anterior (si hubiera) queda en la base de datos sin borrarse.
+            instance.save()
+
         return instance
 
 
