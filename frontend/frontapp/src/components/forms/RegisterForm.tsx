@@ -380,16 +380,7 @@ const recargarCaptcha = () => {
         {formData.rol === 'Paciente' && (
           <div className="p-3 border border-blue-500 rounded bg-blue-50">
             <h3 className="text-black font-bold mb-2">Asociar Padre</h3>
-            <SearchWithFatherRes onPadreSeleccionado={handlePadreSeleccionado} />
-            <div className="mt-4 p-4 border border-gray-300 rounded-lg bg-gray-100">
-              <h3 className="text-black text-lg font-semibold mb-2">Padre seleccionado:</h3>
-              <ul className="list-disc pl-5 text-black space-y-1">
-                  <li key={idPadreSeleccionado} className="flex items-center">
-                    <span className="font-medium">DNI:</span>
-                    <span className="ml-2">{idPadreSeleccionado}</span>
-                  </li>
-              </ul>
-            </div>
+            <SearchWithFatherRes onPadreSeleccionado={handlePadreSeleccionado}/>
           </div>
         )}
         {/* Centros de salud para terapeutas */}

@@ -72,27 +72,28 @@ const SearchWithFatherRes: React.FC<SearchWithResultsProps> = ({ onPadreSeleccio
   return (
     <div>
       {/* Barra de búsqueda */}
-      <SearchBar onSearch={setQuery} placeholder="Buscar Padre" />
+      <SearchBar onSearch={setQuery} placeholder="Buscar nombre del Padre" />
 
       {/* Contenedor de resultados */}
+      {resultados.length > 0 && (
       <div
         className="max-h-52 overflow-y-auto mt-2 border border-gray-300 p-2"
         onScroll={handleScroll}
       >
         {resultados.map((padre) => (
-          <div key={padre.dni} className="flex justify-between items-center mb-2">
-            <label className="flex items-center text-black">
-              <input
-                type="radio"
-                name="padre"
-                value={padre.dni}
-                className="mr-2"
-                checked={dniSeleccionado === padre.dni}
-                onChange={() => handleRadioChange(padre.dni)}
-              />
-              {padre.nombre} - {padre.dni}
-            </label>
-          </div>
+        <div key={padre.dni} className="flex justify-between items-center mb-2">
+          <label className="flex items-center text-black">
+          <input
+            type="radio"
+            name="padre"
+            value={padre.dni}
+            className="mr-2"
+            checked={dniSeleccionado === padre.dni}
+            onChange={() => handleRadioChange(padre.dni)}
+          />
+          {padre.nombre} - {padre.dni}
+          </label>
+        </div>
         ))}
 
         {/* Indicador de carga */}
@@ -100,9 +101,10 @@ const SearchWithFatherRes: React.FC<SearchWithResultsProps> = ({ onPadreSeleccio
 
         {/* Mensaje de fin de resultados */}
         {!hasMore && resultados.length > 0 && (
-          <p className="text-gray-500">No hay más resultados</p>
+        <p className="text-gray-500">No hay más resultados</p>
         )}
       </div>
+      )}
     </div>
   );
 };

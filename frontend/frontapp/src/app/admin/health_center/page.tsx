@@ -78,13 +78,13 @@ export default function HealthCenterPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
         {healthCenters.map((center) => (
           <div key={center.id} className="flex flex-col items-center">
-            <div className={"w-48 h-48 rounded-lg shadow-md ${center.color} flex items-center justify-center"}>
+            <div className={`w-48 h-48 rounded-lg shadow-md ${center.color} flex items-center justify-center`}>
               <Image
                 src="/icon/hospital.png"
                 alt="Centro de Salud"
                 width={120}
                 height={120}
-                className="rounded-full"
+                className="rounded-full "
               />
             </div>
             <div className="flex items-center justify-center mt-4">

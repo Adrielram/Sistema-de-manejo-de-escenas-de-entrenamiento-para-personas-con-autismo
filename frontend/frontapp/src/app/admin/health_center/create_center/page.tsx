@@ -1,56 +1,32 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import DropDownList from "../../../../components/DropDownList";
 
 export default function Page() {
   const [nombreCentro, setNombreCentro] = useState<string>("");
-  const [provincias, setProvincias] = useState<string[]>([]);
-  const [ciudades, setCiudades] = useState<string[]>([]);
+  const [provincia, setProvincia] = useState<string>("");
+  const [ciudad, setCiudad] = useState<string>("");
   const [calle, setCalle] = useState<string>("");
   const [numero, setNumero] = useState<string>("");
-  const [provinciaSeleccionada, setProvinciaSeleccionada] = useState<string>("");
-  const [ciudadSeleccionada, setCiudadSeleccionada] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
-    const fetchProvincesAndCities = async () => {
-      try {
-        const response = await fetch("http://127.0.0.1:8000/api/get_info/");
-        if (response.ok) {
-          const data = await response.json();
-          setProvincias(data.provinces.map((item: { provincia: string }) => item.provincia));
-          setCiudades(data.cities.map((item: { ciudad: string }) => item.ciudad));
-        } else {
-          console.error("Error al cargar provincias y ciudades");
-        }
-      } catch (error) {
-        console.error("Error de conexión al cargar provincias y ciudades:", error);
-      }
-    };
-
-    fetchProvincesAndCities();
+    
   }, []);
-
-  const handleProvinciaChange = (selected: string) => {
-    setProvinciaSeleccionada(selected);
-    setCiudadSeleccionada(""); 
-    setErrorMessage("");
-  };
 
   const handleSubmit = async () => {
     setErrorMessage("");
 
     const payload = {
       nombre: nombreCentro,
-      provincia: provinciaSeleccionada,
-      ciudad: ciudadSeleccionada,
+      provincia,
+      ciudad,
       calle,
       numero,
     };
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/create_health_center/", {
+      const response = await fetch("http://localhost:8000/api/create_health_center/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -63,14 +39,16 @@ export default function Page() {
       if (response.ok) {
         alert("Centro de salud creado con éxito");
         setNombreCentro("");
-        setProvinciaSeleccionada("");
-        setCiudadSeleccionada("");
+        setProvincia("");
+        setCiudad("");
         setCalle("");
         setNumero("");
       } else {
         setErrorMessage(responseData.message || "Error al guardar el centro de salud");
       }
     } catch (error) {
+      console.error("Error de conexión:", error);
+      setErrorMessage("Hubo un problema al conectarse al servidor.");
       console.error("Error de conexión:", error);
       setErrorMessage("Hubo un problema al conectarse al servidor.");
     }
@@ -100,27 +78,31 @@ export default function Page() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Provincias con z-index más alto */}
-            <div className="w-full relative" style={{ zIndex: 20 }}>
-              <div className="w-full" style={{ minWidth: 0 }}>
-                <DropDownList
-                  listName="Provincias"
-                  items={provincias}
-                  onSelect={(selected: string) => handleProvinciaChange(selected)}
+            <div className="w-full">
+                <label className="block text-sm font-medium mb-1">
+                  Provincia
+                </label>
+                <input
+                  type="text"
+                  value={provincia}
+                  onChange={(e) => setProvincia(e.target.value)}
+                  placeholder="Provincia"
+                  className="w-full p-2 border rounded-md"
                 />
               </div>
-            </div>
 
-            {/* Ciudades con z-index más bajo */}
-            <div className="w-full relative" style={{ zIndex: 10 }}>
-              <div className="w-full" style={{ minWidth: 0 }}>
-                <DropDownList
-                  listName="Ciudades"
-                  items={ciudades}
-                  onSelect={(selected: string) => setCiudadSeleccionada(selected)}
+              <div className="w-full">
+                <label className="block text-sm font-medium mb-1">
+                  Ciudad
+                </label>
+                <input
+                  type="text"
+                  value={ciudad}
+                  onChange={(e) => setCiudad(e.target.value)}
+                  placeholder="Ciudad"
+                  className="w-full p-2 border rounded-md"
                 />
               </div>
-            </div>
 
             <div className="w-full">
               <label className="block text-sm font-medium mb-1">

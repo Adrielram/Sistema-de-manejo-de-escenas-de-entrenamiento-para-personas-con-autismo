@@ -22,7 +22,7 @@ export default function TherapistLayout({
           <SideNav list={SIDENAV_ITEMS} admin={undefined}/>
           <main className="flex-1">
             <MarginWidthWrapper>
-              <HeaderMobile />
+              <HeaderMobile lista_items={SIDENAV_ITEMS}/>
               <PageWrapper>{children}</PageWrapper>
             </MarginWidthWrapper>
           </main>

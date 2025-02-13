@@ -96,6 +96,11 @@ const Comentario = ({dni}) => {
     setComentarioActivo((prev) => (prev === id ? null : id));
   };
 
+  if (escenas.length==0)
+    return <p className="text-gray-500 text-center py-4 bg-gray-100 rounded-md">
+  No hay comentarios de este paciente.
+</p>
+
   return (
     <div>
       {escenas.map((escena) => (
