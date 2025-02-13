@@ -11,6 +11,7 @@ const GenericDropdown = ({
   onSelect,
   valueKey = "id",
   placeholder = "Buscar...",
+  maxHeight = "300px",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,7 +49,9 @@ const GenericDropdown = ({
 
     {/* Contenido desplegable */}
     {isOpen && (
-      <div className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-lg z-50 max-h-[300px] overflow-y-auto shadow-md">
+      <div className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-lg z-50 max-h-[300px] overflow-y-auto shadow-md"
+        style={{ maxHeight }}
+      >
         {/* Campo de búsqueda con lupa */}
         <div className="flex items-center border border-gray-300 rounded-lg p-2 m-2.5 bg-white">
           <input

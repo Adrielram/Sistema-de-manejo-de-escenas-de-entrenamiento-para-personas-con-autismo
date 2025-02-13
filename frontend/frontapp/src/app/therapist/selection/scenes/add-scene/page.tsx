@@ -35,7 +35,7 @@ const CreateScene: React.FC = () => {
   const [descripcion, setDescripcion] = useState("");
   const [linkVideo, setLinkVideo] = useState("");
 
-  // Nuevos estados para condiciones
+  // Estados para condiciones
   const [mostrarCondicion, setMostrarCondicion] = useState(false);
   const [edad, setEdad] = useState<number | "">("");
   const [objetivo, setObjetivo] = useState<number | null>(null);
@@ -81,11 +81,15 @@ const CreateScene: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!titulo || !idioma || !linkVideo || !acento || !complejidad) {
-      alert("Todos los campos son obligatorios");
+    
+    const validationError = validateForm();
+    if (validationError) {
+      alert(validationError);
       return;
     }
-  
+
+    setIsSubmitting(true);
+    
     try {
       // Crear el objeto condicionFields aquí mismo, sin usar setState
       let condicionFields: CondicionFields | null = null;
@@ -123,9 +127,10 @@ const CreateScene: React.FC = () => {
 
       
       const result = await create_scene(nuevaEscena);
+      
       if (result.success) {
         alert("Escena creada exitosamente");
-        // Resetear todos los campos
+        // Reset form fields
         setTitulo("");
         setAcento("");
         setIdioma("");
@@ -136,12 +141,34 @@ const CreateScene: React.FC = () => {
         setObjetivo(null);
         setFecha("");
         setMostrarCondicion(false);
+        setDropdownTitle("Seleccione un objetivo");
       } else {
         alert(`Error al crear la escena: ${result.error}`);
       }
     } catch (error) {
       console.error("Error al crear la escena:", error);
-      alert("Ocurrió un error inesperado");
+      alert(`Ocurrió un error: ${error instanceof Error ? error.message : 'Error inesperado'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleObjetivoSelect = (item: { id: number; name?: string; nombre?: string }) => {
+    try {
+      const id = item.id;
+      const nombre = item.name || item.nombre;
+      
+      if (id && nombre) {
+        setObjetivo(id);
+        setDropdownTitle(nombre);
+      } else {
+        setObjetivo(null);
+        setDropdownTitle("Seleccione un objetivo");
+      }
+    } catch (error) {
+      console.error("Error al seleccionar objetivo:", error);
+      setObjetivo(null);
+      setDropdownTitle("Seleccione un objetivo");
     }
   };
 
@@ -151,7 +178,7 @@ const CreateScene: React.FC = () => {
         <h1 className="text-4xl font-bold text-[#3EA5FF] mb-8 text-center">Crear Escena</h1>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8">
           <div className="space-y-6 bg-white p-8 rounded-xl shadow-lg border border-blue-100">
-          <div>
+            <div>
               <label htmlFor="titulo" className="block font-semibold text-gray-700 mb-2">
                 Título
               </label>
@@ -216,15 +243,16 @@ const CreateScene: React.FC = () => {
                 onChange={(e) => {
                   const value = parseInt(e.target.value, 10);
                   if (value >= 0 && value <= 10) {
-                    setComplejidad(value); // Solo actualiza si está en el rango
+                    setComplejidad(value);
                   }
                 }}
                 className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
                 placeholder="Ingrese la Complejidad"
-                min="0" // Establece el valor mínimo
-                max="10" // Establece el valor máximo
-                />
+                min="0"
+                max="10"
+              />
             </div>
+
             <div>
               <label className="block font-semibold text-gray-700 mb-2">Condiciones</label>
               <button
@@ -249,13 +277,29 @@ const CreateScene: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-gray-700">Objetivo</label>
-                    <input
-                      type="number"
-                      value={objetivo ?? ""}
-                      onChange={(e) => setObjetivo(e.target.value ? parseInt(e.target.value) : null)}
-                      className="w-full border p-2 rounded-lg"
-                      placeholder="Ingrese el objetivo"
-                    />
+                    {objetivos?.length > 0 ? (
+                      <div 
+                        className="relative w-full" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
+                        <GenericDropdown
+                          title={dropdownTitle}
+                          items={objetivos.map((obj) => ({ 
+                            id: obj.id,
+                            name: obj.nombre, // Asegurarnos de usar nombre consistentemente
+                          }))}
+                          onSelect={handleObjetivoSelect}
+                          placeholder="Seleccione un objetivo"
+                          maxHeight="200px"
+                          valueKey="id"
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-sm">No hay objetivos disponibles.</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-gray-700">Fecha</label>
@@ -271,24 +315,24 @@ const CreateScene: React.FC = () => {
             </div>
           </div>
           <div>
-          <label htmlFor="linkVideo" className="block font-semibold text-gray-700 mb-2">
-                Link al Video Explicativo
-              </label>
-              <input
-                id="linkVideo"
-                type="search"
-                value={linkVideo}
-                onChange={(e) => setLinkVideo(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
-                placeholder="Ingrese el link"
-              />
+            <label htmlFor="linkVideo" className="block font-semibold text-gray-700 mb-2">
+              Link al Video Explicativo
+            </label>
+            <input
+              id="linkVideo"
+              type="search"
+              value={linkVideo}
+              onChange={(e) => setLinkVideo(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
+              placeholder="Ingrese el link"
+            />
           </div>
-          
           <button 
             type="submit" 
             className="w-full bg-[#3EA5FF] text-white font-semibold py-4 rounded-xl hover:bg-[#2E8BFF]"
+            disabled={isSubmitting}
           >
-            Crear Escena
+            {isSubmitting ? "Creando..." : "Crear Escena"}
           </button>
         </form>
       </div>
