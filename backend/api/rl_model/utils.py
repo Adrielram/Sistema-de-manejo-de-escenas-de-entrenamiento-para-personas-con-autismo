@@ -14,7 +14,7 @@ def safe_eval(value):
 import numpy as np
 from django.conf import settings
 
-def create_observation(objetivo_id, edad, patologias, num_patologias, max_objetivo_id):
+def create_observation(objetivo_id, edad, patologias, num_patologias, max_objetivo_id, num_escenas):
     """
     Crea una observación (estado) para el modelo de recomendación.
     Ajusta los índices de los datos correctamente.
@@ -22,7 +22,7 @@ def create_observation(objetivo_id, edad, patologias, num_patologias, max_objeti
 
     objetivo_id = float((objetivo_id - 1) / (max_objetivo_id - 1))
     print("OBJETIVO_ID observacion: ",objetivo_id)
-
+    escenas_vistas = np.zeros(num_escenas)
     # Vector de patologías en formato one-hot
     patologias_one_hot = np.zeros(num_patologias)
     print("patologias lenght ",len(patologias_one_hot))
@@ -34,9 +34,8 @@ def create_observation(objetivo_id, edad, patologias, num_patologias, max_objeti
             raise ValueError(f"Patología {p} está fuera del rango válido (1-{num_patologias}).")
 
 
-
     # Construir la observación
-    observation = np.concatenate([[objetivo_id, edad / 100.0], patologias_one_hot])
+    observation = np.concatenate([[objetivo_id, edad / 100.0], patologias_one_hot, escenas_vistas])
     return observation.astype(np.float32)
 
 import os
@@ -51,7 +50,7 @@ def get_recommendation(objetivo_id, edad, patologias):
     Obtiene una recomendación basada en el modelo de IA almacenado en `settings.modelo_ia`.
     """
     # Definir el número de patologías fijo
-    num_patologias = 2
+    num_patologias = 12
 
     # Cargar dataset y calcular el número máximo de escenas
     if not os.path.exists(DATASET_PATH):
@@ -63,8 +62,9 @@ def get_recommendation(objetivo_id, edad, patologias):
         raise ValueError("La columna 'Escena' no existe en el dataset")
     
     max_objetivo_id = df["Objetivo ID"].max() # Obtener el máximo ID de objetivo
+    num_escenas = df["Escena"].max() # Obtener el número máximo de escenas
     # Crear observación
-    observation = create_observation(objetivo_id, edad, patologias, num_patologias, max_objetivo_id)
+    observation = create_observation(objetivo_id, edad, patologias, num_patologias, max_objetivo_id, num_escenas)
     print("Observación enviada al modelo:", observation)
 
     rl_manager = RLModelManager.get_instance()

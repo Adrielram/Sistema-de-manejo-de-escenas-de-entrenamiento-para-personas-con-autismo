@@ -1,5 +1,5 @@
 import random
-from api.models import RegistroEvaluacion, Objetivo, User, Escena
+from api.models import RegistroEvaluacion, Objetivo, User, Escena, Patologia  # Se importa el modelo Patologia
 
 # Mapeo de objetivos a sus escenas correspondientes.
 # Se asume que el primer id es la escena con muy buena valoración y los demás son muy malas.
@@ -42,8 +42,8 @@ def poblar_registros(cantidad=500):
         escenas = [Escena.objects.get(id=esc_id) for esc_id in escena_ids]
         escenas_dict[obj] = escenas
 
-    patologias_fijas = [1, 2]  # Siempre las mismas patologías para el paciente
-
+    # Obtener todas las patologías registradas en el sistema (se asume que hay 12)
+    todas_patologias = list(Patologia.objects.all())
     registros = []
     for _ in range(cantidad):
         # Seleccionar un objetivo al azar.
@@ -66,12 +66,16 @@ def poblar_registros(cantidad=500):
         # Generar el resultado de la evaluación según el tipo.
         resultado = generar_resultado(edad, escena, tipo)
 
+        # Seleccionar de forma aleatoria un subconjunto de patologías (al menos 1, y hasta las 12)
+        num_patologias = random.randint(1, len(todas_patologias))
+        patologias_asignadas = random.sample(todas_patologias, num_patologias)
+
         # Crear y almacenar el registro de evaluación.
         registro = RegistroEvaluacion(
             objetivo=objetivo,
             paciente=paciente,
             edad=edad,
-            patologias=patologias_fijas,  # Se asume que siempre es [1, 2]
+            patologias=[patologia.id for patologia in patologias_asignadas],  # Asignar el subconjunto aleatorio de patologías
             escena=escena,
             complejidad=escena.complejidad,  # Se asume que Escena tiene la propiedad 'complejidad'
             resultado=resultado

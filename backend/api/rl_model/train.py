@@ -35,12 +35,18 @@ def train_model():
         .environment(RecommenderEnv)
         .framework("torch")
         .training(
-            lr=0.00345198,  # Reducir el learning rate para más estabilidad
+            lr=0.00942397,  # Reducir el learning rate para más estabilidad
             train_batch_size=512,  # Batch más grande para estabilidad
             gamma=0.98,  
-            entropy_coeff=0.00427191,  # Promueve exploración balanceada
-            clip_param=0.168183
+            entropy_coeff=0.0151845,  # Promueve exploración balanceada
+            clip_param=0.269169
         )
+        .exploration(exploration_config={ 
+            "type": "EpsilonGreedy",
+            "initial_epsilon": 1.0,
+            "final_epsilon": 0.05,
+            "epsilon_timesteps": 2500  # Exploración más gradual
+        })
         .resources(num_gpus=0)               
     )
 
@@ -59,7 +65,7 @@ def train_model():
 
     # Entrenar el modelo
     # Prueba con 500 iteraciones primero
-    for i in range(300):  
+    for i in range(6000):  
         result = trainer.train()
         episode_reward_mean = result['env_runners'].get('episode_reward_mean', None)
         total_loss = result['info']['learner']['default_policy']['learner_stats']['total_loss']
@@ -89,10 +95,10 @@ def train_model():
     print(f"🛠 Instancia de RLManager obtenida luego de entrenamiento: {rl_manager}")
     print("Modelo en memoria después de entrenar:", rl_manager.model)
     print("Modelo actualizado en memoria.")'''
-    print("Evaluando el modelo...")
-    env = RecommenderEnv(config={})  # Asegúrate de que el entorno esté inicializado correctamente
-    print("Evaluando el modelo...")
-    evaluate_model(trainer, env, num_episodes=10)
+    #print("Evaluando el modelo...")
+    #env = RecommenderEnv(config={})  # Asegúrate de que el entorno esté inicializado correctamente
+    #print("Evaluando el modelo...")
+    #evaluate_model(trainer, env, num_episodes=10)
 
     # Notificar a Django para cargar el modelo en su instancia Singleton
     try:

@@ -74,8 +74,8 @@ class RecommenderEnv(gym.Env):
         ]         
         max_escenas_vistas = 3  
         if not subset.empty:
-            self.recompensa_actual = subset["Evaluacion"].max() / 100.0       
-            self.recompensa_actual = (np.sum(self.escenas_vistas) / max_escenas_vistas) * subset["Evaluacion"].max() / 100.0
+            self.recompensa_actual = subset["Evaluacion"].mean() / 100.0       
+            #self.recompensa_actual = (np.sum(self.escenas_vistas) / max_escenas_vistas) * self.recompensa_actual
         else:
             self.recompensa_actual -= 0.1
         if self.escenas_vistas[action] == 1:
@@ -86,7 +86,7 @@ class RecommenderEnv(gym.Env):
         #max_escenas_vistas = 3  
         #done = np.sum(self.escenas_vistas) >= max_escenas_vistas
         done = False  
-        if self.recompensa_actual < -0.7 or self.recompensa_actual > 0.5:
+        if self.recompensa_actual < -0.7 or self.recompensa_actual > 0.5 or np.sum(self.escenas_vistas) >= self.num_escenas:
             self.recompensa_actual = 0
             done = True
 
