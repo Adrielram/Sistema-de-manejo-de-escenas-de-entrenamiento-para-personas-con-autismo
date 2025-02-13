@@ -181,7 +181,7 @@ def delete_person_group(request, grupo_id, user_id):
 # Vista para obtener los centros de salud
 @csrf_exempt
 @authentication_classes([CookieJWTAuthentication])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def get_health_centers(request):
     centros = Centrodesalud.objects.all().values("id", "nombre", "direccion_id_dir")  
     return JsonResponse(list(centros), safe=False)
@@ -193,7 +193,7 @@ def get_health_centers(request):
 
 # Vista para crear un grupo
 @authentication_classes([CookieJWTAuthentication])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def create_group(request):
     if request.method == "POST":
         try:
@@ -236,7 +236,7 @@ def create_group(request):
 
 
 
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 class DynamicPagination(PageNumberPagination):
     page_size_query_param = "limit"
@@ -244,7 +244,7 @@ class DynamicPagination(PageNumberPagination):
     page_size = 8
 
 @csrf_exempt  # Asegúrate de no tener problemas con CSRF
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def create_health_center(request):
     if request.method == "POST":
@@ -324,7 +324,7 @@ def delete_health_center(request, center_id):
     except Centrodesalud.DoesNotExist:
         return Response({"error": "Centro de salud no encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def listar_centros_de_salud(request):
     """
@@ -334,9 +334,10 @@ def listar_centros_de_salud(request):
     centros_list = list(centros)
     return JsonResponse(centros_list, safe=False)
 
-@permission_classes([AllowAny])
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
     def get_token(cls, user):
         token = super().get_token(user)
 
@@ -352,7 +353,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['role'] = self.user.role
         return data
 
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def example_view(request):
     return JsonResponse({'message': 'Hello, world!'})
@@ -364,7 +365,7 @@ from .serializers import UserSerializer
 from .models import User
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def login(request):
     serializer = CustomTokenObtainPairSerializer(data=request.data)
@@ -390,7 +391,7 @@ def login(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def logout(request):
     response = Response({"message": "Logout successful"})
@@ -399,7 +400,7 @@ def logout(request):
     return response
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def verify_session(request):
     # Extraer la cookie 'jwt'
@@ -518,24 +519,25 @@ class CargarPersonaObjetivoEvaluacion(APIView):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def objetivos_list(request):
     objetivos = Objetivo.objects.all().values()  # Obtiene todos los objetivos 
     return JsonResponse(list(objetivos), safe=False)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def patologias_list(request):
     patologias = Patologia.objects.all().values()  # Obtiene todos los objetivos 
     return JsonResponse(list(patologias), safe=False)
 
 class ObjetivoListView(generics.ListAPIView):
-    serializer_class = ObjetivoSerializer
-    pagination_class = DynamicPagination
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
+    serializer_class = ObjetivoSerializer
+    pagination_class = DynamicPagination
     def get_queryset(self):
         username = self.request.query_params.get('username')
         if not username:
@@ -604,7 +606,7 @@ class ObjetivoListView(generics.ListAPIView):
         return Response(serializer.data)
 '''
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def obj_list_user(request, user_id):
     objetivos = PersonaObjetivoEscena.objects.filter(user_id=user_id).values()  # Obtiene los objetivos del usuario
@@ -796,10 +798,11 @@ class EscenasPorObjetivoView(generics.ListAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 '''
 class EscenasPorObjetivoView(generics.ListAPIView):
-    serializer_class = EscenaSerializer
-    pagination_class = None  # Eliminar la paginación
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
+    serializer_class = EscenaSerializer
+    pagination_class = None  # Eliminar la paginación
     def get_queryset(self):
         objetivo_id = self.request.GET.get('objetivo_id')
         username = self.request.GET.get('username')
@@ -926,11 +929,12 @@ class EscenasPorObjetivoView(generics.ListAPIView):
 
 
 class VerificarEscenaAsignadaView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
+
     """
     Verifica si un usuario tiene asignada una escena por algún objetivo.
     """
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [CookieJWTAuthentication]
 
     def get(self, request):
         
@@ -965,6 +969,7 @@ logger = logging.getLogger(__name__)
 class EscenaView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     queryset = Escena.objects.filter(habilitada=True).prefetch_related(
         Prefetch(
             'escenaobjetivo_set',
@@ -1082,6 +1087,7 @@ class EscenaView(generics.ListAPIView):
 class VerificarCondicionesView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     def get(self, request):
         username = request.query_params.get('username')
         escena_id = request.query_params.get('escena_id')
@@ -1159,6 +1165,9 @@ class VerificarCondicionesView(APIView):
 
 
 class EscenaFilter(filters.FilterSet):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
+
     query = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
     
     class Meta:
@@ -1169,6 +1178,7 @@ class EscenaFilter(filters.FilterSet):
 class EscenaBusquedaView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     serializer_class = EscenaSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = EscenaFilter  
@@ -1289,6 +1299,7 @@ class EscenaBusquedaView(generics.ListAPIView):
 class EscenasPorObjetivoListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     serializer_class = EscenaSerializer
     filter_backends = [DjangoFilterBackend]
 
@@ -1313,6 +1324,7 @@ class EscenasPorObjetivoListView(generics.ListAPIView):
 class GetEscenaView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     serializer_class = EscenaSerializer
 
     def get(self, request):
@@ -1336,6 +1348,7 @@ class GetEscenaView(APIView):
 class PacienteListView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     def get(self, request):
         query = request.query_params.get('query', '').lower()  # Parámetro de búsqueda
         pacientes = User.objects.filter(role='paciente')
@@ -1359,6 +1372,7 @@ from django.views.decorators.csrf import csrf_exempt
 class ObjetivosListCentro(View):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     def get(self, request, *args, **kwargs):
         username = request.GET.get('username')
         center_name = request.GET.get('centername')
@@ -1381,10 +1395,11 @@ class ObjetivosListCentro(View):
     
 
 
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 class ResolveNamesToIds(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     def post(self, request):
         center_name = request.data.get('center_name')
         username = request.data.get('username')
@@ -1403,6 +1418,7 @@ class ResolveNamesToIds(APIView):
 class ObjetivoViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     def create(self, request):
         try:
             user = get_object_or_404(User, username=request.user)
@@ -1451,10 +1467,16 @@ class ObjetivoViewSet(viewsets.ViewSet):
 
 
 class EscenaUpdateView(UpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
+
     queryset = Escena.objects.filter(habilitada=True)  # Solo escenas habilitadas
     serializer_class = EscenaSerializer
     
 class GetPatientsView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
+
     queryset = User.objects.filter(role='paciente')
     serializer_class = PacienteSerializer
 
@@ -1462,6 +1484,7 @@ class GetPatientsView(generics.ListAPIView):
 class GrupoUpdateView(UpdateAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     queryset = Grupo.objects.all()
     serializer_class = GrupoSerializer
 
@@ -1584,6 +1607,7 @@ def get_goal_data(request, objetivo_id):
 class retrieve_user(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     def get(self, request):
         username = request.query_params.get('username', '').strip()
 
@@ -1604,6 +1628,7 @@ class retrieve_user(APIView):
 class update_user(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     def put(self, request):
         try:
             # Validar que todos los campos obligatorios estén presentes
@@ -1712,7 +1737,7 @@ class update_user(APIView):
 
 @api_view(['POST'])
 @authentication_classes([CookieJWTAuthentication])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def signIn(request):
     try:
         # Validar CAPTCHA
@@ -2072,6 +2097,7 @@ from django.db.models import Avg
 class UnassignObjective(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     def post(self, request, patientId, objectiveId):
         try:
             # Validar si el usuario existe
@@ -2147,6 +2173,7 @@ def objetivos_escena_usuario(request):
 class Get_escenas_by_objetivo(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     def get(self, request, objetivo_id, patient_id):
         # Obtener el objetivo
         objetivo = get_object_or_404(Objetivo, id=objetivo_id)
@@ -2189,6 +2216,7 @@ class Get_escenas_by_objetivo(APIView):
 class Get_escenas_by_objetivo_by_user(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     def get(self, request, objetivo_id, patient_id):
         # Obtener el objetivo
         objetivo = get_object_or_404(Objetivo, id=objetivo_id)
@@ -2219,11 +2247,12 @@ class Get_escenas_by_objetivo_by_user(APIView):
         }, status=status.HTTP_200_OK)
     
 
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 class NameFilter(filters.FilterSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     nombre = filters.CharFilter(field_name='nombre', lookup_expr='icontains')
     centro_profesional = filters.NumberFilter(field_name='centro_profesional', lookup_expr='exact')
 
@@ -2240,6 +2269,7 @@ class NameFilter(filters.FilterSet):
 @permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 class ObjetivosListView(generics.ListAPIView):    
+    
     queryset = Objetivo.objects.filter(habilitada=True)
     serializer_class = ObjetivoSerializerList
     pagination_class = DynamicPagination
@@ -2315,11 +2345,12 @@ class NotAssociatedCentersListView(generics.ListAPIView):
 class AssociatedCentersListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     serializer_class = CentroSaludSerializer
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
-    #permission_classes = [AllowAny]
+    #permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
         related_centers = get_related_centers(self)
@@ -2329,6 +2360,7 @@ class AssociatedCentersListView(generics.ListAPIView):
 class AssociateCenterView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     serializer_class = ProfesionalCentroSerializer
 
     def create(self, request, *args, **kwargs):
@@ -2363,6 +2395,7 @@ class AssociateCenterView(generics.CreateAPIView):
 class CreateGroup(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     serializer_class = PatientGroupSerializer
 
     def create(self, request, *args, **kwargs):
@@ -2475,6 +2508,7 @@ class CreateGroup(generics.CreateAPIView):
 class DisassociateCenterView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     serializer_class = ProfesionalCentroSerializer
 
     def create(self, request, *args, **kwargs):
@@ -2509,6 +2543,7 @@ class DisassociateCenterView(generics.CreateAPIView):
 class GetPathologiesFromUserView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+
     serializer_class = PatologiaSerializer
 
     def get(self, request, *args, **kwargs):
@@ -2534,6 +2569,7 @@ class GetPathologiesFromUserView(generics.RetrieveAPIView):
 class GetCentroProfesionalView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+    
     serializer_class = ProfesionalCentroSerializer
 
     def get(self, request, *args, **kwargs):
@@ -2936,7 +2972,7 @@ class DeleteAssesmentView(generics.DestroyAPIView):
 class GetReachedGoalsView(generics.ListAPIView):
     serializer_class = ObjetivoSerializer
     authentication_classes = [CookieJWTAuthentication]
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user_dni = self.request.query_params.get('user_dni')
@@ -2985,7 +3021,7 @@ class GetUnreachedGoalsView(generics.ListAPIView):
         return unreached_goals
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def buscar_padres(request):
     query = request.GET.get('query', '').strip()
@@ -3552,7 +3588,7 @@ def update_group(request, group_id):
 
 
 # Vista para obtener los terapeutas
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 
 def get_patients(request):
@@ -3561,7 +3597,7 @@ def get_patients(request):
     serializer = PacienteSerializer2(pacientes, many=True)
     return JsonResponse(serializer.data, safe=False)
 
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def get_therapists(request):
     terapeutas = User.objects.filter(role='terapeuta')  # Filtrar por el rol de 'terapeuta'
@@ -3571,7 +3607,7 @@ def get_therapists(request):
 
 
 # Vista para crear un grupo
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def create_group(request):
     if request.method == "POST":
@@ -4306,7 +4342,7 @@ class GroupDetailView(generics.RetrieveDestroyAPIView):
 
 @api_view(['GET'])
 @authentication_classes([CookieJWTAuthentication])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 
 def obtener_notificaciones_pendientes(request):
     print("Request user: ",request.user)
@@ -4417,7 +4453,7 @@ from api.models import User
 from .models import Notificacion
 from api.notificaciones.utils import actualizar_notificacion 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def procesar_notificacion(request, pk, accion):
     """
@@ -4674,7 +4710,7 @@ El Sistema de Monitoreo Automático
 
 @api_view(['POST'])
 @authentication_classes([CookieJWTAuthentication])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 
 def forgot_password(request):
     """
@@ -4758,7 +4794,7 @@ def forgot_password(request):
         )
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 def reset_password(request):
     token = request.data.get('token')
