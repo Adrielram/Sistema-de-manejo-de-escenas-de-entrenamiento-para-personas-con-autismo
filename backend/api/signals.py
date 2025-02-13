@@ -2,7 +2,7 @@ from django.db.models.signals import post_save
 from django.contrib.contenttypes.models import ContentType
 from django.dispatch import receiver
 from api.models import Notificacion, User
-from .notificaciones.utils import enviar_notificacion
+from .notificaciones.utils import enviar_notificacion_admin
 print("Señales registradas en api.signals")
 
 @receiver(post_save, sender=User)
@@ -30,7 +30,7 @@ def notificacion_usuario_creado(sender, instance, created, **kwargs):
             print(f"Notificación creada: {notificacion}")
 
             # Enviar la notificación en tiempo real
-            enviar_notificacion(notificacion)
+            enviar_notificacion_admin(notificacion)
 
         except ValueError as e:
             print(f"Error: {e}")

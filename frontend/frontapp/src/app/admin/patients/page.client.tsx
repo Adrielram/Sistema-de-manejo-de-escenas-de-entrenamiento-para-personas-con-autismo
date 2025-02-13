@@ -42,30 +42,39 @@ const PacientesPage = ({token}) => {
   const handlePageChange = (newPage) => {
     setPage(newPage);
   };
+  
 
   return (    
-    <div>
+    <div className="p-5">
       <SearchBar onSearch={handleSearch} />
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-1 gap-x-1 p-1 sm:p-2 bg-white mt-5">
-          {pacientes.map((paciente) => (
-            <div key={paciente.dni} className="flex flex-col items-center justify-center w-full">
-              <Box
-                elem={paciente}
-                opciones={{
-                  personalInfo: true,
-                  buttonVer: false,
-                  buttonEdit: false,
-                  buttonSeguimiento: false,
-                  buttonComments: true,
-                  trashBin: true,
-                }}
-                img="/icon/persona_silueta.png"
-              />
+        <div>
+          {pacientes.length === 0 ? (
+            <p className="text-gray-500 text-center py-4 bg-gray-100 rounded-md">
+              No se encontró ningún paciente.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-1 gap-x-1 p-1 sm:p-2 bg-white mt-5">
+              {pacientes.map((paciente) => (
+                <div key={paciente.dni} className="flex flex-col items-center justify-center w-full">
+                  <Box
+                    elem={paciente}
+                    opciones={{
+                      personalInfo: true,
+                      buttonVer: false,
+                      buttonEdit: false,
+                      buttonSeguimiento: false,
+                      buttonComments: true,
+                      trashBin: true,
+                    }}
+                    img="/icon/persona_silueta.png"
+                  />
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
       {/* Paginación */}

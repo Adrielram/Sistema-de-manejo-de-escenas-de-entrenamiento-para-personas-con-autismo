@@ -35,6 +35,7 @@ import sys
 import json
 import requests
 from rest_framework.exceptions import NotFound
+from django.contrib.auth.tokens import default_token_generator
 #User = get_user_model()  # Modelo de usuario creado por nosotros
 
 from rest_framework import generics
@@ -52,6 +53,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 import json
 from .models import Condicion, Objetivo  # Ensure you import Objetivo
+
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Subquery, OuterRef
 
 @csrf_exempt
 def create_condition(request):
@@ -298,16 +302,6 @@ def create_health_center(request):
 
     return JsonResponse({'message': 'Método no permitido'}, status=405)
 
-@permission_classes([AllowAny])
-def get_provinces_and_cities(request):
-    provinces = Residencia.objects.values('provincia').distinct()
-    cities = Residencia.objects.values('ciudad').distinct()
-    return JsonResponse({
-        "provinces": list(provinces),
-        "cities": list(cities),
-    })
-
-
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
@@ -532,7 +526,7 @@ class ObjetivoListView(generics.ListAPIView):
 
         # Optimizamos con select_related para traer la relación escena
         return Objetivo.objects.filter(
-            id__in=objetivos_ids
+            id__in=objetivos_ids, habilitada=True
         ).select_related('escena').prefetch_related(
             Prefetch(
                 'escenaobjetivo_set',
@@ -786,7 +780,7 @@ class EscenasPorObjetivoView(generics.ListAPIView):
             return Escena.objects.none()
         
         return Escena.objects.filter(
-            escenaobjetivo__objetivo=objetivo_id
+            escenaobjetivo__objetivo=objetivo_id, habilitada=True
         ).distinct().prefetch_related(
             Prefetch(
                 'escenaobjetivo_set',
@@ -934,7 +928,7 @@ logger = logging.getLogger(__name__)
 
 #devuelve escenas del sistema
 class EscenaView(generics.ListAPIView):
-    queryset = Escena.objects.all().prefetch_related(
+    queryset = Escena.objects.filter(habilitada=True).prefetch_related(
         Prefetch(
             'escenaobjetivo_set',
             queryset=EscenaObjetivo.objects.select_related('objetivo').prefetch_related(
@@ -1140,7 +1134,7 @@ class EscenaBusquedaView(generics.ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        queryset = Escena.objects.all().prefetch_related(
+        queryset = Escena.objects.filter(habilitada=True).prefetch_related(
             Prefetch(
                 'escenaobjetivo_set',
                 queryset=EscenaObjetivo.objects.select_related('objetivo').prefetch_related(
@@ -1264,7 +1258,7 @@ class EscenasPorObjetivoListView(generics.ListAPIView):
             return Escena.objects.none()  # Devuelve un queryset vacío si no hay objetivo_id
 
         # Filtra las relaciones por el ID del objetivo
-        relaciones = EscenaObjetivo.objects.filter(objetivo=objetivo_id)
+        relaciones = EscenaObjetivo.objects.filter(objetivo=objetivo_id, escena__habilitada=True)
 
         # Obtén las escenas asociadas al objetivo (TODAS)
         escenas_objetivo = Escena.objects.filter(
@@ -1330,7 +1324,7 @@ class ObjetivosListCentro(View):
         except ObjectDoesNotExist:
             return JsonResponse({"error": "Usuario, centro o relación no encontrados."}, status=404)
 
-        objetivos = Objetivo.objects.filter(centro_profesional=center_professional).values()
+        objetivos = Objetivo.objects.filter(centro_profesional=center_professional, habilitada=True).values()
         return JsonResponse(list(objetivos), safe=False)
 
 
@@ -1353,14 +1347,30 @@ class ResolveNamesToIds(APIView):
     
 
 
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication])
 class ObjetivoViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
+            user = get_object_or_404(User, username=request.user)
             # Serializar los datos
             serializer = ObjetivoSerializer(data=request.data)
             if serializer.is_valid():
                 objetivo = serializer.save()
+                 # Crear notificación para el admin
+                admin = User.objects.filter(role='admin').first()
+                if admin:
+                    content_type = ContentType.objects.get_for_model(objetivo)
+                    print("Content_Type:    ",content_type)
+                    notificacion = Notificacion.objects.create(
+                        destinatario=admin,
+                        remitente=user,
+                        mensaje=f"El usuario {user.username} creó el objetivo '{objetivo.nombre}' Revisar.",
+                        estado='pendiente',
+                        content_type=content_type,
+                        object_id=objetivo.id,
+                    )
+                    enviar_notificacion_admin(notificacion)                
                 return Response({
                     'message': 'Objetivo creado con éxito',
                     'objetivo': serializer.data
@@ -1388,9 +1398,8 @@ class ObjetivoViewSet(viewsets.ViewSet):
 
 
 class EscenaUpdateView(UpdateAPIView):
-    queryset = Escena.objects.all()
+    queryset = Escena.objects.filter(habilitada=True)  # Solo escenas habilitadas
     serializer_class = EscenaSerializer
-
     
 class GetPatientsView(generics.ListAPIView):
     queryset = User.objects.filter(role='paciente')
@@ -1474,6 +1483,11 @@ class GrupoUpdateView(UpdateAPIView):
 
         return Response(response_data, status=status.HTTP_200_OK)
 
+from django.contrib.contenttypes.models import ContentType
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from django.shortcuts import get_object_or_404
+
 @api_view(['GET'])
 def get_goal_data(request, objetivo_id):
     try:
@@ -1494,7 +1508,7 @@ def get_goal_data(request, objetivo_id):
                 "complejidad": relacion.escena.complejidad,
                 "link": relacion.escena.link,
             }
-            for relacion in EscenaObjetivo.objects.filter(objetivo=objetivo)
+            for relacion in EscenaObjetivo.objects.filter(objetivo=objetivo, escena__habilitada=True)
         ]
 
         # Añadir las escenas relacionadas al diccionario serializado
@@ -1506,6 +1520,7 @@ def get_goal_data(request, objetivo_id):
         return Response(serialized_objetivo, status=200)
     except Objetivo.DoesNotExist:
         return Response({"error": "Objetivo no encontrado"}, status=404)
+
         
 
 
@@ -1660,7 +1675,7 @@ def signIn(request):
         # Validar que todos los campos están presentes
         required_fields = [
             'dni', 'nombre', 'fecha_nac', 'genero', 'role',
-            'provincia', 'ciudad', 'calle', 'numero'
+            'provincia', 'ciudad', 'calle', 'numero','email'
         ]
         missing_fields = [field for field in required_fields if field not in request.data]
 
@@ -1684,6 +1699,7 @@ def signIn(request):
         centros_de_salud = request.data.get('centros_de_salud', None)
         sintomas = request.data.get('sintomas', [])
         texto = request.data.get('texto', '')
+        email = request.data.get('email')
 
         print(f"Datos recibidos: DNI={dni}, Nombre={nombre}, Fecha={fecha_nac}, Genero={genero}, Role={role}")
 
@@ -1694,6 +1710,10 @@ def signIn(request):
         # Verificar si el nombre ya existe
         if User.objects.filter(nombre=nombre).exists():
             return Response({"error": "Ya existe un usuario con ese nombre"}, status=400)
+
+        # Verificar si email ya esta registrado
+        if User.objects.filter(email=email).exists():
+            return Response({"error": "Ya existe un usuario con ese email"}, status=400)
 
         # Validar formato de fecha de nacimiento
         try:
@@ -1732,7 +1752,7 @@ def signIn(request):
                 genero=genero,
                 role=role,
                 direccion_id_dir=residencia,
-                email='adri@example.com',
+                email=email,
                 patologia=texto
             )
 
@@ -1889,7 +1909,7 @@ def objetivos_evaluacion_usuario(request):
     # Agrupar por objetivo_id y calcular el progreso promedio
     objetivos_agrupados = (
         PersonaObjetivoEvaluacion.objects
-        .filter(user_id=user_id)
+        .filter(user_id=user_id, evaluacion__habilitada=True)
         .values('objetivo_id')  # Solo obtenemos los IDs para la agrupación
         .annotate(
             progreso_promedio=Avg('progreso')
@@ -1901,7 +1921,7 @@ def objetivos_evaluacion_usuario(request):
 
     # Serializar los datos agrupados manualmente
     data = []
-    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=[o['objetivo_id'] for o in objetivos_agrupados])}
+    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=[o['objetivo_id'] for o in objetivos_agrupados], habilitada=True)}
     for obj in objetivos_agrupados:
         # Luego, en el bucle:
         objetivo = objetivos_map[obj['objetivo_id']]
@@ -1939,23 +1959,40 @@ def get_dni(request):
         return Response({'dni': user.dni})
     except User.DoesNotExist:
         return Response({'error': f'No se encontró un usuario con username: {username}'}, status=404)
-
+    
+     
+from api.notificaciones.utils import enviar_notificacion_admin
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication])
 def crear_escena(request):
     try:
-        serializer = EscenaSerializer(data=request.data)
-        
-        # Validar datos
+        data = request.data.copy()   
+        user = get_object_or_404(User, username=request.user)
+        serializer = EscenaSerializer(data=data)
         if serializer.is_valid():
-            serializer.save()
+            
+            escena = serializer.save()          
+             # Crear notificación para el admin
+            admin = User.objects.filter(role='admin').first()
+            if admin:
+                content_type = ContentType.objects.get_for_model(escena)
+                print("Content_Type:    ",content_type)
+                notificacion = Notificacion.objects.create(
+                    destinatario=admin,
+                    remitente=user,
+                    mensaje=f"El usuario {user.username} creó la escena '{escena.nombre}'.",
+                    estado='pendiente',
+                    content_type=content_type,
+                    object_id=escena.id,
+                )
+                enviar_notificacion_admin(notificacion)
             return Response(
                 {"message": "Escena creada exitosamente", "data": serializer.data},
                 status=status.HTTP_201_CREATED
             )
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
     except Exception as e:
         return Response(
             {"error": f"Error inesperado: {str(e)}"},
@@ -2015,7 +2052,7 @@ def objetivos_escena_usuario(request):
 
     # Obtener los datos de los objetivos
     objetivos_ids = [obj['escena_objetivo__objetivo_id'] for obj in objetivos_agrupados]
-    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=objetivos_ids)}
+    objetivos_map = {obj.id: obj for obj in Objetivo.objects.filter(id__in=objetivos_ids, habilitada=True)}
     
     data = []
     for obj in objetivos_agrupados:
@@ -2041,7 +2078,7 @@ class Get_escenas_by_objetivo(APIView):
         objetivo = get_object_or_404(Objetivo, id=objetivo_id)
 
         # Obtener todas las relaciones EscenaObjetivo para este objetivo
-        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo).select_related('escena')
+        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo, escena__habilitada = True).select_related('escena')
 
         # Extraer todas las escenas del objetivo
         escenas = [eo.escena for eo in escenas_objetivo]
@@ -2081,7 +2118,7 @@ class Get_escenas_by_objetivo_by_user(APIView):
         objetivo = get_object_or_404(Objetivo, id=objetivo_id)
         
         # Obtener todas las relaciones EscenaObjetivo para este objetivo
-        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo).select_related('escena')
+        escenas_objetivo = EscenaObjetivo.objects.filter(objetivo=objetivo, escena__habilitada = True).select_related('escena')
         
         # Obtener las escenas ya asignadas al paciente
         escenas_asignadas = PersonaObjetivoEscena.objects.filter(
@@ -2122,7 +2159,7 @@ class NameFilter(filters.FilterSet):
         fields = ['nombre', 'centro_profesional']
 
 class ObjetivosListView(generics.ListAPIView):    
-    queryset = Objetivo.objects.all()
+    queryset = Objetivo.objects.filter(habilitada=True)
     serializer_class = ObjetivoSerializerList
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
@@ -2130,13 +2167,13 @@ class ObjetivosListView(generics.ListAPIView):
 
 @permission_classes([AllowAny])
 class EscenaListView(generics.ListAPIView):
-    queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
 
-
+    def get_queryset(self):
+        return Escena.objects.filter(habilitada=True)  # Solo escenas habilitadas 
 class CentrosSaludListView(generics.ListAPIView):
     queryset = Centrodesalud.objects.all()
     serializer_class = CentroSaludSerializer
@@ -2450,7 +2487,7 @@ class GetCentroProfesionalObjetivosView(generics.ListAPIView):
                 profesional=user
             )
             
-            return Objetivo.objects.filter(centro_profesional=centro_profesional)
+            return Objetivo.objects.filter(centro_profesional=centro_profesional, habilitada=True)
 
         except Centrodesalud.DoesNotExist:
             raise NotFound('Centro de salud no encontrado')
@@ -2470,10 +2507,13 @@ class ListsScenesView(generics.ListAPIView):
 class GetScenesView(generics.ListAPIView):
     queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
-    pagination_class = DynamicPagination
+    pagination_class = DynamicPagination   
+
+    def get_queryset(self):
+        return Escena.objects.filter(habilitada=True) 
 
 class DeleteSceneView(generics.DestroyAPIView):
-    queryset = Escena.objects.all()
+    queryset = Escena.objects.filter(habilitada=True)
     serializer_class = ObjetivoSerializer
 
 class DeleteGroupView(generics.DestroyAPIView):
@@ -2713,7 +2753,7 @@ class GetFormsPerUserView(generics.ListAPIView):
         except User.DoesNotExist:
             raise NotFound(f"Usuario con username '{username}' no encontrado.")
 
-        return Formulario.objects.filter(objetivo_id__centro_profesional=centro_profesional)    
+        return Formulario.objects.filter(objetivo_id__centro_profesional=centro_profesional, habilitada=True)    
 
 class GetFormsPatientView(generics.ListAPIView):
     serializer_class = EvaluacionIdSerializer
@@ -2729,7 +2769,7 @@ class GetFormsPatientView(generics.ListAPIView):
         except User.DoesNotExist:
             raise NotFound(f"Usuario con username '{dni}' no encontrado.")
         
-        return PersonaObjetivoEvaluacion.objects.filter(user_id=user).values('evaluacion').distinct()
+        return PersonaObjetivoEvaluacion.objects.filter(user_id=user, evaluacion__habilitada=True).values('evaluacion').distinct()
 
 class DeleteAssesmentView(generics.DestroyAPIView):
     queryset = Formulario.objects.all()
@@ -2962,7 +3002,7 @@ class EscenasSegunUsuarioObjetivo(APIView):
             return Response({'error': 'Se requiere el parámetro objetivo_id'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Obtener las escenas relacionadas al objetivo
-        escena_objetivos = EscenaObjetivo.objects.filter(objetivo_id=objetivo_id)
+        escena_objetivos = EscenaObjetivo.objects.filter(objetivo_id=objetivo_id, escena__habilitada=True)
         if not escena_objetivos.exists():
             return Response({'error': 'No se encontraron escenas para el objetivo proporcionado'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -2990,7 +3030,8 @@ class ObtenerLinksEvaluaciones(APIView):
             # Filtrar las evaluaciones asociadas
             evaluaciones = PersonaObjetivoEvaluacion.objects.filter(
                 user_id=user_id,
-                objetivo_id=objetivo_id
+                objetivo_id=objetivo_id,
+                evaluacion__habilitada=True
             ).exclude(
                 evaluacion__isnull=True  # Asegurarse de que haya evaluación
             ).values_list('evaluacion__link', flat=True)
@@ -3018,7 +3059,7 @@ class GetPatientForms(generics.ListAPIView):
                 evaluacion__isnull=True  # Asegurarse de que haya evaluación
             ).values_list('evaluacion', flat=True)
 
-            return Formulario.objects.filter(id__in=assesments_ids)
+            return Formulario.objects.filter(id__in=assesments_ids, habilitada=True)
         
         except Exception as e:
             raise Exception(f"Ocurrió un error al obtener los formularios: {str(e)}")
@@ -4004,6 +4045,7 @@ class GroupDetailView(generics.RetrieveDestroyAPIView):
 #@authentication_classes([CookieJWTAuthentication])
 @permission_classes([AllowAny])
 def obtener_notificaciones_pendientes(request):
+    print("Request user: ",request.user)
     # Filtrar notificaciones pendientes para el usuario actual
     notificaciones = Notificacion.objects.filter(
         destinatario=request.user, estado='pendiente'
@@ -4012,28 +4054,99 @@ def obtener_notificaciones_pendientes(request):
     return JsonResponse({'notificaciones': list(notificaciones)})
 
 from django.http import JsonResponse
+from django.contrib.contenttypes.models import ContentType
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from .models import Notificacion
+from rest_framework.permissions import AllowAny
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication])
 def obtener_detalle_notificacion(request, pk):
     try:
         # Buscar la notificación por id y asegurarse de que pertenece al usuario autenticado
         notificacion = Notificacion.objects.get(id=pk, destinatario=request.user)
-        # Devolver los detalles de la notificación
-        return JsonResponse({
+
+        # Inicializar el detalle de la notificación
+        detalle = {
             'id': notificacion.id,
             'mensaje': notificacion.mensaje,
             'timestamp': notificacion.timestamp,
             'estado': notificacion.estado,
             'remitente': notificacion.remitente.username if notificacion.remitente else None,
             'destinatario': notificacion.destinatario.username if notificacion.destinatario else None,
-        })
+        }
+
+        # Verificar si la notificación está asociada a una escena
+        if notificacion.content_type and notificacion.object_id:
+            content_type = ContentType.objects.get_for_id(notificacion.content_type.id)
+            if content_type.model == 'escena':  # Ajusta el nombre del modelo según corresponda
+                escena = content_type.get_object_for_this_type(id=notificacion.object_id)
+                detalle['escena'] = {             
+                    'nombre': escena.nombre,  # Ajusta los campos según el modelo Escena
+                    'link': escena.link,  # Ajusta si tienes un campo `link`
+                }        
+        
+        if notificacion.content_type and notificacion.object_id:
+            content_type = ContentType.objects.get_for_id(notificacion.content_type.id)
+            if content_type.model == 'objetivo':  # Ajusta el nombre del modelo según corresponda
+                objetivo = content_type.get_object_for_this_type(id=notificacion.object_id)
+                detalle['objetivo'] = {             
+                    'nombre': objetivo.nombre,  # Ajusta los campos según el modelo Escena
+                    'video_explicativo': objetivo.escena.link,  # Ajusta si tienes un campo `link`
+                    'descripcion': objetivo.descripcion,
+                }
+                # Agregar los links de las escenas vinculadas al objetivo
+                escenas_vinculadas = EscenaObjetivo.objects.filter(objetivo=objetivo).select_related('escena')
+                detalle['escenas_vinculadas'] = [
+                    {
+                        'id': escena_obj.escena.id,
+                        'link': escena_obj.escena.link,  # Asegúrate de que el modelo Escena tenga un campo `link`
+                    }
+                    for escena_obj in escenas_vinculadas
+                ]
+
+                # Agregar los nombres de los objetivos previos vinculados al objetivo
+                objetivos_previos = Objetivoscumplir.objects.filter(objetivo=objetivo).select_related('objetivo_previo')
+                print("ObjetivosPrevios: ",objetivos_previos)
+                detalle['objetivos_previos'] = [
+                    {
+                        'id': obj_previo.objetivo_previo.id,
+                        'nombre': obj_previo.objetivo_previo.nombre,
+                    }
+                    for obj_previo in objetivos_previos
+                ]
+
+        # Caso 3: Formulario
+        if content_type.model == 'formulario':  
+            formulario = content_type.get_object_for_this_type(id=notificacion.object_id)
+            detalle['formulario'] = {
+                'nombre': formulario.nombre,
+                'descripcion': formulario.descripcion,
+                'fecha_creacion': formulario.fecha_creacion,
+            }
+            # Obtener preguntas y opciones
+            preguntas = formulario.preguntas.prefetch_related('opciones')
+            detalle['preguntas'] = [
+                {
+                    'id': pregunta.id,
+                    'texto': pregunta.texto,
+                    'tipo': pregunta.tipo,
+                    'opciones': [{'id': opcion.id, 'texto': opcion.texto} for opcion in pregunta.opciones.all()]
+                }
+                for pregunta in preguntas
+            ]
+
+        # Devolver los detalles de la notificación
+        return JsonResponse(detalle)
+
     except Notificacion.DoesNotExist:
         # Manejar el caso de una notificación no encontrada o no autorizada
         return JsonResponse({'error': 'Notificación no encontrada o no autorizada'}, status=404)
+
+    except ContentType.DoesNotExist:
+        # Manejar el caso donde el ContentType no existe
+        return JsonResponse({'error': 'Tipo de contenido no válido'}, status=400)
+
     
 
 from api.models import User
@@ -4053,8 +4166,7 @@ def procesar_notificacion(request, pk, accion):
 
     # Verifica el tipo de objeto asociado
     content_type = notificacion.content_type
-    objeto_asociado = notificacion.objeto_asociado  # Accede al objeto asociado
-
+    
     try:
         if content_type.model == 'user':  # Si es una solicitud de activación de usuario
             usuario = get_object_or_404(User, username=notificacion.remitente.username)
@@ -4069,20 +4181,34 @@ def procesar_notificacion(request, pk, accion):
                 return JsonResponse({'success': True, 'message': f'Usuario {usuario} eliminado y notificación procesada'})
         
         elif content_type.model == 'objetivo':  # Si es una solicitud de agregar un objetivo
+            objetivo = get_object_or_404(Objetivo, id=notificacion.object_id)
             if accion == 'aceptar':
-                objeto_asociado.aprobado = True
-                objeto_asociado.save()
-                notificacion.estado = 'leida'
+                objetivo.habilitada = True  # Habilitar la escena
+                objetivo.save()
+                notificacion.estado = 'leida'        
             elif accion == 'rechazar':
-                objeto_asociado.delete()
-                notificacion.estado = 'eliminada'
+                objetivo.delete()
+                notificacion.estado = 'eliminada'       
 
-        elif content_type.model == 'comentario':  # Si es una solicitud de moderar un comentario
+        elif content_type.model == 'formulario':  # Si es una solicitud de agregar un objetivo
+            formulario = get_object_or_404(Formulario, id=notificacion.object_id)
             if accion == 'aceptar':
-                notificacion.estado = 'leida'
+                formulario.habilitada = True  # Habilitar la escena
+                formulario.save()
+                notificacion.estado = 'leida'        
             elif accion == 'rechazar':
-                objeto_asociado.delete()
-                notificacion.estado = 'eliminada'
+                formulario.delete()
+                notificacion.estado = 'eliminada'       
+
+        elif content_type.model == 'escena':
+            escena = get_object_or_404(Escena, id=notificacion.object_id)
+            if accion == 'aceptar':
+                escena.habilitada = True  # Habilitar la escena
+                escena.save()
+                notificacion.estado = 'leida'        
+            elif accion == 'rechazar':
+                escena.delete()
+                notificacion.estado = 'eliminada'       
 
         else:
             return JsonResponse({'error': 'Tipo de objeto no soportado'}, status=400)
@@ -4198,7 +4324,7 @@ def GEMINI_chequear_comentario(username:str,comentario_usuario:str):
     genai.configure(api_key=settings.GEMINI_API_KEY)
 
     prompt = f"""
-    Dado el siguiente comentario realizado por un paciente con trastornos del espectro autista (edad entre 4 y 20 años): 
+    Dado el siguiente comentario realizado por un paciente con trastornos del espectro autista (edad entre 4 y 20 años):
 
     "{comentario_usuario}"
 
@@ -4209,16 +4335,21 @@ def GEMINI_chequear_comentario(username:str,comentario_usuario:str):
     - Incluye lenguaje extremadamente agresivo, insultos o acoso.
     - Expresa angustia extrema, pensamientos suicidas o signos de depresión severa.
     - Muestra confusión o indicios de que el usuario está en peligro inmediato.
-    - Urls de otros sitios web
+    - Contiene URLs de otros sitios web no permitidos.
+    - Usa malas palabras, insultos o términos vulgares, incluyendo palabras comunes en Argentina como:
+    - "garchar", "pija", "concha", "coger" (tener en cuenta el contexto), "verga", "culo", "chupar".
+    - Variaciones o palabras escritas al revés como "japi" (posible referencia a "pija").
+    - Insultos como "boludo", "pelotudo", "tarado", "idiota", "conchudo", "hijo de puta", "forro", "mogólico" (considerado altamente ofensivo en Argentina).
+    - Cualquier otra palabra ofensiva utilizada de manera inapropiada.
 
     Si el mensaje no cumple con ninguna de estas condiciones, se considera **NO URGENTE**.
 
     Devuelve la respuesta en formato JSON con la siguiente estructura:
 
-    
-    "urgente": true/false,
-    "razon": "Explicación breve de por qué se considera urgente o no."
-    
+    {
+        "urgente": true/false,
+        "razon": "Explicación breve de por qué se considera urgente o no."
+    }
     """
 
     # Generar respuesta con el modelo
@@ -4271,3 +4402,104 @@ El Sistema de Monitoreo Automático
             print(f"Error al enviar el correo: {e}")
 
     return JsonResponse({"data": data, "therapist_emails": list(therapist_emails), "mensaje": mensaje, "razon": razon})
+
+
+@api_view(['POST'])
+def forgot_password(request):
+    """
+    Vista para manejar la solicitud de restablecimiento de contraseña.
+    Envía un correo con un enlace para restablecer la contraseña si el email existe.
+    """
+    try:
+        email = request.data.get("email", "").strip().lower()
+        
+        # Validar que se proporcionó un email
+        if not email:
+            return Response(
+                {"error": "El correo electrónico es requerido"}
+            )
+        
+        # Validar formato del email
+        try:
+            validate_email(email)
+        except ValidationError:
+            return Response(
+                {"error": "El formato del correo electrónico no es válido"}
+            )
+
+        
+        # Buscar usuario por email
+        user = User.objects.filter(email=email).first()
+        
+        # Si no existe el usuario, retornar mensaje genérico por seguridad
+        if not user:
+            return Response(
+                {"error": "No existe un usuario con ese mail asociado"}
+            )
+
+        # Generar token único para este usuario
+        token = default_token_generator.make_token(user)
+        
+        # Construir URL de restablecimiento
+        reset_url = f"http://localhost:3000/auth/reset-password/?token={token}&uid={user.pk}"
+
+        # Preparar contenido del email
+        email_subject = 'Restablecer tu contraseña'
+        email_body = f"""
+        Hola,
+
+        Has solicitado restablecer tu contraseña. 
+        Usa el siguiente enlace para crear una nueva contraseña:
+
+        {reset_url}
+
+        Si no solicitaste este cambio, puedes ignorar este mensaje.
+        El enlace expirará en 1 hora por seguridad.
+
+        Saludos,
+        Centro Casabella
+        """
+
+        # Intentar enviar el email
+        try:
+            sendmail(
+                [email],
+                email_subject,
+                email_body
+            )
+            return Response(
+                {"message": "Recibirás un email con instrucciones brevemente..."},
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            # Registrar el error para debugging
+            logger.error(f"Error enviando email de recuperación: {str(e)}")
+            return Response(
+                {"error": "Hubo un problema al enviar el correo. Por favor, intenta nuevamente."}
+            )
+
+    except Exception as e:
+        # Registrar error general para debugging
+        logger.error(f"Error en forgot_password: {str(e)}")
+        return Response(
+            {"error": "Ocurrió un error inesperado. Por favor, intenta nuevamente."}
+        )
+
+@api_view(['POST'])
+def reset_password(request):
+    token = request.data.get('token')
+    uid = request.data.get('uid')
+    new_password = request.data.get('new_password')
+
+    try:
+        user = User.objects.get(pk=uid)
+    except User.DoesNotExist:
+        return Response({"error": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+    if default_token_generator.check_token(user, token):
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "Contraseña restablecida con éxito."})
+    else:
+        return Response({"error": "Token inválido o expirado."}, status=400)

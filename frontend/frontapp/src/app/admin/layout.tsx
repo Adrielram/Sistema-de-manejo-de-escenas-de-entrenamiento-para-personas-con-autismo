@@ -19,13 +19,13 @@ export default async function AdminLayout({
   }) {
     const token = await getTokenFromCookies();
     return (
-      <div className={`min-h-screen bg-white ${inter.className}`}>
+      <div className={`flex min-h-screen flex-col bg-white ${inter.className}`}>
         <Header token={token}/> {/* Asegúrate de que esté fuera del contenedor flex */}
-        <div className="flex">
+        <div className="flex flex-1">
           <SideNav list={SIDENAV_ITEMS_ADMIN} admin={true}/>
-          <main className="flex-1">
+          <main className="flex-1 ">
             <MarginWidthWrapper>
-              <HeaderMobile />
+              <HeaderMobile lista_items={SIDENAV_ITEMS_ADMIN}/>
               <PageWrapper>{children}</PageWrapper>
             </MarginWidthWrapper>
           </main>
@@ -34,3 +34,5 @@ export default async function AdminLayout({
       </div>
     );
   }
+
+  

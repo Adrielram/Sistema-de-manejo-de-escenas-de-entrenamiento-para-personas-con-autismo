@@ -143,7 +143,6 @@ class CondicionSerializer(serializers.ModelSerializer):
 class EscenaSerializer(serializers.ModelSerializer):
     condicion = CondicionSerializer(required=False, allow_null=True)
     condicionFields = serializers.DictField(write_only=True, required=False)
-
     class Meta:
             model = Escena
             fields = [
@@ -164,6 +163,7 @@ class EscenaSerializer(serializers.ModelSerializer):
         escena = Escena.objects.create(**validated_data)  # Crear la escena
 
         if condicion_data:
+            print("Entro a condition_data")
             condicion = Condicion.objects.create(**condicion_data)  # Crear la condición
             escena.condicion = condicion  # Asociar la condición con la escena
             
@@ -234,6 +234,7 @@ class PreguntaSerializer(serializers.ModelSerializer):
     def get_nombre_escena(self, obj):        
         return obj.escena.nombre if obj.escena else None
 
+from api.notificaciones.utils import enviar_notificacion_admin
 class FormularioSerializer(serializers.ModelSerializer):
     preguntas = PreguntaSerializer(many=True)
     
@@ -264,6 +265,21 @@ class FormularioSerializer(serializers.ModelSerializer):
                     progreso=0,
                     evaluacion=formulario
                 )
+        # Crear notificación para el admin
+        admin = User.objects.filter(role='admin').first()
+        if admin:
+            content_type = ContentType.objects.get_for_model(formulario)
+            mensaje = f"El usuario {formulario.creado_por.username} creó el formulario '{formulario.nombre}'. Revisar."
+            notificacion = Notificacion.objects.create(
+                destinatario=admin,
+                remitente=formulario.creado_por,
+                mensaje=mensaje,
+                estado='pendiente',
+                content_type=content_type,
+                object_id=formulario.id,
+            )
+            enviar_notificacion_admin(notificacion)
+
         return formulario
 
 

@@ -23,8 +23,8 @@ const AssignedObjectives = ({ patientId }: AssignedObjectivesProps) => {
       }
       const data = await response.json();
       setObjectives(data);
-    } catch (err) {
-      console.error("Fetch error:", err);
+    } catch (err) {  
+          
     } finally {
       setLoading(false);
     }

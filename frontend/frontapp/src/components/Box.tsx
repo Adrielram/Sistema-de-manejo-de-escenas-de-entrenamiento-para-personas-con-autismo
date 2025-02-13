@@ -102,7 +102,6 @@ const Box = ({elem , opciones, img}:BoxProps) => {
   };
 
 
-
   const elemento = {
     nombre: elem.nombre || "Sin asignar",
     dni: elem.dni || "Sin asignar",

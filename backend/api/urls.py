@@ -20,7 +20,6 @@ urlpatterns = [
     path('objetivo/<int:objetivo_id>/', get_goal_data, name='get_goal_data'),
     path('health_centers/<int:center_id>/delete/', delete_health_center, name='delete_health_center'),
     path('health_centers/', views.listar_centros_de_salud, name='listar_centros_de_salud'),
-    path('get_info/', views.get_provinces_and_cities, name='get_provinces_and_cities'),
     path('terapeutas/', TerapeutaListView.as_view(), name='terapeutas-list'),
     path('grupos/', GroupListView.as_view(), name='grupos-list'),
     path('pacientes/<int:pk>/', PacienteDetailView.as_view(), name='paciente-detail'),
@@ -141,7 +140,9 @@ urlpatterns = [
     path('assign-pathology/', AssignPathologyView.as_view(), name='assign-pathology'),
     path('unassign-pathology/', UnassignPathologyView.as_view(), name='unassign-pathology'),
     path('get_forms_patient/', GetFormsPatientView.as_view(), name='get_forms_patient'),
-    path('patients/', GetPacienteView.as_view(), name='get_paciente')
+    path('patients/', GetPacienteView.as_view(), name='get_paciente'),
+    path('forgot-password/', forgot_password,name="forgot-passowrd"),
+    path('reset-password/', reset_password, name="reset_password"),
 ]
 
 urlpatterns += [path('', include(router.urls))]
