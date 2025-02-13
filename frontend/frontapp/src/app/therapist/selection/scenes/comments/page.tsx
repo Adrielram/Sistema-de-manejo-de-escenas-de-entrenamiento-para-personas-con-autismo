@@ -18,6 +18,7 @@ const ComentariosEscena = () => {
   const [reloadComentarios, setReloadComentarios] = useState(false);
   const { username } = useSelector((state: RootState) => state.user);
   const nuevoComentarioRef = useRef<HTMLDivElement>(null);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const [formData, setFormData] = useState({
     user: username, 
@@ -39,7 +40,7 @@ const ComentariosEscena = () => {
 
       try {
         setLoadingComentarios(true);
-        const response = await fetch(`http://localhost:8000/api/comentarios/lista/?id_escena=${escenaId}`, {
+        const response = await fetch(`${baseUrl}comentarios/lista/?id_escena=${escenaId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -68,7 +69,8 @@ const ComentariosEscena = () => {
   const handleResponder = async (idComentario: number) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/comentarios/?idComentario=${idComentario}`
+        `${baseUrl}comentarios/?idComentario=${idComentario}`,
+        { credentials: 'include' }
       );
       const data = await response.json();
       if (response.ok) {

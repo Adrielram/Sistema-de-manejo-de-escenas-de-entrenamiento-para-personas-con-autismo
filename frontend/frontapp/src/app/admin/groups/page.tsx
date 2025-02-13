@@ -13,12 +13,14 @@ const ManageGroupPage = () => {
   const [patients, setPatients] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   // Función para obtener los datos de un grupo específico
   const fetchGroupData = async (groupId) => {
     try {
-      const response = await fetch("http://localhost:8000/api/get_groups/", {
+      const response = await fetch(`${baseUrl}get_groups/`, {
         method: "GET",
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
@@ -54,8 +56,9 @@ const ManageGroupPage = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch("http://localhost:8000/api/get_groups/", {
+        const response = await fetch(`${baseUrl}get_groups/`, {
           method: "GET",
+          credentials: 'include',
           headers: {
             "Content-Type": "application/json",
           },
@@ -82,8 +85,8 @@ const ManageGroupPage = () => {
     const fetchTherapistsAndPatients = async () => {
       try {
         const [therapistResponse, patientResponse] = await Promise.all([
-          fetch("http://localhost:8000/api/get_therapists/", { method: "GET" }),
-          fetch("http://localhost:8000/api/get_patients/", { method: "GET" })
+          fetch(`${baseUrl}get_therapists/`, { method: "GET", credentials: 'include', }),
+          fetch(`${baseUrl}get_patients/`, { method: "GET", credentials: 'include', })
         ]);
 
         if (!therapistResponse.ok || !patientResponse.ok) {
@@ -140,7 +143,7 @@ const ManageGroupPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/personagrupo/${selectedGroup.id}/${therapistId}/`,
+        `${baseUrl}personagrupo/${selectedGroup.id}/${therapistId}/`,
         {
           method: "DELETE",
           credentials: "include",
@@ -174,7 +177,7 @@ const ManageGroupPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/personagrupo/${selectedGroup.id}/${patientId}/`,
+        `${baseUrl}personagrupo/${selectedGroup.id}/${patientId}/`,
         {
           method: "DELETE",
           credentials: "include",
@@ -212,7 +215,7 @@ const ManageGroupPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/update_group_associations/${selectedGroup.id}/`,
+        `${baseUrl}update_group_associations/${selectedGroup.id}/`,
         {
           method: "PUT",
           credentials: "include",

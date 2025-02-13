@@ -20,7 +20,7 @@ const Page = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `${baseUrl}terapeutas/?nombre=${query}&page=${page}`
+        `${baseUrl}terapeutas/?nombre=${query}&page=${page}`, { credentials: 'include' }
       );
       const data = await response.json();
       setTerapeutas(data.results || []); // Asegurarse de que results exista

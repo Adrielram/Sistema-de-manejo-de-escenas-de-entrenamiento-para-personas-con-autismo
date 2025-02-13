@@ -29,9 +29,5 @@ const BigButton = ({ color, font_bold, title, hover, onClick }: ButtonProps) => 
   };
   
 
-/**
- * color="bg-blue-600"
-                hover="hover:bg-blue-700"
- */
 
 export default BigButton

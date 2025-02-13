@@ -11,12 +11,15 @@ const VerHijos = () => {
   const [hijos, setHijos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     // Función para obtener el DNI a partir del username
     const fetchDNI = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/get-dni/?username=${username}`);
+        const response = await fetch(`${baseUrl}get-dni/?username=${username}`,
+          { credentials: 'include' }
+        );
         if (!response.ok) {
           throw new Error('Error al obtener el DNI');
         }
@@ -31,7 +34,9 @@ const VerHijos = () => {
     // Función para obtener los hijos desde el backend
     const fetchHijos = async (dni) => {
       try {
-        const response = await fetch(`http://localhost:8000/api/HijosListView/?padre_id=${dni}`);
+        const response = await fetch(`${baseUrl}HijosListView/?padre_id=${dni}`,
+          { credentials: 'include' }
+        );
         if (!response.ok) {
           throw new Error('Error al obtener los hijos');
         }

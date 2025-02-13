@@ -24,16 +24,17 @@ const GroupsPage: React.FC = () => {
   const showImage = true;
   const { username } = useSelector((state: RootState) => state.user);
   const { center } = useSelector((state: RootState) => state.user);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const fetchGroups = useCallback(async (page: number) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/get_groups_per_user/?username=${encodeURIComponent(username)}&centername=${center}&page=${page}`, {
+      const response = await fetch(`${baseUrl}get_groups_per_user/?username=${encodeURIComponent(username)}&centername=${center}&page=${page}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+        credentials: 'include',
       });
 
       if (!response.ok) {

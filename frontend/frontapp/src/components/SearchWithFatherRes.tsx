@@ -19,6 +19,7 @@ const SearchWithFatherRes: React.FC<SearchWithResultsProps> = ({ onPadreSeleccio
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [dniSeleccionado, setDniSeleccionado] = useState<number | null>(null);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     if (query) {
@@ -34,7 +35,9 @@ const SearchWithFatherRes: React.FC<SearchWithResultsProps> = ({ onPadreSeleccio
 
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/buscar_padres/?query=${searchQuery}&page=${page}`);
+      const response = await fetch(`${baseUrl}buscar_padres/?query=${searchQuery}&page=${page}`,
+        { credentials: 'include' }
+      );
       if (!response.ok) {
         throw new Error('Error al obtener los datos');
       }

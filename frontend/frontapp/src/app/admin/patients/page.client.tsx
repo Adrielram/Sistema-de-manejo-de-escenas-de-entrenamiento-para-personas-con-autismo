@@ -15,7 +15,8 @@ const PacientesPage = ({token}) => {
     setLoading(true);
     try {
       const response = await fetch(
-        `${baseUrl}pacientes/?nombre=${query}&page=${page}`
+        `${baseUrl}pacientes/?nombre=${query}&page=${page}`, 
+        { credentials: 'include' }
       );
       const data = await response.json();
       console.log("Data:", data);

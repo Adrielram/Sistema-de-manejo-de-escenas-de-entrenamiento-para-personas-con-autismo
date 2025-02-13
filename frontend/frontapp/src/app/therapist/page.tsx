@@ -22,10 +22,11 @@ export default function Therapist() {
   const [associatedCenters, setAssociatedCenters] = useState([]); // Para almacenar los centros asociados
   const [resetTrigger, setResetTrigger] = useState(false);
   const [resetTrigger2, setResetTrigger2] = useState(false);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const fetchAssociatedCenters = useCallback( async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/get_associated_centers/${username}/`, {
+      const response = await fetch(`${baseUrl}get_associated_centers/${username}/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -59,7 +60,7 @@ export default function Therapist() {
     console.log('Datos a enviar 2:', JSON.stringify(therapistCenterData)); // Para depuración
   
     try {
-      const response = await fetch(`http://localhost:8000/api/associate_center/`, {
+      const response = await fetch(`${baseUrl}associate_center/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -98,7 +99,7 @@ export default function Therapist() {
     };
   
     try {
-      const response = await fetch(`http://localhost:8000/api/disassociate_center/`, {
+      const response = await fetch(`${baseUrl}disassociate_center/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -159,7 +160,7 @@ export default function Therapist() {
                   onSelectItems={setselectedCentersToAssociate}
                   resetTrigger={resetTrigger} // Pasa el trigger al SearchSelectBox
 
-                  apiUrl={`http://localhost:8000/api/get_not_associated_centers/${username}/`}
+                  apiUrl={`${baseUrl}get_not_associated_centers/${username}/`}
                 />
             </div>
             <div className="flex justify-center">
@@ -181,7 +182,7 @@ export default function Therapist() {
                   onSelectItems={setselectedCentersToDisassociate}
                   resetTrigger={resetTrigger2} // Pasa el trigger al SearchSelectBox
 
-                  apiUrl={`http://localhost:8000/api/get_associated_centers/${username}/`}
+                  apiUrl={`${baseUrl}get_associated_centers/${username}/`}
                 />
             </div>
             <div className="flex justify-center">

@@ -41,7 +41,9 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
 
     const fetchGroupDetails = async () => {
       try {
-        const response = await fetch(`${baseUrl}grupoById/${grupoId}/`);
+        const response = await fetch(`${baseUrl}grupoById/${grupoId}/`,
+          { credentials: 'include' }
+        );
         if (!response.ok) {
           throw new Error("Error al obtener los datos del grupo");
         }
@@ -55,7 +57,9 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
 
     const fetchPacientesDisponibles = async () => {
       try {
-        const response = await fetch(`${baseUrl}get_patients_not_in_group/?group_id=${grupoId}`);
+        const response = await fetch(`${baseUrl}get_patients_not_in_group/?group_id=${grupoId}`,
+          { credentials: 'include' }
+        );
         if (!response.ok) {
           throw new Error("Error al obtener los pacientes disponibles");
         }
@@ -70,7 +74,9 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
 
     const fetchTerapeutasDisponibles = async () => {
       try {
-        const response = await fetch(`${baseUrl}get_therapists_not_in_group/?group_id=${grupoId}`);
+        const response = await fetch(`${baseUrl}get_therapists_not_in_group/?group_id=${grupoId}`,
+          { credentials: 'include' }
+        );
         if (!response.ok) {
           throw new Error("Error al obtener los terapeutas disponibles");
         }
@@ -84,7 +90,9 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
 
     const fetchPacientesEnGrupo = async () => {
       try {
-        const response = await fetch(`${baseUrl}get_patients_per_group/?group_id=${grupoId}&user=${username}`);
+        const response = await fetch(`${baseUrl}get_patients_per_group/?group_id=${grupoId}&user=${username}`,
+          { credentials: 'include' }
+        );
         if (!response.ok) {
           throw new Error("Error al obtener los pacientes en el grupo");
         }
@@ -103,7 +111,9 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
 
     const fetchTerapeutasEnGrupo = async () => {
       try {
-        const response = await fetch(`${baseUrl}get_therapists_per_group/?group_id=${grupoId}`);
+        const response = await fetch(`${baseUrl}get_therapists_per_group/?group_id=${grupoId}`,
+          { credentials: 'include' }
+        );
         if (!response.ok) {
           throw new Error("Error al obtener los terapeutas en el grupo");
         }
@@ -168,6 +178,7 @@ const EditGroup: React.FC<{ params: Promise<{ group_id: string }> }> = ({ params
     try {
       const response = await fetch(`${baseUrl}groups/${grupoId}`, {
         method: "PUT",
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },

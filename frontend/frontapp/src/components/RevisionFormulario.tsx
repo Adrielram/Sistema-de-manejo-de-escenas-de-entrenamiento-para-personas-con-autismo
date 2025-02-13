@@ -52,7 +52,8 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
     const fetchData = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8000/api/formularios/${formularioId}/${pacienteDni}/`
+          `${baseUrl}formularios/${formularioId}/${pacienteDni}/`,
+          { credentials: 'include' }
         );
         if (!response.ok) {
           throw new Error("Error al cargar los datos del formulario.");
@@ -71,7 +72,7 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
         );
   
         setRespuestas(respuestasUltimoIntento);        
-      } catch (err) {
+      } catch  {
         setError("Error al cargar los datos del formulario.");
       } finally {
         setLoading(false);
@@ -89,8 +90,9 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
       return;
     }  
     try {
-      const response = await fetch(`http://localhost:8000/api/respuestas/${respuestaId}/actualizar-nota/`, {
+      const response = await fetch(`${baseUrl}respuestas/${respuestaId}/actualizar-nota/`, {
         method: "PATCH",
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
@@ -128,8 +130,9 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
         texto: comentarios[respuestaId],
       };
 
-      const response = await fetch("http://localhost:8000/api/comentario_profesional/", {
+      const response = await fetch(`${baseUrl}comentario_profesional/`, {
         method: "POST",
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
@@ -165,6 +168,7 @@ const RevisionFormulario: React.FC<RespuestasFormularioProps> = ({
       const url = `${baseUrl}respuesta/${idRespuesta}/${esCorrecta ? "correcta" : "incorrecta"}/`;
       const response = await fetch(url, {
         method: "PATCH",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
       });
 

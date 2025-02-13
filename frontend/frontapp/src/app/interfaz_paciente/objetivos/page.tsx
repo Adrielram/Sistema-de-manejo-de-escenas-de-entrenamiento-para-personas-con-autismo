@@ -65,7 +65,8 @@ export default function Page() {
           return;
         }
         const response = await fetch(
-          `${baseURL}get-objetivos-list/?page=${currentPage}&limit=4&username=${username}`
+          `${baseURL}get-objetivos-list/?page=${currentPage}&limit=4&username=${username}`,
+          { credentials: 'include' }
         );
         if (!response.ok) throw new Error(`Error: ${response.status}`);
         const data: PaginatedResponse = await response.json();
@@ -94,7 +95,8 @@ export default function Page() {
       if (!selectedObjetivo) return;
       try {
         const response = await fetch(
-          `${baseURL}escenas-por-objetivo/?objetivo_id=${selectedObjetivo.id}&username=${username}&page=${page}&limit=4`
+          `${baseURL}escenas-por-objetivo/?objetivo_id=${selectedObjetivo.id}&username=${username}&page=${page}&limit=4`,
+          { credentials: 'include' }
         );
         if (!response.ok) {
           // Si hay error de paginación, forzar página 1

@@ -61,10 +61,12 @@ const Box = ({elem , opciones, img}:BoxProps) => {
       if (elem.role){
           response = await fetch(`${endpoint}${elem.dni}/`, {
           method: 'DELETE',
+          credentials: 'include',
         });
       }else{
           response = await fetch(`${endpoint}${elem.id}/`, {
           method: 'DELETE',
+          credentials: 'include',
         });
       }
   

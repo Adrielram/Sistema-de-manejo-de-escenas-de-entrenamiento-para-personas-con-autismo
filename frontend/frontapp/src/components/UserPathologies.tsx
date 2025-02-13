@@ -30,12 +30,16 @@ const UserPathologies = ({ userId }: UserPathologiesProps) => {
       setLoading(true);
       console.log("Fetching pathologies for user:", userId);
       // Obtener las patologías asignadas al usuario
-      const assignedRes = await fetch(`${baseUrl}get_pathologies_from_user/${userId}/`);
+      const assignedRes = await fetch(`${baseUrl}get_pathologies_from_user/${userId}/`,
+        { credentials: 'include' }
+      );
       if (!assignedRes.ok) throw new Error("Error al obtener patologías asignadas");
       const assignedData: AssignedPathology[] = await assignedRes.json();
 
       // Obtener todas las patologías disponibles
-      const allRes = await fetch(`${baseUrl}patologias/`);
+      const allRes = await fetch(`${baseUrl}patologias/`,
+        { credentials: 'include' }
+      );
       if (!allRes.ok) throw new Error("Error al obtener todas las patologías");
       const allData: Pathology[] = await allRes.json();
       console.log("assignedData:", assignedData);
@@ -62,6 +66,7 @@ const UserPathologies = ({ userId }: UserPathologiesProps) => {
     try {
       const response = await fetch(`${baseUrl}assign-pathology/`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId, patologia_id: pathologyId}),
       });
@@ -77,6 +82,7 @@ const UserPathologies = ({ userId }: UserPathologiesProps) => {
     try {
       const response = await fetch(`${baseUrl}unassign-pathology/`, {
         method: "DELETE",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId, patologia_id: pathologyId }),
       });

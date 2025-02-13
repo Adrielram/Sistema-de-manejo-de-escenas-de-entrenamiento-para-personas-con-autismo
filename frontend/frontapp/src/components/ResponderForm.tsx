@@ -11,7 +11,9 @@ const ResponderForm = ({ idform, dni,  onSubmitted = () => {}}) => {
   const router = useRouter();  
   
   useEffect(() => {
-    fetch(`${baseUrl}formularios/${idform}/`)
+    fetch(`${baseUrl}formularios/${idform}/`,
+      { credentials: 'include' }
+    )
       .then((res) => res.json())
       .then((data) => setFormulario(data))
       .catch(() => setError("Error al cargar el formulario"));
@@ -61,6 +63,7 @@ const ResponderForm = ({ idform, dni,  onSubmitted = () => {}}) => {
 
       await fetch(`${baseUrl}registrar-respuesta/`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           formulario_id: idform,

@@ -9,6 +9,7 @@ export default function Page() {
   const [calle, setCalle] = useState<string>("");
   const [numero, setNumero] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     
@@ -26,8 +27,9 @@ export default function Page() {
     };
 
     try {
-      const response = await fetch("http://localhost:8000/api/create_health_center/", {
+      const response = await fetch(`${baseUrl}create_health_center/`, {
         method: "POST",
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },

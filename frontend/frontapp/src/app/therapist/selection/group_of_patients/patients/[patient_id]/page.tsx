@@ -36,7 +36,9 @@ const EditPatient: React.FC<{ params: Promise<{ patient_id: string }> }> = ({ pa
   // Función para obtener todos los objetivos
   const fetchObjetivos = async () => {
     try {
-      const response = await fetch(`${baseUrl}objetivos/?username=${username}&centername=${center}`);
+      const response = await fetch(`${baseUrl}objetivos/?username=${username}&centername=${center}`,
+        { credentials: 'include' }
+      );
       if (!response.ok) {
         throw new Error("Error al cargar los objetivos.");
       }
@@ -80,6 +82,7 @@ const EditPatient: React.FC<{ params: Promise<{ patient_id: string }> }> = ({ pa
       // Enviar ambos conjuntos de datos al backend
       const response = await fetch(`${baseUrl}objetivo_save_order/`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
