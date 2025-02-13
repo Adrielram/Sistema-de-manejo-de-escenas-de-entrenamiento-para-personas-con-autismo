@@ -17,13 +17,15 @@ const AssignedObjectives = ({ patientId }: AssignedObjectivesProps) => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${baseUrl}objetivos-es-paciente/?user_id=${patientId}`);
+      const response = await fetch(`${baseUrl}objetivos-es-paciente/?user_id=${patientId}`,
+        { credentials: 'include' }
+      );
       if (!response.ok) {
         throw new Error("Error al obtener los objetivos");
       }
       const data = await response.json();
       setObjectives(data);
-    } catch (err) {  
+    } catch {  
           
     } finally {
       setLoading(false);
@@ -34,6 +36,7 @@ const AssignedObjectives = ({ patientId }: AssignedObjectivesProps) => {
     try {
       const response = await fetch(`${baseUrl}patients/${patientId}/objectives/${objectiveId}/unassign/`, {
         method: "POST",
+        credentials: 'include',
       });
       if (!response.ok) {
         throw new Error("Error al desasignar el objetivo");

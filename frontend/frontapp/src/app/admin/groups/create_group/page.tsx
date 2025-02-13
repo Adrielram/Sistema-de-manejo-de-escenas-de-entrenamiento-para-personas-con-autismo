@@ -12,16 +12,16 @@ const CreateGroupPage = () => {
   const [associatedPatients, setAssociatedPatients] = useState([]);
   const [associatedHealthCenters, setAssociatedHealthCenters] = useState([]);
   const [groupName, setGroupName] = useState("");
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [healthCentersResponse, therapistsResponse, patientsResponse] = await Promise.all([
-          fetch("http://localhost:8000/api/get_health_centers/"),
-          fetch("http://localhost:8000/api/get_therapists/"),
-          fetch("http://localhost:8000/api/get_patients/")
+          fetch(`${baseUrl}get_health_centers/`, { credentials: 'include' }),
+          fetch(`${baseUrl}get_therapists/`, { credentials: 'include' }),
+          fetch(`${baseUrl}get_patients/`, { credentials: 'include' })
         ]);
-  
         // Check if all responses are OK
         if (!healthCentersResponse.ok || !therapistsResponse.ok || !patientsResponse.ok) {
           throw new Error("One or more API requests failed");
@@ -84,7 +84,7 @@ const CreateGroupPage = () => {
           therapist_ids: therapistIds,
           patient_ids: patientIds,
         }));   
-        const response = await fetch(`http://localhost:8000/api/create_group/`, {
+        const response = await fetch(`${baseUrl}create_group/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

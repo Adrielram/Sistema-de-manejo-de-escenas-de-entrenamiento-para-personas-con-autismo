@@ -14,11 +14,14 @@ const Pregunta: React.FC<PreguntaProps> = ({ onAddPregunta, esVerificacionAutoma
   const [opciones, setOpciones] = useState<any[]>([]);
   const [correcta, setCorrecta] = useState("");
   const [escenas, setEscenas] = useState([]);
-  const [escenaId, setEscenaId] = useState(null);  
+  const [escenaId, setEscenaId] = useState(null);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     if (objetivoId) {
-      fetch(`http://localhost:8000/api/objetivo/${objetivoId}/`)
+      fetch(`${baseUrl}objetivo/${objetivoId}/`,
+        { credentials: 'include' }
+      )
         .then((res) => res.json())
         .then((data) => setEscenas(data.escenas_relacionadas || []))
         .catch((error) => console.error("Error al obtener escenas:", error));

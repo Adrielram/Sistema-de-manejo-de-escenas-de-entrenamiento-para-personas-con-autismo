@@ -18,13 +18,14 @@ const ScenesPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalItems, setTotalItems] = useState<number>(0);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const showImage = true;
 
   const fetchscenes = useCallback(async (page: number) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/get_scenes/?page=${page}`, {
+      const response = await fetch(`${baseUrl}get_scenes/?page=${page}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

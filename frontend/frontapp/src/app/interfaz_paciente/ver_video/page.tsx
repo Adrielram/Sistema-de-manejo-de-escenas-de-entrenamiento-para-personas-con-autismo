@@ -54,7 +54,9 @@ const VerVideo = () => {
   //FORMULARIOS
   useEffect(() => {
     const verificarFormulario = async (formId: string) => {
-      const response = await fetch(`http://localhost:8000/api/verificar_form_completado/${formId}/${username}/`);
+      const response = await fetch(`${baseUrl}verificar_form_completado/${formId}/${username}/`,
+        { credentials: 'include' }
+      );
       if (response.ok) {
         const data = await response.json();
         if (data.status === 'completado') {
@@ -70,7 +72,9 @@ const VerVideo = () => {
 
   useEffect(() => {
     const cargarFormulariosCompletados = async () => {
-      const response = await fetch(`http://localhost:8000/api/listar_formularios_completados/${username}/`);
+      const response = await fetch(`${baseUrl}listar_formularios_completados/${username}/`,
+        { credentials: 'include' }
+      );
       if (response.ok) {
         const data = await response.json();
         console.log("Data: ", JSON.stringify(data));
@@ -86,7 +90,9 @@ const VerVideo = () => {
       const newQuizStates: Record<number, { revision: boolean; volver_a_realizar: boolean; tiene_respuestas: boolean }> = {};
       for (const quiz of quizzes.formularios) {
         try {
-          const response = await fetch(`${baseUrl}obtener_estado_revision/?formulario_id=${quiz.id}&username=${username}`);
+          const response = await fetch(`${baseUrl}obtener_estado_revision/?formulario_id=${quiz.id}&username=${username}`,
+            { credentials: 'include' }
+          );
           if (response.ok) {
             const data = await response.json();
             newQuizStates[quiz.id] = data;
@@ -107,7 +113,8 @@ const VerVideo = () => {
   const handleResponder = async (idComentario: number) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/comentarios/?idComentario=${idComentario}`
+        `${baseUrl}comentarios/?idComentario=${idComentario}`,
+        { credentials: 'include' }
       );
       const data = await response.json();
       if (response.ok) {
@@ -132,7 +139,8 @@ const VerVideo = () => {
     const fetchComentarios = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8000/api/comentarios/lista/?id_escena=${idEscena}`
+          `${baseUrl}comentarios/lista/?id_escena=${idEscena}`,
+          { credentials: 'include' }
         );
         const data = await response.json();
 
@@ -162,7 +170,9 @@ const VerVideo = () => {
       try {
         if (objetivoId !== "") {  //CASO CUANDO HAY OBJETIVO
           // Fetch para obtener las escenas relacionadas al objetivo
-          const response = await fetch(`http://localhost:8000/api/get-escenas-obj/?objetivo_id=${objetivoId}`);
+          const response = await fetch(`${baseUrl}get-escenas-obj/?objetivo_id=${objetivoId}`,
+            { credentials: 'include' }
+          );
           
           if (!response.ok) {
             throw new Error('Error al obtener las escenas');
@@ -184,7 +194,9 @@ const VerVideo = () => {
           setVideos(data.map((escena: Escena) => escena.link));
           
           // Fetch para obtener las evaluaciones asociadas al objetivo y usuario
-          const evaluacionesResponse = await fetch(`http://localhost:8000/api/get-evaluaciones/?username=${username}&objetivo_id=${objetivoId}`);
+          const evaluacionesResponse = await fetch(`${baseUrl}get-evaluaciones/?username=${username}&objetivo_id=${objetivoId}`,
+            { credentials: 'include' }
+          );
             
           if (!evaluacionesResponse.ok) {
             setQuizzes({ formularios: [] });
@@ -196,7 +208,9 @@ const VerVideo = () => {
         } 
         else {  //CASO CUANDO NO HAY OBJETIVO
           // Fetch para obtener la escena
-          const escenaResponse = await fetch(`http://localhost:8000/api/get-escena/?escena_id=${idEscena}`);
+          const escenaResponse = await fetch(`${baseUrl}get-escena/?escena_id=${idEscena}`,
+            { credentials: 'include' }
+          );
           if (!escenaResponse.ok) {
             throw new Error('Error al obtener la escena');
           }
@@ -270,8 +284,9 @@ const VerVideo = () => {
 
   const marcarVideoComoVisto = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/video-visto/', {
+      const response = await fetch(`${baseUrl}video-visto/`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

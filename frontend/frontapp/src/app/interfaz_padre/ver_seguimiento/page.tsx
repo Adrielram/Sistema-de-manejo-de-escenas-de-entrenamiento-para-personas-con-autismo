@@ -44,6 +44,7 @@ const ObjetivoList = () => {
   const [evaluaciones, setEvaluaciones] = useState<{ [key: string]: string }>({});
   const [totalItems, setTotalItems] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -52,7 +53,9 @@ const ObjetivoList = () => {
     const fetchObjetivos = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8000/api/objetivos-ev-paciente/?user_id=${userId}`);
+        const response = await fetch(`${baseUrl}objetivos-ev-paciente/?user_id=${userId}`,
+          { credentials: 'include' }
+        );
         if (!response.ok) throw new Error("Error al cargar los objetivos");
         const data = await response.json();
         setObjetivos(data);
@@ -71,7 +74,9 @@ const ObjetivoList = () => {
   // Fetch escenas activas
   const fetchEscenas = async () => {
     try {
-      const response = await fetch(`${baseURL}obtener_escenas_por_objetivo/?objetivo_id=${objetivoId}`);
+      const response = await fetch(`${baseURL}obtener_escenas_por_objetivo/?objetivo_id=${objetivoId}`,
+        { credentials: 'include' }
+      );
       if (!response.ok) throw new Error(`Error: ${response.status}`);
       const data: Escena[] = await response.json();
       setEscenasActivas(data);
@@ -98,7 +103,9 @@ const ObjetivoList = () => {
   const fetchEvaluaciones = async (page: number) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/get_forms_patient/?dni=${userId}&page=${page}`);
+      const response = await fetch(`${baseUrl}get_forms_patient/?dni=${userId}&page=${page}`,
+        { credentials: 'include' }
+      );
       
       if (!response.ok) throw new Error("Error al obtener las evaluaciones");
   
@@ -148,7 +155,8 @@ const ObjetivoList = () => {
     const fetchComentarios = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8000/api/comentarios/lista/?id_escena=${escenaId}`
+          `${baseUrl}comentarios/lista/?id_escena=${escenaId}`,
+          { credentials: 'include' }
         );
         const data = await response.json();
 

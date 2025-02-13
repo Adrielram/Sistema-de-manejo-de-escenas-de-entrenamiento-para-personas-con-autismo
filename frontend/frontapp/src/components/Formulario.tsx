@@ -16,6 +16,7 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
   const [objetivo_id, setObjetivoId] = useState("");
   const {center} = useSelector((state: RootState) => state.user);
   const {username} = useSelector((state: RootState) => state.user);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const agregarPregunta = (pregunta: any) => {
     setPreguntas([...preguntas, pregunta]);
   };
@@ -53,7 +54,9 @@ const Formulario: React.FC<FormularioProps> = ({ onSubmit }) => {
 
 
   useEffect(() => {
-    fetch(`http://localhost:8000/api/objetivos/?username=${username}&centername=${center}`)
+    fetch(`${baseUrl}objetivos/?username=${username}&centername=${center}`,
+      { credentials: 'include' }
+    )
       .then((res) => res.json())
       .then((data) => setObjetivos(data))
       .catch((error) => console.error("Error al obtener objetivos:", error));

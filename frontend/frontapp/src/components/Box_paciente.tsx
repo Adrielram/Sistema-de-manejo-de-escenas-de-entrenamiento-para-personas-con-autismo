@@ -49,6 +49,7 @@ const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
   const dispatch = useDispatch();
   const router = useRouter()
   const { role } = useSelector((state: RootState) => state.user);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const handleDelete = () => {
     alert('Eliminar persona');
   };
@@ -69,7 +70,7 @@ const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
     if (role  === "padre"){
       dispatch(setUserId({userId:datosPaciente.dni}));
       dispatch(setHijoNombre({hijoNombre:datosPaciente.nombre})); //FUNCIONA PORQUE EL NOMBRE DE API.USER ES EL MISMO QUE EL USERNAME
-      router.push(`http://localhost:3000/interfaz_padre/ver_seguimiento/`);
+      router.push(`${baseUrl}interfaz_padre/ver_seguimiento/`);
     }
     else {
       alert(`Ver seguimiento de ${paciente.nombre}`);

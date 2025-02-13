@@ -21,12 +21,14 @@ interface NuevoComentarioProps {
 }
 
 export const NuevoComentario: React.FC<NuevoComentarioProps> = ({ formData, setFormData, onCommentAdded }) => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const handleAddComment = async () => {
     if (formData.texto.trim() !== "") {
       try {
         console.log(formData);
-        const response = await fetch("http://localhost:8000/api/registrar_comentario/", {
+        const response = await fetch(`${baseUrl}registrar_comentario/`, {
           method: "POST",
+          credentials: 'include',
           headers: {
             "Content-Type": "application/json",
           },

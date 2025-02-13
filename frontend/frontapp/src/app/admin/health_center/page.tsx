@@ -13,6 +13,7 @@ interface HealthCenter {
 
 export default function HealthCenterPage() {
   const [healthCenters, setHealthCenters] = useState<HealthCenter[]>([]);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     // Paleta de colores en tonos variados
@@ -25,8 +26,9 @@ export default function HealthCenterPage() {
 
     const fetchHealthCenters = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/health_centers/', {
+        const response = await fetch(`${baseUrl}health_centers/`, {
           method: "GET",
+          credentials: 'include',
           headers: {
             "Content-Type": "application/json",
           },
@@ -56,9 +58,9 @@ export default function HealthCenterPage() {
   }, []);
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch('http://localhost:8000/api/health_centers/${id}/delete/', {
+      const response = await fetch(`${baseUrl}health_centers/${id}/delete/`, {
         method: "DELETE",
-        credentials: "include", // Uso del token solo para eliminación
+        credentials: "include",
       });
   
       if (response.ok) {

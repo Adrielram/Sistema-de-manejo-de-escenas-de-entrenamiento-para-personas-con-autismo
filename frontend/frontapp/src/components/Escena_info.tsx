@@ -41,11 +41,14 @@ const EscenaInfo: React.FC<EscenaInfoProps> = ({ escena, escenaHandleClick }) =>
 
   const { username } = useSelector((state: RootState) => state.user);
   const [condiciones, setCondiciones] = useState<CondicionCumple>();
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const verificarCondiciones = async (idEscena: number) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/verificar-condiciones/?username=${username}&escena_id=${idEscena}`
+        `${baseUrl}verificar-condiciones/?username=${username}&escena_id=${idEscena}`,
+        { credentials: 'include' }
+
       );
 
       if (!response.ok) {

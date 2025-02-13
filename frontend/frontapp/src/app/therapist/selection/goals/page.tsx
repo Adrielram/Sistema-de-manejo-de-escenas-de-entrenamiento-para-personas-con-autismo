@@ -22,12 +22,13 @@ const GoalsPage: React.FC = () => {
   const [totalItems, setTotalItems] = useState<number>(0);
   const showImage = true;
   const { username, center } = useSelector((state: RootState) => state.user);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const fetchGoals = useCallback(async (page: number) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/get_goals_centroprofesional/?username=${encodeURIComponent(username)}&centername=${encodeURIComponent(center)}&page=${page}`, {
+      const response = await fetch(`${baseUrl}get_goals_centroprofesional/?username=${encodeURIComponent(username)}&centername=${encodeURIComponent(center)}&page=${page}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

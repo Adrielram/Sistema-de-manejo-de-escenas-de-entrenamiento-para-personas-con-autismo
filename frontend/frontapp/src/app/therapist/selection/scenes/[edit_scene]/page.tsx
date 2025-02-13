@@ -79,6 +79,7 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
     try {
       const response = await fetch(`${baseUrl}scenes/${sceneId}`, {
         method: "PUT", // Usa el método apropiado según tu API
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },

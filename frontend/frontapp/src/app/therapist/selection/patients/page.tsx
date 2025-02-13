@@ -20,11 +20,12 @@ const PatientList = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [patientsDictionary, setPatientsDictionary] = useState<Dictionary>();
   const [allPatients, setAllPatients] = useState<Patient[]>([]);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const fetchAllPatients = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/get_patients/", {
+        const response = await fetch(`${baseUrl}get_patients/`, {
           method: "GET",
           credentials: "include",
           headers: {
@@ -76,7 +77,7 @@ const PatientList = () => {
 
     const fetchPatients = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/patients/?dni_o_nombre=${debouncedSearchTerm}`, {
+        const response = await fetch(`${baseUrl}patients/?dni_o_nombre=${debouncedSearchTerm}`, {
           method: "GET",
           credentials: "include",
           headers: {

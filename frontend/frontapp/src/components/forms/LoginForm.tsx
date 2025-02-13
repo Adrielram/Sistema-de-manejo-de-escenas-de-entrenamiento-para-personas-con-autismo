@@ -12,6 +12,7 @@ export default function LoginForm() {
   const [isPasswordHidden, setIsPasswordHidden] = useState(true);
   const router = useRouter();
   const dispatch = useDispatch();
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,7 +24,7 @@ export default function LoginForm() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/login/', {
+      const response = await fetch(`${baseUrl}login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

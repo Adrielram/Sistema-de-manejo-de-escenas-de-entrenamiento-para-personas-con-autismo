@@ -26,7 +26,7 @@ export default function Evaluacion() {
         }
   
         try {
-          const response = await fetch(`${baseUrl}get-dni/?username=${encodeURIComponent(username)}`)
+          const response = await fetch(`${baseUrl}get-dni/?username=${encodeURIComponent(username)}`,{ credentials: 'include' })
           if (!response.ok) {
             throw new Error('Error al obtener el DNI del terapeuta')
           }

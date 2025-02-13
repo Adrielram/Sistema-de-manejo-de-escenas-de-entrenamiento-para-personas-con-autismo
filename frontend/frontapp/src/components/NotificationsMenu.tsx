@@ -19,6 +19,7 @@ export default function NotificationsMenu({token}) {
       const fetchNotificaciones = async () => {
         const response = await fetch(`${baseUrl}notificaciones/`, {
           method: "GET",
+          credentials: 'include',
           headers: {
             "Authorization": `Bearer ${token}`,
           },
@@ -31,7 +32,8 @@ export default function NotificationsMenu({token}) {
   
       fetchNotificaciones();
   
-      const socket = new WebSocket(`ws://localhost:8000/ws/notificaciones/?token=${token}`);
+      const socket = new WebSocket(`ws://localhost:8000/ws/notificaciones/?token=${token}`);   //CHEQUEAR DESPUES ESTO PORQUE LA URL NO ES LA MISMA QUE LA BASE
+      
       
       const handleMessage = (event) => {
         const data = JSON.parse(event.data);

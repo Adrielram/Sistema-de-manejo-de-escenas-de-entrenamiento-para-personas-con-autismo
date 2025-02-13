@@ -15,6 +15,7 @@ export default function ResetPassword() {
     const [isError, setIsError] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isPasswordHidden, setIsPasswordHidden] = useState(true);
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 
   
@@ -25,8 +26,9 @@ export default function ResetPassword() {
     setIsError(false);
   
     try {
-      const res = await fetch("http://localhost:8000/api/reset-password/", {
+      const res = await fetch(`${baseUrl}reset-password/`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, uid, new_password: password }),
       });
@@ -39,7 +41,7 @@ export default function ResetPassword() {
         setPassword("");
   
         setTimeout(() => {
-          router.push("/auth/login"); // Redirigir después de un pequeño delay
+          router.push("/auth/login"); 
         }, 2000);
       } else {
         setMessage(data.error || "Error al cambiar la contraseña");
