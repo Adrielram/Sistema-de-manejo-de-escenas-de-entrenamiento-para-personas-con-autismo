@@ -24,10 +24,11 @@ interface BoxPaginadoProps {
   showImage: boolean;
   currentPage: number;
   totalItems: number;
+  onSelect?: (id: string) => void;
   onPageChange: (page: number) => void;
   itemsPerPage: number;
   onItemDeleted?: (id: string) => void;
-  actualizar?: boolean// Agrega esta línea
+  actualizar?: boolean;
 
 }
 

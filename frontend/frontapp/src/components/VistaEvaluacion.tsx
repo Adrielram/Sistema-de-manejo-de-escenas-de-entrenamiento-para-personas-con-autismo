@@ -38,7 +38,7 @@ const VistaEvaluacion: React.FC<VistaEvaluacionProps> = ({ formularioId }) => {
         
         const data = await response.json();
         setFormulario(data);
-      } catch (err) {
+      } catch {
         setError("Error al cargar el formulario");
       } finally {
         setLoading(false);

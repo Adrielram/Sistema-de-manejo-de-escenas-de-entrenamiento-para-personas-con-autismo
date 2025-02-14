@@ -23,13 +23,15 @@ const PatientsOfGroupPage: React.FC = () => {
 
   const searchParams = useSearchParams()
   const group_id = searchParams.get('group_id')
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const fetchPatients = useCallback(async (page: number) => {
     setLoading(true);
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/get_patients_per_group/?group_id=${encodeURIComponent(group_id)}&page=${page}`
+        `${baseUrl}get_patients_per_group/?group_id=${encodeURIComponent(group_id)}&page=${page}`,
+        { credentials: 'include' }
       );
 
       if (!response.ok) {
@@ -101,7 +103,6 @@ const PatientsOfGroupPage: React.FC = () => {
             img='/icon/persona_silueta.png'
             edit_path="/therapist/selection/group_of_patients/patients/"
             supervision_path='/therapist/selection/group_of_patients/patients/follow_patient/'
-            //comments_path='/therapist/selection/group_of_patients/patients/patient_comments/'
             forms_path='/therapist/selection/group_of_patients/patients/forms/'
             item_type="patient"
             showImage={showImage}

@@ -26,6 +26,7 @@ const GoalsPage = () => {
   const dispatch = useDispatch();
   const searchParams = useSearchParams();
   const patient_dni = searchParams.get('patient_dni');
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   // Fetch objetivos
     useEffect(() => {
@@ -33,9 +34,11 @@ const GoalsPage = () => {
         try {
           setLoading(true);
 
-          const response = await fetch(`http://localhost:8000/api/objetivos-ev-paciente/?user_id=${patient_dni}`);
+          const response = await fetch(`${baseUrl}objetivos-ev-paciente/?user_id=${patient_dni}`,
+            { credentials: 'include' }
+          );
           if (!response.ok) throw new Error("Error al cargar los objetivos");
-          const data = await response.json();       console.log("Fetched data:", data); // Debug log
+          const data = await response.json();
 
           setObjetivos(data);
           setError(null);

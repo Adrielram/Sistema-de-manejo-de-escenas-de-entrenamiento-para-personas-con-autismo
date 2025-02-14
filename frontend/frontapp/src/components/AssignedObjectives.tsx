@@ -10,12 +10,16 @@ const AssignedObjectives = ({ patientId, onUpdate }: { patientId: string | null,
     if (!patientId) return;
     try {
       setLoading(true);
-      const response = await fetch(`${baseUrl}objetivos-es-paciente/?user_id=${patientId}`);
-      if (!response.ok) throw new Error("Error al obtener los objetivos");
+      const response = await fetch(`${baseUrl}objetivos-es-paciente/?user_id=${patientId}`,
+        { credentials: 'include' }
+      );
+      if (!response.ok) {
+        throw new Error("Error al obtener los objetivos");
+      }
       const data = await response.json();
       setObjectives(data);
-    } catch (err) {  
-      console.error("Fetch error:", err);
+    } catch {  
+          
     } finally {
       setLoading(false);
     }
@@ -31,6 +35,7 @@ const AssignedObjectives = ({ patientId, onUpdate }: { patientId: string | null,
     try {
       const response = await fetch(`${baseUrl}patients/${patientId}/objectives/${objectiveId}/unassign/`, {
         method: "POST",
+        credentials: 'include',
       });
       if (!response.ok) throw new Error("Error al desasignar el objetivo");
       setObjectives(objectives.filter((obj) => obj.id !== objectiveId));

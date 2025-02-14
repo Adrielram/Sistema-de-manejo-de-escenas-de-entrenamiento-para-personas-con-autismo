@@ -48,6 +48,7 @@ export default function RegisterForm() {
   const [success, setSuccess] = useState(false);
   const router = useRouter();
   const [sintomasPrediction, setSintomasPrediction] = useState<Symptom[]>([]);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -79,8 +80,9 @@ export default function RegisterForm() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/spacy-patologias/', {
+      const response = await fetch(`${baseUrl}spacy-patologias/`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ texto:sintomas }),
       });
@@ -103,7 +105,9 @@ export default function RegisterForm() {
 
   const fetchCentros = async (page: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/obtener_centros_de_salud/?page=${page}`);
+      const response = await fetch(`${baseUrl}obtener_centros_de_salud/?page=${page}`,
+        { credentials: 'include' }
+      );
       if (!response.ok) throw new Error('Error al cargar centros de salud');
       const data = await response.json();
   
@@ -144,8 +148,9 @@ export default function RegisterForm() {
     }
   
     try {
-      const response = await fetch('http://localhost:8000/api/signIn/', {
+      const response = await fetch(`${baseUrl}signIn/`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

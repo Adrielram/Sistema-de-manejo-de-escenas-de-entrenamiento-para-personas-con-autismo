@@ -31,7 +31,9 @@ const CreateGroup: React.FC = () => {
   useEffect(() => {
     const fetchPacientes = async () => {
       try {
-        const response = await fetch(`${baseUrl}get_patients/`); // Cambia "/api/pacientes" por la URL correcta
+        const response = await fetch(`${baseUrl}get_patients/`,
+          { credentials: 'include' }
+        ); 
         if (!response.ok) {
           throw new Error("Error al cargar los pacientes");
         }
@@ -50,7 +52,9 @@ const CreateGroup: React.FC = () => {
   useEffect(() => {
     const fetchTerapeutas = async () => {
       try {
-        const response = await fetch(`${baseUrl}getTherapistsExcluding/${username}/`); // Cambia "/api/pacientes" por la URL correcta
+        const response = await fetch(`${baseUrl}getTherapistsExcluding/${username}/`,
+          { credentials: 'include' }
+        ); 
         if (!response.ok) {
           throw new Error("Error al cargar los terapeutas");
         }

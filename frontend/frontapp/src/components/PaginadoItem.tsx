@@ -42,11 +42,13 @@ const PaginadoItem: React.FC<PaginadoItemProps> = ({
   onDelete 
 }) => {
   const router = useRouter();
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/${item_type}/${id}/delete/`, {
+      const response = await fetch(`${baseUrl}${item_type}/${id}/delete/`, {
         method: "DELETE",
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },

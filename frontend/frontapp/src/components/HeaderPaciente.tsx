@@ -10,11 +10,12 @@ const HeaderPaciente: React.FC = () => {
   const router = useRouter(); // Obtiene el router
   const dispatch = useDispatch();
   const {username} = useSelector((state: RootState) => state.user);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const handleLogout = async () => {
       try {
         // Llama a la API del backend para el logout
-        const response = await fetch('http://localhost:8000/api/logout/', {
+        const response = await fetch(`${baseUrl}logout/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

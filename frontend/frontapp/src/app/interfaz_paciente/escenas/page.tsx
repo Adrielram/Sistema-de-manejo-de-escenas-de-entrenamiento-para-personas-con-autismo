@@ -48,12 +48,13 @@ export default function Page() {
   const [escenasFiltradas, setEscenasFiltradas] = useState<Escena[]>([]);
   const dispatch = useDispatch();
   const router = useRouter();
+  
 
 
   const fetchEscenaPorBusqueda = async (searchQuery: string) => {
     try {
       const response = await fetch(
-        `${baseURL}buscar-escenas/?username=${username}&query=${searchQuery}`
+        `${baseURL}buscar-escenas/?username=${username}&query=${searchQuery}`,{ credentials: 'include' }
       );
   
       // Verifica si la respuesta es exitosa
@@ -76,7 +77,7 @@ export default function Page() {
   const verificarEscenaAsignada = async (idEscena: number) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/verificar-escena/?user_id=${username}&escena_id=${idEscena}`
+        `${baseURL}verificar-escena/?user_id=${username}&escena_id=${idEscena}`,{ credentials: 'include' }
       );
   
       if (!response.ok) {
@@ -108,7 +109,7 @@ export default function Page() {
           return;
         }
   
-        const response = await fetch(`${baseURL}get-escenas-list/?page=${page}&limit=6&username=${username}`);
+        const response = await fetch(`${baseURL}get-escenas-list/?page=${page}&limit=6&username=${username}`,{ credentials: 'include' });
         if (!response.ok) throw new Error(`Error: ${response.status}`);
         const data: PaginatedResponse = await response.json();
   

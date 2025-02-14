@@ -22,10 +22,13 @@ const ComentarioPaciente: React.FC<ComentarioPacienteProps> = ({ idComentario, r
   const [comentario, setComentario] = useState<Comentario | null>(null);
   const [mostrarRespuestas, setMostrarRespuestas] = useState(false);
   const { username,role } = useSelector((state: RootState) => state.user);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   useEffect(() => {
     const fetchComentario = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/comentarios/?idComentario=${idComentario}`);
+        const response = await fetch(`${baseUrl}comentarios/?idComentario=${idComentario}`,
+          { credentials: 'include' }
+        );
         const data = await response.json();
         if (response.ok) {
           setComentario(data);

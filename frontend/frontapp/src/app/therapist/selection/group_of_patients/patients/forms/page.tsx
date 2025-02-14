@@ -23,13 +23,15 @@ const PatientForms: React.FC = () => {
 
   const searchParams = useSearchParams()
   const patient_dni = searchParams.get('patient_dni')
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const fetchPatientForms = useCallback(async (page: number) => {
     setLoading(true);
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/get_patient_forms/?user_dni=${encodeURIComponent(patient_dni)}&page=${page}`
+        `${baseUrl}get_patient_forms/?user_dni=${encodeURIComponent(patient_dni)}&page=${page}`,
+        { credentials: 'include' }
       );
 
       if (!response.ok) {

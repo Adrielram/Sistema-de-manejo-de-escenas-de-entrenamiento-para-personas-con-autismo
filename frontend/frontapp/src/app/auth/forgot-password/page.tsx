@@ -13,10 +13,12 @@ export default function ForgotPassword() {
     setIsLoading(true);
     setMessage("");
     setIsError(false); // Resetear el estado de error al inicio
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     
     try {
-      const res = await fetch(`http://localhost:8000/api/forgot-password/`, {
+      const res = await fetch(`${baseUrl}forgot-password/`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });

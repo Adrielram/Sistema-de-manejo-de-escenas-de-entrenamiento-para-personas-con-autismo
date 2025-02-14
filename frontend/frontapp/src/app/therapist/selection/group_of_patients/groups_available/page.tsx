@@ -22,14 +22,17 @@ const GroupsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalItems, setTotalItems] = useState<number>(0);
   const showImage = true;
-  const { username } = useSelector((state: RootState) => state.user);
+  const { username, center } = useSelector((state: RootState) => state.user);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
 
   const fetchGroups = useCallback(async (page: number) => {
     setLoading(true);
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/get_groups_per_user_not_in/?username=${encodeURIComponent(username)}&page=${page}`
+        `${baseUrl}get_groups_per_user_not_in/?username=${encodeURIComponent(username)}&page=${page}`,
+        { credentials: 'include' }
       );
 
       if (!response.ok) {
@@ -95,7 +98,7 @@ const GroupsPage: React.FC = () => {
       ) : (
         <div className="container mx-auto p-4">
           {totalItems === 0 ? ( // Check if there are no items
-            <NoGroupsMessage /> // Render the NoGroupsMessage component
+            <NoGroupsMessage center={center}/> // Render the NoGroupsMessage component
           ) : (
             <BoxPaginado 
               data={data} 

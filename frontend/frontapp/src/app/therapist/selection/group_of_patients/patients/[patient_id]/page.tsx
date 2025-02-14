@@ -35,8 +35,12 @@ const EditPatient: React.FC<{ params: Promise<{ patient_id: string }> }> = ({ pa
 
   const fetchObjetivos = async () => {
     try {
-      const response = await fetch(`${baseUrl}objetivos/?username=${username}&centername=${center}`);
-      if (!response.ok) throw new Error("Error al cargar los objetivos.");
+      const response = await fetch(`${baseUrl}objetivos/?username=${username}&centername=${center}`,
+        { credentials: 'include' }
+      );
+      if (!response.ok) {
+        throw new Error("Error al cargar los objetivos.");
+      }
       const data = await response.json();
       setObjetivos(data);
     } catch (error) {
@@ -59,7 +63,10 @@ const EditPatient: React.FC<{ params: Promise<{ patient_id: string }> }> = ({ pa
 
       const response = await fetch(`${baseUrl}objetivo_save_order/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           ordered_escenas: orderableItems.map((item) => ({ id: item.id, order: item.order })),
           non_ordered_escenas: nonOrderableItems.map((item) => item.id),

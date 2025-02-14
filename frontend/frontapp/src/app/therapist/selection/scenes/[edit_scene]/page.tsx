@@ -179,7 +179,8 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
       };
       console.log("datos a enviar: ", nuevaEscena);
       const response = await fetch(`${baseUrl}scenes/${sceneId}`, {
-        method: "PUT",
+        method: "PUT", // Usa el método apropiado según tu API
+        credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },

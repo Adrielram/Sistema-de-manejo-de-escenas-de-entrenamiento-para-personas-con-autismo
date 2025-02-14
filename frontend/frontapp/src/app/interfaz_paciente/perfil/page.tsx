@@ -26,7 +26,7 @@ const UserPage: React.FC = () => {
     const [showSearchFather, setShowSearchFather] = useState(false);
     const [idPadreSeleccionado, setIdPadreSeleccionado] = useState<number | null>(null);
     const router = useRouter();
-
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const { username } = useSelector((state: RootState) => state.user);
     
     const generoMap = {
@@ -43,7 +43,9 @@ const UserPage: React.FC = () => {
         setIdPadreSeleccionado(dni); // Almacena el DNI del padre seleccionado
       };
     useEffect(() => {
-        fetch(`http://localhost:8000/api/get-user/?username=${username}`)
+        fetch(`${baseUrl}get-user/?username=${username}`,
+            { credentials: 'include' }
+        )
             .then((response) => {
                 if (!response.ok) {
                     throw new Error("Network response was not ok");
@@ -101,8 +103,9 @@ const UserPage: React.FC = () => {
     
         try {
             console.log("Datos enviados al backend:", updatedUser);
-            const response = await fetch(`http://localhost:8000/api/update-user/`, {
+            const response = await fetch(`${baseUrl}update-user/`, {
                 method: "PUT",
+                credentials: 'include',
                 headers: {
                     "Content-Type": "application/json",
                 },

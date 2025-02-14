@@ -43,11 +43,14 @@ const CreateScene: React.FC = () => {
   const [objetivos, setObjetivos] = useState<Objetivo[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dropdownTitle, setDropdownTitle] = useState("Seleccione un objetivo");
-  
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
     const fetchObjetivos = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/objetivos-list/");
+        const response = await fetch(`${baseUrl}objetivos-list/`,
+          { credentials: 'include' }
+        );
         const data = await response.json();
         const objetivosArray = data.results || [];
         setObjetivos(objetivosArray);
