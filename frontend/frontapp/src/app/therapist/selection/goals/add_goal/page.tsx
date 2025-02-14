@@ -130,7 +130,7 @@ const CreateObjetivo: React.FC = () => {
                 console.log("Escena seleccionada:", id);
                 setSelectedSceneId(id); // Actualiza el estado con el id seleccionado
               } }
-              apiUrl={`${baseUrl}escenas/`}             />
+              apiUrl={`${baseUrl}scenes/`}             />
 
 
           </div>          
@@ -142,7 +142,7 @@ const CreateObjetivo: React.FC = () => {
               getItemLabel={(item) => item.nombre as string}
               selectedItems={selectedScenes}
               onSelectItems={setSelectedScenes}
-              apiUrl={`${baseUrl}escenas/`}
+              apiUrl={`${baseUrl}scenes/`}
             />
 
             <SearchSelectBox
@@ -151,7 +151,7 @@ const CreateObjetivo: React.FC = () => {
               getItemLabel={(item) => item.nombre as string} // Asumiendo que cada objetivo tiene un campo 'nombre'
               selectedItems={selectedObjectives}
               onSelectItems={setSelectedObjectives} // Maneja la selección de objetivos
-              apiUrl={`${baseUrl}objetivos-list/`} // URL para los objetivos
+              apiUrl={`${baseUrl}goals/`} // URL para los objetivos
             />
 
           </div>

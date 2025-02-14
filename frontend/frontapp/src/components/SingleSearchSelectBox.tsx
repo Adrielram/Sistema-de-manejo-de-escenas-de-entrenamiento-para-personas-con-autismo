@@ -33,19 +33,20 @@ const SingleSearchSelectBox = ({
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${apiUrl}?nombre=${encodeURIComponent(searchValue)}`
-      );
+      const response = await fetch(`${apiUrl}?nombre=${encodeURIComponent(searchValue)}`);
       if (!response.ok) {
         throw new Error("Error al cargar las escenas.");
       }
       const data = await response.json();
-
-      // Update items based on whether we're resetting or loading more
-      setItems(prevItems => 
-        resetResults ? data.results : [...prevItems, ...data.results]
-      );
+      console.log("Data:", data);
       
-      // Check if there are more results
+      // Actualizar usando una función para asegurar el estado más reciente
+      setItems(prevItems => {
+        const newItems = resetResults ? data : [...prevItems, ...data];
+        console.log("Items actualizados:", newItems);
+        return newItems;
+      });
+      
       setHasMore(data.next !== null);
     } catch (err) {
       console.error("Error fetching items:", err);
@@ -54,6 +55,8 @@ const SingleSearchSelectBox = ({
       setLoading(false);
     }
   }, [searchValue, apiUrl]);
+
+
 
   // Effect to fetch items when search value changes
   useEffect(() => {

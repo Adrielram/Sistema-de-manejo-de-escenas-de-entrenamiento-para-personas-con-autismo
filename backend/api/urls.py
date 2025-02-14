@@ -98,6 +98,8 @@ urlpatterns = [
     path('get-persona-obj-esc/', ObtenerPersonaObjetivoID.as_view(), name='get-persona-obj-esc'),
     path('video-visto/', MarcarVideoVistoAPIView.as_view(), name='video-visto'),
     path('scenes/', ListsScenesView.as_view(), name='list_scenes'),
+    path('goals/', ListsGoalView.as_view(), name='list_goals'),
+
     path('get_scenes/', GetScenesView.as_view(), name='get_scenes'),
     path('scene/<int:pk>/delete/', DeleteSceneView.as_view(), name='delete_scene'),
     path('group/<int:pk>/delete/', DeleteGroupView.as_view(), name='delete_group'),

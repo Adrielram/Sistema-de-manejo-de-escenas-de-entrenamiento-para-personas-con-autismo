@@ -55,7 +55,8 @@ const SearchSelectBox = ({
           throw new Error("Error al cargar las escenas.");
         }
         const data = await response.json();
-        setItems(data.results || []);
+        setItems(data || []);
+        console.log(data);
       } catch (err) {
         console.error("Error fetching items:", err);
         setError("Error al cargar las escenas.");

@@ -2167,13 +2167,12 @@ class ObjetivosListView(generics.ListAPIView):
 
 @permission_classes([AllowAny])
 class EscenaListView(generics.ListAPIView):
+    queryset = Escena.objects.filter(habilitada=True)
     serializer_class = EscenaSerializer
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
 
-    def get_queryset(self):
-        return Escena.objects.filter(habilitada=True)  # Solo escenas habilitadas 
 class CentrosSaludListView(generics.ListAPIView):
     queryset = Centrodesalud.objects.all()
     serializer_class = CentroSaludSerializer
@@ -2501,8 +2500,20 @@ class DeleteGoalView(generics.DestroyAPIView):
     serializer_class = ObjetivoSerializer
 
 class ListsScenesView(generics.ListAPIView):
-    queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+    def get_queryset(self):
+        return Escena.objects.filter(habilitada=True) 
+    
+
+class ListsGoalView(generics.ListAPIView):
+    serializer_class = ObjetivoSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+    def get_queryset(self):
+        return Objetivo.objects.filter(habilitada=True) 
+    
 
 class GetScenesView(generics.ListAPIView):
     queryset = Escena.objects.all()

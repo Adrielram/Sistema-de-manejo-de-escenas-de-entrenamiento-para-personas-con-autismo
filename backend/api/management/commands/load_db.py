@@ -200,7 +200,9 @@ class Command(BaseCommand):
             complejidad=1,
             link="https://drive.google.com/file/d/1jDUv2cWsGROqI-Cs7XUmHUEp2Qhe7-TA/preview",
             nombre="Escena 1",
-            descripcion = "Esta escena reflexiona sobre la importancia de la amistad"
+            descripcion = "Esta escena reflexiona sobre la importancia de la amistad",
+                        habilitada = True
+
         )
         escena_2 = Escena.objects.create(
             idioma="Español",
@@ -208,7 +210,9 @@ class Command(BaseCommand):
             complejidad=1,
             link="https://drive.google.com/file/d/1jDUv2cWsGROqI-Cs7XUmHUEp2Qhe7-TA/preview",
             nombre="Escena 2",
-            descripcion = "Esta escena refleja la importancia de la familia"
+            descripcion = "Esta escena refleja la importancia de la familia",
+                        habilitada = True
+
 
         )
         escena_3 = Escena.objects.create(
@@ -217,7 +221,9 @@ class Command(BaseCommand):
             complejidad=2,
             link="https://drive.google.com/file/d/1zCpLV-NkRAI_nnh82hAGmcFi3kdyU0t-/preview",
             nombre="Escena 3",
-            descripcion = "Esta escena demuestra la importancia de la educación"
+            descripcion = "Esta escena demuestra la importancia de la educación",
+            habilitada = True
+
 
         )
         escena_4 = Escena.objects.create(
@@ -226,7 +232,9 @@ class Command(BaseCommand):
             complejidad=4,
             link="https://drive.google.com/file/d/1zCpLV-NkRAI_nnh82hAGmcFi3kdyU0t-/preview",
             nombre="Escena 4",
-            descripcion = "Esta escena refuerza la importancia de la juventud"
+            descripcion = "Esta escena refuerza la importancia de la juventud",
+            habilitada = True
+
         )
         escena_5 = Escena.objects.create(
             idioma="Español",
@@ -234,7 +242,9 @@ class Command(BaseCommand):
             complejidad=3,
             link="https://drive.google.com/file/d/1ecZueXAucLxCeD2IYMo3furoH3pVtAYi/preview",
             nombre="Escena 5",
-            descripcion = "Esta escena refleja la importancia del viaje antes que el destino"
+            descripcion = "Esta escena refleja la importancia del viaje antes que el destino",
+            habilitada = True
+            
 
         )
         escena_6 = Escena.objects.create(
@@ -243,7 +253,9 @@ class Command(BaseCommand):
             complejidad=5,
             link="https://drive.google.com/file/d/1ecZueXAucLxCeD2IYMo3furoH3pVtAYi/preview",
             nombre="Escena 6",
-            descripcion = "Esta escena refuerza la importancia de la juventud"
+            descripcion = "Esta escena refuerza la importancia de la juventud",
+            habilitada = True
+
         )
         ##estos tienen video que funciona
         escena_7 = Escena.objects.create(
@@ -253,7 +265,8 @@ class Command(BaseCommand):
             condicion=condicion2,
             link="https://drive.google.com/file/d/17RTqxuu9WPX5Nwvs1h3s7wuQh5ldDDTz/preview",
             nombre="Escena 7",
-            descripcion = "Esta escena es la de openai"
+            descripcion = "Esta escena es la de openai",
+            habilitada = True
 
         )
         escena_8 = Escena.objects.create(
@@ -271,7 +284,9 @@ class Command(BaseCommand):
             complejidad=1,
             link="https://drive.google.com/file/d/1yPgHYRagTJXTqlrGhNkZDEy5zNY4-f77/preview",
             nombre="Escena 9",
-            descripcion = "Esta escena es la del cartpole"
+            descripcion = "Esta escena es la del cartpole",
+            habilitada = True
+
 
         )
 
@@ -280,37 +295,48 @@ class Command(BaseCommand):
             nombre="Objetivo 1",
             descripcion="Primer objetivo de prueba",
             escena=escena_1,
-            centro_profesional=centro_prof
+            centro_profesional=centro_prof,
+            habilitada = True
         )
         objetivo_2 = Objetivo.objects.create(
             nombre="Objetivo 2",
             descripcion="Segundo objetivo de prueba",
             escena=escena_3,
-            centro_profesional=centro_prof
+            centro_profesional=centro_prof,
+                        habilitada = True
+
         )
         objetivo_3 = Objetivo.objects.create(
             nombre="Este es el que funca (messi)",
             descripcion="Tenes que vencer a goku",
             escena=escena_5,
-            centro_profesional=centro_prof
+            centro_profesional=centro_prof,
+                        habilitada = True
+
         )
         objetivo_4 = Objetivo.objects.create(
             nombre="CR7",
             descripcion="Tenes que vencer a vegeta",
             escena=escena_6,
-            centro_profesional=centro_prof
+            centro_profesional=centro_prof,
+                        habilitada = True
+
         )
         objetivo_5 = Objetivo.objects.create(
             nombre="Ronaldinho",
             descripcion="Tenes que vencer a krillin",
             escena=escena_6,
-            centro_profesional=centro_prof
+            centro_profesional=centro_prof,
+                        habilitada = True
+
         )
         objetivo_6 = Objetivo.objects.create(
             nombre="neymar",
             descripcion="Tenes que vencer a yamcha",
             escena=escena_1,
-            centro_profesional=centro_prof
+            centro_profesional=centro_prof,
+                        habilitada = True
+
         )
 
         Objetivoscumplir.objects.create(
