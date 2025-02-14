@@ -47,7 +47,7 @@ export const create_scene = async (nuevaEscena) => {
                 descripcion: nuevaEscena.descripcion, // Agregamos este campo
                 idioma: nuevaEscena.idioma,
                 acento: nuevaEscena.acento,
-                condicion: nuevaEscena.condicion ?? null,
+                condicion: nuevaEscena.condicionFields ?? null,
                 complejidad: nuevaEscena.complejidad,
                 link: nuevaEscena.link
             }),

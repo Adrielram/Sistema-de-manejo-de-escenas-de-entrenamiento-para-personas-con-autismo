@@ -2282,6 +2282,7 @@ class EscenaListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
 
+    queryset = Escena.objects.filter(habilitada=True)
     serializer_class = EscenaSerializer
     pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
@@ -2313,9 +2314,13 @@ class EscenaById(APIView):
     def get(self, request, pk):
         # Obtener el objeto Escena por su ID (pk)
         escena = get_object_or_404(Escena, pk=pk)
-        serializer = EscenaSerializer(escena)
-        return Response(serializer.data)
-    
+        
+        # Serializar la escena, lo cual incluye la condición si existe
+        escena_serializer = EscenaSerializer(escena)
+        
+        # Obtener los datos serializados
+        escena_data = escena_serializer.data
+        return Response(escena_data)
 class GrupoById(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
@@ -2650,8 +2655,21 @@ class DeleteGoalView(generics.DestroyAPIView):
 @permission_classes([IsAuthenticated])
 @authentication_classes([CookieJWTAuthentication])
 class ListsScenesView(generics.ListAPIView):
-    queryset = Escena.objects.all()
     serializer_class = EscenaSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+    def get_queryset(self):
+        return Escena.objects.filter(habilitada=True) 
+    
+@permission_classes([IsAuthenticated])
+@authentication_classes([CookieJWTAuthentication])
+class ListsGoalView(generics.ListAPIView):
+    serializer_class = ObjetivoSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NameFilter
+    def get_queryset(self):
+        return Objetivo.objects.filter(habilitada=True) 
+    
 
 
 class GetScenesView(generics.ListAPIView):

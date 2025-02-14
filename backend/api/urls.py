@@ -98,6 +98,8 @@ urlpatterns = [
     path('get-persona-obj-esc/', ObtenerPersonaObjetivoID.as_view(), name='get-persona-obj-esc'),
     path('video-visto/', MarcarVideoVistoAPIView.as_view(), name='video-visto'),
     path('scenes/', ListsScenesView.as_view(), name='list_scenes'),
+    path('goals/', ListsGoalView.as_view(), name='list_goals'),
+
     path('get_scenes/', GetScenesView.as_view(), name='get_scenes'),
     path('scene/<int:pk>/delete/', DeleteSceneView.as_view(), name='delete_scene'),
     path('group/<int:pk>/delete/', DeleteGroupView.as_view(), name='delete_group'),
@@ -139,7 +141,6 @@ urlpatterns = [
     path('getTherapistsExcluding/<str:username>/', GetTherapistsExcludingView.as_view(), name='getTherapistsExcluding'),
     path('assign-pathology/', AssignPathologyView.as_view(), name='assign-pathology'),
     path('unassign-pathology/', UnassignPathologyView.as_view(), name='unassign-pathology'),
-    path('create_condition/', views.create_condition, name='create_condition'),
     path('get_forms_patient/', GetFormsPatientView.as_view(), name='get_forms_patient'),
     path('patients/', GetPacienteView.as_view(), name='get_paciente'),
     path('forgot-password/', forgot_password,name="forgot-passowrd"),

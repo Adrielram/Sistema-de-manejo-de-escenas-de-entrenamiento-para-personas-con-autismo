@@ -160,7 +160,7 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
             getItemLabel={(item) => item?.nombre as string || "Sin Nombre"}
             selectedItemId={selectedSceneId}
             onSelectItem={setSelectedSceneId}
-            apiUrl={`${baseUrl}escenas/`} />
+            apiUrl={`${baseUrl}scenes/`} />
           
 
           </div>          
@@ -171,7 +171,7 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
               getItemLabel={(item) => item.nombre as string}
               selectedItems={selectedScenes}
               onSelectItems={setSelectedScenes}
-              apiUrl={`${baseUrl}escenas/`}
+              apiUrl={`${baseUrl}scenes/`}
             />
 
             <SearchSelectBox
@@ -180,7 +180,7 @@ const EditObjetivo: React.FC<{ params: Promise<{ edit_goal: string }> }> = ({ pa
               getItemLabel={(item) => item.nombre as string}
               selectedItems={selectedObjectives}
               onSelectItems={setSelectedObjectives}
-              apiUrl={`${baseUrl}objetivos-list/`}
+              apiUrl={`${baseUrl}goals/`} // URL para los objetivos
             />
           </div>
 

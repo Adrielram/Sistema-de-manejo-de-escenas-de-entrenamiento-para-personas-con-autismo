@@ -1,30 +1,72 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
+import GenericDropdown from "../../../../../components/SearchableDropDown";
+// Define interfaces for our data structures
+interface Objetivo {
+  id: number;
+  nombre: string;
+}
+interface CondicionFields {
+  edad?: number;
+  objetivo_id?: number;
+  fecha?: string;
+}
+interface NuevaEscena {
+  nombre: string;
+  descripcion: string;
+  idioma: string;
+  acento: string;
+  condicionFields: CondicionFields | null;
+  complejidad: number;
+  link: string;
+}
+
 
 const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ params }) => {
   const [sceneId, setSceneId] = useState<string | null>(null);
   const [titulo, setTitulo] = useState("");
   const [idioma, setIdioma] = useState("");
   const [acento, setAcento] = useState("");
-  const [condiciones, setCondicion] = useState<string>("");
   const [complejidad, setComplejidad] = useState(0);
-  const [linkVideo, setLinkVideo] = useState("");
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  const router = useRouter();
   const [descripcion, setDescripcion] = useState("");
-  // Extraer `edit_scene` de `params` y guardarlo en el estado
+  const [linkVideo, setLinkVideo] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Estados para condiciones
+  const [mostrarCondicion, setMostrarCondicion] = useState(false);
+  const [edad, setEdad] = useState<number | "">("");
+  const [objetivo, setObjetivo] = useState<number | null>(null);
+  const [fecha, setFecha] = useState("");
+  const [objetivos, setObjetivos] = useState<Objetivo[]>([]);
+  const [dropdownTitle, setDropdownTitle] = useState("Seleccione un objetivo");
+
+  const router = useRouter();
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
     const unwrapParams = async () => {
-      console.log("params:", params); // <-- Log para verificar params
-      const resolvedParams = await params; // Espera a que la promesa se resuelva
-      setSceneId(resolvedParams.edit_scene); // Almacena `edit_scene` en el estado
+      const resolvedParams = await params;
+      setSceneId(resolvedParams.edit_scene);
     };
     unwrapParams();
   }, [params]);
 
-  // Cargar los datos de la escena al montar el componente
+  useEffect(() => {
+    const fetchObjetivos = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/objetivos-list/");
+        const data = await response.json();
+        const objetivosArray = data.results || [];
+        setObjetivos(objetivosArray);
+      } catch (error) {
+        console.error("Error al obtener los objetivos:", error);
+        setObjetivos([]);
+      }
+    };
+    fetchObjetivos();
+  }, []);
+
   useEffect(() => {
     if (!sceneId) return;
 
@@ -35,19 +77,32 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: 'include', // Incluir cookies (para manejar la cookie JWT)
+          credentials: 'include',
         });
+        
         if (!response.ok) {
           throw new Error("Error al obtener los datos de la escena");
         }
+        
         const data = await response.json();
+        console.log("Data:", data);
         setTitulo(data.nombre || "");
         setIdioma(data.idioma || "");
         setAcento(data.acento || "");
-        setCondicion(data.condiciones || "");
         setComplejidad(data.complejidad || 0);
         setDescripcion(data.descripcion || "");
         setLinkVideo(data.link || "");
+
+        // Configurar condiciones si existen
+        if (data.condicion) {
+          setMostrarCondicion(true);
+          setEdad(data.condicion.edad || "");
+          if (data.condicion.objetivo) {
+            setObjetivo(data.condicion.objetivo);
+            setDropdownTitle(data.condicion.objetivo);
+          }
+          console.log("fecha:", data.condicion.fecha);
+          setFecha((data.condicion.fecha ? new Date(data.condicion.fecha).toISOString().split('T')[0] : ""));        }
       } catch (error) {
         console.error(error);
         alert("No se pudieron cargar los datos de la escena");
@@ -55,58 +110,121 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
     };
 
     fetchScene();
-  }, [sceneId]);
+  }, [sceneId, baseUrl, objetivos]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const validateForm = (): string | null => {
+    const requiredFields: Record<string, string | number> = {
+      titulo,
+      idioma,
+      linkVideo,
+      acento,
+      complejidad
+    };
+
+    const emptyFields = Object.entries(requiredFields)
+      .filter(([key, value]) => !value || (key === 'complejidad' && value === 0))
+      .map(([key]) => key);
+
+    if (emptyFields.length > 0) {
+      return `Por favor complete los siguientes campos: ${emptyFields.join(', ')}`;
+    }
+
+    return null;
+  };
+
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!titulo || !idioma || !linkVideo || !acento || !complejidad || !descripcion)  {
-      alert("Todos los campos son obligatorios");
+    
+    const validationError = validateForm();
+    if (validationError) {
+      alert(validationError);
       return;
     }
 
-    // Crear un objeto con los datos actualizados
-    const escenaActualizada = {
-      nombre: titulo,
-      idioma: idioma,
-      acento: acento,
-      descripcion: descripcion,
-      condiciones: condiciones === "" ? null : condiciones, // Reemplaza cadena vacía por null
-      complejidad: complejidad,
-      link: linkVideo,
-    };
-
+    setIsSubmitting(true);
+    
     try {
+      // Crear el objeto condicionFields aquí mismo, sin usar setState
+      let condicionFields: CondicionFields | null = null;
+      
+      if (mostrarCondicion) {
+        condicionFields = {};
+        
+        if (edad !== "") {
+          condicionFields.edad = Number(edad);
+        }
+        
+        if (objetivo !== null) {
+          condicionFields.objetivo_id = objetivo;
+        }
+        
+        if (fecha) {
+          condicionFields.fecha = fecha;
+        }
+        
+        // Si no hay ningún campo con valor, establecer como null
+        if (Object.keys(condicionFields).length === 0) {
+          condicionFields = null;
+        }
+      }
+      
+      const nuevaEscena: NuevaEscena = {
+        nombre: titulo,
+        descripcion,
+        idioma,
+        acento,
+        condicionFields, // Usar directamente el objeto creado
+        complejidad,
+        link: linkVideo,
+      };
+      console.log("datos a enviar: ", nuevaEscena);
       const response = await fetch(`${baseUrl}scenes/${sceneId}`, {
         method: "PUT", // Usa el método apropiado según tu API
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(escenaActualizada),
+        body: JSON.stringify(nuevaEscena),
       });
-
-      if (response.ok) {
-        alert("Escena actualizada exitosamente");
-        router.push('/therapist/selection/scenes'); // Redirige a una página de listado de escenas
-
-      } else {
+  
+      if (!response.ok) {
         const errorData = await response.json();
-        alert(`Error al actualizar la escena: ${errorData.error}`);
+        throw new Error(errorData.error || "Error al actualizar la escena");
+      }
+      console.log("response:", response.json()); 
+      alert("Escena actualizada exitosamente");
+      router.push('/therapist/selection/scenes');
+    } catch (error) {
+      console.error("Error:", error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Error inesperado'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleObjetivoSelect = (item: { id: number; name?: string; nombre?: string }) => {
+    try {
+      const id = item.id;
+      const nombre = item.name || item.nombre;
+      
+      if (id && nombre) {
+        setObjetivo(id);
+        setDropdownTitle(nombre);
+      } else {
+        setObjetivo(null);
+        setDropdownTitle("Seleccione un objetivo");
       }
     } catch (error) {
-      console.error("Error al actualizar la escena:", error);
-      alert("Ocurrió un error inesperado");
+      console.error("Error al seleccionar objetivo:", error);
+      setObjetivo(null);
+      setDropdownTitle("Seleccione un objetivo");
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-blue-50 py-12 px-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-[#3EA5FF] mb-8 text-center">
-          Editar Escena
-        </h1>
-
+        <h1 className="text-4xl font-bold text-[#3EA5FF] mb-8 text-center">Editar Escena</h1>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8">
           <div className="space-y-6 bg-white p-8 rounded-xl shadow-lg border border-blue-100">
             <div>
@@ -133,7 +251,7 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
                 className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF] min-h-[200px]"
                 placeholder="Ingrese la descripción"
               />
-            </div> 
+            </div>
             <div>
               <label htmlFor="idioma" className="block font-semibold text-gray-700 mb-2">
                 Idioma
@@ -147,7 +265,6 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
                 placeholder="Ingrese el Idioma"
               />
             </div>
-
             <div>
               <label htmlFor="acento" className="block font-semibold text-gray-700 mb-2">
                 Acento
@@ -161,7 +278,6 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
                 placeholder="Ingrese el Acento"
               />
             </div>
-
             <div>
               <label htmlFor="complejidad" className="block font-semibold text-gray-700 mb-2">
                 Complejidad
@@ -184,45 +300,86 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
             </div>
 
             <div>
-              <label htmlFor="condiciones" className="block font-semibold text-gray-700 mb-2">
-                Condiciones
-              </label>
-              <input
-                id="condiciones"
-                type="text"
-                value={condiciones}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setCondicion(value === "" ? "" : value);
-                }}
-                className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
-                placeholder="Ingrese las Condiciones"
-              />
-            </div>
+              <label className="block font-semibold text-gray-700 mb-2">Condiciones</label>
+              <button
+                type="button"
+                className="bg-blue-500 text-white p-2 rounded-lg"
+                onClick={() => setMostrarCondicion(!mostrarCondicion)}
+              >
+                {mostrarCondicion ? "Ocultar" : "Agregar Condición"}
+              </button>
 
-            <div>
-              <label htmlFor="linkVideo" className="block font-semibold text-gray-700 mb-2">
-                Link al Video Explicativo
-              </label>
-              <input
-                id="linkVideo"
-                type="search"
-                value={linkVideo}
-                onChange={(e) => setLinkVideo(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
-                placeholder="Ingrese el link"
-              />
+              {mostrarCondicion && (
+                <div className="mt-4 space-y-4 p-4 border border-gray-300 rounded-lg">
+                  <div>
+                    <label className="block text-gray-700">Edad</label>
+                    <input
+                      type="number"
+                      value={edad}
+                      onChange={(e) => setEdad(e.target.value ? parseInt(e.target.value) : "")}
+                      className="w-full border p-2 rounded-lg"
+                      placeholder="Ingrese la edad"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700">Objetivo</label>
+                    {objetivos?.length > 0 ? (
+                      <div 
+                        className="relative w-full" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
+                        <GenericDropdown
+                          title={dropdownTitle}
+                          items={objetivos.map((obj) => ({ 
+                            id: obj.id,
+                            name: obj.nombre,
+                          }))}
+                          onSelect={handleObjetivoSelect}
+                          placeholder="Seleccione un objetivo"
+                          maxHeight="200px"
+                          valueKey="id"
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-sm">No hay objetivos disponibles.</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-gray-700">Fecha</label>
+                    <input
+                      type="date"
+                      value={fecha}
+                      onChange={(e) => setFecha(e.target.value)}
+                      className="w-full border p-2 rounded-lg"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-
-          <div className="lg:col-span-2 mt-6">
-            <button
-              type="submit"
-              className="w-full bg-[#3EA5FF] text-white font-semibold py-4 rounded-xl hover:bg-[#2E8BFF] transition duration-300 shadow-lg hover:shadow-xl"
-            >
-              Guardar Cambios
-            </button>
+          <div>
+            <label htmlFor="linkVideo" className="block font-semibold text-gray-700 mb-2">
+              Link al Video Explicativo
+            </label>
+            <input
+              id="linkVideo"
+              type="search"
+              value={linkVideo}
+              onChange={(e) => setLinkVideo(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#3EA5FF]"
+              placeholder="Ingrese el link"
+            />
           </div>
+          <button 
+            type="submit" 
+            className="w-full bg-[#3EA5FF] text-white font-semibold py-4 rounded-xl hover:bg-[#2E8BFF]"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Guardando..." : "Guardar Cambios"}
+          </button>
         </form>
       </div>
     </div>

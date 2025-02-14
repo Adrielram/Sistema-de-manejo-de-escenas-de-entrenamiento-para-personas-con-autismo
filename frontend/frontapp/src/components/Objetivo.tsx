@@ -28,7 +28,7 @@ const Objetivo = ({
       <h2 className="text-lg font-bold" onClick={() => onExpand(id)}>
         {titulo}
       </h2>
-      {!terapeuta_interface && expanded && (
+      {!terapeuta_interface && expanded ? (
         <div>
           <p>{descripcion}</p>
           <ProgressBar progress={progreso} /> {/* Usar la barra de progreso aquí */}       
@@ -47,9 +47,10 @@ const Objetivo = ({
             </button>
           </div>  
         </div>
-      )} : {terapeuta_interface && ( 
+      ) :  
+      (terapeuta_interface && ( 
         <><p>{descripcion}</p><ProgressBar progress={progreso} /></>      
-      )}
+      ))}
     </div>
   );
 };

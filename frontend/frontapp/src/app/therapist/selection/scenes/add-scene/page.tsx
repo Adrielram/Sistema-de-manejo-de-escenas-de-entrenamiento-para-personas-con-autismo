@@ -11,22 +11,17 @@ interface Objetivo {
 
 interface CondicionFields {
   edad?: number;
-  objetivo?: number;
+  objetivo_id?: number;
   fecha?: string;
 }
 
-
-
-interface CondicionDict {
-  objetivo_id: number;  // Cambiado de id a objetivo_id
-}
 
 interface NuevaEscena {
   nombre: string;
   descripcion: string;
   idioma: string;
   acento: string;
-  condicion: CondicionDict | null;
+  condicionFields: CondicionFields | null;
   complejidad: number;
   link: string;
 }
@@ -53,11 +48,11 @@ const CreateScene: React.FC = () => {
   useEffect(() => {
     const fetchObjetivos = async () => {
       try {
-        const response = await fetch(`${baseUrl}objetivos-list/`,
+        const response = await fetch(`${baseUrl}goals/`,
           { credentials: 'include' }
         );
         const data = await response.json();
-        const objetivosArray = data.results || [];
+        const objetivosArray = data || [];
         setObjetivos(objetivosArray);
       } catch (error) {
         console.error("Error al obtener los objetivos:", error);
@@ -99,56 +94,27 @@ const CreateScene: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      let condicionDict: CondicionDict | null = null;
-    
+      // Crear el objeto condicionFields aquí mismo, sin usar setState
+      let condicionFields: CondicionFields | null = null;
+      
       if (mostrarCondicion) {
-        const condicionFields: CondicionFields = {};
-        let objetivoOriginal = null;  // Guardamos el objetivo original
+        condicionFields = {};
         
         if (edad !== "") {
-          condicionFields.edad = edad;
+          condicionFields.edad = Number(edad);
         }
         
         if (objetivo !== null) {
-          condicionFields.objetivo = objetivo;
-          objetivoOriginal = objetivo;  // Guardamos el valor original
+          condicionFields.objetivo_id = objetivo;
         }
         
         if (fecha) {
           condicionFields.fecha = fecha;
         }
-      
-        if (Object.keys(condicionFields).length > 0) {
-          console.log("Datos exactos que se envían al backend:", JSON.stringify(condicionFields));
-          
-          try {
-            const response = await fetch(`${baseUrl}create_condition/`, {
-              method: "POST",
-              credentials: "include",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(condicionFields),
-            });
-      
-            if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(`Error al crear la condición: ${errorText}`);
-            }
-      
-            const result = await response.json();
-            console.log("Respuesta de create_condition:", result);
-      
-            if (result.id) {
-              // Usamos el objetivo_id original en lugar del id de la condición
-              condicionDict = { objetivo_id: objetivoOriginal };
-            } else {
-              throw new Error("No se recibió el ID de la condición");
-            }
-          } catch (error) {
-            console.error("Error en create_condition:", error);
-            throw error;
-          }
+        
+        // Si no hay ningún campo con valor, establecer como null
+        if (Object.keys(condicionFields).length === 0) {
+          condicionFields = null;
         }
       }
       
@@ -157,12 +123,12 @@ const CreateScene: React.FC = () => {
         descripcion,
         idioma,
         acento,
-        condicion: condicionDict,
+        condicionFields, // Usar directamente el objeto creado
         complejidad,
         link: linkVideo,
       };
+
       
-      console.log("Datos de la escena a enviar:", nuevaEscena);
       const result = await create_scene(nuevaEscena);
       
       if (result.success) {
