@@ -184,7 +184,6 @@ const EditScene: React.FC<{ params: Promise<{ edit_scene: string }> }> = ({ para
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: 'include',
         body: JSON.stringify(nuevaEscena),
       });
   

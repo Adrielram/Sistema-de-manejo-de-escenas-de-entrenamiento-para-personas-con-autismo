@@ -48,11 +48,11 @@ const CreateScene: React.FC = () => {
   useEffect(() => {
     const fetchObjetivos = async () => {
       try {
-        const response = await fetch(`${baseUrl}objetivos-list/`,
+        const response = await fetch(`${baseUrl}goals/`,
           { credentials: 'include' }
         );
         const data = await response.json();
-        const objetivosArray = data.results || [];
+        const objetivosArray = data || [];
         setObjetivos(objetivosArray);
       } catch (error) {
         console.error("Error al obtener los objetivos:", error);
