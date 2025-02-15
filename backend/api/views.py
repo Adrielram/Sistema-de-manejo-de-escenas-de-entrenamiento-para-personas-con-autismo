@@ -365,8 +365,6 @@ from .serializers import UserSerializer
 from .models import User
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
-@authentication_classes([CookieJWTAuthentication])
 def login(request):
     serializer = CustomTokenObtainPairSerializer(data=request.data)
     if serializer.is_valid():
@@ -400,8 +398,6 @@ def logout(request):
     return response
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
-@authentication_classes([CookieJWTAuthentication])
 def verify_session(request):
     # Extraer la cookie 'jwt'
     jwt_token = request.COOKIES.get('jwt')
@@ -1736,8 +1732,6 @@ class update_user(APIView):
     
 
 @api_view(['POST'])
-@authentication_classes([CookieJWTAuthentication])
-@permission_classes([IsAuthenticated])
 def signIn(request):
     try:
         # Validar CAPTCHA
@@ -4812,8 +4806,6 @@ def forgot_password(request):
         )
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
-@authentication_classes([CookieJWTAuthentication])
 def reset_password(request):
     token = request.data.get('token')
     uid = request.data.get('uid')
