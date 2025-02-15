@@ -2331,7 +2331,6 @@ class NotAssociatedCentersListView(generics.ListAPIView):
     authentication_classes = [CookieJWTAuthentication]
 
     serializer_class = CentroSaludSerializer
-    pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
 
@@ -2346,10 +2345,8 @@ class AssociatedCentersListView(generics.ListAPIView):
     authentication_classes = [CookieJWTAuthentication]
 
     serializer_class = CentroSaludSerializer
-    pagination_class = DynamicPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = NameFilter
-    #permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
         related_centers = get_related_centers(self)
