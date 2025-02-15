@@ -35,7 +35,7 @@ export default function Therapist() {
       });
       if (!response.ok) throw new Error('Error al cargar los centros asociados');
       const data = await response.json();
-      setAssociatedCenters(data.results); // Guarda los centros asociados en el estado
+      setAssociatedCenters(data); // Guarda los centros asociados en el estado
     } catch (err) {
       console.error(err);
       alert('Hubo un error al cargar los centros asociados.');
