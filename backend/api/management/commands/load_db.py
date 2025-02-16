@@ -441,42 +441,49 @@ class Command(BaseCommand):
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            habilitada=True
         )
         formulario_2= Formulario.objects.create(
             nombre="Formulario 2",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            habilitada=True
+
         )
         Formulario.objects.create(
             nombre="Formulario 3",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            habilitada=True
         )
         Formulario.objects.create(
             nombre="Formulario 4",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            habilitada=True
         )
         Formulario.objects.create(
             nombre="Formulario 5",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            habilitada=True
         )
         Formulario.objects.create(
             nombre="Formulario 6",
             descripcion="Lorem ipsum dolor anda a saber como sigue...",
             es_verificacion_automatica=True,
             creado_por=terapeuta,
-            fecha_creacion=datetime.now()
+            fecha_creacion=datetime.now(),
+            habilitada=True
         )
 
         # Añadir preguntas al Formulario 1
@@ -618,7 +625,7 @@ class Command(BaseCommand):
         Comentario.objects.create(
             user=terapeuta,
             escena=escena_1,
-            texto="El letrero dice aguante messi",
+            texto="El letrero dice 'Prohibido ingresar con automotor'",
             comentario_contestado=comentario_respuesta
         )
 

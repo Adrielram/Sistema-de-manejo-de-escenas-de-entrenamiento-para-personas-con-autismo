@@ -2285,8 +2285,7 @@ class EscenaListView(generics.ListAPIView):
     def get_queryset(self):
         return Escena.objects.filter(habilitada=True)  # Solo escenas habilitadas 
     
-@permission_classes([IsAuthenticated])
-@authentication_classes([CookieJWTAuthentication])
+
 class CentrosSaludListView(generics.ListAPIView):
     queryset = Centrodesalud.objects.all()
     serializer_class = CentroSaludSerializer
@@ -4660,7 +4659,7 @@ def GEMINI_chequear_comentario(username:str,comentario_usuario:str):
     Devuelve la respuesta en formato JSON con la siguiente estructura:
 
     {
-        "urgente": true/false,
+        "urgente": true o false,
         "razon": "Explicación breve de por qué se considera urgente o no."
     }
     """
