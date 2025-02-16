@@ -255,12 +255,11 @@ const ManageGroupPage = () => {
                 {error}
               </div>
             )}
-
             <div className="mb-8">
               <label htmlFor="groupSelect" className="block text-center text-sm mb-2">
                 Seleccionar grupo:
               </label>
-              <div className="relative" style={{ zIndex: 10 }}>
+              <div className="relative" style={{ zIndex: 20 }}>
                 <GenericDropdown
                   title={selectedGroup ? selectedGroup.name : "Seleccionar Grupo"}
                   items={groups}
@@ -303,13 +302,44 @@ const ManageGroupPage = () => {
                   </div>
                 </div>
 
-                <div className="save-button-container mt-5 text-center">
+                <div className="save-button-container mt-5 flex justify-end gap-4">
                   <button
                     className="px-4 py-2 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-colors"
                     onClick={handleSaveChanges}
                     disabled={isLoading}
                   >
                     {isLoading ? "Guardando..." : "Guardar cambios"}
+                  </button>                  
+                  <button
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                    onClick={async () => {
+                      if (confirm("¿Estás seguro de que deseas borrar este grupo?")) {
+                        try {
+                          const response = await fetch(
+                            `${baseUrl}group/${selectedGroup.id}/delete/`,
+                            {
+                              method: "DELETE",
+                              credentials: "include",
+                            }
+                          );
+
+                          if (!response.ok) {
+                            throw new Error(`Error: ${response.status}`);
+                          }
+
+                          alert("Grupo eliminado exitosamente.");
+                          setSelectedGroup(null);
+                          setGroups((prev) =>
+                            prev.filter((group) => group.id !== selectedGroup.id)
+                          );
+                        } catch (err) {
+                          alert("Error al eliminar el grupo: " + err.message);
+                        }
+                      }
+                    }}
+                    disabled={isLoading}
+                  >
+                    Borrar Grupo
                   </button>
                 </div>
               </div>
