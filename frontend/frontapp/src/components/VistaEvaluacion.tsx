@@ -33,7 +33,8 @@ const VistaEvaluacion: React.FC<VistaEvaluacionProps> = ({ formularioId }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${baseUrl}formularios/${formularioId}/`);
+        const response = await fetch(`${baseUrl}formularios/${formularioId}/`, {credentials: 'include'});
+
         if (!response.ok) throw new Error("Error al cargar el formulario");
         
         const data = await response.json();

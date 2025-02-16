@@ -101,9 +101,9 @@ const NotificationPage = ({ token }: { token: string }) => {
       const response = await fetch(`${baseUrl}notificaciones/${notificationId}/aceptar/`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
       });
       if (!response.ok) {
         throw new Error("Error al aceptar la notificación");
@@ -121,9 +121,9 @@ const NotificationPage = ({ token }: { token: string }) => {
       const response = await fetch(`${baseUrl}notificaciones/${notificationId}/rechazar/`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
       });
       if (!response.ok) {
         throw new Error("Error al rechazar la notificación");
