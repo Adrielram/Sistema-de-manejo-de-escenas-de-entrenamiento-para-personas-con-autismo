@@ -3029,8 +3029,7 @@ class GetUnreachedGoalsView(generics.ListAPIView):
         return unreached_goals
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
-@authentication_classes([CookieJWTAuthentication])
+
 def buscar_padres(request):
     query = request.GET.get('query', '').strip()
     page = request.GET.get('page', 1)
@@ -3452,8 +3451,6 @@ from rest_framework.response import Response
 from .models import Patologia
 
 class SpacyPatologiasView(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [CookieJWTAuthentication]
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.nlp = spacy.load('es_core_news_lg')
