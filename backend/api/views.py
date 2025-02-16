@@ -389,8 +389,7 @@ def login(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
-@authentication_classes([CookieJWTAuthentication])
+
 def logout(request):
     response = Response({"message": "Logout successful"})
     # Borrar la cookie JWT
@@ -1857,7 +1856,7 @@ def signIn(request):
             print("Validando contraseña")
             print(user.check_password(user.password))
 
-            if role == 'terapeuta':
+            if role == 'terapeuta' or role == 'paciente':
                 user.is_active = False
             else:
                 user.is_active = True
