@@ -2,16 +2,21 @@
 import Formulario from '../../../../../components/Formulario';
 //import ResponderForm from '../../../../../components/ResponderForm';
 import { enviarFormulario } from '../../../../../utils/api';
+import { useRouter } from 'next/navigation';
 
 const CreateAssesment: React.FC = () => { 
+  const router = useRouter();
 
   const manejarEnvio = async (formulario) => {
     const resultado = await enviarFormulario(formulario);
+    
     if (!resultado.success){
       alert("No se pudo crear el formulario.")
     }else{
       alert("Formulario creado exitosamente");
       console.log('Formulario creado:', resultado);
+      router.push('/therapist/selection/assesments');
+
     }      
   };
 

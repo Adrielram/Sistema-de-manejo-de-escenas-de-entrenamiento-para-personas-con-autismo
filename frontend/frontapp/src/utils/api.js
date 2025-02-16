@@ -80,6 +80,7 @@ export const create_scene = async (nuevaEscena) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formulario),
+        credentials: 'include'
       }); 
       const data = await respuesta.json();
       if (respuesta.status === 201) {
