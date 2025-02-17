@@ -37,6 +37,7 @@ const GoalsPage = () => {
           const response = await fetch(`${baseUrl}objetivos-ev-paciente/?user_id=${patient_dni}`,
             { credentials: 'include' }
           );
+          console.log(response);
           if (!response.ok) throw new Error("Error al cargar los objetivos");
           const data = await response.json();
 
@@ -76,11 +77,11 @@ const GoalsPage = () => {
     );
   }
 
-  if (error) {
+  if (error === "Error al cargar los objetivos") {
     return (
       <div className="min-h-screen bg-gray-100 py-10 px-4 flex justify-center items-center">
-        <div className="text-red-600">Error: {error}</div>
-      </div>
+            <p className="text-center text-gray-500">No hay elementos para mostrar.</p>
+            </div>
     );
   }
 
