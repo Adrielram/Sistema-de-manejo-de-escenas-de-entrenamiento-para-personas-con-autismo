@@ -59,6 +59,7 @@ const ResponderForm = ({ idform, dni,  onSubmitted = () => {}}) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(respuestasAEnviar),
+        credentials: 'include',
       });
 
       await fetch(`${baseUrl}registrar-respuesta/`, {
