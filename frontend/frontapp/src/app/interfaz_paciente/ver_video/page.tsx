@@ -47,7 +47,7 @@ const VerVideo = () => {
     escena: Number(idEscena),
     texto: '',
     visibilidad: true,
-    comentario_respondido: 0,
+    comentario_contestado: 0,
     usuarioRespondido: '', 
   });
 
@@ -120,7 +120,7 @@ const VerVideo = () => {
       if (response.ok) {
         setFormData((prev) => ({
           ...prev,
-          comentario_respondido: idComentario,
+          comentario_contestado: idComentario,
           usuarioRespondido: data.usuario, 
         }));
 
@@ -457,12 +457,12 @@ const VerVideo = () => {
             </div>
           ))}
         </div>
-        {formData.comentario_respondido !== 0 && (
+        {formData.comentario_contestado !== 0 && (
           <div className="flex items-center text-sm text-gray-600 mt-2">
-            <p>Respondiendo a @{formData.user}</p>
+            <p>Respondiendo a @{formData.usuarioRespondido}</p>
             <button
               onClick={() =>
-                setFormData((prev) => ({ ...prev, comentario_respondido: 0 }))
+                setFormData((prev) => ({ ...prev, comentario_contestado: 0 }))
               }
               className="ml-2 text-red-500 scale-150 hover:text-red-700 transition-colors"
             >

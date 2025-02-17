@@ -8,33 +8,33 @@ interface NuevoComentarioProps {
     escena: number;
     texto: string;
     visibilidad: boolean;
-    comentario_respondido: number | null;
+    comentario_contestado: number | null;
   };
   setFormData: React.Dispatch<React.SetStateAction<{
     user: string;
     escena: number;
     texto: string;
     visibilidad: boolean;
-    comentario_respondido: number | null;
+    comentario_contestado: number | null;
   }>>;
   onCommentAdded: () => void; // Nueva función para notificar que se agregó un comentario
 }
 
 export const NuevoComentario: React.FC<NuevoComentarioProps> = ({ formData, setFormData, onCommentAdded }) => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const handleAddComment = async () => {
     if (formData.texto.trim() !== "") {
+      console.log(formData);
       try {
         console.log(formData);
-        const response = await fetch(`${baseUrl}registrar_comentario/`, {
+        const response = await fetch("http://localhost:8000/api/registrar_comentario/", {
           method: "POST",
-          credentials: 'include',
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(formData),
+          credentials: "include",
         });
-
+        console.log(response.json());
         if (!response.ok) {
           throw new Error("Error al guardar el comentario");
         }
