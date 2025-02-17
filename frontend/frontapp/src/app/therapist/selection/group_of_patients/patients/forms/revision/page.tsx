@@ -62,7 +62,8 @@ const Revision = () => {
     try {
       const response = await fetch(`${baseUrl}habilitar-revision/${formIdNumber}/${patient_dni}/`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
       })
 
       if (!response.ok) {
