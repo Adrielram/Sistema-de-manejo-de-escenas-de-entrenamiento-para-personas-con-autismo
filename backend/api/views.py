@@ -4654,10 +4654,10 @@ def GEMINI_chequear_comentario(username:str,comentario_usuario:str):
 
     Devuelve la respuesta en formato JSON con la siguiente estructura:
 
-    {
-        "urgente": true o false,
+    
+        "urgente": true/false
         "razon": "Explicación breve de por qué se considera urgente o no."
-    }
+    
     """
 
     # Generar respuesta con el modelo

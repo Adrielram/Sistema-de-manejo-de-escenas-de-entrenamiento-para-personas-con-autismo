@@ -167,7 +167,7 @@ const CreateGroupPage = () => {
           </div>
         </div>
 
-        <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 z-10 w-auto flex justify-center">
+        <div className="bottom-5 mt-4 w-auto flex justify-center">
           <button
             onClick={handleSave}
             className="px-4 py-2 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition-colors"
