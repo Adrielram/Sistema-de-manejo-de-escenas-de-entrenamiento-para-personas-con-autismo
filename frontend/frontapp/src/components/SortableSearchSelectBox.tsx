@@ -153,7 +153,7 @@ const DraggableSearchSelectBox = ({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${apiUrl}?nombre=${encodeURIComponent(searchValue)}`);
+        const response = await fetch(`${apiUrl}?nombre=${encodeURIComponent(searchValue)}`, {credentials: 'include'});
         if (!response.ok) {
           throw new Error("Error al cargar los items.");
         }

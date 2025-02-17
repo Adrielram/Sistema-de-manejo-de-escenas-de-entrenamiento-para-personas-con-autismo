@@ -70,8 +70,7 @@ const Box_paciente = ({paciente,opciones}:BoxPacienteProps) => {
     if (role  === "padre"){
       dispatch(setUserId({userId:datosPaciente.dni}));
       dispatch(setHijoNombre({hijoNombre:datosPaciente.nombre})); //FUNCIONA PORQUE EL NOMBRE DE API.USER ES EL MISMO QUE EL USERNAME
-      router.push(`${baseUrl}interfaz_padre/ver_seguimiento/`);
-    }
+      router.push("/interfaz_padre/ver_seguimiento");    }
     else {
       alert(`Ver seguimiento de ${paciente.nombre}`);
     }
