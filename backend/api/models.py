@@ -462,7 +462,7 @@ class RegistroEvaluacion(models.Model):
     objetivo = models.ForeignKey(Objetivo, on_delete=models.CASCADE, related_name="registros")
     paciente = models.ForeignKey(User, on_delete=models.CASCADE, related_name="registros")
     edad = models.PositiveIntegerField()
-    patologias = models.ManyToManyField(Patologia, related_name="registros")
+    patologias = models.JSONField(default=list)
     escena = models.ForeignKey(Escena, on_delete=models.CASCADE, related_name="registros")
     complejidad = models.PositiveIntegerField()  # Se obtiene desde Escena
     resultado = models.DecimalField(max_digits=5, decimal_places=2)  # Evaluación en porcentaje
@@ -470,4 +470,11 @@ class RegistroEvaluacion(models.Model):
     def __str__(self):
         return f"Eval {self.id} - Obj {self.objetivo.id} - Escena {self.escena.id} - {self.resultado}%"    
     class Meta:
+
         db_table = 'registroEvaluacion'   
+
+
+from django.db import models
+class EntrenamientoRegistro(models.Model):
+    ultima_cantidad = models.IntegerField(default=0)
+    fecha_ultimo_entrenamiento = models.DateTimeField(auto_now=True)   

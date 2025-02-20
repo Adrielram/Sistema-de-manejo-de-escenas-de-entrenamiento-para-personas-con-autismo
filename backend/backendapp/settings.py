@@ -45,7 +45,31 @@ INSTALLED_APPS = [
     'api',
     "corsheaders",
     'django_filters',
+    "django_celery_beat",
 ]
+
+CELERY_BROKER_URL = "redis://redis:6379/0"  # Usá el nombre del contenedor de Redis
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+
+# Agregar un backend de resultados
+CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+from celery.schedules import crontab
+# Configuración de Celery Beat
+CELERY_BEAT_SCHEDULE = {
+    'generar-dataset-rl-diariamente': {
+        'task': 'generar_dataset',
+        'schedule': crontab(hour=3, minute=0),  # Configura la hora y el minuto (19:06)
+    },
+    'entrenar-modelo-diariamente': {
+        'task': 'train_if_needed',
+        'schedule': crontab(hour=20, minute=42),  # Ejemplo para ejecutar a las 3:00 AM
+    },
+}
+
+# Configuración adicional de Celery Beat para evitar tareas duplicadas
+CELERY_BEAT_SCHEDULE_SYNC = True
+CELERY_WORKER_REDIRECT_STDOUTS = False
 
 # Configuración de Channels
 ASGI_APPLICATION = 'backendapp.asgi.application'

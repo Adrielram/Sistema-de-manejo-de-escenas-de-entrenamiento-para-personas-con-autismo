@@ -11,9 +11,7 @@ export async function middleware(request) {
     admin: "/admin",
   };
 
-  //const cookie = request.headers.get('cookie');
 
-  // Verificar si existe una cookie válida
     try {
       // Llamar al endpoint de verificación de sesión
       const response = await fetch('http://backend:8000/api/verify-session/', {

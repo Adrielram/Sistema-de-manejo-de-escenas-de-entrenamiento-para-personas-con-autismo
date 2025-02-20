@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   db:
     image: mysql:8.0
@@ -14,6 +13,7 @@ services:
   backend:
     build:
       context: ./backend
+    image: backend
     container_name: django_container
     ports:
       - "8000:8000"
@@ -47,6 +47,36 @@ services:
     container_name: redis_server
     ports:
       - "6379:6379"
+
+  celery:    
+    image: backend
+    container_name: celery
+    command: celery -A backendapp worker --loglevel=info
+    depends_on:      
+      - redis
+      - backend
+    volumes:
+      - ./backend:/app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=backendapp.settings
+      - RUNNING_CELERY=1
+
+  celery-beat:    
+    image: backend
+    container_name: celery_beat
+    command: celery -A backendapp beat --loglevel=info
+    volumes:
+      - ./backend:/app
+    depends_on:      
+      - redis
+      - celery
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=backendapp.settings
+      - RUNNING_CELERY=1
 
 volumes:
   db_data:

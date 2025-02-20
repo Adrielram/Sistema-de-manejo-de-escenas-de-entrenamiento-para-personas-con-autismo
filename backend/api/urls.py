@@ -145,6 +145,11 @@ urlpatterns = [
     path('patients/', GetPacienteView.as_view(), name='get_paciente'),
     path('forgot-password/', forgot_password,name="forgot-passowrd"),
     path('reset-password/', reset_password, name="reset_password"),
+    #IA
+    path("recommend/", recommend_scene, name="recommend_scene"),
+    path("train/",train_model_view, name="train_model"),
+    path('load_model/', load_model, name='load_model'),    
+
 ]
 
 urlpatterns += [path('', include(router.urls))]

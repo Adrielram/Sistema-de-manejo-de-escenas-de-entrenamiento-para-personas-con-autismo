@@ -4233,15 +4233,19 @@ def calcular_edad(fecha_nac):
 def guardar_registro_evaluacion(username, formulario_id):
     paciente = get_object_or_404(User, username=username)
     formulario = get_object_or_404(Formulario, id=formulario_id)
-    objetivo = formulario.objetivo
-    #patologias = paciente.patologias.all()
+    objetivo = formulario.objetivo    
     edad_paciente = calcular_edad(paciente.fecha_nac)
+    # Obtener IDs de patologías del usuario desde PersonaPatologia
+    patologias_ids = list(
+        PersonaPatologia.objects.filter(user_id=paciente).values_list("patologia_id", flat=True)
+    )
     # Obtener todas las preguntas del formulario con su escena asociada
     preguntas_por_escena = defaultdict(list)
     preguntas = Pregunta.objects.filter(formulario=formulario).select_related("escena")
 
     for pregunta in preguntas:
-        preguntas_por_escena[pregunta.escena].append(pregunta)
+        if pregunta.escena:  # Asegura que la escena existe
+            preguntas_por_escena[pregunta.escena].append(pregunta)
 
     registros = []
     for escena, preguntas in preguntas_por_escena.items():
@@ -4264,6 +4268,7 @@ def guardar_registro_evaluacion(username, formulario_id):
             objetivo=objetivo,
             paciente=paciente,
             edad= edad_paciente, 
+            patologias=patologias_ids,
             escena=escena,
             complejidad=escena.complejidad,
             resultado=Decimal(resultado_escena),
@@ -4814,3 +4819,48 @@ def reset_password(request):
         return Response({"message": "Contraseña restablecida con éxito."})
     else:
         return Response({"error": "Token inválido o expirado."}, status=400)
+    
+from django.http import JsonResponse
+import json
+from api.rl_model.utils import get_recommendation
+
+def recommend_scene(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        objetivo_id = data["objetivo_id"]
+        edad = data["edad"]
+        patologias = data["patologias"]        
+
+        recommended_scene = get_recommendation(objetivo_id, edad, patologias)
+
+        return JsonResponse({"scene_id": recommended_scene})
+    
+    except KeyError as e:
+        return JsonResponse({"error": f"Falta el parámetro {str(e)}"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+from api.rl_model.train import train_model
+def train_model_view(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+    try:
+        train_model()
+        return JsonResponse({"message": "Modelo entrenado correctamente"})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+from django.http import JsonResponse
+from api.rl_model.rl_model_manager import RLModelManager  # Asegúrate de importar correctamente
+
+def load_model(request):
+    """Endpoint que carga el modelo entrenado en la instancia Singleton del backend."""
+    try:
+        rl_manager = RLModelManager()  # Obtener la instancia singleton
+        rl_manager.load_model()  # Cargar el nuevo modelo entrenado
+        return JsonResponse({"message": "Modelo actualizado correctamente"}, status=200)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
