@@ -4718,9 +4718,9 @@ El Sistema de Monitoreo Automático
 
 
 @api_view(['POST'])
-@authentication_classes([CookieJWTAuthentication])
-@permission_classes([IsAuthenticated])
-
+#@authentication_classes([CookieJWTAuthentication])
+#@permission_classes([AllowAny])
+# NO NECESITA ESTAR AUTENTICADO. INCLUSO SOLO LO HARIA SI NO LO ESTÁ.
 def forgot_password(request):
     """
     Vista para manejar la solicitud de restablecimiento de contraseña.
